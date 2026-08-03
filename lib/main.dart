@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:billing_software/screens/splash_screen.dart';
 import 'package:billing_software/services/theme_provider.dart';
+import 'package:billing_software/services/shortcut_service.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  shortcutService.init();
   runApp(const MyApp());
 }
 
@@ -15,6 +18,8 @@ class MyApp extends StatelessWidget {
       listenable: themeProvider,
       builder: (context, _) {
         return MaterialApp(
+          navigatorKey: shortcutService.navigatorKey,
+          navigatorObservers: [shortcutService.routeObserver],
           debugShowCheckedModeBanner: false,
           title: 'Billing Software',
           themeMode: themeProvider.themeMode,

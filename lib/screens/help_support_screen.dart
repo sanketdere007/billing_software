@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../widgets/app_drawer.dart';
+import '../widgets/direct_back_scope.dart';
 
 class HelpSupportScreen extends StatelessWidget {
   const HelpSupportScreen({super.key});
@@ -98,40 +99,42 @@ class HelpSupportScreen extends StatelessWidget {
         ),
       );
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final bool isDesktop = constraints.maxWidth >= 800;
+    return DirectBackScope(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final bool isDesktop = constraints.maxWidth >= 800;
 
-        if (isDesktop) {
-          return Scaffold(
-            body: Row(
-              children: [
-                const SizedBox(
-                  width: 250,
-                  child: AppDrawer(isPermanent: true),
-                ),
-                const VerticalDivider(width: 1, thickness: 1),
-                Expanded(
-                  child: Scaffold(
-                    appBar: AppBar(
-                      title: const Text('Help & Support'),
-                    ),
-                    body: content,
+          if (isDesktop) {
+            return Scaffold(
+              body: Row(
+                children: [
+                  const SizedBox(
+                    width: 250,
+                    child: AppDrawer(isPermanent: true),
                   ),
-                ),
-              ],
-            ),
-          );
-        } else {
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('Help & Support'),
-            ),
-            drawer: const AppDrawer(isPermanent: false),
-            body: content,
-          );
-        }
-      },
+                  const VerticalDivider(width: 1, thickness: 1),
+                  Expanded(
+                    child: Scaffold(
+                      appBar: AppBar(
+                        title: const Text('Help & Support'),
+                      ),
+                      body: content,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          } else {
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('Help & Support'),
+              ),
+              drawer: const AppDrawer(isPermanent: false),
+              body: content,
+            );
+          }
+        },
+      ),
     );
   }
 

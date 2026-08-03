@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:billing_software/screens/login_screen.dart';
 import 'package:billing_software/screens/dashboard_screen.dart';
+import 'package:billing_software/services/shortcut_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -83,6 +84,9 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
+        settings: RouteSettings(
+          name: isLoggedIn ? AppRoutes.dashboard : '/login',
+        ),
         pageBuilder: (context, animation, secondaryAnimation) => 
             isLoggedIn ? const DashboardScreen() : const LoginScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {

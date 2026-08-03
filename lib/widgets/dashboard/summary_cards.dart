@@ -120,7 +120,7 @@ class SummaryCards extends StatelessWidget {
     bool isPositive,
   ) {
     final currencyFormatter = NumberFormat.currency(
-      symbol: '\$',
+      symbol: '₹',
       decimalDigits: 2,
     );
     return _buildCardBase(

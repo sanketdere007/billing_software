@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import '../services/theme_provider.dart';
 import '../widgets/app_drawer.dart';
+import '../widgets/direct_back_scope.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
+    return DirectBackScope(
+      child: LayoutBuilder(
       builder: (context, constraints) {
         final bool isDesktop = constraints.maxWidth >= 800;
         
@@ -114,6 +116,7 @@ class SettingsScreen extends StatelessWidget {
           );
         }
       },
-    );
-  }
+    ),
+  );
+}
 }

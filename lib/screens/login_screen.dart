@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:billing_software/screens/dashboard_screen.dart';
+import 'package:billing_software/services/shortcut_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:billing_software/services/theme_provider.dart';
 import 'package:billing_software/widgets/support_info_footer.dart';
@@ -39,7 +40,10 @@ class _LoginScreenState extends State<LoginScreen> {
       // Navigate to Dashboard upon successful validation
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const DashboardScreen()),
+        MaterialPageRoute(
+          settings: const RouteSettings(name: AppRoutes.dashboard),
+          builder: (context) => const DashboardScreen(),
+        ),
       );
     }
   }

@@ -25,11 +25,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
   double _amountReceived = 0.0;
   double _balance = 0.0;
 
-  final Map<String, double> _payments = {
-    'Cash': 0.0,
-    'UPI': 0.0,
-    'Card': 0.0,
-  };
+  final Map<String, double> _payments = {'Cash': 0.0, 'UPI': 0.0, 'Card': 0.0};
 
   @override
   void dispose() {
@@ -42,7 +38,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
     for (var p in _products) {
       gross += (p['quantity'] as double) * (p['price'] as double);
     }
-    
+
     double totalReceived = 0;
     _payments.forEach((key, value) {
       totalReceived += value;
@@ -128,10 +124,10 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
       child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
             child: _buildBasicDetailsCard(isDesktop, isTablet, isMobile),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 4),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -148,10 +144,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
       return Scaffold(
         body: Row(
           children: [
-            const SizedBox(
-              width: 250,
-              child: AppDrawer(isPermanent: true),
-            ),
+            const SizedBox(width: 250, child: AppDrawer(isPermanent: true)),
             const VerticalDivider(width: 1, thickness: 1),
             Expanded(
               child: Scaffold(
@@ -252,9 +245,9 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
               Column(
                 children: [
                   _buildInvoiceNoField(),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 8),
                   _buildDateField(),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 8),
                   _buildCustomerDropdown(),
                 ],
               )
@@ -298,7 +291,11 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(_dateFormat.format(_selectedDate)),
-            Icon(Icons.calendar_today, size: 18, color: Theme.of(context).colorScheme.onSurfaceVariant),
+            Icon(
+              Icons.calendar_today,
+              size: 18,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ],
         ),
       ),
@@ -312,9 +309,11 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
       value: _selectedCustomer,
-      items: ['Acme Corp', 'Global Industries', 'Tech Solutions']
-          .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-          .toList(),
+      items: [
+        'Acme Corp',
+        'Global Industries',
+        'Tech Solutions',
+      ].map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
       onChanged: (val) {
         setState(() {
           _selectedCustomer = val;
@@ -332,12 +331,12 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: 8,
-              runSpacing: 8,
+            padding: const EdgeInsets.all(12.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              // crossAxisAlignment: WrapCrossAlignment.center,
+              // spacing: 8,
+              // runSpacing: 8,
               children: [
                 const Text(
                   'Products',
@@ -347,20 +346,14 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    OutlinedButton.icon(
-                      onPressed: () {},
-                      icon: const Icon(Icons.qr_code_scanner),
-                      label: const Text('Scan'),
-                      style: OutlinedButton.styleFrom(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
-                      ),
-                    ),
                     ElevatedButton.icon(
                       onPressed: _addProductRow,
                       icon: const Icon(Icons.add),
                       label: const Text('Add Product'),
                       style: ElevatedButton.styleFrom(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                   ],
@@ -375,16 +368,28 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.inventory_2_outlined, size: 48, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        Icon(
+                          Icons.inventory_2_outlined,
+                          size: 48,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                         const SizedBox(height: 16),
-                        Text('No products added. Scan or Add Product to start.', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                        Text(
+                          'No products added. Scan or Add Product to start.',
+                          style: TextStyle(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
                       ],
                     ),
                   )
                 : ListView.separated(
                     padding: const EdgeInsets.all(20.0),
                     itemCount: _products.length,
-                    separatorBuilder: (context, index) => const Divider(height: 32),
+                    separatorBuilder: (context, index) =>
+                        const Divider(height: 32),
                     itemBuilder: (context, index) {
                       return isMobile
                           ? _buildMobileProductRow(index)
@@ -406,12 +411,16 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
           child: DropdownButtonFormField<String>(
             decoration: InputDecoration(
               labelText: 'Product',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               isDense: true,
             ),
-            items: ['Laptop Dell XPS', 'Wireless Mouse', 'Keyboard']
-                .map((p) => DropdownMenuItem(value: p, child: Text(p)))
-                .toList(),
+            items: [
+              'Laptop Dell XPS',
+              'Wireless Mouse',
+              'Keyboard',
+            ].map((p) => DropdownMenuItem(value: p, child: Text(p))).toList(),
             onChanged: (val) {
               setState(() {
                 _products[index]['product'] = val;
@@ -427,7 +436,9 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
           child: TextFormField(
             decoration: InputDecoration(
               labelText: 'Qty',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               isDense: true,
             ),
             keyboardType: TextInputType.number,
@@ -444,7 +455,9 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
           child: TextFormField(
             decoration: InputDecoration(
               labelText: 'Price (₹)',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               isDense: true,
             ),
             keyboardType: TextInputType.number,
@@ -472,7 +485,13 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Item ${index + 1}', style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+            Text(
+              'Item ${index + 1}',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
             IconButton(
               icon: const Icon(Icons.delete_outline, color: Colors.red),
               onPressed: () => _removeProductRow(index),
@@ -488,9 +507,11 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             isDense: true,
           ),
-          items: ['Laptop Dell XPS', 'Wireless Mouse', 'Keyboard']
-              .map((p) => DropdownMenuItem(value: p, child: Text(p)))
-              .toList(),
+          items: [
+            'Laptop Dell XPS',
+            'Wireless Mouse',
+            'Keyboard',
+          ].map((p) => DropdownMenuItem(value: p, child: Text(p))).toList(),
           onChanged: (val) {
             setState(() {
               _products[index]['product'] = val;
@@ -506,7 +527,9 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
               child: TextFormField(
                 decoration: InputDecoration(
                   labelText: 'Qty',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   isDense: true,
                 ),
                 keyboardType: TextInputType.number,
@@ -522,7 +545,9 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
               child: TextFormField(
                 decoration: InputDecoration(
                   labelText: 'Price (₹)',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   isDense: true,
                 ),
                 keyboardType: TextInputType.number,
@@ -561,16 +586,27 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                   children: [
                     SizedBox(
                       width: 50,
-                      child: Text(mode, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                      child: Text(
+                        mode,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: TextFormField(
                         decoration: InputDecoration(
                           prefixText: '₹ ',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           isDense: true,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 10,
+                            horizontal: 12,
+                          ),
                         ),
                         keyboardType: TextInputType.number,
                         onChanged: (val) {
@@ -604,17 +640,39 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
             _buildTotalRow('Discount', _discount),
             _buildTotalRow('GST', _gst),
             const Divider(height: 12),
-            _buildTotalRow('Grand Total', _grandTotal, isBold: true, color: Theme.of(context).colorScheme.primary, size: 18),
+            _buildTotalRow(
+              'Grand Total',
+              _grandTotal,
+              isBold: true,
+              color: Theme.of(context).colorScheme.primary,
+              size: 18,
+            ),
             const SizedBox(height: 4),
-            _buildTotalRow('Amount Received', _amountReceived, isBold: true, color: Colors.green),
-            _buildTotalRow('Balance', _balance, isBold: true, color: Colors.red),
+            _buildTotalRow(
+              'Amount Received',
+              _amountReceived,
+              isBold: true,
+              color: Colors.green,
+            ),
+            _buildTotalRow(
+              'Balance',
+              _balance,
+              isBold: true,
+              color: Colors.red,
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTotalRow(String label, double amount, {bool isBold = false, Color? color, double size = 14}) {
+  Widget _buildTotalRow(
+    String label,
+    double amount, {
+    bool isBold = false,
+    Color? color,
+    double size = 14,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2.0),
       child: Row(

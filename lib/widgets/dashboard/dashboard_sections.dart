@@ -96,7 +96,7 @@ class DashboardSections extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '\$${(150.50 * (index + 1)).toStringAsFixed(2)}',
+                  '₹${(150.50 * (index + 1)).toStringAsFixed(2)}',
                   style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
                 ),
                 Text(

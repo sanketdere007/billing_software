@@ -30,6 +30,11 @@ import '../screens/terms_conditions/terms_conditions_list_screen.dart';
 import '../screens/sales/sales_order/add_sales_order_screen.dart';
 import '../screens/sales/sales_entry/add_sales_entry_screen.dart';
 import '../screens/sales/sales_return/add_sales_return_screen.dart';
+import '../screens/purchases/purchase_order/add_purchase_order_screen.dart';
+import '../screens/purchases/purchase_entry/add_purchase_entry_screen.dart';
+import '../screens/purchases/purchase_return/add_purchase_return_screen.dart';
+import '../services/shortcut_service.dart';
+import '../utils/platform_helper.dart';
 import '../screens/about_screen.dart';
 import '../screens/help_support_screen.dart';
 import '../widgets/support_info_footer.dart';
@@ -50,6 +55,7 @@ class _AppDrawerState extends State<AppDrawer> {
   static bool _isOrganizationMastersExpanded = false;
   static bool _isConfigurationMastersExpanded = false;
   static bool _isSalesMenuExpanded = false;
+  static bool _isPurchaseMenuExpanded = false;
 
   Color _getIconColor(BuildContext context, MaterialColor baseColor) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -254,6 +260,9 @@ class _AppDrawerState extends State<AppDrawer> {
                   onTap: () {
                     Navigator.of(context).pushAndRemoveUntil(
                       MaterialPageRoute(
+                        settings: const RouteSettings(
+                          name: AppRoutes.dashboard,
+                        ),
                         builder: (context) => const DashboardScreen(),
                       ),
                       (route) => false,
@@ -302,6 +311,7 @@ class _AppDrawerState extends State<AppDrawer> {
                             icon: Icons.people_alt_rounded,
                             iconColor: _getIconColor(context, Colors.purple),
                             title: 'Customer Master',
+                            shortcutKey: 'Ctrl+C',
                             onTap: () {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
@@ -719,29 +729,29 @@ class _AppDrawerState extends State<AppDrawer> {
                     ),
                   ),
                   children: [
-                    _buildDrawerItem(
-                      context: context,
-                      icon: Icons.add_shopping_cart_rounded,
-                      iconColor: _getIconColor(context, Colors.cyan),
-                      title: 'Sales Order',
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => const AddSalesOrderScreen(),
-                          ),
-                        );
-                      },
-                    ),
+                    // _buildDrawerItem(
+                    //   context: context,
+                    //   icon: Icons.add_shopping_cart_rounded,
+                    //   iconColor: _getIconColor(context, Colors.cyan),
+                    //   title: 'Sales Order',
+                    //   shortcutKey: 'F4',
+                    //   onTap: () {
+                    //     shortcutService.navigateToNamedScreen(
+                    //       AppRoutes.salesOrderAdd,
+                    //       () => const AddSalesOrderScreen(),
+                    //     );
+                    //   },
+                    // ),
                     _buildDrawerItem(
                       context: context,
                       icon: Icons.receipt_rounded,
                       iconColor: _getIconColor(context, Colors.cyan),
                       title: 'Sales Entry (Invoice)',
+                      shortcutKey: 'F5',
                       onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => const AddSalesEntryScreen(),
-                          ),
+                        shortcutService.navigateToNamedScreen(
+                          AppRoutes.salesEntryAdd,
+                          () => const AddSalesEntryScreen(),
                         );
                       },
                     ),
@@ -750,11 +760,71 @@ class _AppDrawerState extends State<AppDrawer> {
                       icon: Icons.assignment_return_rounded,
                       iconColor: _getIconColor(context, Colors.cyan),
                       title: 'Sales Return',
+                      shortcutKey: 'Ctrl+F5',
                       onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => const AddSalesReturnScreen(),
-                          ),
+                        shortcutService.navigateToNamedScreen(
+                          AppRoutes.salesReturnAdd,
+                          () => const AddSalesReturnScreen(),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+
+                ExpansionTile(
+                  initiallyExpanded: _isPurchaseMenuExpanded,
+                  onExpansionChanged: (expanded) {
+                    _isPurchaseMenuExpanded = expanded;
+                  },
+                  leading: Icon(
+                    Icons.shopping_cart_checkout_rounded,
+                    color: _getIconColor(context, Colors.indigo),
+                  ),
+                  title: Text(
+                    'Purchases',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                  children: [
+                    // _buildDrawerItem(
+                    //   context: context,
+                    //   icon: Icons.add_business_rounded,
+                    //   iconColor: _getIconColor(context, Colors.indigo),
+                    //   title: 'Purchase Order',
+                    //   shortcutKey: 'F6',
+                    //   onTap: () {
+                    //     shortcutService.navigateToNamedScreen(
+                    //       AppRoutes.purchaseOrderAdd,
+                    //       () => const AddPurchaseOrderScreen(),
+                    //     );
+                    //   },
+                    // ),
+                    _buildDrawerItem(
+                      context: context,
+                      icon: Icons.receipt_long_rounded,
+                      iconColor: _getIconColor(context, Colors.indigo),
+                      title: 'Purchase Entry',
+                      shortcutKey: 'F7',
+                      onTap: () {
+                        shortcutService.navigateToNamedScreen(
+                          AppRoutes.purchaseEntryAdd,
+                          () => const AddPurchaseEntryScreen(),
+                        );
+                      },
+                    ),
+                    _buildDrawerItem(
+                      context: context,
+                      icon: Icons.assignment_returned_rounded,
+                      iconColor: _getIconColor(context, Colors.indigo),
+                      title: 'Purchase Return',
+                      shortcutKey: 'Ctrl+F7',
+                      onTap: () {
+                        shortcutService.navigateToNamedScreen(
+                          AppRoutes.purchaseReturnAdd,
+                          () => const AddPurchaseReturnScreen(),
                         );
                       },
                     ),
@@ -768,7 +838,43 @@ class _AppDrawerState extends State<AppDrawer> {
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
+                        settings: const RouteSettings(
+                          name: AppRoutes.settings,
+                        ),
                         builder: (context) => const SettingsScreen(),
+                      ),
+                    );
+                  },
+                ),
+                _buildDrawerItem(
+                  context: context,
+                  icon: Icons.info_rounded,
+                  iconColor: _getIconColor(context, Colors.blue),
+                  title: 'About Us',
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        settings: const RouteSettings(
+                          name: AppRoutes.about,
+                        ),
+                        builder: (context) => const AboutScreen(),
+                      ),
+                    );
+                  },
+                ),
+
+                _buildDrawerItem(
+                  context: context,
+                  icon: Icons.help_rounded,
+                  iconColor: _getIconColor(context, Colors.green),
+                  title: 'Help & Support',
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        settings: const RouteSettings(
+                          name: AppRoutes.helpSupport,
+                        ),
+                        builder: (context) => const HelpSupportScreen(),
                       ),
                     );
                   },
@@ -777,30 +883,7 @@ class _AppDrawerState extends State<AppDrawer> {
             ),
           ),
           const Divider(height: 1),
-          _buildDrawerItem(
-            context: context,
-            icon: Icons.info_rounded,
-            iconColor: _getIconColor(context, Colors.blue),
-            title: 'About Us',
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const AboutScreen()),
-              );
-            },
-          ),
-          _buildDrawerItem(
-            context: context,
-            icon: Icons.help_rounded,
-            iconColor: _getIconColor(context, Colors.green),
-            title: 'Help & Support',
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const HelpSupportScreen(),
-                ),
-              );
-            },
-          ),
+
           _buildDrawerItem(
             context: context,
             icon: Icons.logout_rounded,
@@ -829,6 +912,7 @@ class _AppDrawerState extends State<AppDrawer> {
     required String title,
     required VoidCallback onTap,
     Color? iconColor,
+    String? shortcutKey,
   }) {
     final bool isRootItem =
         title == 'Dashboard' ||
@@ -836,6 +920,9 @@ class _AppDrawerState extends State<AppDrawer> {
         title == 'Logout' ||
         title == 'About Us' ||
         title == 'Help & Support';
+
+    final bool showShortcut =
+        shortcutKey != null && PlatformHelper.isWindowsDesktopEffective;
 
     return Padding(
       padding: EdgeInsets.only(left: isRootItem ? 0.0 : 12.0),
@@ -847,11 +934,37 @@ class _AppDrawerState extends State<AppDrawer> {
         title: Text(
           title,
           style: TextStyle(
-            fontSize: 16,
+            fontSize: 15,
             fontWeight: FontWeight.w500,
             color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
+        trailing: showShortcut
+            ? Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white.withOpacity(0.08)
+                      : Colors.black.withOpacity(0.06),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white12
+                        : Colors.black12,
+                  ),
+                ),
+                child: Text(
+                  shortcutKey,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white70
+                        : Colors.black54,
+                  ),
+                ),
+              )
+            : null,
         onTap: () {
           // First handle drawer closing logic if it's not widget.isPermanent
           if (!widget.isPermanent) {
