@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:billing_software/screens/login_screen.dart';
 import 'package:billing_software/screens/dashboard_screen.dart';
 import 'package:billing_software/services/shortcut_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:billing_software/services/auth_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -77,8 +77,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     // Wait for the animation to finish + a little extra time
     await Future.delayed(const Duration(milliseconds: 3200));
     
-    final prefs = await SharedPreferences.getInstance();
-    final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+    final isLoggedIn = await authService.isAuthenticated();
 
     if (!mounted) return;
     Navigator.pushReplacement(

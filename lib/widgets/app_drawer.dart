@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:billing_software/services/auth_service.dart';
 import '../screens/login_screen.dart';
 import '../screens/settings_screen.dart';
 import '../screens/dashboard_screen.dart';
@@ -886,8 +886,7 @@ class _AppDrawerState extends State<AppDrawer> {
             iconColor: _getIconColor(context, Colors.red),
             title: 'Logout',
             onTap: () async {
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.setBool('isLoggedIn', false);
+              await authService.logout();
               if (context.mounted) {
                 Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(builder: (context) => const LoginScreen()),

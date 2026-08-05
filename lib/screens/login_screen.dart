@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:billing_software/screens/dashboard_screen.dart';
 import 'package:billing_software/services/shortcut_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:billing_software/services/auth_service.dart';
+import 'package:billing_software/services/api_service.dart';
 import 'package:billing_software/services/theme_provider.dart';
 import 'package:billing_software/widgets/support_info_footer.dart';
 
@@ -16,33 +17,108 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final FocusNode _emailFocusNode = FocusNode();
+  final FocusNode _passwordFocusNode = FocusNode();
   bool _isPasswordVisible = false;
+  bool _isLoading = false;
 
+  @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _emailFocusNode.requestFocus();
+      }
+    });
   }
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _emailFocusNode.dispose();
+    _passwordFocusNode.dispose();
     super.dispose();
   }
 
   Future<void> _login() async {
+    if (_isLoading) return;
     if (_formKey.currentState!.validate()) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('isLoggedIn', true);
+      setState(() {
+        _isLoading = true;
+      });
 
-      if (!mounted) return;
-      // Navigate to Dashboard upon successful validation
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          settings: const RouteSettings(name: AppRoutes.dashboard),
-          builder: (context) => const DashboardScreen(),
-        ),
-      );
+      try {
+        final response = await authService.login(
+          username: _emailController.text,
+          password: _passwordController.text,
+        );
+
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle_outline, color: Colors.white),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    response.message.isNotEmpty
+                        ? response.message
+                        : 'Login Successful.',
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.green.shade600,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+
+        // Navigate to Dashboard and remove Login Screen from navigation stack
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            settings: const RouteSettings(name: AppRoutes.dashboard),
+            builder: (context) => const DashboardScreen(),
+          ),
+        );
+      } catch (e) {
+        if (!mounted) return;
+
+        final errorMessage = e is ApiException
+            ? e.message
+            : 'Unable to connect to server. Please try again later.';
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.white),
+                const SizedBox(width: 10),
+                Expanded(child: Text(errorMessage)),
+              ],
+            ),
+            backgroundColor: Colors.red.shade600,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
     }
   }
 
@@ -150,16 +226,21 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                   const SizedBox(height: 32),
 
-                                  // Email Field
+                                  // Email / Username Field
                                   TextFormField(
                                     controller: _emailController,
+                                    focusNode: _emailFocusNode,
+                                    autofocus: true,
                                     keyboardType: TextInputType.emailAddress,
                                     textInputAction: TextInputAction.next,
+                                    onFieldSubmitted: (_) {
+                                      _passwordFocusNode.requestFocus();
+                                    },
                                     decoration: InputDecoration(
-                                      labelText: 'Email Address',
-                                      hintText: 'name@example.com',
+                                      labelText: 'Username / Email Address',
+                                      hintText: 'Enter your username or email',
                                       prefixIcon: Icon(
-                                        Icons.email_outlined,
+                                        Icons.person_outline,
                                         color: isDark
                                             ? Colors.blue.shade300
                                             : Colors.blue.shade700,
@@ -189,11 +270,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                       ),
                                     ),
                                     validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return 'Please enter your email';
-                                      }
-                                      if (!value.contains('@')) {
-                                        return 'Please enter a valid email';
+                                      if (value == null ||
+                                          value.trim().isEmpty) {
+                                        return 'Please enter your username or email';
                                       }
                                       return null;
                                     },
@@ -203,6 +282,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   // Password Field
                                   TextFormField(
                                     controller: _passwordController,
+                                    focusNode: _passwordFocusNode,
                                     obscureText: !_isPasswordVisible,
                                     textInputAction: TextInputAction.done,
                                     onFieldSubmitted: (_) => _login(),
@@ -317,10 +397,13 @@ class _LoginScreenState extends State<LoginScreen> {
                                       ],
                                     ),
                                     child: ElevatedButton(
-                                      onPressed: _login,
+                                      onPressed: _isLoading ? null : _login,
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: Colors.transparent,
                                         shadowColor: Colors.transparent,
+                                        disabledBackgroundColor:
+                                            Colors.transparent,
+                                        disabledForegroundColor: Colors.white,
                                         padding: const EdgeInsets.symmetric(
                                           vertical: 16,
                                         ),
@@ -330,15 +413,27 @@ class _LoginScreenState extends State<LoginScreen> {
                                           ),
                                         ),
                                       ),
-                                      child: const Text(
-                                        'Sign In',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                          letterSpacing: 0.5,
-                                        ),
-                                      ),
+                                      child: _isLoading
+                                          ? const SizedBox(
+                                              height: 20,
+                                              width: 20,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2.5,
+                                                valueColor:
+                                                    AlwaysStoppedAnimation<
+                                                      Color
+                                                    >(Colors.white),
+                                              ),
+                                            )
+                                          : const Text(
+                                              'Sign In',
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white,
+                                                letterSpacing: 0.5,
+                                              ),
+                                            ),
                                     ),
                                   ),
                                   const SizedBox(height: 12),
