@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../models/purchase_order.dart';
 import '../../../services/purchase_order_service.dart';
+import '../../../services/shortcut_service.dart';
 import '../../../widgets/app_drawer.dart';
 import 'add_purchase_order_screen.dart';
 
@@ -74,8 +75,9 @@ class _PurchaseOrderListScreenState extends State<PurchaseOrderListScreen> {
               const SizedBox(width: 16),
               ElevatedButton.icon(
                 onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => const AddPurchaseOrderScreen()),
+                  shortcutService.navigateToNamedScreen(
+                    AppRoutes.purchaseOrderAdd,
+                    () => const AddPurchaseOrderScreen(),
                   );
                 },
                 icon: const Icon(Icons.add),

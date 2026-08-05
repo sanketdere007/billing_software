@@ -15,7 +15,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
   final _formKey = GlobalKey<FormState>();
   final CustomerService _customerService = CustomerService();
   bool _isLoading = false;
-  
+
   // Form values
   String _name = '';
   String _mobile = '';
@@ -34,9 +34,9 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
     if (!_formKey.currentState!.validate()) {
       return;
     }
-    
+
     _formKey.currentState!.save();
-    
+
     setState(() {
       _isLoading = true;
     });
@@ -61,7 +61,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
       await _customerService.addCustomer(newCustomer);
 
       if (!mounted) return;
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Customer saved successfully!'),
@@ -100,123 +100,117 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
         Widget content = _isLoading
             ? const Center(child: CircularProgressIndicator())
             : SingleChildScrollView(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Center(
-                    child: Container(
-                      constraints: const BoxConstraints(maxWidth: 800),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Customer Information',
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                padding: const EdgeInsets.all(16.0),
+                child: Center(
+                  child: Container(
+                    constraints: const BoxConstraints(maxWidth: 800),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Customer Information',
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 16),
+                          if (constraints.maxWidth >= 600) ...[
+                            // Desktop/Tablet layout (Two columns)
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(child: _buildNameField()),
+                                const SizedBox(width: 16),
+                                Expanded(child: _buildMobileField()),
+                              ],
                             ),
                             const SizedBox(height: 16),
-                            if (constraints.maxWidth >= 600) ...[
-                              // Desktop/Tablet layout (Two columns)
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(child: _buildNameField()),
-                                  const SizedBox(width: 16),
-                                  Expanded(child: _buildMobileField()),
-                                ],
-                              ),
-                              const SizedBox(height: 16),
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(child: _buildEmailField()),
-                                  const SizedBox(width: 16),
-                                  Expanded(child: _buildGSTField()),
-                                ],
-                              ),
-                            ] else ...[
-                              // Mobile layout (Single column)
-                              _buildNameField(),
-                              const SizedBox(height: 16),
-                              _buildMobileField(),
-                              const SizedBox(height: 16),
-                              _buildEmailField(),
-                              const SizedBox(height: 16),
-                              _buildGSTField(),
-                            ],
-                            const SizedBox(height: 24),
-                            Text(
-                              'Address Details',
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(child: _buildEmailField()),
+                                const SizedBox(width: 16),
+                                Expanded(child: _buildGSTField()),
+                              ],
                             ),
+                          ] else ...[
+                            // Mobile layout (Single column)
+                            _buildNameField(),
                             const SizedBox(height: 16),
-                            _buildAddressField(),
+                            _buildMobileField(),
                             const SizedBox(height: 16),
-                            if (constraints.maxWidth >= 600) ...[
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(child: _buildCityField()),
-                                  const SizedBox(width: 16),
-                                  Expanded(child: _buildStateField()),
-                                  const SizedBox(width: 16),
-                                  Expanded(child: _buildPincodeField()),
-                                ],
-                              ),
-                            ] else ...[
-                              _buildCityField(),
-                              const SizedBox(height: 16),
-                              _buildStateField(),
-                              const SizedBox(height: 16),
-                              _buildPincodeField(),
-                            ],
-                            const SizedBox(height: 24),
-                            Text(
-                              'Financial Details',
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                            ),
+                            _buildEmailField(),
                             const SizedBox(height: 16),
-                            if (constraints.maxWidth >= 600) ...[
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(child: _buildCreditLimitField()),
-                                  const SizedBox(width: 16),
-                                  Expanded(child: _buildOpeningBalanceField()),
-                                ],
-                              ),
-                            ] else ...[
-                              _buildCreditLimitField(),
-                              const SizedBox(height: 16),
-                              _buildOpeningBalanceField(),
-                            ],
-                            const SizedBox(height: 16),
-                            _buildStatusField(),
-                            const SizedBox(height: 16),
-                            _buildNotesField(),
-                            const SizedBox(height: 32),
-                            _buildActionButtons(constraints.maxWidth >= 600),
-                            const SizedBox(height: 32),
+                            _buildGSTField(),
                           ],
-                        ),
+                          const SizedBox(height: 24),
+                          Text(
+                            'Address Details',
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 16),
+                          _buildAddressField(),
+                          const SizedBox(height: 16),
+                          if (constraints.maxWidth >= 600) ...[
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(child: _buildCityField()),
+                                const SizedBox(width: 16),
+                                Expanded(child: _buildStateField()),
+                                const SizedBox(width: 16),
+                                Expanded(child: _buildPincodeField()),
+                              ],
+                            ),
+                          ] else ...[
+                            _buildCityField(),
+                            const SizedBox(height: 16),
+                            _buildStateField(),
+                            const SizedBox(height: 16),
+                            _buildPincodeField(),
+                          ],
+                          const SizedBox(height: 24),
+                          // Text(
+                          //   'Financial Details',
+                          //   style: Theme.of(context).textTheme.titleLarge
+                          //       ?.copyWith(fontWeight: FontWeight.bold),
+                          // ),
+                          // const SizedBox(height: 16),
+                          // if (constraints.maxWidth >= 600) ...[
+                          //   Row(
+                          //     crossAxisAlignment: CrossAxisAlignment.start,
+                          //     children: [
+                          //       Expanded(child: _buildCreditLimitField()),
+                          //       const SizedBox(width: 16),
+                          //       Expanded(child: _buildOpeningBalanceField()),
+                          //     ],
+                          //   ),
+                          // ] else ...[
+                          //   _buildCreditLimitField(),
+                          //   const SizedBox(height: 16),
+                          //   _buildOpeningBalanceField(),
+                          // ],
+                          const SizedBox(height: 16),
+                          _buildStatusField(),
+                          const SizedBox(height: 16),
+
+                          const SizedBox(height: 32),
+                          _buildActionButtons(constraints.maxWidth >= 600),
+                          const SizedBox(height: 32),
+                        ],
                       ),
                     ),
                   ),
-                );
+                ),
+              );
 
         if (isDesktop) {
           return Scaffold(
             body: Row(
               children: [
-                const SizedBox(
-                  width: 250,
-                  child: AppDrawer(isPermanent: true),
-                ),
+                const SizedBox(width: 250, child: AppDrawer(isPermanent: true)),
                 const VerticalDivider(width: 1, thickness: 1),
                 Expanded(
                   child: Scaffold(
@@ -414,18 +408,6 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
         });
       },
       contentPadding: EdgeInsets.zero,
-    );
-  }
-
-  Widget _buildNotesField() {
-    return TextFormField(
-      decoration: const InputDecoration(
-        labelText: 'Notes / Remarks',
-        border: OutlineInputBorder(),
-        alignLabelWithHint: true,
-      ),
-      maxLines: 3,
-      onSaved: (value) => _notes = value?.trim() ?? '',
     );
   }
 

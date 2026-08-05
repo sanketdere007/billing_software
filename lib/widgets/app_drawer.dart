@@ -838,9 +838,7 @@ class _AppDrawerState extends State<AppDrawer> {
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        settings: const RouteSettings(
-                          name: AppRoutes.settings,
-                        ),
+                        settings: const RouteSettings(name: AppRoutes.settings),
                         builder: (context) => const SettingsScreen(),
                       ),
                     );
@@ -854,9 +852,7 @@ class _AppDrawerState extends State<AppDrawer> {
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        settings: const RouteSettings(
-                          name: AppRoutes.about,
-                        ),
+                        settings: const RouteSettings(name: AppRoutes.about),
                         builder: (context) => const AboutScreen(),
                       ),
                     );

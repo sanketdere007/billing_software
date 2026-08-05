@@ -1,10 +1,10 @@
-import 'package:billing_software/screens/sales/sales_entry/add_sales_entry_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:billing_software/utils/platform_helper.dart';
 import 'package:billing_software/services/shortcut_service.dart';
 import 'package:billing_software/widgets/close_confirmation_dialog.dart';
+import 'package:billing_software/widgets/screen_already_open_dialog.dart';
 import 'package:billing_software/services/purchase_order_service.dart';
 import 'package:billing_software/services/purchase_entry_service.dart';
 import 'package:billing_software/services/purchase_return_service.dart';
@@ -12,6 +12,8 @@ import 'package:billing_software/models/purchase_order.dart';
 import 'package:billing_software/models/purchase_entry.dart';
 import 'package:billing_software/models/purchase_return.dart';
 import 'package:billing_software/screens/sales/sales_order/add_sales_order_screen.dart';
+import 'package:billing_software/screens/sales/sales_entry/add_sales_entry_screen.dart';
+import 'package:billing_software/screens/sales/sales_return/add_sales_return_screen.dart';
 import 'package:billing_software/screens/purchases/purchase_order/add_purchase_order_screen.dart';
 import 'package:billing_software/screens/purchases/purchase_entry/add_purchase_entry_screen.dart';
 import 'package:billing_software/screens/purchases/purchase_return/add_purchase_return_screen.dart';
@@ -143,6 +145,98 @@ void main() {
     });
   });
 
+  group('ScreenAlreadyOpenDialog Tests', () {
+    testWidgets('Dialog renders title, message, and OK button', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              return ElevatedButton(
+                onPressed: () async {
+                  await showScreenAlreadyOpenDialog(context);
+                },
+                child: const Text('Trigger Dialog'),
+              );
+            },
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Trigger Dialog'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ScreenAlreadyOpenDialog), findsOneWidget);
+      expect(find.text('Screen Already Open'), findsOneWidget);
+      expect(
+        find.text('Please close the currently open transaction screen before opening a new one.'),
+        findsOneWidget,
+      );
+      expect(find.text('OK'), findsOneWidget);
+
+      // Tap OK button to dismiss
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ScreenAlreadyOpenDialog), findsNothing);
+    });
+
+    testWidgets('Enter key closes ScreenAlreadyOpenDialog', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              return ElevatedButton(
+                onPressed: () async {
+                  await showScreenAlreadyOpenDialog(context);
+                },
+                child: const Text('Trigger Dialog'),
+              );
+            },
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Trigger Dialog'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ScreenAlreadyOpenDialog), findsOneWidget);
+
+      // Send Enter key
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ScreenAlreadyOpenDialog), findsNothing);
+    });
+
+    testWidgets('Escape key closes ScreenAlreadyOpenDialog', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              return ElevatedButton(
+                onPressed: () async {
+                  await showScreenAlreadyOpenDialog(context);
+                },
+                child: const Text('Trigger Dialog'),
+              );
+            },
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Trigger Dialog'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ScreenAlreadyOpenDialog), findsOneWidget);
+
+      // Send Escape key
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ScreenAlreadyOpenDialog), findsNothing);
+    });
+  });
+
   group('Purchase Services Data Tests', () {
     test('PurchaseOrderService initialization and add order', () async {
       final service = PurchaseOrderService();
@@ -212,7 +306,7 @@ void main() {
     });
   });
 
-  group('ShortcutService Navigation & Single-Instance Tests', () {
+  group('Single Transaction Screen Validation & Navigation Tests', () {
     setUp(() {
       PlatformHelper.setOverrideForTesting(true);
       shortcutService.init();
@@ -260,14 +354,16 @@ void main() {
         await tester.sendKeyEvent(LogicalKeyboardKey.f4);
         await tester.pumpAndSettle();
         expect(find.byType(AddSalesOrderScreen), findsOneWidget);
+        expect(shortcutService.isTransactionScreenOpen, isTrue);
 
         final initialStackCount =
             shortcutService.routeObserver.routeStack.length;
 
-        // 2. Press F4 again while already on the screen -> Should do nothing (no duplicate)
+        // 2. Press F4 again while already on the screen -> Should do nothing (no duplicate, no dialog)
         await tester.sendKeyEvent(LogicalKeyboardKey.f4);
         await tester.pumpAndSettle();
 
+        expect(find.byType(ScreenAlreadyOpenDialog), findsNothing);
         expect(find.byType(AddSalesOrderScreen), findsOneWidget);
         expect(
           shortcutService.routeObserver.routeStack.length,
@@ -277,57 +373,156 @@ void main() {
     );
 
     testWidgets(
-      'Existing screen in stack is brought to front instead of creating duplicate',
+      'Prevent multiple transaction screens: When Sales Entry is open, opening Purchase Entry shows Screen Already Open dialog',
       (tester) async {
         await tester.pumpWidget(
           MaterialApp(
             navigatorKey: shortcutService.navigatorKey,
             navigatorObservers: [shortcutService.routeObserver],
-            home: const Scaffold(body: Text('Home Screen')),
+            home: const Scaffold(body: Text('Dashboard Overview')),
           ),
         );
 
-        // 1. Open Sales Order via F4
-        await tester.sendKeyEvent(LogicalKeyboardKey.f4);
+        // 1. Open Sales Entry via F5
+        await tester.sendKeyEvent(LogicalKeyboardKey.f5);
         await tester.pumpAndSettle();
-        expect(find.byType(AddSalesOrderScreen), findsOneWidget);
+        expect(find.byType(AddSalesEntryScreen), findsOneWidget);
+        expect(shortcutService.isTransactionScreenOpen, isTrue);
 
-        // 2. Open Purchase Order via F6 (pushed on top of Sales Order)
-        await tester.sendKeyEvent(LogicalKeyboardKey.f6);
-        await tester.pumpAndSettle();
-        expect(find.byType(AddPurchaseOrderScreen), findsOneWidget);
-
-        // 3. Press F4 again -> Should bring the existing Sales Order to the front
-        await tester.sendKeyEvent(LogicalKeyboardKey.f4);
+        // 2. Try to open Purchase Entry via F7 while Sales Entry is open
+        await tester.sendKeyEvent(LogicalKeyboardKey.f7);
         await tester.pumpAndSettle();
 
-        // Sales Order is now on top and visible
-        expect(find.byType(AddSalesOrderScreen), findsOneWidget);
-        expect(find.byType(AddPurchaseOrderScreen), findsNothing);
+        // 3. Purchase Entry must NOT open; ScreenAlreadyOpenDialog must be shown
+        expect(find.byType(AddPurchaseEntryScreen), findsNothing);
+        expect(find.byType(ScreenAlreadyOpenDialog), findsOneWidget);
+        expect(find.text('Screen Already Open'), findsOneWidget);
+        expect(
+          find.text('Please close the currently open transaction screen before opening a new one.'),
+          findsOneWidget,
+        );
+
+        // 4. Dismiss dialog using OK button
+        await tester.tap(find.text('OK'));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(ScreenAlreadyOpenDialog), findsNothing);
+        expect(find.byType(AddSalesEntryScreen), findsOneWidget);
+
+        // 5. Try opening another transaction screen: Purchase Return (Ctrl+F7)
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+        await tester.sendKeyEvent(LogicalKeyboardKey.f7);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+        await tester.pumpAndSettle();
+
+        expect(find.byType(AddPurchaseReturnScreen), findsNothing);
+        expect(find.byType(ScreenAlreadyOpenDialog), findsOneWidget);
+
+        // Dismiss with Enter
+        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+        await tester.pumpAndSettle();
+
+        expect(find.byType(ScreenAlreadyOpenDialog), findsNothing);
+        expect(find.byType(AddSalesEntryScreen), findsOneWidget);
+
+        // 6. Close Sales Entry using Esc -> Yes
+        await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+        await tester.pumpAndSettle();
+        expect(find.byType(CloseConfirmationDialog), findsOneWidget);
+
+        // Switch to Yes and confirm
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+        await tester.pumpAndSettle();
+        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+        await tester.pumpAndSettle();
+
+        expect(find.byType(AddSalesEntryScreen), findsNothing);
+        expect(shortcutService.isTransactionScreenOpen, isFalse);
+
+        // 7. Now Purchase Entry can open normally!
+        await tester.sendKeyEvent(LogicalKeyboardKey.f7);
+        await tester.pumpAndSettle();
+
+        expect(find.byType(AddPurchaseEntryScreen), findsOneWidget);
+        expect(shortcutService.isTransactionScreenOpen, isTrue);
       },
     );
 
-    testWidgets('Windows platform navigates to AddPurchaseEntryScreen on F7', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          navigatorKey: shortcutService.navigatorKey,
-          navigatorObservers: [shortcutService.routeObserver],
-          home: const Scaffold(body: Text('Home Screen')),
-        ),
-      );
+    testWidgets(
+      'Mutual exclusion works between Sales Return and Purchase Order',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            navigatorKey: shortcutService.navigatorKey,
+            navigatorObservers: [shortcutService.routeObserver],
+            home: const Scaffold(body: Text('Dashboard Overview')),
+          ),
+        );
 
-      await tester.sendKeyEvent(LogicalKeyboardKey.f7);
-      await tester.pumpAndSettle();
+        // 1. Open Sales Return via Ctrl+F5
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+        await tester.sendKeyEvent(LogicalKeyboardKey.f5);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+        await tester.pumpAndSettle();
 
-      expect(find.byType(AddPurchaseEntryScreen), findsOneWidget);
+        expect(find.byType(AddSalesReturnScreen), findsOneWidget);
 
-      // Repeated F7 does nothing
-      await tester.sendKeyEvent(LogicalKeyboardKey.f7);
-      await tester.pumpAndSettle();
-      expect(find.byType(AddPurchaseEntryScreen), findsOneWidget);
-    });
+        // 2. Try to open Purchase Order via F6
+        await tester.sendKeyEvent(LogicalKeyboardKey.f6);
+        await tester.pumpAndSettle();
+
+        expect(find.byType(AddPurchaseOrderScreen), findsNothing);
+        expect(find.byType(ScreenAlreadyOpenDialog), findsOneWidget);
+
+        // Close dialog via Esc
+        await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+        await tester.pumpAndSettle();
+
+        expect(find.byType(ScreenAlreadyOpenDialog), findsNothing);
+        expect(find.byType(AddSalesReturnScreen), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'Non-transaction screen (Customer Master) can open when transaction screen is open, but another transaction screen cannot',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            navigatorKey: shortcutService.navigatorKey,
+            navigatorObservers: [shortcutService.routeObserver],
+            home: const Scaffold(body: Text('Dashboard Overview')),
+          ),
+        );
+
+        // 1. Open Purchase Entry via F7
+        await tester.sendKeyEvent(LogicalKeyboardKey.f7);
+        await tester.pumpAndSettle();
+        expect(find.byType(AddPurchaseEntryScreen), findsOneWidget);
+
+        // 2. Open Add Customer via Ctrl+C (non-transaction screen)
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+        await tester.sendKeyEvent(LogicalKeyboardKey.keyC);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+        await tester.pumpAndSettle();
+
+        expect(find.byType(AddCustomerScreen), findsOneWidget);
+
+        // 3. From Customer Screen, try to open Sales Entry (F5)
+        await tester.sendKeyEvent(LogicalKeyboardKey.f5);
+        await tester.pumpAndSettle();
+
+        // Should show ScreenAlreadyOpenDialog because Purchase Entry is still open in stack
+        expect(find.byType(AddSalesEntryScreen), findsNothing);
+        expect(find.byType(ScreenAlreadyOpenDialog), findsOneWidget);
+
+        // Dismiss dialog
+        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+        await tester.pumpAndSettle();
+
+        expect(find.byType(ScreenAlreadyOpenDialog), findsNothing);
+        expect(find.byType(AddCustomerScreen), findsOneWidget);
+      },
+    );
 
     testWidgets(
       'Dashboard + Esc does nothing (no confirmation dialog, stays on Dashboard)',

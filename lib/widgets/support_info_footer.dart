@@ -90,9 +90,9 @@ class SupportInfoFooter extends StatelessWidget {
               children: [
                 _buildInfoItem(
                   icon: Icons.language,
-                  text: 'sankysoft.netlify.app',
+                  text: 'www.sankysoft.in',
                   color: iconColor,
-                  onTap: () => _launchUrl('https://sankysoft.netlify.app/'),
+                  onTap: () => _launchUrl('https://www.sankysoft.in'),
                 ),
                 const SizedBox(width: 24.0),
                 _buildInfoItem(

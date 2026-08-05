@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../models/purchase_entry.dart';
 import '../../../services/purchase_entry_service.dart';
+import '../../../services/shortcut_service.dart';
 import '../../../widgets/app_drawer.dart';
 import 'add_purchase_entry_screen.dart';
 
@@ -70,8 +71,9 @@ class _PurchaseEntryListScreenState extends State<PurchaseEntryListScreen> {
               const SizedBox(width: 16),
               ElevatedButton.icon(
                 onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => const AddPurchaseEntryScreen()),
+                  shortcutService.navigateToNamedScreen(
+                    AppRoutes.purchaseEntryAdd,
+                    () => const AddPurchaseEntryScreen(),
                   );
                 },
                 icon: const Icon(Icons.add),

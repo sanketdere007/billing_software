@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../utils/platform_helper.dart';
 import '../widgets/close_confirmation_dialog.dart';
+import '../widgets/screen_already_open_dialog.dart';
 import '../screens/sales/sales_order/add_sales_order_screen.dart';
 import '../screens/sales/sales_entry/add_sales_entry_screen.dart';
 import '../screens/sales/sales_return/add_sales_return_screen.dart';
@@ -100,6 +101,41 @@ class ShortcutService {
 
   bool _isInitialized = false;
   bool _isConfirmationDialogOpen = false;
+  bool _isScreenAlreadyOpenDialogOpen = false;
+
+  /// Transaction route names where only one transaction screen can be open at a time.
+  static const Set<String> transactionRoutes = {
+    AppRoutes.salesOrderAdd,
+    AppRoutes.salesEntryAdd,
+    AppRoutes.salesReturnAdd,
+    AppRoutes.purchaseOrderAdd,
+    AppRoutes.purchaseEntryAdd,
+    AppRoutes.purchaseReturnAdd,
+  };
+
+  /// Checks if any transaction screen is currently open in the route stack.
+  bool get isTransactionScreenOpen {
+    return routeObserver.routeStack.any(
+      (r) => transactionRoutes.contains(r.settings.name),
+    );
+  }
+
+  /// Gets the route of the currently open transaction screen in the route stack, if any.
+  Route<dynamic>? get openTransactionRoute {
+    try {
+      return routeObserver.routeStack.firstWhere(
+        (r) => transactionRoutes.contains(r.settings.name),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Checks if a route name represents a transaction screen.
+  static bool isTransactionRoute(String? routeName) {
+    if (routeName == null) return false;
+    return transactionRoutes.contains(routeName);
+  }
 
   /// Direct-back route names that should pop directly on Esc without confirmation.
   static  Set<String> directBackRoutes = {
@@ -353,8 +389,8 @@ class ShortcutService {
       return false;
     }
 
-    // If confirmation dialog is already displayed, allow dialog's own handler to close itself
-    if (_isConfirmationDialogOpen) {
+    // If confirmation or screen already open dialog is already displayed, allow dialog's own handler to close itself
+    if (_isConfirmationDialogOpen || _isScreenAlreadyOpenDialogOpen) {
       return false;
     }
 
@@ -394,15 +430,56 @@ class ShortcutService {
     }
   }
 
-  /// Navigates to a target screen ensuring single-instance behavior:
-  /// 1. If already on the screen (active top route) -> does nothing (no duplicate, no reload, no animation).
-  /// 2. If the screen is already open in the stack below -> brings it to front and focuses it.
-  /// 3. If the screen is not open -> navigates to it normally.
-  void navigateToNamedScreen(String routeName, Widget Function() screenBuilder) {
+  /// Navigates to a target screen ensuring single-instance and single-transaction rules:
+  /// 1. If target is a transaction screen and ANOTHER transaction screen is already open:
+  ///    - Does NOT open the new screen.
+  ///    - Displays the "Screen Already Open" dialog.
+  /// 2. If target is already on the screen (active top route) -> does nothing (no duplicate, no reload).
+  /// 3. If target screen is already open in the stack below -> brings it to front and focuses it.
+  /// 4. If target screen is not open -> navigates to it normally.
+  Future<void> navigateToNamedScreen(
+    String routeName,
+    Widget Function() screenBuilder, {
+    BuildContext? context,
+  }) async {
     final navState = navigatorKey.currentState;
     if (navState == null) return;
 
     final stack = routeObserver.routeStack;
+
+    // Check transaction screen rule
+    if (transactionRoutes.contains(routeName)) {
+      Route<dynamic>? activeTransaction;
+      for (final r in stack) {
+        if (transactionRoutes.contains(r.settings.name)) {
+          activeTransaction = r;
+          break;
+        }
+      }
+
+      if (activeTransaction != null) {
+        // If the open transaction screen is the SAME as the target screen
+        if (activeTransaction.settings.name == routeName) {
+          if (stack.isNotEmpty && stack.last.settings.name == routeName) {
+            return;
+          }
+          navState.popUntil((r) => r.settings.name == routeName);
+          return;
+        }
+
+        // Another transaction screen is already open -> Show dialog and do not open new screen
+        final dialogContext = context ?? navigatorKey.currentContext;
+        if (dialogContext != null) {
+          _isScreenAlreadyOpenDialogOpen = true;
+          try {
+            await showScreenAlreadyOpenDialog(dialogContext);
+          } finally {
+            _isScreenAlreadyOpenDialogOpen = false;
+          }
+        }
+        return;
+      }
+    }
 
     // 1. If current top route is already the target screen, do nothing!
     if (stack.isNotEmpty && stack.last.settings.name == routeName) {
