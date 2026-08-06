@@ -144,3 +144,7 @@ class StateListResponse {
     );
   }
 }
+
+/// Typedef for consistency with other master model naming conventions
+typedef StateListItem = StateModel;
+

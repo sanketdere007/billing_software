@@ -16,6 +16,11 @@ class ApiConstants {
   // State Endpoints
   static const String getAllStatesEndpoint = '/api/State/GetAllStates';
 
+  // Customer Endpoints
+  static const String getAllCustomersEndpoint = '/api/Customer/GetAllCustomers';
+  static const String getCustomerByIdEndpoint = '/api/Customer/GetCustomerById';
+  static const String insertOrUpdateCustomerEndpoint = '/api/Customer/InsertorUpdateCustomer';
+
   // Default JSON Headers
   static const Map<String, String> defaultHeaders = {
     'Content-Type': 'application/json',

@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../models/city.dart';
-import '../services/city_service.dart';
+import '../models/area.dart';
+import '../services/area_service.dart';
 
-/// A reusable City Dropdown widget that connects to `/api/City/GetAllCities`.
-/// Supports state filtering, search dialog, and keyboard navigation.
-class CityDropdown extends StatefulWidget {
-  final int? selectedCityId;
+/// A reusable Area Dropdown widget that connects to `/api/Area/GetAllAreas`.
+/// Supports state and city filtering, live search dialog, pincode badge display,
+/// and keyboard navigation (Up, Down, Enter, Esc).
+class AreaDropdown extends StatefulWidget {
+  final int? selectedAreaId;
+  final String? selectedAreaName;
+  final int? cityId;
   final int? stateId;
-  final ValueChanged<CityListItem?>? onChanged;
-  final String? Function(CityListItem?)? validator;
+  final ValueChanged<AreaListItem?>? onChanged;
+  final String? Function(AreaListItem?)? validator;
   final String labelText;
   final String hintText;
   final bool isRequired;
@@ -23,17 +26,19 @@ class CityDropdown extends StatefulWidget {
   final bool autofocus;
   final VoidCallback? onSelectionComplete;
 
-  const CityDropdown({
+  const AreaDropdown({
     super.key,
-    this.selectedCityId,
+    this.selectedAreaId,
+    this.selectedAreaName,
+    this.cityId,
     this.stateId,
     this.onChanged,
     this.validator,
-    this.labelText = 'City',
-    this.hintText = 'Select City',
+    this.labelText = 'Area',
+    this.hintText = 'Select Area',
     this.isRequired = false,
     this.isFilter = false,
-    this.allOptionLabel = 'All Cities',
+    this.allOptionLabel = 'All Areas',
     this.enabled = true,
     this.contentPadding,
     this.prefixIcon,
@@ -44,28 +49,28 @@ class CityDropdown extends StatefulWidget {
   });
 
   @override
-  State<CityDropdown> createState() => _CityDropdownState();
+  State<AreaDropdown> createState() => _AreaDropdownState();
 }
 
-class _CityDropdownState extends State<CityDropdown> {
-  final CityService _cityService = cityService;
+class _AreaDropdownState extends State<AreaDropdown> {
+  final AreaService _areaService = areaService;
   bool _isLoading = false;
   String? _error;
-  CityListItem? _selectedCity;
+  AreaListItem? _selectedArea;
   late FocusNode _focusNode;
   bool _isFocused = false;
-  List<CityListItem> _availableCities = [];
+  List<AreaListItem> _availableAreas = [];
 
   @override
   void initState() {
     super.initState();
     _focusNode = widget.focusNode ?? FocusNode();
     _focusNode.addListener(_onFocusChanged);
-    _loadCities();
+    _loadAreas();
   }
 
   @override
-  void didUpdateWidget(covariant CityDropdown oldWidget) {
+  void didUpdateWidget(covariant AreaDropdown oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.focusNode != widget.focusNode) {
       if (oldWidget.focusNode == null) {
@@ -78,10 +83,11 @@ class _CityDropdownState extends State<CityDropdown> {
       _focusNode.addListener(_onFocusChanged);
     }
 
-    if (oldWidget.stateId != widget.stateId) {
-      _loadCities(force: true);
-    } else if (oldWidget.selectedCityId != widget.selectedCityId) {
-      _syncSelectedCity();
+    if (oldWidget.cityId != widget.cityId || oldWidget.stateId != widget.stateId) {
+      _loadAreas(force: true);
+    } else if (oldWidget.selectedAreaId != widget.selectedAreaId ||
+        oldWidget.selectedAreaName != widget.selectedAreaName) {
+      _syncSelectedArea();
     }
   }
 
@@ -102,25 +108,46 @@ class _CityDropdownState extends State<CityDropdown> {
     }
   }
 
-  void _syncSelectedCity() {
-    if (widget.selectedCityId == null || widget.selectedCityId! <= 0) {
-      _selectedCity = null;
-    } else {
-      _selectedCity = _availableCities.firstWhere(
-        (c) => c.cityId == widget.selectedCityId,
-        orElse: () => _cityService.cities.firstWhere(
-          (c) => c.cityId == widget.selectedCityId,
-          orElse: () => CityListItem(
-            cityId: widget.selectedCityId!,
-            cityName: 'City #${widget.selectedCityId}',
+  void _syncSelectedArea() {
+    if ((widget.selectedAreaId == null || widget.selectedAreaId! <= 0) &&
+        (widget.selectedAreaName == null || widget.selectedAreaName!.trim().isEmpty)) {
+      _selectedArea = null;
+      return;
+    }
+
+    if (widget.selectedAreaId != null && widget.selectedAreaId! > 0) {
+      _selectedArea = _availableAreas.firstWhere(
+        (a) => a.areaId == widget.selectedAreaId,
+        orElse: () => _areaService.areas.firstWhere(
+          (a) => a.areaId == widget.selectedAreaId,
+          orElse: () => AreaListItem(
+            areaId: widget.selectedAreaId!,
+            areaName: widget.selectedAreaName ?? 'Area #${widget.selectedAreaId}',
+            areaPincode: '',
             stateName: '',
+            cityName: '',
           ),
         ),
       );
+    } else if (widget.selectedAreaName != null && widget.selectedAreaName!.trim().isNotEmpty) {
+      final name = widget.selectedAreaName!.trim().toLowerCase();
+      try {
+        _selectedArea = _availableAreas.firstWhere(
+          (a) => a.areaName.trim().toLowerCase() == name,
+        );
+      } catch (_) {
+        _selectedArea = AreaListItem(
+          areaId: 0,
+          areaName: widget.selectedAreaName!.trim(),
+          areaPincode: '',
+          stateName: '',
+          cityName: '',
+        );
+      }
     }
   }
 
-  Future<void> _loadCities({bool force = false}) async {
+  Future<void> _loadAreas({bool force = false}) async {
     if (!mounted) return;
     setState(() {
       _isLoading = true;
@@ -128,12 +155,13 @@ class _CityDropdownState extends State<CityDropdown> {
     });
 
     try {
-      final cities = await _cityService.getAllCities(
+      final areas = await _areaService.getAllAreas(
+        cityId: widget.cityId,
         stateId: widget.stateId,
       );
       if (mounted) {
-        _availableCities = cities;
-        _syncSelectedCity();
+        _availableAreas = areas;
+        _syncSelectedArea();
       }
     } catch (e) {
       if (mounted) {
@@ -150,30 +178,34 @@ class _CityDropdownState extends State<CityDropdown> {
     }
   }
 
-  void _openSearchDialog([FormFieldState<CityListItem?>? fieldState]) async {
+  void _openSearchDialog([FormFieldState<AreaListItem?>? fieldState]) async {
     if (!widget.enabled || _isLoading) return;
 
-    if (_availableCities.isEmpty) {
-      await _loadCities(force: true);
-      if (_availableCities.isEmpty) return;
+    if (_availableAreas.isEmpty) {
+      await _loadAreas(force: true);
+      if (_availableAreas.isEmpty && !widget.isFilter) {
+        // If still empty and in form mode, let user know or allow manual entry
+      }
     }
 
     if (!mounted) return;
 
-    final CityListItem? picked = await showDialog<CityListItem?>(
+    final AreaListItem? picked = await showDialog<AreaListItem?>(
       context: context,
-      builder: (context) => _CitySearchDialog(
-        cities: _availableCities,
-        selectedCityId: _selectedCity?.cityId,
+      builder: (context) => _AreaSearchDialog(
+        areas: _availableAreas,
+        selectedAreaId: _selectedArea?.areaId,
+        selectedAreaName: _selectedArea?.areaName,
         isFilter: widget.isFilter,
-        allOptionLabel: widget.allOptionLabel ?? 'All Cities',
+        allOptionLabel: widget.allOptionLabel ?? 'All Areas',
+        cityName: widget.cityId != null ? 'Selected City' : null,
       ),
     );
 
-    // If dismissed with a result (including null for "All Cities" in filter mode)
+    // If dismissed with a result (including null for "All Areas" in filter mode)
     if (picked != null || (widget.isFilter && picked == null)) {
       setState(() {
-        _selectedCity = picked;
+        _selectedArea = picked;
       });
       fieldState?.didChange(picked);
       widget.onChanged?.call(picked);
@@ -190,7 +222,7 @@ class _CityDropdownState extends State<CityDropdown> {
         }
       });
     } else {
-      // Re-focus the dropdown trigger if dialog was dismissed without picking
+      // Re-focus dropdown trigger
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           _focusNode.requestFocus();
@@ -202,7 +234,7 @@ class _CityDropdownState extends State<CityDropdown> {
   KeyEventResult _handleTriggerKeyEvent(
     FocusNode node,
     KeyEvent event,
-    FormFieldState<CityListItem?>? fieldState,
+    FormFieldState<AreaListItem?>? fieldState,
   ) {
     if (event is! KeyDownEvent) {
       return KeyEventResult.ignored;
@@ -240,12 +272,12 @@ class _CityDropdownState extends State<CityDropdown> {
               widget.prefixIcon!,
               const SizedBox(width: 10),
             ] else ...[
-              const Icon(Icons.location_city_outlined, size: 20, color: Colors.grey),
+              const Icon(Icons.share_location_rounded, size: 20, color: Colors.grey),
               const SizedBox(width: 10),
             ],
             Expanded(
               child: Text(
-                'Loading cities...',
+                'Loading areas...',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -261,7 +293,7 @@ class _CityDropdownState extends State<CityDropdown> {
       );
     }
 
-    if (_error != null && _availableCities.isEmpty) {
+    if (_error != null && _availableAreas.isEmpty) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
@@ -276,12 +308,12 @@ class _CityDropdownState extends State<CityDropdown> {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                'Failed to load cities',
+                'Failed to load areas',
                 style: TextStyle(color: theme.colorScheme.error, fontSize: 13),
               ),
             ),
             TextButton.icon(
-              onPressed: () => _loadCities(force: true),
+              onPressed: () => _loadAreas(force: true),
               icon: const Icon(Icons.refresh_rounded, size: 16),
               label: const Text('Retry', style: TextStyle(fontSize: 12)),
               style: TextButton.styleFrom(
@@ -295,28 +327,28 @@ class _CityDropdownState extends State<CityDropdown> {
       );
     }
 
-    return FormField<CityListItem?>(
-      initialValue: _selectedCity,
+    return FormField<AreaListItem?>(
+      initialValue: _selectedArea,
       validator: (val) {
         if (widget.validator != null) {
-          return widget.validator!(_selectedCity);
+          return widget.validator!(_selectedArea);
         }
-        if (widget.isRequired && _selectedCity == null) {
-          return 'Please select a city';
+        if (widget.isRequired && (_selectedArea == null || _selectedArea!.areaName.isEmpty)) {
+          return 'Please select an area';
         }
         return null;
       },
       builder: (fieldState) {
         final hasError = fieldState.hasError;
-        final displayText = _selectedCity != null
-            ? (_selectedCity!.stateName.isNotEmpty
-                ? '${_selectedCity!.cityName}, ${_selectedCity!.stateName}'
-                : _selectedCity!.cityName)
+        final displayText = _selectedArea != null
+            ? (_selectedArea!.areaPincode.isNotEmpty
+                ? '${_selectedArea!.areaName} (${_selectedArea!.areaPincode})'
+                : _selectedArea!.areaName)
             : (widget.isFilter
-                ? (widget.allOptionLabel ?? 'All Cities')
+                ? (widget.allOptionLabel ?? 'All Areas')
                 : widget.hintText);
 
-        final isPlaceholder = _selectedCity == null && !widget.isFilter;
+        final isPlaceholder = _selectedArea == null && !widget.isFilter;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -373,7 +405,7 @@ class _CityDropdownState extends State<CityDropdown> {
                         const SizedBox(width: 8),
                       ] else ...[
                         Icon(
-                          Icons.location_city_outlined,
+                          Icons.share_location_rounded,
                           size: 18,
                           color: _isFocused
                               ? theme.colorScheme.primary
@@ -393,7 +425,7 @@ class _CityDropdownState extends State<CityDropdown> {
                                       ? theme.colorScheme.onSurfaceVariant
                                           .withOpacity(0.7)
                                       : theme.colorScheme.onSurface,
-                                  fontWeight: _selectedCity != null
+                                  fontWeight: _selectedArea != null
                                       ? FontWeight.w500
                                       : FontWeight.normal,
                                   fontSize: 13,
@@ -405,7 +437,7 @@ class _CityDropdownState extends State<CityDropdown> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  if (_selectedCity != null)
+                                  if (_selectedArea != null)
                                     Text(
                                       effectiveLabel,
                                       style: TextStyle(
@@ -428,7 +460,7 @@ class _CityDropdownState extends State<CityDropdown> {
                                           ? theme.colorScheme.onSurfaceVariant
                                               .withOpacity(0.6)
                                           : theme.colorScheme.onSurface,
-                                      fontWeight: _selectedCity != null
+                                      fontWeight: _selectedArea != null
                                           ? FontWeight.w500
                                           : FontWeight.normal,
                                     ),
@@ -438,11 +470,11 @@ class _CityDropdownState extends State<CityDropdown> {
                                 ],
                               ),
                       ),
-                      if (widget.isFilter && _selectedCity != null)
+                      if (widget.isFilter && _selectedArea != null)
                         InkWell(
                           onTap: () {
                             setState(() {
-                              _selectedCity = null;
+                              _selectedArea = null;
                             });
                             fieldState.didChange(null);
                             widget.onChanged?.call(null);
@@ -506,43 +538,53 @@ class _CityDropdownState extends State<CityDropdown> {
   }
 }
 
-/// Search Dialog for selecting a City with fast filtering & keyboard navigation
-class _CitySearchDialog extends StatefulWidget {
-  final List<CityListItem> cities;
-  final int? selectedCityId;
+/// Search Dialog for selecting an Area with fast filtering & keyboard navigation
+class _AreaSearchDialog extends StatefulWidget {
+  final List<AreaListItem> areas;
+  final int? selectedAreaId;
+  final String? selectedAreaName;
   final bool isFilter;
   final String allOptionLabel;
+  final String? cityName;
 
-  const _CitySearchDialog({
-    required this.cities,
-    this.selectedCityId,
+  const _AreaSearchDialog({
+    required this.areas,
+    this.selectedAreaId,
+    this.selectedAreaName,
     required this.isFilter,
     required this.allOptionLabel,
+    this.cityName,
   });
 
   @override
-  State<_CitySearchDialog> createState() => _CitySearchDialogState();
+  State<_AreaSearchDialog> createState() => _AreaSearchDialogState();
 }
 
-class _CitySearchDialogState extends State<_CitySearchDialog> {
+class _AreaSearchDialogState extends State<_AreaSearchDialog> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   final ScrollController _scrollController = ScrollController();
-  List<CityListItem> _filteredCities = [];
+  List<AreaListItem> _filteredAreas = [];
   int _highlightedIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    _filteredCities = widget.cities;
+    _filteredAreas = widget.areas;
     _searchController.addListener(_onSearchChanged);
 
     // Initial highlighted index
-    if (widget.isFilter && widget.selectedCityId == null) {
+    if (widget.isFilter && widget.selectedAreaId == null && (widget.selectedAreaName == null || widget.selectedAreaName!.isEmpty)) {
       _highlightedIndex = 0;
-    } else if (widget.selectedCityId != null) {
+    } else if (widget.selectedAreaId != null && widget.selectedAreaId! > 0) {
       final foundIndex =
-          widget.cities.indexWhere((c) => c.cityId == widget.selectedCityId);
+          widget.areas.indexWhere((a) => a.areaId == widget.selectedAreaId);
+      if (foundIndex != -1) {
+        _highlightedIndex = widget.isFilter ? foundIndex + 1 : foundIndex;
+      }
+    } else if (widget.selectedAreaName != null && widget.selectedAreaName!.isNotEmpty) {
+      final foundIndex = widget.areas.indexWhere((a) =>
+          a.areaName.toLowerCase() == widget.selectedAreaName!.toLowerCase());
       if (foundIndex != -1) {
         _highlightedIndex = widget.isFilter ? foundIndex + 1 : foundIndex;
       }
@@ -571,12 +613,13 @@ class _CitySearchDialogState extends State<_CitySearchDialog> {
     final query = _searchController.text.trim().toLowerCase();
     setState(() {
       if (query.isEmpty) {
-        _filteredCities = widget.cities;
+        _filteredAreas = widget.areas;
       } else {
-        _filteredCities = widget.cities.where((c) {
-          final cityNameMatch = c.cityName.toLowerCase().contains(query);
-          final stateNameMatch = c.stateName.toLowerCase().contains(query);
-          return cityNameMatch || stateNameMatch;
+        _filteredAreas = widget.areas.where((a) {
+          final areaNameMatch = a.areaName.toLowerCase().contains(query);
+          final pincodeMatch = a.areaPincode.toLowerCase().contains(query);
+          final cityNameMatch = a.cityName.toLowerCase().contains(query);
+          return areaNameMatch || pincodeMatch || cityNameMatch;
         }).toList();
       }
       _highlightedIndex = 0;
@@ -585,7 +628,7 @@ class _CitySearchDialogState extends State<_CitySearchDialog> {
   }
 
   int get _totalItemsCount =>
-      widget.isFilter ? _filteredCities.length + 1 : _filteredCities.length;
+      widget.isFilter ? _filteredAreas.length + 1 : _filteredAreas.length;
 
   void _scrollToIndex(int index) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -654,16 +697,16 @@ class _CitySearchDialogState extends State<_CitySearchDialog> {
 
     if (widget.isFilter) {
       if (_highlightedIndex == 0) {
-        Navigator.of(context).pop(null); // "All Cities" selected
+        Navigator.of(context).pop(null); // "All Areas" selected
         return;
       }
-      final cityIndex = _highlightedIndex - 1;
-      if (cityIndex >= 0 && cityIndex < _filteredCities.length) {
-        Navigator.of(context).pop(_filteredCities[cityIndex]);
+      final areaIndex = _highlightedIndex - 1;
+      if (areaIndex >= 0 && areaIndex < _filteredAreas.length) {
+        Navigator.of(context).pop(_filteredAreas[areaIndex]);
       }
     } else {
-      if (_highlightedIndex >= 0 && _highlightedIndex < _filteredCities.length) {
-        Navigator.of(context).pop(_filteredCities[_highlightedIndex]);
+      if (_highlightedIndex >= 0 && _highlightedIndex < _filteredAreas.length) {
+        Navigator.of(context).pop(_filteredAreas[_highlightedIndex]);
       }
     }
   }
@@ -697,18 +740,32 @@ class _CitySearchDialogState extends State<_CitySearchDialog> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
-                      Icons.location_city_rounded,
+                      Icons.share_location_rounded,
                       color: theme.colorScheme.onPrimaryContainer,
                       size: 20,
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(
-                      widget.isFilter ? 'Filter by City' : 'Select City',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.isFilter ? 'Filter by Area' : 'Select Area',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        if (widget.cityName != null)
+                          Text(
+                            widget.cityName!,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                   IconButton(
@@ -729,7 +786,7 @@ class _CitySearchDialogState extends State<_CitySearchDialog> {
                 focusNode: _searchFocusNode,
                 textInputAction: TextInputAction.search,
                 decoration: InputDecoration(
-                  hintText: 'Search city or state name...',
+                  hintText: 'Search area name, city, or pincode...',
                   prefixIcon: const Icon(Icons.search_rounded, size: 20),
                   suffixIcon: _searchController.text.isNotEmpty
                       ? IconButton(
@@ -755,7 +812,7 @@ class _CitySearchDialogState extends State<_CitySearchDialog> {
               child: Row(
                 children: [
                   Text(
-                    '${_filteredCities.length} ${_filteredCities.length == 1 ? 'city' : 'cities'} found',
+                    '${_filteredAreas.length} ${_filteredAreas.length == 1 ? 'area' : 'areas'} found',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                       fontSize: 11,
@@ -776,7 +833,7 @@ class _CitySearchDialogState extends State<_CitySearchDialog> {
             ),
             const SizedBox(height: 4),
 
-            // List of Cities
+            // List of Areas
             Flexible(
               child: _totalItemsCount == 0
                   ? Padding(
@@ -788,7 +845,9 @@ class _CitySearchDialogState extends State<_CitySearchDialog> {
                               size: 44, color: theme.hintColor),
                           const SizedBox(height: 10),
                           Text(
-                            'No cities match "${_searchController.text}"',
+                            _searchController.text.isEmpty
+                                ? 'No areas found.'
+                                : 'No areas match "${_searchController.text}"',
                             style: TextStyle(color: theme.hintColor),
                           ),
                         ],
@@ -800,15 +859,16 @@ class _CitySearchDialogState extends State<_CitySearchDialog> {
                           horizontal: 10, vertical: 6),
                       itemCount: _totalItemsCount,
                       itemBuilder: (context, index) {
-                        // "All Cities" entry for filter mode
+                        // "All Areas" entry for filter mode
                         if (widget.isFilter && index == 0) {
                           final isHighlighted = _highlightedIndex == 0;
-                          final isSelected = widget.selectedCityId == null;
+                          final isSelected = widget.selectedAreaId == null &&
+                              (widget.selectedAreaName == null || widget.selectedAreaName!.isEmpty);
 
-                          return _buildCityTile(
+                          return _buildAreaTile(
                             context: context,
                             title: widget.allOptionLabel,
-                            subtitle: 'Show records for all cities',
+                            subtitle: 'Show records for all areas',
                             isSelected: isSelected,
                             isHighlighted: isHighlighted,
                             onTap: () => Navigator.of(context).pop(null),
@@ -816,20 +876,33 @@ class _CitySearchDialogState extends State<_CitySearchDialog> {
                           );
                         }
 
-                        final cityIndex = widget.isFilter ? index - 1 : index;
-                        final city = _filteredCities[cityIndex];
+                        final areaIndex = widget.isFilter ? index - 1 : index;
+                        final area = _filteredAreas[areaIndex];
                         final isHighlighted = _highlightedIndex == index;
-                        final isSelected = city.cityId == widget.selectedCityId;
+                        final isSelected = (widget.selectedAreaId != null &&
+                                area.areaId == widget.selectedAreaId) ||
+                            (widget.selectedAreaName != null &&
+                                area.areaName.toLowerCase() ==
+                                    widget.selectedAreaName!.toLowerCase());
 
-                        return _buildCityTile(
+                        final subtitleParts = [
+                          if (area.cityName.isNotEmpty) area.cityName,
+                          if (area.stateName.isNotEmpty) area.stateName,
+                        ];
+
+                        return _buildAreaTile(
                           context: context,
-                          title: city.cityName,
-                          subtitle: city.stateName.isNotEmpty ? city.stateName : null,
-                          badgeText: city.stateCode,
+                          title: area.areaName,
+                          subtitle: subtitleParts.isNotEmpty
+                              ? subtitleParts.join(', ')
+                              : null,
+                          badgeText: area.areaPincode.isNotEmpty
+                              ? area.areaPincode
+                              : null,
                           isSelected: isSelected,
                           isHighlighted: isHighlighted,
-                          onTap: () => Navigator.of(context).pop(city),
-                          leadingIcon: Icons.location_city_rounded,
+                          onTap: () => Navigator.of(context).pop(area),
+                          leadingIcon: Icons.share_location_rounded,
                         );
                       },
                     ),
@@ -840,7 +913,7 @@ class _CitySearchDialogState extends State<_CitySearchDialog> {
     );
   }
 
-  Widget _buildCityTile({
+  Widget _buildAreaTile({
     required BuildContext context,
     required String title,
     String? subtitle,
@@ -916,16 +989,28 @@ class _CitySearchDialogState extends State<_CitySearchDialog> {
                     const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 margin: const EdgeInsets.only(right: 6),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceVariant,
+                  color: theme.colorScheme.primary.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  badgeText,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.onSurfaceVariant,
+                  border: Border.all(
+                    color: theme.colorScheme.primary.withOpacity(0.3),
+                    width: 0.8,
                   ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.pin_drop_outlined,
+                        size: 11, color: theme.colorScheme.primary),
+                    const SizedBox(width: 3),
+                    Text(
+                      badgeText,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             if (isSelected)

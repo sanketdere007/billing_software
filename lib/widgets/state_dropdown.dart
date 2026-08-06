@@ -308,9 +308,12 @@ class _StateDropdownState extends State<StateDropdown> {
                 onTap: widget.enabled ? () => _openSearchDialog(fieldState) : null,
                 borderRadius: BorderRadius.circular(8),
                 child: Container(
-                  constraints: const BoxConstraints(minHeight: 52),
+                  constraints: BoxConstraints(minHeight: widget.isFilter ? 40 : 52),
                   padding: widget.contentPadding ??
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: widget.isFilter ? 4 : 10,
+                      ),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
@@ -340,65 +343,86 @@ class _StateDropdownState extends State<StateDropdown> {
                     children: [
                       if (widget.prefixIcon != null) ...[
                         widget.prefixIcon!,
-                        const SizedBox(width: 10),
+                        const SizedBox(width: 8),
                       ] else ...[
                         Icon(
                           Icons.map_outlined,
-                          size: 20,
+                          size: 18,
                           color: _isFocused
                               ? theme.colorScheme.primary
                               : (widget.enabled
                                   ? theme.colorScheme.primary
                                   : theme.colorScheme.onSurfaceVariant.withOpacity(0.5)),
                         ),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: 8),
                       ],
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (_selectedState != null || widget.isFilter)
-                              Text(
-                                effectiveLabel,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: hasError
-                                      ? theme.colorScheme.error
-                                      : (_isFocused
-                                          ? theme.colorScheme.primary
-                                          : theme.colorScheme.onSurfaceVariant),
-                                  fontWeight: _isFocused ? FontWeight.bold : FontWeight.w500,
+                        child: widget.isFilter
+                            ? Text(
+                                displayText,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: isPlaceholder
+                                      ? theme.colorScheme.onSurfaceVariant.withOpacity(0.7)
+                                      : theme.colorScheme.onSurface,
+                                  fontWeight: _selectedState != null
+                                      ? FontWeight.w500
+                                      : FontWeight.normal,
+                                  fontSize: 13,
                                 ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              )
+                            : Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (_selectedState != null)
+                                    Text(
+                                      effectiveLabel,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: hasError
+                                            ? theme.colorScheme.error
+                                            : (_isFocused
+                                                ? theme.colorScheme.primary
+                                                : theme.colorScheme.onSurfaceVariant),
+                                        fontWeight: _isFocused ? FontWeight.bold : FontWeight.w500,
+                                      ),
+                                    ),
+                                  Text(
+                                    displayText,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: isPlaceholder
+                                          ? theme.colorScheme.onSurfaceVariant.withOpacity(0.6)
+                                          : theme.colorScheme.onSurface,
+                                      fontWeight: _selectedState != null
+                                          ? FontWeight.w500
+                                          : FontWeight.normal,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
                               ),
-                            Text(
-                              displayText,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: isPlaceholder
-                                    ? theme.colorScheme.onSurfaceVariant.withOpacity(0.6)
-                                    : theme.colorScheme.onSurface,
-                                fontWeight: _selectedState != null
-                                    ? FontWeight.w500
-                                    : FontWeight.normal,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
                       ),
                       if (widget.isFilter && _selectedState != null)
-                        IconButton(
-                          icon: const Icon(Icons.clear, size: 18),
-                          splashRadius: 18,
-                          tooltip: 'Clear state filter',
-                          onPressed: () {
+                        InkWell(
+                          onTap: () {
                             setState(() {
                               _selectedState = null;
                             });
                             fieldState.didChange(null);
                             widget.onChanged?.call(null);
                           },
+                          borderRadius: BorderRadius.circular(12),
+                          child: Padding(
+                            padding: const EdgeInsets.all(4),
+                            child: Icon(
+                              Icons.close_rounded,
+                              size: 16,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
                         )
                       else ...[
                         if (_isFocused)
