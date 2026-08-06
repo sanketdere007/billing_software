@@ -9,6 +9,10 @@ class ApiConstants {
   static const String getAllCitiesEndpoint = '/api/City/GetAllCities';
   static const String insertOrUpdateCityEndpoint = '/api/City/InsertorUpdateCity';
 
+  // Area Endpoints
+  static const String getAllAreasEndpoint = '/api/Area/GetAllAreas';
+  static const String insertOrUpdateAreaEndpoint = '/api/Area/InsertorUpdateArea';
+
   // State Endpoints
   static const String getAllStatesEndpoint = '/api/State/GetAllStates';
 

@@ -14,6 +14,7 @@ import '../screens/hsn_sac/hsn_sac_list_screen.dart';
 import '../screens/gst/gst_list_screen.dart';
 import '../screens/companies/company_list_screen.dart';
 import '../screens/cities/city_list_screen.dart';
+import '../screens/areas/area_list_screen.dart';
 import '../screens/branches/branch_list_screen.dart';
 import '../screens/warehouses/warehouse_list_screen.dart';
 import '../screens/users/user_list_screen.dart';
@@ -489,8 +490,20 @@ class _AppDrawerState extends State<AppDrawer> {
                             onTap: () {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (context) =>
-                                      const CityListScreen(),
+                                  builder: (context) => const CityListScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                          _buildDrawerItem(
+                            context: context,
+                            icon: Icons.place_rounded,
+                            iconColor: _getIconColor(context, Colors.teal),
+                            title: 'Area Master',
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const AreaListScreen(),
                                 ),
                               );
                             },

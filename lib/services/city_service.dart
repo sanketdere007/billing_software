@@ -143,6 +143,40 @@ class CityService extends ChangeNotifier {
       throw ApiException('Error saving city: $e');
     }
   }
+
+  /// Get city by ID from in-memory cache
+  CityListItem? getCityById(int id) {
+    try {
+      return _cities.firstWhere((c) => c.cityId == id);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Get city by name from in-memory cache
+  CityListItem? getCityByName(String name) {
+    try {
+      final trimmed = name.trim().toLowerCase();
+      return _cities.firstWhere(
+        (c) => c.cityName.trim().toLowerCase() == trimmed,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Get cached cities filtered by State ID
+  List<CityListItem> getCitiesByStateId(int stateId) {
+    if (stateId <= 0) return _cities;
+    return _cities.where((c) => c.stateId == stateId).toList();
+  }
+
+  /// Clear in-memory cached cities
+  void clearCache() {
+    _cities = [];
+    _errorMessage = null;
+    notifyListeners();
+  }
 }
 
 final cityService = CityService();
