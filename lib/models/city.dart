@@ -6,7 +6,7 @@ class CityListItem {
   final String? stateCode;
   final bool cityIsActive;
 
-  CityListItem({
+  const CityListItem({
     required this.cityId,
     required this.cityName,
     this.stateId,

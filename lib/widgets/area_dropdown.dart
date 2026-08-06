@@ -83,7 +83,8 @@ class _AreaDropdownState extends State<AreaDropdown> {
       _focusNode.addListener(_onFocusChanged);
     }
 
-    if (oldWidget.cityId != widget.cityId || oldWidget.stateId != widget.stateId) {
+    if (oldWidget.cityId != widget.cityId ||
+        oldWidget.stateId != widget.stateId) {
       _loadAreas(force: true);
     } else if (oldWidget.selectedAreaId != widget.selectedAreaId ||
         oldWidget.selectedAreaName != widget.selectedAreaName) {
@@ -110,7 +111,8 @@ class _AreaDropdownState extends State<AreaDropdown> {
 
   void _syncSelectedArea() {
     if ((widget.selectedAreaId == null || widget.selectedAreaId! <= 0) &&
-        (widget.selectedAreaName == null || widget.selectedAreaName!.trim().isEmpty)) {
+        (widget.selectedAreaName == null ||
+            widget.selectedAreaName!.trim().isEmpty)) {
       _selectedArea = null;
       return;
     }
@@ -122,14 +124,16 @@ class _AreaDropdownState extends State<AreaDropdown> {
           (a) => a.areaId == widget.selectedAreaId,
           orElse: () => AreaListItem(
             areaId: widget.selectedAreaId!,
-            areaName: widget.selectedAreaName ?? 'Area #${widget.selectedAreaId}',
+            areaName:
+                widget.selectedAreaName ?? 'Area #${widget.selectedAreaId}',
             areaPincode: '',
             stateName: '',
             cityName: '',
           ),
         ),
       );
-    } else if (widget.selectedAreaName != null && widget.selectedAreaName!.trim().isNotEmpty) {
+    } else if (widget.selectedAreaName != null &&
+        widget.selectedAreaName!.trim().isNotEmpty) {
       final name = widget.selectedAreaName!.trim().toLowerCase();
       try {
         _selectedArea = _availableAreas.firstWhere(
@@ -202,13 +206,17 @@ class _AreaDropdownState extends State<AreaDropdown> {
       ),
     );
 
-    // If dismissed with a result (including null for "All Areas" in filter mode)
-    if (picked != null || (widget.isFilter && picked == null)) {
+    // If dismissed with a result (including allAreasOption for "All Areas" in filter mode)
+    if (picked != null) {
+      final AreaListItem? effectiveArea =
+          (picked.areaId == -1 || picked.areaName == '__ALL_AREAS__')
+          ? null
+          : picked;
       setState(() {
-        _selectedArea = picked;
+        _selectedArea = effectiveArea;
       });
-      fieldState?.didChange(picked);
-      widget.onChanged?.call(picked);
+      fieldState?.didChange(effectiveArea);
+      widget.onChanged?.call(effectiveArea);
 
       // Automatically transfer focus to next field after dialog closes
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -255,8 +263,9 @@ class _AreaDropdownState extends State<AreaDropdown> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final effectiveLabel =
-        widget.isRequired ? '${widget.labelText} *' : widget.labelText;
+    final effectiveLabel = widget.isRequired
+        ? '${widget.labelText} *'
+        : widget.labelText;
 
     if (_isLoading) {
       return Container(
@@ -272,7 +281,11 @@ class _AreaDropdownState extends State<AreaDropdown> {
               widget.prefixIcon!,
               const SizedBox(width: 10),
             ] else ...[
-              const Icon(Icons.share_location_rounded, size: 20, color: Colors.grey),
+              const Icon(
+                Icons.share_location_rounded,
+                size: 20,
+                color: Colors.grey,
+              ),
               const SizedBox(width: 10),
             ],
             Expanded(
@@ -303,8 +316,11 @@ class _AreaDropdownState extends State<AreaDropdown> {
         ),
         child: Row(
           children: [
-            Icon(Icons.error_outline_rounded,
-                color: theme.colorScheme.error, size: 20),
+            Icon(
+              Icons.error_outline_rounded,
+              color: theme.colorScheme.error,
+              size: 20,
+            ),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -333,7 +349,8 @@ class _AreaDropdownState extends State<AreaDropdown> {
         if (widget.validator != null) {
           return widget.validator!(_selectedArea);
         }
-        if (widget.isRequired && (_selectedArea == null || _selectedArea!.areaName.isEmpty)) {
+        if (widget.isRequired &&
+            (_selectedArea == null || _selectedArea!.areaName.isEmpty)) {
           return 'Please select an area';
         }
         return null;
@@ -342,11 +359,11 @@ class _AreaDropdownState extends State<AreaDropdown> {
         final hasError = fieldState.hasError;
         final displayText = _selectedArea != null
             ? (_selectedArea!.areaPincode.isNotEmpty
-                ? '${_selectedArea!.areaName} (${_selectedArea!.areaPincode})'
-                : _selectedArea!.areaName)
+                  ? '${_selectedArea!.areaName} (${_selectedArea!.areaPincode})'
+                  : _selectedArea!.areaName)
             : (widget.isFilter
-                ? (widget.allOptionLabel ?? 'All Areas')
-                : widget.hintText);
+                  ? (widget.allOptionLabel ?? 'All Areas')
+                  : widget.hintText);
 
         final isPlaceholder = _selectedArea == null && !widget.isFilter;
 
@@ -365,8 +382,11 @@ class _AreaDropdownState extends State<AreaDropdown> {
                     : null,
                 borderRadius: BorderRadius.circular(8),
                 child: Container(
-                  constraints: BoxConstraints(minHeight: widget.isFilter ? 40 : 52),
-                  padding: widget.contentPadding ??
+                  constraints: BoxConstraints(
+                    minHeight: widget.isFilter ? 40 : 52,
+                  ),
+                  padding:
+                      widget.contentPadding ??
                       EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: widget.isFilter ? 4 : 10,
@@ -377,18 +397,19 @@ class _AreaDropdownState extends State<AreaDropdown> {
                       color: hasError
                           ? theme.colorScheme.error
                           : (_isFocused
-                              ? theme.colorScheme.primary
-                              : (widget.enabled
-                                  ? theme.colorScheme.outline
-                                  : theme.colorScheme.outlineVariant
-                                      .withOpacity(0.5))),
+                                ? theme.colorScheme.primary
+                                : (widget.enabled
+                                      ? theme.colorScheme.outline
+                                      : theme.colorScheme.outlineVariant
+                                            .withOpacity(0.5))),
                       width: (_isFocused || hasError) ? 2 : 1,
                     ),
                     boxShadow: _isFocused
                         ? [
                             BoxShadow(
-                              color: theme.colorScheme.primary
-                                  .withOpacity(isDark ? 0.3 : 0.15),
+                              color: theme.colorScheme.primary.withOpacity(
+                                isDark ? 0.3 : 0.15,
+                              ),
                               blurRadius: 6,
                               offset: const Offset(0, 0),
                             ),
@@ -410,9 +431,9 @@ class _AreaDropdownState extends State<AreaDropdown> {
                           color: _isFocused
                               ? theme.colorScheme.primary
                               : (widget.enabled
-                                  ? theme.colorScheme.primary
-                                  : theme.colorScheme.onSurfaceVariant
-                                      .withOpacity(0.5)),
+                                    ? theme.colorScheme.primary
+                                    : theme.colorScheme.onSurfaceVariant
+                                          .withOpacity(0.5)),
                         ),
                         const SizedBox(width: 8),
                       ],
@@ -423,7 +444,7 @@ class _AreaDropdownState extends State<AreaDropdown> {
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: isPlaceholder
                                       ? theme.colorScheme.onSurfaceVariant
-                                          .withOpacity(0.7)
+                                            .withOpacity(0.7)
                                       : theme.colorScheme.onSurface,
                                   fontWeight: _selectedArea != null
                                       ? FontWeight.w500
@@ -445,9 +466,10 @@ class _AreaDropdownState extends State<AreaDropdown> {
                                         color: hasError
                                             ? theme.colorScheme.error
                                             : (_isFocused
-                                                ? theme.colorScheme.primary
-                                                : theme.colorScheme
-                                                    .onSurfaceVariant),
+                                                  ? theme.colorScheme.primary
+                                                  : theme
+                                                        .colorScheme
+                                                        .onSurfaceVariant),
                                         fontWeight: _isFocused
                                             ? FontWeight.bold
                                             : FontWeight.w500,
@@ -458,7 +480,7 @@ class _AreaDropdownState extends State<AreaDropdown> {
                                     style: theme.textTheme.bodyMedium?.copyWith(
                                       color: isPlaceholder
                                           ? theme.colorScheme.onSurfaceVariant
-                                              .withOpacity(0.6)
+                                                .withOpacity(0.6)
                                           : theme.colorScheme.onSurface,
                                       fontWeight: _selectedArea != null
                                           ? FontWeight.w500
@@ -493,7 +515,9 @@ class _AreaDropdownState extends State<AreaDropdown> {
                         if (_isFocused)
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 2),
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             margin: const EdgeInsets.only(right: 6),
                             decoration: BoxDecoration(
                               color: theme.colorScheme.primaryContainer,
@@ -540,6 +564,17 @@ class _AreaDropdownState extends State<AreaDropdown> {
 
 /// Search Dialog for selecting an Area with fast filtering & keyboard navigation
 class _AreaSearchDialog extends StatefulWidget {
+  static const AreaListItem allAreasOption = AreaListItem(
+    areaId: -1,
+    areaName: '__ALL_AREAS__',
+    areaPincode: '',
+    cityId: 0,
+    cityName: '',
+    stateId: 0,
+    stateName: '',
+    areaIsActive: true,
+  );
+
   final List<AreaListItem> areas;
   final int? selectedAreaId;
   final String? selectedAreaName;
@@ -574,17 +609,23 @@ class _AreaSearchDialogState extends State<_AreaSearchDialog> {
     _searchController.addListener(_onSearchChanged);
 
     // Initial highlighted index
-    if (widget.isFilter && widget.selectedAreaId == null && (widget.selectedAreaName == null || widget.selectedAreaName!.isEmpty)) {
+    if (widget.isFilter &&
+        widget.selectedAreaId == null &&
+        (widget.selectedAreaName == null || widget.selectedAreaName!.isEmpty)) {
       _highlightedIndex = 0;
     } else if (widget.selectedAreaId != null && widget.selectedAreaId! > 0) {
-      final foundIndex =
-          widget.areas.indexWhere((a) => a.areaId == widget.selectedAreaId);
+      final foundIndex = widget.areas.indexWhere(
+        (a) => a.areaId == widget.selectedAreaId,
+      );
       if (foundIndex != -1) {
         _highlightedIndex = widget.isFilter ? foundIndex + 1 : foundIndex;
       }
-    } else if (widget.selectedAreaName != null && widget.selectedAreaName!.isNotEmpty) {
-      final foundIndex = widget.areas.indexWhere((a) =>
-          a.areaName.toLowerCase() == widget.selectedAreaName!.toLowerCase());
+    } else if (widget.selectedAreaName != null &&
+        widget.selectedAreaName!.isNotEmpty) {
+      final foundIndex = widget.areas.indexWhere(
+        (a) =>
+            a.areaName.toLowerCase() == widget.selectedAreaName!.toLowerCase(),
+      );
       if (foundIndex != -1) {
         _highlightedIndex = widget.isFilter ? foundIndex + 1 : foundIndex;
       }
@@ -697,7 +738,9 @@ class _AreaSearchDialogState extends State<_AreaSearchDialog> {
 
     if (widget.isFilter) {
       if (_highlightedIndex == 0) {
-        Navigator.of(context).pop(null); // "All Areas" selected
+        Navigator.of(
+          context,
+        ).pop(_AreaSearchDialog.allAreasOption); // "All Areas" selected
         return;
       }
       final areaIndex = _highlightedIndex - 1;
@@ -720,10 +763,7 @@ class _AreaSearchDialogState extends State<_AreaSearchDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 8,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(
-          maxWidth: 480,
-          maxHeight: 560,
-        ),
+        constraints: const BoxConstraints(maxWidth: 480, maxHeight: 560),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -794,14 +834,15 @@ class _AreaSearchDialogState extends State<_AreaSearchDialog> {
                           onPressed: () => _searchController.clear(),
                         )
                       : null,
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
                   filled: true,
-                  fillColor:
-                      theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                  fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
                 ),
               ),
             ),
@@ -819,7 +860,11 @@ class _AreaSearchDialogState extends State<_AreaSearchDialog> {
                     ),
                   ),
                   const Spacer(),
-                  Icon(Icons.keyboard_outlined, size: 12, color: theme.hintColor),
+                  Icon(
+                    Icons.keyboard_outlined,
+                    size: 12,
+                    color: theme.hintColor,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     '↑/↓ navigate • Enter to select • Esc to close',
@@ -841,8 +886,11 @@ class _AreaSearchDialogState extends State<_AreaSearchDialog> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.search_off_rounded,
-                              size: 44, color: theme.hintColor),
+                          Icon(
+                            Icons.search_off_rounded,
+                            size: 44,
+                            color: theme.hintColor,
+                          ),
                           const SizedBox(height: 10),
                           Text(
                             _searchController.text.isEmpty
@@ -856,14 +904,18 @@ class _AreaSearchDialogState extends State<_AreaSearchDialog> {
                   : ListView.builder(
                       controller: _scrollController,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 6),
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
                       itemCount: _totalItemsCount,
                       itemBuilder: (context, index) {
                         // "All Areas" entry for filter mode
                         if (widget.isFilter && index == 0) {
                           final isHighlighted = _highlightedIndex == 0;
-                          final isSelected = widget.selectedAreaId == null &&
-                              (widget.selectedAreaName == null || widget.selectedAreaName!.isEmpty);
+                          final isSelected =
+                              widget.selectedAreaId == null &&
+                              (widget.selectedAreaName == null ||
+                                  widget.selectedAreaName!.isEmpty);
 
                           return _buildAreaTile(
                             context: context,
@@ -871,7 +923,9 @@ class _AreaSearchDialogState extends State<_AreaSearchDialog> {
                             subtitle: 'Show records for all areas',
                             isSelected: isSelected,
                             isHighlighted: isHighlighted,
-                            onTap: () => Navigator.of(context).pop(null),
+                            onTap: () => Navigator.of(
+                              context,
+                            ).pop(_AreaSearchDialog.allAreasOption),
                             leadingIcon: Icons.all_inclusive_rounded,
                           );
                         }
@@ -879,7 +933,8 @@ class _AreaSearchDialogState extends State<_AreaSearchDialog> {
                         final areaIndex = widget.isFilter ? index - 1 : index;
                         final area = _filteredAreas[areaIndex];
                         final isHighlighted = _highlightedIndex == index;
-                        final isSelected = (widget.selectedAreaId != null &&
+                        final isSelected =
+                            (widget.selectedAreaId != null &&
                                 area.areaId == widget.selectedAreaId) ||
                             (widget.selectedAreaName != null &&
                                 area.areaName.toLowerCase() ==
@@ -932,8 +987,8 @@ class _AreaSearchDialogState extends State<_AreaSearchDialog> {
         color: isHighlighted
             ? theme.colorScheme.primary.withOpacity(isDark ? 0.25 : 0.12)
             : (isSelected
-                ? theme.colorScheme.primaryContainer.withOpacity(0.4)
-                : Colors.transparent),
+                  ? theme.colorScheme.primaryContainer.withOpacity(0.4)
+                  : Colors.transparent),
         borderRadius: BorderRadius.circular(8),
         border: isHighlighted
             ? Border.all(color: theme.colorScheme.primary, width: 1.5)
@@ -985,8 +1040,7 @@ class _AreaSearchDialogState extends State<_AreaSearchDialog> {
           children: [
             if (badgeText != null && badgeText.isNotEmpty)
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 margin: const EdgeInsets.only(right: 6),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.primary.withOpacity(0.12),
@@ -999,8 +1053,11 @@ class _AreaSearchDialogState extends State<_AreaSearchDialog> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.pin_drop_outlined,
-                        size: 11, color: theme.colorScheme.primary),
+                    Icon(
+                      Icons.pin_drop_outlined,
+                      size: 11,
+                      color: theme.colorScheme.primary,
+                    ),
                     const SizedBox(width: 3),
                     Text(
                       badgeText,
@@ -1014,12 +1071,14 @@ class _AreaSearchDialogState extends State<_AreaSearchDialog> {
                 ),
               ),
             if (isSelected)
-              Icon(Icons.check_circle_rounded,
-                  size: 18, color: theme.colorScheme.primary),
+              Icon(
+                Icons.check_circle_rounded,
+                size: 18,
+                color: theme.colorScheme.primary,
+              ),
             if (isHighlighted && !isSelected)
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.primaryContainer,
                   borderRadius: BorderRadius.circular(4),

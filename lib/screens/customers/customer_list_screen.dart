@@ -40,6 +40,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
   bool? _selectedStatus; // null = All, true = Active, false = Inactive
   bool _isLoading = false;
   String? _errorMessage;
+  List<CustomerListItem> _allCustomers = [];
   List<CustomerListItem> _customers = [];
   int _highlightedIndex = 0;
 
@@ -133,11 +134,138 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
     });
   }
 
+  List<CustomerListItem> _applyFilters(List<CustomerListItem> source) {
+    final search = _searchController.text.trim().toLowerCase();
+    final stateId = _selectedStateId;
+    final stateName = _selectedStateName?.trim().toLowerCase();
+    final cityId = _selectedCityId;
+    final cityName = _selectedCityName?.trim().toLowerCase();
+    final areaId = _selectedAreaId;
+    final areaName = _selectedAreaName?.trim().toLowerCase();
+    final status = _selectedStatus;
+
+    return source.where((c) {
+      // 1. Status Filter
+      if (status != null && c.custIsActive != status) {
+        return false;
+      }
+
+      // 2. State Filter
+      if (stateId != null && stateId > 0 && c.custStateId > 0) {
+        if (c.custStateId != stateId) return false;
+      } else if (stateName != null && stateName.isNotEmpty && c.custState.trim().isNotEmpty) {
+        if (c.custState.trim().toLowerCase() != stateName) return false;
+      }
+
+      // 3. City Filter
+      if (cityId != null && cityId > 0 && c.custCityId > 0) {
+        if (c.custCityId != cityId) return false;
+      } else if (cityName != null && cityName.isNotEmpty && c.custCity.trim().isNotEmpty) {
+        if (c.custCity.trim().toLowerCase() != cityName) return false;
+      }
+
+      // 4. Area Filter
+      if (areaId != null && areaId > 0 && c.custAreaId > 0) {
+        if (c.custAreaId != areaId) return false;
+      } else if (areaName != null && areaName.isNotEmpty && c.custArea.trim().isNotEmpty) {
+        if (c.custArea.trim().toLowerCase() != areaName) return false;
+      }
+
+      // 5. Search Text Filter
+      if (search.isNotEmpty) {
+        final matches = c.custName.toLowerCase().contains(search) ||
+            c.custMobileNo.toLowerCase().contains(search) ||
+            c.custAlternateMobileNo.toLowerCase().contains(search) ||
+            c.custCode.toLowerCase().contains(search) ||
+            c.custCompanyName.toLowerCase().contains(search) ||
+            c.custEmail.toLowerCase().contains(search) ||
+            c.custGSTNo.toLowerCase().contains(search) ||
+            c.custPANNo.toLowerCase().contains(search) ||
+            c.custAddress.toLowerCase().contains(search) ||
+            c.custCity.toLowerCase().contains(search) ||
+            c.custState.toLowerCase().contains(search) ||
+            c.custArea.toLowerCase().contains(search) ||
+            c.custPincode.toLowerCase().contains(search) ||
+            'c-${c.custId}'.contains(search);
+        if (!matches) return false;
+      }
+
+      return true;
+    }).toList();
+  }
+
+  void _updateFilteredCustomers() {
+    _customers = _applyFilters(_allCustomers);
+    if (_customers.isNotEmpty) {
+      _highlightedIndex = _highlightedIndex.clamp(0, _customers.length - 1);
+    } else {
+      _highlightedIndex = 0;
+    }
+  }
+
   void _onSearchChanged(String value) {
+    setState(() {
+      _updateFilteredCustomers();
+    });
     _debounceTimer?.cancel();
-    _debounceTimer = Timer(const Duration(milliseconds: 400), () {
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
       _fetchCustomers();
     });
+  }
+
+  void _onStateChanged(StateModel? state) {
+    setState(() {
+      _selectedStateId = state?.stateId;
+      _selectedStateName = state?.stateName;
+      _selectedCityId = null;
+      _selectedCityName = null;
+      _selectedAreaId = null;
+      _selectedAreaName = null;
+      _updateFilteredCustomers();
+    });
+    _fetchCustomers();
+  }
+
+  void _onCityChanged(CityListItem? city) {
+    setState(() {
+      _selectedCityId = city?.cityId;
+      _selectedCityName = city?.cityName;
+      if (city != null && city.stateId != null && city.stateId! > 0 && _selectedStateId == null) {
+        _selectedStateId = city.stateId;
+        _selectedStateName = city.stateName;
+      }
+      _selectedAreaId = null;
+      _selectedAreaName = null;
+      _updateFilteredCustomers();
+    });
+    _fetchCustomers();
+  }
+
+  void _onAreaChanged(AreaListItem? area) {
+    setState(() {
+      _selectedAreaId = area?.areaId;
+      _selectedAreaName = area?.areaName;
+      if (area != null) {
+        if (area.cityId != null && area.cityId! > 0 && _selectedCityId == null) {
+          _selectedCityId = area.cityId;
+          _selectedCityName = area.cityName;
+        }
+        if (area.stateId != null && area.stateId! > 0 && _selectedStateId == null) {
+          _selectedStateId = area.stateId;
+          _selectedStateName = area.stateName;
+        }
+      }
+      _updateFilteredCustomers();
+    });
+    _fetchCustomers();
+  }
+
+  void _onStatusChanged(bool? status) {
+    setState(() {
+      _selectedStatus = status;
+      _updateFilteredCustomers();
+    });
+    _fetchCustomers();
   }
 
   Future<void> _fetchCustomers() async {
@@ -150,15 +278,23 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
     try {
       final customers = await _customerService.getAllCustomers(
         search: _searchController.text.trim(),
+        stateId: _selectedStateId,
         state: _selectedStateName,
+        cityId: _selectedCityId,
         city: _selectedCityName,
+        areaId: _selectedAreaId,
         area: _selectedAreaName,
         isActive: _selectedStatus,
       );
 
       if (mounted) {
         setState(() {
-          _customers = customers;
+          if (_customerService.customers.isNotEmpty) {
+            _allCustomers = _customerService.customers;
+          } else if (!_hasActiveFilters) {
+            _allCustomers = customers;
+          }
+          _customers = _applyFilters(_allCustomers.isNotEmpty ? _allCustomers : customers);
           _isLoading = false;
           if (_customers.isNotEmpty) {
             _highlightedIndex = _highlightedIndex.clamp(0, _customers.length - 1);
@@ -190,14 +326,17 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
       _selectedAreaName = null;
       _selectedStatus = null;
       _highlightedIndex = 0;
+      _updateFilteredCustomers();
     });
     _fetchCustomers();
   }
 
   bool get _hasActiveFilters =>
-      _searchController.text.isNotEmpty ||
+      _searchController.text.trim().isNotEmpty ||
       _selectedStateId != null ||
+      (_selectedStateName != null && _selectedStateName!.isNotEmpty) ||
       _selectedCityId != null ||
+      (_selectedCityName != null && _selectedCityName!.isNotEmpty) ||
       _selectedAreaId != null ||
       (_selectedAreaName != null && _selectedAreaName!.isNotEmpty) ||
       _selectedStatus != null;
@@ -353,6 +492,9 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                               icon: const Icon(Icons.clear_rounded, size: 18),
                               onPressed: () {
                                 _searchController.clear();
+                                setState(() {
+                                  _updateFilteredCustomers();
+                                });
                                 _fetchCustomers();
                               },
                             )
@@ -382,17 +524,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                     allOptionLabel: 'All States',
                     labelText: 'State Filter',
                     hintText: 'All States',
-                    onChanged: (StateModel? state) {
-                      setState(() {
-                        _selectedStateId = state?.stateId;
-                        _selectedStateName = state?.stateName;
-                        _selectedCityId = null;
-                        _selectedCityName = null;
-                        _selectedAreaId = null;
-                        _selectedAreaName = null;
-                      });
-                      _fetchCustomers();
-                    },
+                    onChanged: _onStateChanged,
                   ),
                 ),
               ),
@@ -410,15 +542,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                     allOptionLabel: 'All Cities',
                     labelText: 'City Filter',
                     hintText: 'All Cities',
-                    onChanged: (CityListItem? city) {
-                      setState(() {
-                        _selectedCityId = city?.cityId;
-                        _selectedCityName = city?.cityName;
-                        _selectedAreaId = null;
-                        _selectedAreaName = null;
-                      });
-                      _fetchCustomers();
-                    },
+                    onChanged: _onCityChanged,
                   ),
                 ),
               ),
@@ -438,13 +562,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                     allOptionLabel: 'All Areas',
                     labelText: 'Area Filter',
                     hintText: 'All Areas',
-                    onChanged: (AreaListItem? area) {
-                      setState(() {
-                        _selectedAreaId = area?.areaId;
-                        _selectedAreaName = area?.areaName;
-                      });
-                      _fetchCustomers();
-                    },
+                    onChanged: _onAreaChanged,
                   ),
                 ),
               ),
@@ -517,6 +635,9 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                       icon: const Icon(Icons.clear_rounded),
                       onPressed: () {
                         _searchController.clear();
+                        setState(() {
+                          _updateFilteredCustomers();
+                        });
                         _fetchCustomers();
                       },
                     )
@@ -537,17 +658,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                   allOptionLabel: 'All States',
                   labelText: 'State',
                   hintText: 'All States',
-                  onChanged: (StateModel? state) {
-                    setState(() {
-                      _selectedStateId = state?.stateId;
-                      _selectedStateName = state?.stateName;
-                      _selectedCityId = null;
-                      _selectedCityName = null;
-                      _selectedAreaId = null;
-                      _selectedAreaName = null;
-                    });
-                    _fetchCustomers();
-                  },
+                  onChanged: _onStateChanged,
                 ),
               ),
               const SizedBox(width: 8),
@@ -559,15 +670,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                   allOptionLabel: 'All Cities',
                   labelText: 'City',
                   hintText: 'All Cities',
-                  onChanged: (CityListItem? city) {
-                    setState(() {
-                      _selectedCityId = city?.cityId;
-                      _selectedCityName = city?.cityName;
-                      _selectedAreaId = null;
-                      _selectedAreaName = null;
-                    });
-                    _fetchCustomers();
-                  },
+                  onChanged: _onCityChanged,
                 ),
               ),
             ],
@@ -585,25 +688,14 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                   allOptionLabel: 'All Areas',
                   labelText: 'Area',
                   hintText: 'All Areas',
-                  onChanged: (AreaListItem? area) {
-                    setState(() {
-                      _selectedAreaId = area?.areaId;
-                      _selectedAreaName = area?.areaName;
-                    });
-                    _fetchCustomers();
-                  },
+                  onChanged: _onAreaChanged,
                 ),
               ),
               const SizedBox(width: 8),
               PopupMenuButton<bool?>(
                 initialValue: _selectedStatus,
                 tooltip: 'Filter Status',
-                onSelected: (bool? status) {
-                  setState(() {
-                    _selectedStatus = status;
-                  });
-                  _fetchCustomers();
-                },
+                onSelected: _onStatusChanged,
                 itemBuilder: (context) => [
                   const PopupMenuItem(value: null, child: Text('All Statuses')),
                   const PopupMenuItem(value: true, child: Text('Active Only')),
@@ -670,10 +762,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
         ],
         selected: {_selectedStatus},
         onSelectionChanged: (Set<bool?> newSelection) {
-          setState(() {
-            _selectedStatus = newSelection.first;
-          });
-          _fetchCustomers();
+          _onStatusChanged(newSelection.first);
         },
         style: SegmentedButton.styleFrom(
           visualDensity: VisualDensity.compact,

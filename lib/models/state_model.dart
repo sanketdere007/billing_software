@@ -5,7 +5,7 @@ class StateModel {
   final bool stateIsActive;
   final int? countryId;
 
-  StateModel({
+  const StateModel({
     required this.stateId,
     required this.stateName,
     this.stateCode,

@@ -156,13 +156,15 @@ class _StateDropdownState extends State<StateDropdown> {
       ),
     );
 
-    // If dismissed with a result (including null for "All States" in filter mode)
-    if (picked != null || (widget.isFilter && picked == null)) {
+    // If dismissed with a result (including allStatesOption for "All States" in filter mode)
+    if (picked != null) {
+      final StateModel? effectiveState =
+          (picked.stateId == -1 || picked.stateName == '__ALL_STATES__') ? null : picked;
       setState(() {
-        _selectedState = picked;
+        _selectedState = effectiveState;
       });
-      fieldState?.didChange(picked);
-      widget.onChanged?.call(picked);
+      fieldState?.didChange(effectiveState);
+      widget.onChanged?.call(effectiveState);
 
       // Automatically transfer focus to next field after dialog closes
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -474,6 +476,13 @@ class _StateDropdownState extends State<StateDropdown> {
 
 /// Search Dialog for selecting a State with fast filtering & keyboard navigation (Up, Down, Enter, Esc)
 class _StateSearchDialog extends StatefulWidget {
+  static  StateModel allStatesOption = StateModel(
+    stateId: -1,
+    stateName: '__ALL_STATES__',
+    stateCode: '',
+    stateIsActive: true,
+  );
+
   final List<StateModel> states;
   final int? selectedStateId;
   final bool isFilter;
@@ -579,7 +588,7 @@ class _StateSearchDialogState extends State<_StateSearchDialog> {
 
   void _selectHighlightedItem() {
     if (widget.isFilter && _highlightedIndex == 0) {
-      Navigator.of(context).pop(null);
+      Navigator.of(context).pop(_StateSearchDialog.allStatesOption);
       return;
     }
 
@@ -792,7 +801,7 @@ class _StateSearchDialogState extends State<_StateSearchDialog> {
                                           color: theme.colorScheme.primary, size: 20),
                                   ],
                                 ),
-                                onTap: () => Navigator.of(context).pop(null),
+                                onTap: () => Navigator.of(context).pop(_StateSearchDialog.allStatesOption),
                               ),
                             ),
                           );

@@ -8,7 +8,7 @@ class AreaListItem {
   final String cityName;
   final bool areaIsActive;
 
-  AreaListItem({
+  const AreaListItem({
     required this.areaId,
     required this.areaName,
     required this.areaPincode,

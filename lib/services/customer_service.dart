@@ -23,11 +23,14 @@ class CustomerService extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   /// Fetch all customers from `/api/Customer/GetAllCustomers`
-  /// with query filters: Search, Cust_BranchId, Cust_CompId, Area, City, State, IsActive
+  /// with query filters: Search, Cust_BranchId, Cust_CompId, Area, City, State, IsActive, StateId, CityId, AreaId
   Future<List<CustomerListItem>> getAllCustomers({
     String? search,
     int? branchId,
     int? compId,
+    int? stateId,
+    int? cityId,
+    int? areaId,
     String? area,
     String? city,
     String? state,
@@ -40,24 +43,37 @@ class CustomerService extends ChangeNotifier {
     final cleanSearch = (search == null || search == 'null') ? '' : search.trim();
     final effectiveBranchId = (branchId != null && branchId > 0) ? branchId : 0;
     final effectiveCompId = (compId != null && compId > 0) ? compId : 0;
+    final effectiveStateId = (stateId != null && stateId > 0) ? stateId : 0;
+    final effectiveCityId = (cityId != null && cityId > 0) ? cityId : 0;
+    final effectiveAreaId = (areaId != null && areaId > 0) ? areaId : 0;
+    final cleanArea = (area == null || area == 'null') ? '' : area.trim();
+    final cleanCity = (city == null || city == 'null') ? '' : city.trim();
+    final cleanState = (state == null || state == 'null') ? '' : state.trim();
 
     final Map<String, String> queryParameters = {
       'Search': cleanSearch,
       if (effectiveBranchId > 0) 'Cust_BranchId': effectiveBranchId.toString(),
       if (effectiveCompId > 0) 'Cust_CompId': effectiveCompId.toString(),
+      if (effectiveStateId > 0) 'StateId': effectiveStateId.toString(),
+      if (effectiveCityId > 0) 'CityId': effectiveCityId.toString(),
+      if (effectiveAreaId > 0) 'AreaId': effectiveAreaId.toString(),
     };
 
-    if (area != null && area.trim().isNotEmpty) {
-      queryParameters['Area'] = area.trim();
+    if (cleanArea.isNotEmpty) {
+      queryParameters['Area'] = cleanArea;
+      queryParameters['Cust_Area'] = cleanArea;
     }
-    if (city != null && city.trim().isNotEmpty) {
-      queryParameters['City'] = city.trim();
+    if (cleanCity.isNotEmpty) {
+      queryParameters['City'] = cleanCity;
+      queryParameters['Cust_City'] = cleanCity;
     }
-    if (state != null && state.trim().isNotEmpty) {
-      queryParameters['State'] = state.trim();
+    if (cleanState.isNotEmpty) {
+      queryParameters['State'] = cleanState;
+      queryParameters['Cust_State'] = cleanState;
     }
     if (isActive != null) {
       queryParameters['IsActive'] = isActive.toString();
+      queryParameters['Cust_IsActive'] = isActive.toString();
     }
 
     debugPrint('👥 [CustomerService.getAllCustomers] Requesting with query parameters: $queryParameters');
@@ -94,7 +110,75 @@ class CustomerService extends ChangeNotifier {
       }
 
       _errorMessage = null;
-      return _customers;
+
+      // Apply client-side fallback filtering on fetched list
+      List<CustomerListItem> filteredResult = _customers;
+      final bool hasFilters = cleanSearch.isNotEmpty ||
+          effectiveStateId > 0 ||
+          effectiveCityId > 0 ||
+          effectiveAreaId > 0 ||
+          cleanState.isNotEmpty ||
+          cleanCity.isNotEmpty ||
+          cleanArea.isNotEmpty ||
+          isActive != null;
+
+      if (hasFilters) {
+        final searchLower = cleanSearch.toLowerCase();
+        final stateLower = cleanState.toLowerCase();
+        final cityLower = cleanCity.toLowerCase();
+        final areaLower = cleanArea.toLowerCase();
+
+        filteredResult = filteredResult.where((c) {
+          // Status filter
+          if (isActive != null && c.custIsActive != isActive) {
+            return false;
+          }
+
+          // State filter (match stateId or state name)
+          if (effectiveStateId > 0 && c.custStateId > 0) {
+            if (c.custStateId != effectiveStateId) return false;
+          } else if (stateLower.isNotEmpty && c.custState.trim().isNotEmpty) {
+            if (c.custState.trim().toLowerCase() != stateLower) return false;
+          }
+
+          // City filter (match cityId or city name)
+          if (effectiveCityId > 0 && c.custCityId > 0) {
+            if (c.custCityId != effectiveCityId) return false;
+          } else if (cityLower.isNotEmpty && c.custCity.trim().isNotEmpty) {
+            if (c.custCity.trim().toLowerCase() != cityLower) return false;
+          }
+
+          // Area filter (match areaId or area name)
+          if (effectiveAreaId > 0 && c.custAreaId > 0) {
+            if (c.custAreaId != effectiveAreaId) return false;
+          } else if (areaLower.isNotEmpty && c.custArea.trim().isNotEmpty) {
+            if (c.custArea.trim().toLowerCase() != areaLower) return false;
+          }
+
+          // Search text filter
+          if (searchLower.isNotEmpty) {
+            final matches = c.custName.toLowerCase().contains(searchLower) ||
+                c.custMobileNo.toLowerCase().contains(searchLower) ||
+                c.custAlternateMobileNo.toLowerCase().contains(searchLower) ||
+                c.custCode.toLowerCase().contains(searchLower) ||
+                c.custCompanyName.toLowerCase().contains(searchLower) ||
+                c.custEmail.toLowerCase().contains(searchLower) ||
+                c.custGSTNo.toLowerCase().contains(searchLower) ||
+                c.custPANNo.toLowerCase().contains(searchLower) ||
+                c.custAddress.toLowerCase().contains(searchLower) ||
+                c.custCity.toLowerCase().contains(searchLower) ||
+                c.custState.toLowerCase().contains(searchLower) ||
+                c.custArea.toLowerCase().contains(searchLower) ||
+                c.custPincode.toLowerCase().contains(searchLower) ||
+                'c-${c.custId}'.contains(searchLower);
+            if (!matches) return false;
+          }
+
+          return true;
+        }).toList();
+      }
+
+      return filteredResult;
     } on ApiException catch (e) {
       _errorMessage = e.message;
       _customers = [];

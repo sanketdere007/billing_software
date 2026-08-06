@@ -9,6 +9,7 @@ import '../../services/city_service.dart';
 import '../../services/area_service.dart';
 import '../../services/state_service.dart';
 import '../../services/session_service.dart';
+import '../../utils/text_formatters.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/city_dropdown.dart';
 import '../../widgets/area_dropdown.dart';
@@ -941,6 +942,9 @@ class _CustomerMasterScreenState extends State<CustomerMasterScreen> {
       focusNode: _nameFocusNode,
       textInputAction: TextInputAction.next,
       textCapitalization: TextCapitalization.words,
+      inputFormatters: const [
+        CapitalizeWordsInputFormatter(),
+      ],
       onFieldSubmitted: (_) => _companyFocusNode.requestFocus(),
       decoration: InputDecoration(
         labelText: 'Customer Name *',
@@ -966,6 +970,9 @@ class _CustomerMasterScreenState extends State<CustomerMasterScreen> {
       focusNode: _companyFocusNode,
       textInputAction: TextInputAction.next,
       textCapitalization: TextCapitalization.words,
+      inputFormatters: const [
+        CapitalizeWordsInputFormatter(),
+      ],
       onFieldSubmitted: (_) => _mobileFocusNode.requestFocus(),
       decoration: InputDecoration(
         labelText: 'Company / Business Name',

@@ -170,13 +170,15 @@ class _CityDropdownState extends State<CityDropdown> {
       ),
     );
 
-    // If dismissed with a result (including null for "All Cities" in filter mode)
-    if (picked != null || (widget.isFilter && picked == null)) {
+    // If dismissed with a result (including allCitiesOption for "All Cities" in filter mode)
+    if (picked != null) {
+      final CityListItem? effectiveCity =
+          (picked.cityId == -1 || picked.cityName == '__ALL_CITIES__') ? null : picked;
       setState(() {
-        _selectedCity = picked;
+        _selectedCity = effectiveCity;
       });
-      fieldState?.didChange(picked);
-      widget.onChanged?.call(picked);
+      fieldState?.didChange(effectiveCity);
+      widget.onChanged?.call(effectiveCity);
 
       // Automatically transfer focus to next field after dialog closes
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -508,6 +510,14 @@ class _CityDropdownState extends State<CityDropdown> {
 
 /// Search Dialog for selecting a City with fast filtering & keyboard navigation
 class _CitySearchDialog extends StatefulWidget {
+  static  CityListItem allCitiesOption = CityListItem(
+    cityId: -1,
+    cityName: '__ALL_CITIES__',
+    stateId: 0,
+    stateName: '',
+    cityIsActive: true,
+  );
+
   final List<CityListItem> cities;
   final int? selectedCityId;
   final bool isFilter;
@@ -654,7 +664,7 @@ class _CitySearchDialogState extends State<_CitySearchDialog> {
 
     if (widget.isFilter) {
       if (_highlightedIndex == 0) {
-        Navigator.of(context).pop(null); // "All Cities" selected
+        Navigator.of(context).pop(_CitySearchDialog.allCitiesOption); // "All Cities" selected
         return;
       }
       final cityIndex = _highlightedIndex - 1;
@@ -811,7 +821,7 @@ class _CitySearchDialogState extends State<_CitySearchDialog> {
                             subtitle: 'Show records for all cities',
                             isSelected: isSelected,
                             isHighlighted: isHighlighted,
-                            onTap: () => Navigator.of(context).pop(null),
+                            onTap: () => Navigator.of(context).pop(_CitySearchDialog.allCitiesOption),
                             leadingIcon: Icons.all_inclusive_rounded,
                           );
                         }
