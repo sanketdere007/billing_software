@@ -16,88 +16,84 @@ class HelpSupportScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget content = Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 800),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'How can we help you?',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24.0),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 800),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'How can we help you?',
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Choose an option below to get in touch with our support team or find answers.',
+                style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+              ),
+              const SizedBox(height: 32),
+              Wrap(
+                spacing: 16,
+                runSpacing: 16,
+                children: [
+                  _buildSupportCard(
+                    context,
+                    title: 'Call Support',
+                    subtitle: 'Speak directly to our team',
+                    icon: Icons.phone,
+                    color: Colors.green,
+                    onTap: () => _launchUrl('tel:+918411837139'),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Choose an option below to get in touch with our support team or find answers.',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey.shade600,
+                  _buildSupportCard(
+                    context,
+                    title: 'WhatsApp Support',
+                    subtitle: 'Chat with us on WhatsApp',
+                    icon: Icons.message, // Fallback icon for WhatsApp
+                    color: const Color(0xFF25D366),
+                    onTap: () => _launchUrl('https://wa.me/918411837139'),
                   ),
-                ),
-                const SizedBox(height: 32),
-                Wrap(
-                  spacing: 16,
-                  runSpacing: 16,
-                  children: [
-                    _buildSupportCard(
-                      context,
-                      title: 'Call Support',
-                      subtitle: 'Speak directly to our team',
-                      icon: Icons.phone,
-                      color: Colors.green,
-                      onTap: () => _launchUrl('tel:+918411837139'),
+                  _buildSupportCard(
+                    context,
+                    title: 'Email Support',
+                    subtitle: 'Send us an email query',
+                    icon: Icons.email,
+                    color: Colors.blue,
+                    onTap: () => _launchUrl('mailto:sankysoft@gmail.com'),
+                  ),
+                  _buildSupportCard(
+                    context,
+                    title: 'Visit Website',
+                    subtitle: 'Explore our knowledge base',
+                    icon: Icons.language,
+                    color: Colors.indigo,
+                    onTap: () => _launchUrl('https://www.sankysoft.in'),
+                  ),
+                  _buildSupportCard(
+                    context,
+                    title: 'Report a Bug',
+                    subtitle: 'Found an issue? Let us know',
+                    icon: Icons.bug_report,
+                    color: Colors.red,
+                    onTap: () => _launchUrl(
+                      'mailto:sankysoft@gmail.com?subject=Bug Report - Billing Software',
                     ),
-                    _buildSupportCard(
-                      context,
-                      title: 'WhatsApp Support',
-                      subtitle: 'Chat with us on WhatsApp',
-                      icon: Icons.message, // Fallback icon for WhatsApp
-                      color: const Color(0xFF25D366),
-                      onTap: () => _launchUrl('https://wa.me/918411837139'),
-                    ),
-                    _buildSupportCard(
-                      context,
-                      title: 'Email Support',
-                      subtitle: 'Send us an email query',
-                      icon: Icons.email,
-                      color: Colors.blue,
-                      onTap: () => _launchUrl('mailto:support@sankysoft.com'),
-                    ),
-                    _buildSupportCard(
-                      context,
-                      title: 'Visit Website',
-                      subtitle: 'Explore our knowledge base',
-                      icon: Icons.language,
-                      color: Colors.indigo,
-                      onTap: () => _launchUrl('https://sankysoft.netlify.app/'),
-                    ),
-                    _buildSupportCard(
-                      context,
-                      title: 'Report a Bug',
-                      subtitle: 'Found an issue? Let us know',
-                      icon: Icons.bug_report,
-                      color: Colors.red,
-                      onTap: () => _launchUrl('mailto:support@sankysoft.com?subject=Bug Report - Billing Software'),
-                    ),
-                    _buildSupportCard(
-                      context,
-                      title: 'User Guide',
-                      subtitle: 'Read the documentation',
-                      icon: Icons.menu_book,
-                      color: Colors.orange,
-                      onTap: () => _launchUrl('https://sankysoft.netlify.app/docs'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                  ),
+                  _buildSupportCard(
+                    context,
+                    title: 'User Guide',
+                    subtitle: 'Read the documentation',
+                    icon: Icons.menu_book,
+                    color: Colors.orange,
+                    onTap: () => _launchUrl('https://www.sankysoft.in/docs'),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
-      );
+      ),
+    );
 
     return DirectBackScope(
       child: LayoutBuilder(
@@ -115,9 +111,7 @@ class HelpSupportScreen extends StatelessWidget {
                   const VerticalDivider(width: 1, thickness: 1),
                   Expanded(
                     child: Scaffold(
-                      appBar: AppBar(
-                        title: const Text('Help & Support'),
-                      ),
+                      appBar: AppBar(title: const Text('Help & Support')),
                       body: content,
                     ),
                   ),
@@ -126,9 +120,7 @@ class HelpSupportScreen extends StatelessWidget {
             );
           } else {
             return Scaffold(
-              appBar: AppBar(
-                title: const Text('Help & Support'),
-              ),
+              appBar: AppBar(title: const Text('Help & Support')),
               drawer: const AppDrawer(isPermanent: false),
               body: content,
             );

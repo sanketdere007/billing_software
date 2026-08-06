@@ -1,92 +1,11 @@
 import 'package:flutter/material.dart';
-import '../services/database_backup_service.dart';
+import '../services/shortcut_service.dart';
 import '../services/theme_provider.dart';
 import '../widgets/app_drawer.dart';
-import '../widgets/database_backup_dialog.dart';
 import '../widgets/direct_back_scope.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
-
-  Future<void> _handleBackupDatabase(BuildContext context) async {
-    final confirmed = await showDatabaseBackupConfirmationDialog(
-      context: context,
-      title: 'Database Backup',
-      message: 'Do you want to take a database backup?',
-      icon: Icons.storage_rounded,
-      iconColor: Colors.blue.shade700,
-    );
-
-    if (confirmed != true) {
-      return;
-    }
-
-    if (!context.mounted) return;
-
-    // Show loading indicator dialog
-    showBackupProgressDialog(context);
-
-    try {
-      final response = await databaseBackupService.createBackup();
-
-      if (!context.mounted) return;
-      // Dismiss loading dialog
-      Navigator.of(context, rootNavigator: true).pop();
-
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.check_circle, color: Colors.white),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Database backup completed successfully.',
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-              ),
-            ],
-          ),
-          backgroundColor: Colors.green.shade700,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          duration: const Duration(seconds: 4),
-        ),
-      );
-    } catch (e) {
-      if (!context.mounted) return;
-      // Dismiss loading dialog
-      Navigator.of(context, rootNavigator: true).pop();
-
-      // Show error message
-      final errorMessage = e.toString().replaceFirst('Exception: ', '');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.error_outline, color: Colors.white),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  errorMessage,
-                  style: const TextStyle(fontWeight: FontWeight.w500),
-                ),
-              ),
-            ],
-          ),
-          backgroundColor: Colors.red.shade700,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          duration: const Duration(seconds: 5),
-        ),
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -218,7 +137,8 @@ class SettingsScreen extends StatelessWidget {
                       Align(
                         alignment: Alignment.centerLeft,
                         child: ElevatedButton.icon(
-                          onPressed: () => _handleBackupDatabase(context),
+                          onPressed: () =>
+                              shortcutService.triggerDatabaseBackup(context),
                           icon: const Icon(Icons.backup_rounded, size: 20),
                           label: const Text(
                             'Backup Database',

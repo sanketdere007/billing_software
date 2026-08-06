@@ -915,113 +915,13 @@ class _AppDrawerState extends State<AppDrawer> {
             icon: Icons.logout_rounded,
             iconColor: _getIconColor(context, Colors.red),
             title: 'Logout',
-            onTap: () => _handleLogout(context),
+            shortcutKey: 'Ctrl+Shift+L',
+            onTap: () => shortcutService.triggerLogout(context),
           ),
           // const SupportInfoFooter(isCompact: true),
         ],
       ),
     );
-  }
-
-  Future<void> _handleLogout(BuildContext context) async {
-    final confirmed = await showDatabaseBackupConfirmationDialog(
-      context: context,
-      title: 'Logout',
-      message: 'Do you want to take a database backup before logging out?',
-      icon: Icons.logout_rounded,
-      iconColor: Colors.red.shade600,
-    );
-
-    // If user dismissed dialog (Escape), do nothing
-    if (confirmed == null) {
-      return;
-    }
-
-    if (!context.mounted) return;
-
-    if (confirmed == true) {
-      // User selected Yes: Call backup API first
-      showBackupProgressDialog(context);
-
-      try {
-        await databaseBackupService.createBackup();
-
-        if (!context.mounted) return;
-        // Dismiss progress dialog
-        Navigator.of(context, rootNavigator: true).pop();
-
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle, color: Colors.white),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Text(
-                    'Database backup completed successfully.',
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                ),
-              ],
-            ),
-            backgroundColor: Colors.green.shade700,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            duration: const Duration(seconds: 3),
-          ),
-        );
-
-        // Automatically perform logout and navigate to Login Screen
-        await authService.logout();
-        if (context.mounted) {
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (context) => const LoginScreen()),
-            (route) => false,
-          );
-        }
-      } catch (e) {
-        if (!context.mounted) return;
-        // Dismiss progress dialog
-        Navigator.of(context, rootNavigator: true).pop();
-
-        // Show error message and do NOT logout
-        final errorMessage = e.toString().replaceFirst('Exception: ', '');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.error_outline, color: Colors.white),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    errorMessage,
-                    style: const TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                ),
-              ],
-            ),
-            backgroundColor: Colors.red.shade700,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            duration: const Duration(seconds: 5),
-          ),
-        );
-      }
-    } else {
-      // User selected No: Skip backup process and logout immediately
-      await authService.logout();
-      if (context.mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
-          (route) => false,
-        );
-      }
-    }
   }
 
   Widget _buildDrawerItem({

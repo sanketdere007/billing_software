@@ -11,7 +11,8 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _logoScaleAnimation;
   late Animation<double> _logoRotationAnimation;
@@ -49,12 +50,13 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       ),
     );
 
-    _textSlideAnimation = Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: const Interval(0.4, 0.8, curve: Curves.easeOutCubic),
-      ),
-    );
+    _textSlideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: const Interval(0.4, 0.8, curve: Curves.easeOutCubic),
+          ),
+        );
 
     _progressOpacityAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
@@ -76,7 +78,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   _navigateToNextScreen() async {
     // Wait for the animation to finish + a little extra time
     await Future.delayed(const Duration(milliseconds: 3200));
-    
+
     final isLoggedIn = await authService.isAuthenticated();
 
     if (!mounted) return;
@@ -86,11 +88,14 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
         settings: RouteSettings(
           name: isLoggedIn ? AppRoutes.dashboard : '/login',
         ),
-        pageBuilder: (context, animation, secondaryAnimation) => 
+        pageBuilder: (context, animation, secondaryAnimation) =>
             isLoggedIn ? const DashboardScreen() : const LoginScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(
-            opacity: CurvedAnimation(parent: animation, curve: Curves.easeInOut),
+            opacity: CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeInOut,
+            ),
             child: child,
           );
         },
@@ -168,7 +173,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                     ),
                   ),
                   const SizedBox(height: 40),
-                  
+
                   // App Title with Slide and Fade
                   SlideTransition(
                     position: _textSlideAnimation,
@@ -194,7 +199,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                     ),
                   ),
                   const SizedBox(height: 12),
-                  
+
                   // Subtitle with Slide and Fade
                   SlideTransition(
                     position: _textSlideAnimation,
@@ -213,15 +218,6 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                     ),
                   ),
                   const SizedBox(height: 60),
-                  
-                  // Progress Indicator with Fade
-                  FadeTransition(
-                    opacity: _progressOpacityAnimation,
-                    child: const CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      strokeWidth: 3,
-                    ),
-                  ),
                 ],
               );
             },

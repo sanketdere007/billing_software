@@ -5,6 +5,8 @@ import 'package:billing_software/utils/platform_helper.dart';
 import 'package:billing_software/services/shortcut_service.dart';
 import 'package:billing_software/widgets/close_confirmation_dialog.dart';
 import 'package:billing_software/widgets/screen_already_open_dialog.dart';
+import 'package:billing_software/widgets/database_backup_dialog.dart';
+import 'package:billing_software/screens/login_screen.dart';
 import 'package:billing_software/services/purchase_order_service.dart';
 import 'package:billing_software/services/purchase_entry_service.dart';
 import 'package:billing_software/services/purchase_return_service.dart';
@@ -813,6 +815,161 @@ void main() {
         expect(find.byType(CloseConfirmationDialog), findsNothing);
         expect(find.byType(SettingsScreen), findsNothing);
         expect(find.text('Open Unnamed Settings'), findsOneWidget);
+      },
+    );
+  });
+
+  group('Database Backup & Logout Shortcut Tests', () {
+    setUp(() {
+      PlatformHelper.setOverrideForTesting(true);
+      shortcutService.init();
+    });
+
+    tearDown(() {
+      shortcutService.dispose();
+      PlatformHelper.setOverrideForTesting(null);
+    });
+
+    test('Available shortcuts contains Backup Database and Logout', () {
+      final shortcuts = shortcutService.availableShortcuts;
+      final backup = shortcuts.firstWhere((s) => s.keyDisplay == 'Ctrl + Shift + B');
+      expect(backup.label, equals('Backup Database'));
+      expect(backup.category, equals('General'));
+
+      final logout = shortcuts.firstWhere((s) => s.keyDisplay == 'Ctrl + Shift + L');
+      expect(logout.label, equals('Logout'));
+      expect(logout.category, equals('General'));
+    });
+
+    testWidgets(
+      'Ctrl + Shift + B on Windows desktop triggers DatabaseBackupConfirmationDialog',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            navigatorKey: shortcutService.navigatorKey,
+            navigatorObservers: [shortcutService.routeObserver],
+            home: const Scaffold(
+              body: Center(child: Text('Dashboard')),
+            ),
+          ),
+        );
+
+        expect(find.byType(DatabaseBackupConfirmationDialog), findsNothing);
+
+        // Press Ctrl + Shift + B
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.sendKeyEvent(LogicalKeyboardKey.keyB);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+        await tester.pumpAndSettle();
+
+        // Confirmation dialog should be displayed
+        expect(find.byType(DatabaseBackupConfirmationDialog), findsOneWidget);
+        expect(find.text('Database Backup'), findsOneWidget);
+        expect(
+          find.text('Do you want to take a database backup?'),
+          findsOneWidget,
+        );
+
+        // Dismiss dialog with Esc
+        await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+        await tester.pumpAndSettle();
+
+        expect(find.byType(DatabaseBackupConfirmationDialog), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'Ctrl + Shift + B is ignored when PlatformHelper is not Windows',
+      (tester) async {
+        PlatformHelper.setOverrideForTesting(false);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            navigatorKey: shortcutService.navigatorKey,
+            navigatorObservers: [shortcutService.routeObserver],
+            home: const Scaffold(
+              body: Center(child: Text('Dashboard')),
+            ),
+          ),
+        );
+
+        // Press Ctrl + Shift + B
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.sendKeyEvent(LogicalKeyboardKey.keyB);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+        await tester.pumpAndSettle();
+
+        expect(find.byType(DatabaseBackupConfirmationDialog), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'Ctrl + Shift + L on Windows desktop triggers Logout confirmation dialog',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            navigatorKey: shortcutService.navigatorKey,
+            navigatorObservers: [shortcutService.routeObserver],
+            home: const Scaffold(
+              body: Center(child: Text('Dashboard')),
+            ),
+          ),
+        );
+
+        expect(find.byType(DatabaseBackupConfirmationDialog), findsNothing);
+
+        // Press Ctrl + Shift + L
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.sendKeyEvent(LogicalKeyboardKey.keyL);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+        await tester.pumpAndSettle();
+
+        // Confirmation dialog should be displayed
+        expect(find.byType(DatabaseBackupConfirmationDialog), findsOneWidget);
+        expect(find.text('Logout'), findsOneWidget);
+        expect(
+          find.text('Do you want to take a database backup before logging out?'),
+          findsOneWidget,
+        );
+
+        // Dismiss dialog with Esc
+        await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+        await tester.pumpAndSettle();
+
+        expect(find.byType(DatabaseBackupConfirmationDialog), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'Ctrl + Shift + L is ignored when PlatformHelper is not Windows',
+      (tester) async {
+        PlatformHelper.setOverrideForTesting(false);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            navigatorKey: shortcutService.navigatorKey,
+            navigatorObservers: [shortcutService.routeObserver],
+            home: const Scaffold(
+              body: Center(child: Text('Dashboard')),
+            ),
+          ),
+        );
+
+        // Press Ctrl + Shift + L
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.sendKeyEvent(LogicalKeyboardKey.keyL);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+        await tester.pumpAndSettle();
+
+        expect(find.byType(DatabaseBackupConfirmationDialog), findsNothing);
       },
     );
   });

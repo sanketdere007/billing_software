@@ -3,6 +3,10 @@ import 'package:flutter/services.dart';
 import '../utils/platform_helper.dart';
 import '../widgets/close_confirmation_dialog.dart';
 import '../widgets/screen_already_open_dialog.dart';
+import '../widgets/database_backup_dialog.dart';
+import '../services/database_backup_service.dart';
+import '../services/auth_service.dart';
+import '../screens/login_screen.dart';
 import '../screens/sales/sales_order/add_sales_order_screen.dart';
 import '../screens/sales/sales_entry/add_sales_entry_screen.dart';
 import '../screens/sales/sales_return/add_sales_return_screen.dart';
@@ -13,6 +17,7 @@ import '../screens/customers/add_customer_screen.dart';
 
 /// Route name constants for ERP screens managed by shortcuts.
 class AppRoutes {
+  static const String login = '/login';
   static const String dashboard = '/dashboard';
   static const String customerAdd = '/customers/add';
   static const String salesOrderAdd = '/sales/order/add';
@@ -103,6 +108,11 @@ class ShortcutService {
   bool _isInitialized = false;
   bool _isConfirmationDialogOpen = false;
   bool _isScreenAlreadyOpenDialogOpen = false;
+  bool _isBackupDialogOpen = false;
+  bool _isLogoutDialogOpen = false;
+
+  bool get isBackupDialogOpen => _isBackupDialogOpen;
+  bool get isLogoutDialogOpen => _isLogoutDialogOpen;
 
   /// Transaction route names where only one transaction screen can be open at a time.
   static const Set<String> transactionRoutes = {
@@ -191,55 +201,67 @@ class ShortcutService {
   }
 
   /// Registry of ERP shortcuts for easy display and future extensions.
-  List<ErpShortcutItem> get availableShortcuts => const [
-    ErpShortcutItem(
+  List<ErpShortcutItem> get availableShortcuts => [
+    const ErpShortcutItem(
       label: 'Close Screen Confirmation',
       keyDisplay: 'Esc',
       category: 'General',
     ),
     ErpShortcutItem(
+      label: 'Backup Database',
+      keyDisplay: 'Ctrl + Shift + B',
+      category: 'General',
+      customAction: () => triggerDatabaseBackup(),
+    ),
+    ErpShortcutItem(
+      label: 'Logout',
+      keyDisplay: 'Ctrl + Shift + L',
+      category: 'General',
+      customAction: () => triggerLogout(),
+    ),
+    const ErpShortcutItem(
       label: 'New Customer',
       keyDisplay: 'Ctrl + C',
       category: 'Master',
       routeName: AppRoutes.customerAdd,
       screenBuilder: _buildAddCustomer,
     ),
-    ErpShortcutItem(
+    const ErpShortcutItem(
       label: 'Sales Order',
       keyDisplay: 'F4',
       category: 'Sales',
       routeName: AppRoutes.salesOrderAdd,
       screenBuilder: _buildAddSalesOrder,
     ),
-    ErpShortcutItem(
+    const ErpShortcutItem(
       label: 'Sales Entry (Invoice)',
       keyDisplay: 'F5',
       category: 'Sales',
       routeName: AppRoutes.salesEntryAdd,
       screenBuilder: _buildAddSalesEntry,
     ),
-    ErpShortcutItem(
+    const ErpShortcutItem(
       label: 'Sales Return',
       keyDisplay: 'Ctrl + F5',
       category: 'Sales',
       routeName: AppRoutes.salesReturnAdd,
       screenBuilder: _buildAddSalesReturn,
     ),
-    ErpShortcutItem(
+    const ErpShortcutItem(
       label: 'Purchase Order',
       keyDisplay: 'F6',
       category: 'Purchase',
       routeName: AppRoutes.purchaseOrderAdd,
       screenBuilder: _buildAddPurchaseOrder,
     ),
-    ErpShortcutItem(
+    const ErpShortcutItem(
       label: 'Purchase Entry',
       keyDisplay: 'F7',
       category: 'Purchase',
       routeName: AppRoutes.purchaseEntryAdd,
       screenBuilder: _buildAddPurchaseEntry,
     ),
-    ErpShortcutItem(
+    const ErpShortcutItem(
       label: 'Purchase Return',
       keyDisplay: 'Ctrl + F7',
       category: 'Purchase',
@@ -286,17 +308,32 @@ class ShortcutService {
     final isCtrlPressed =
         HardwareKeyboard.instance.isControlPressed ||
         HardwareKeyboard.instance.isMetaPressed;
+    final isShiftPressed = HardwareKeyboard.instance.isShiftPressed;
 
     // Handle Esc shortcut
     if (key == LogicalKeyboardKey.escape) {
       return _handleEscapeKey();
     }
 
+    // Ctrl + Shift + B: Backup Database
+    if (isCtrlPressed && isShiftPressed && key == LogicalKeyboardKey.keyB) {
+      if (isLoginOrSplashActive) return false;
+      triggerDatabaseBackup();
+      return true;
+    }
+
+    // Ctrl + Shift + L: Logout
+    if (isCtrlPressed && isShiftPressed && key == LogicalKeyboardKey.keyL) {
+      if (isLoginOrSplashActive) return false;
+      triggerLogout();
+      return true;
+    }
+
     // Condition 3: Check if text input is actively receiving keyboard input
     final bool isTextInputFocused = _isTextInputActive();
 
     // Ctrl + C: Open New Customer ONLY when not actively inside a text field
-    if (isCtrlPressed && key == LogicalKeyboardKey.keyC) {
+    if (isCtrlPressed && !isShiftPressed && key == LogicalKeyboardKey.keyC) {
       if (isTextInputFocused) {
         // Let system copy clipboard text normally
         return false;
@@ -365,6 +402,22 @@ class ShortcutService {
     return context.findAncestorWidgetOfExactType<EditableText>() != null;
   }
 
+  /// Checks if login or splash screen is currently the active top route.
+  bool get isLoginOrSplashActive {
+    final currentRoute = routeObserver.currentRoute;
+    if (currentRoute != null) {
+      final name = currentRoute.settings.name;
+      if (name == AppRoutes.login ||
+          name == '/login' ||
+          name == 'login' ||
+          name == '/splash' ||
+          name == 'splash') {
+        return true;
+      }
+    }
+    return false;
+  }
+
   /// Checks if the user is currently on the Dashboard screen or at root.
   bool get isDashboardActive {
     final navState = navigatorKey.currentState;
@@ -388,6 +441,246 @@ class ShortcutService {
     }
 
     return false;
+  }
+
+  /// Triggers the Database Backup flow:
+  /// 1. Asks user for confirmation via Dialog.
+  /// 2. If confirmed, displays progress dialog and invokes API.
+  /// 3. Closes progress dialog and displays success/error SnackBar.
+  Future<void> triggerDatabaseBackup([BuildContext? context]) async {
+    final ctx = context ?? navigatorKey.currentContext;
+    if (ctx == null) return;
+    if (_isBackupDialogOpen ||
+        _isLogoutDialogOpen ||
+        _isConfirmationDialogOpen ||
+        _isScreenAlreadyOpenDialogOpen) {
+      return;
+    }
+
+    _isBackupDialogOpen = true;
+    try {
+      final confirmed = await showDatabaseBackupConfirmationDialog(
+        context: ctx,
+        title: 'Database Backup',
+        message: 'Do you want to take a database backup?',
+        icon: Icons.storage_rounded,
+        iconColor: Colors.blue.shade700,
+      );
+
+      if (confirmed != true) return;
+
+      final progressContext = ctx.mounted ? ctx : navigatorKey.currentContext;
+      if (progressContext == null) return;
+
+      showBackupProgressDialog(progressContext);
+
+      try {
+        final response = await databaseBackupService.createBackup();
+
+        if (navigatorKey.currentState != null &&
+            navigatorKey.currentState!.canPop()) {
+          Navigator.of(progressContext, rootNavigator: true).pop();
+        }
+
+        final snackContext = ctx.mounted ? ctx : navigatorKey.currentContext;
+        if (snackContext != null) {
+          final message = response.message.isNotEmpty
+              ? response.message
+              : 'Database backup completed successfully.';
+          ScaffoldMessenger.of(snackContext).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.check_circle, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      message,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.green.shade700,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      } catch (e) {
+        if (navigatorKey.currentState != null &&
+            navigatorKey.currentState!.canPop()) {
+          Navigator.of(progressContext, rootNavigator: true).pop();
+        }
+
+        final snackContext = ctx.mounted ? ctx : navigatorKey.currentContext;
+        if (snackContext != null) {
+          final errorMessage = e.toString().replaceFirst('Exception: ', '');
+          ScaffoldMessenger.of(snackContext).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      errorMessage,
+                      style: const TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.red.shade700,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              duration: const Duration(seconds: 5),
+            ),
+          );
+        }
+      }
+    } finally {
+      _isBackupDialogOpen = false;
+    }
+  }
+
+  /// Triggers the Logout flow:
+  /// 1. Asks user for confirmation via Dialog with options to backup before logout.
+  /// 2. If 'Yes' (Backup & Logout): Shows progress, backs up DB, then logs out.
+  /// 3. If 'No' (Logout without backup): Logs out immediately.
+  /// 4. If dismissed/cancelled: Does nothing.
+  Future<void> triggerLogout([BuildContext? context]) async {
+    final ctx = context ?? navigatorKey.currentContext;
+    if (ctx == null) return;
+    if (_isLogoutDialogOpen ||
+        _isBackupDialogOpen ||
+        _isConfirmationDialogOpen ||
+        _isScreenAlreadyOpenDialogOpen) {
+      return;
+    }
+
+    _isLogoutDialogOpen = true;
+    try {
+      final confirmed = await showDatabaseBackupConfirmationDialog(
+        context: ctx,
+        title: 'Logout',
+        message: 'Do you want to take a database backup before logging out?',
+        icon: Icons.logout_rounded,
+        iconColor: Colors.red.shade600,
+      );
+
+      // If user dismissed dialog (Escape or outside click), do nothing
+      if (confirmed == null) {
+        return;
+      }
+
+      final activeContext = ctx.mounted ? ctx : navigatorKey.currentContext;
+      if (activeContext == null) return;
+
+      if (confirmed == true) {
+        // User selected Yes: Call backup API first
+        showBackupProgressDialog(activeContext);
+
+        try {
+          await databaseBackupService.createBackup();
+
+          if (navigatorKey.currentState != null &&
+              navigatorKey.currentState!.canPop()) {
+            Navigator.of(activeContext, rootNavigator: true).pop();
+          }
+
+          final snackContext = ctx.mounted ? ctx : navigatorKey.currentContext;
+          if (snackContext != null) {
+            ScaffoldMessenger.of(snackContext).showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: [
+                    const Icon(Icons.check_circle, color: Colors.white),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'Database backup completed successfully.',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ],
+                ),
+                backgroundColor: Colors.green.shade700,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          }
+
+          // Automatically perform logout and navigate to Login Screen
+          await authService.logout();
+          final finalNavState = navigatorKey.currentState;
+          if (finalNavState != null) {
+            finalNavState.pushAndRemoveUntil(
+              MaterialPageRoute(
+                settings: const RouteSettings(name: AppRoutes.login),
+                builder: (context) => const LoginScreen(),
+              ),
+              (route) => false,
+            );
+          }
+        } catch (e) {
+          if (navigatorKey.currentState != null &&
+              navigatorKey.currentState!.canPop()) {
+            Navigator.of(activeContext, rootNavigator: true).pop();
+          }
+
+          final snackContext = ctx.mounted ? ctx : navigatorKey.currentContext;
+          if (snackContext != null) {
+            final errorMessage = e.toString().replaceFirst('Exception: ', '');
+            ScaffoldMessenger.of(snackContext).showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: [
+                    const Icon(Icons.error_outline, color: Colors.white),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        errorMessage,
+                        style: const TextStyle(fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ],
+                ),
+                backgroundColor: Colors.red.shade700,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                duration: const Duration(seconds: 5),
+              ),
+            );
+          }
+        }
+      } else {
+        // User selected No: Skip backup process and logout immediately
+        await authService.logout();
+        final finalNavState = navigatorKey.currentState;
+        if (finalNavState != null) {
+          finalNavState.pushAndRemoveUntil(
+            MaterialPageRoute(
+              settings: const RouteSettings(name: AppRoutes.login),
+              builder: (context) => const LoginScreen(),
+            ),
+            (route) => false,
+          );
+        }
+      }
+    } finally {
+      _isLogoutDialogOpen = false;
+    }
   }
 
   /// Handle Escape key logic
