@@ -21,6 +21,9 @@ class ApiConstants {
   static const String getCustomerByIdEndpoint = '/api/Customer/GetCustomerById';
   static const String insertOrUpdateCustomerEndpoint = '/api/Customer/InsertorUpdateCustomer';
 
+  // Database Backup Endpoints
+  static const String createDatabaseBackupEndpoint = '/api/DatabaseBackup/CreateDatabaseBackup';
+
   // Default JSON Headers
   static const Map<String, String> defaultHeaders = {
     'Content-Type': 'application/json',

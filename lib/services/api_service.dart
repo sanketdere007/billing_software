@@ -31,6 +31,7 @@ class ApiService {
     Map<String, dynamic>? body,
     bool requiresAuth = false,
     Map<String, String>? customHeaders,
+    Duration? timeout,
   }) async {
     final uri = _buildUri(endpoint);
     Map<String, String> headers;
@@ -58,7 +59,7 @@ class ApiService {
             headers: headers,
             body: body != null ? jsonEncode(body) : null,
           )
-          .timeout(ApiConstants.timeoutDuration);
+          .timeout(timeout ?? ApiConstants.timeoutDuration);
 
       debugPrint('┌────────────────────────────────────────────────────────');
       debugPrint('│ 📥 [API POST Response] Status: ${response.statusCode} for $uri');
@@ -97,6 +98,7 @@ class ApiService {
     String endpoint, {
     Map<String, String>? queryParameters,
     bool requiresAuth = true,
+    Duration? timeout,
   }) async {
     final uri = _buildUri(endpoint, queryParameters: queryParameters);
     Map<String, String> headers;
@@ -116,7 +118,7 @@ class ApiService {
 
       final response = await _client
           .get(uri, headers: headers)
-          .timeout(ApiConstants.timeoutDuration);
+          .timeout(timeout ?? ApiConstants.timeoutDuration);
 
       debugPrint('┌────────────────────────────────────────────────────────');
       debugPrint('│ 📥 [API GET Response] Status: ${response.statusCode} for $uri');
