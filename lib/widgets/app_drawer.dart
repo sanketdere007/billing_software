@@ -13,6 +13,7 @@ import '../screens/units/unit_list_screen.dart';
 import '../screens/hsn_sac/hsn_sac_list_screen.dart';
 import '../screens/gst/gst_list_screen.dart';
 import '../screens/companies/company_list_screen.dart';
+import '../screens/cities/city_list_screen.dart';
 import '../screens/branches/branch_list_screen.dart';
 import '../screens/warehouses/warehouse_list_screen.dart';
 import '../screens/users/user_list_screen.dart';
@@ -476,6 +477,20 @@ class _AppDrawerState extends State<AppDrawer> {
                                 MaterialPageRoute(
                                   builder: (context) =>
                                       const BranchListScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                          _buildDrawerItem(
+                            context: context,
+                            icon: Icons.location_city_rounded,
+                            iconColor: _getIconColor(context, Colors.teal),
+                            title: 'City Master',
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const CityListScreen(),
                                 ),
                               );
                             },

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../utils/api_constants.dart';
 import 'session_service.dart';
@@ -45,6 +46,12 @@ class ApiService {
     }
 
     try {
+      debugPrint('┌────────────────────────────────────────────────────────');
+      debugPrint('│ 🚀 [API POST] $uri');
+      debugPrint('│ 📦 Body: ${body != null ? jsonEncode(body) : "null"}');
+      debugPrint('│ 🔑 Headers: $headers');
+      debugPrint('└────────────────────────────────────────────────────────');
+
       final response = await _client
           .post(
             uri,
@@ -52,6 +59,11 @@ class ApiService {
             body: body != null ? jsonEncode(body) : null,
           )
           .timeout(ApiConstants.timeoutDuration);
+
+      debugPrint('┌────────────────────────────────────────────────────────');
+      debugPrint('│ 📥 [API POST Response] Status: ${response.statusCode} for $uri');
+      debugPrint('│ 📄 Body: ${response.body}');
+      debugPrint('└────────────────────────────────────────────────────────');
 
       return _processResponse(response);
     } on SocketException catch (e) {
@@ -96,9 +108,20 @@ class ApiService {
     }
 
     try {
+      debugPrint('┌────────────────────────────────────────────────────────');
+      debugPrint('│ 🔍 [API GET] $uri');
+      debugPrint('│ 🏷️  Query Parameters: ${queryParameters ?? {}}');
+      debugPrint('│ 🔑 Headers: $headers');
+      debugPrint('└────────────────────────────────────────────────────────');
+
       final response = await _client
           .get(uri, headers: headers)
           .timeout(ApiConstants.timeoutDuration);
+
+      debugPrint('┌────────────────────────────────────────────────────────');
+      debugPrint('│ 📥 [API GET Response] Status: ${response.statusCode} for $uri');
+      debugPrint('│ 📄 Body: ${response.body}');
+      debugPrint('└────────────────────────────────────────────────────────');
 
       return _processResponse(response);
     } on SocketException catch (e) {

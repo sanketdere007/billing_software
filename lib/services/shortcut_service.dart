@@ -30,7 +30,8 @@ class AppRoutes {
 class ShortcutRouteObserver extends NavigatorObserver {
   final List<Route<dynamic>> routeStack = [];
 
-  Route<dynamic>? get currentRoute => routeStack.isNotEmpty ? routeStack.last : null;
+  Route<dynamic>? get currentRoute =>
+      routeStack.isNotEmpty ? routeStack.last : null;
 
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
@@ -138,7 +139,7 @@ class ShortcutService {
   }
 
   /// Direct-back route names that should pop directly on Esc without confirmation.
-  static  Set<String> directBackRoutes = {
+  static Set<String> directBackRoutes = {
     AppRoutes.settings,
     AppRoutes.about,
     AppRoutes.helpSupport,
@@ -282,7 +283,8 @@ class ShortcutService {
     }
 
     final key = event.logicalKey;
-    final isCtrlPressed = HardwareKeyboard.instance.isControlPressed ||
+    final isCtrlPressed =
+        HardwareKeyboard.instance.isControlPressed ||
         HardwareKeyboard.instance.isMetaPressed;
 
     // Handle Esc shortcut
@@ -332,11 +334,17 @@ class ShortcutService {
     if (key == LogicalKeyboardKey.f7) {
       if (isCtrlPressed) {
         // Ctrl + F7: Purchase Return
-        navigateToNamedScreen(AppRoutes.purchaseReturnAdd, _buildAddPurchaseReturn);
+        navigateToNamedScreen(
+          AppRoutes.purchaseReturnAdd,
+          _buildAddPurchaseReturn,
+        );
         return true;
       } else {
         // F7: Purchase Entry
-        navigateToNamedScreen(AppRoutes.purchaseEntryAdd, _buildAddPurchaseEntry);
+        navigateToNamedScreen(
+          AppRoutes.purchaseEntryAdd,
+          _buildAddPurchaseEntry,
+        );
         return true;
       }
     }
@@ -487,7 +495,9 @@ class ShortcutService {
     }
 
     // 2. If screen already exists lower in the route stack, bring it to front
-    final bool isAlreadyInStack = stack.any((r) => r.settings.name == routeName);
+    final bool isAlreadyInStack = stack.any(
+      (r) => r.settings.name == routeName,
+    );
     if (isAlreadyInStack) {
       navState.popUntil((r) => r.settings.name == routeName);
       return;

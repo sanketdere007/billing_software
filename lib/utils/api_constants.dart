@@ -5,6 +5,13 @@ class ApiConstants {
   // Auth Endpoints
   static const String loginEndpoint = '/api/Auth/Login';
 
+  // City Endpoints
+  static const String getAllCitiesEndpoint = '/api/City/GetAllCities';
+  static const String insertOrUpdateCityEndpoint = '/api/City/InsertorUpdateCity';
+
+  // State Endpoints
+  static const String getAllStatesEndpoint = '/api/State/GetAllStates';
+
   // Default JSON Headers
   static const Map<String, String> defaultHeaders = {
     'Content-Type': 'application/json',
