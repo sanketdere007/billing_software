@@ -237,8 +237,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                       _passwordFocusNode.requestFocus();
                                     },
                                     decoration: InputDecoration(
-                                      labelText: 'Username / Email Address',
-                                      hintText: 'Enter your username or email',
+                                      labelText: 'Username',
+                                      hintText: 'Enter your username',
                                       prefixIcon: Icon(
                                         Icons.person_outline,
                                         color: isDark
@@ -272,7 +272,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     validator: (value) {
                                       if (value == null ||
                                           value.trim().isEmpty) {
-                                        return 'Please enter your username or email';
+                                        return 'Please enter your username';
                                       }
                                       return null;
                                     },
@@ -349,30 +349,30 @@ class _LoginScreenState extends State<LoginScreen> {
                                   const SizedBox(height: 12),
 
                                   // Forgot Password
-                                  Align(
-                                    alignment: Alignment.centerRight,
-                                    child: TextButton(
-                                      onPressed: () {
-                                        // Handle forgot password
-                                      },
-                                      style: TextButton.styleFrom(
-                                        foregroundColor: isDark
-                                            ? Colors.blue.shade300
-                                            : Colors.blue.shade700,
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 4,
-                                        ),
-                                      ),
-                                      child: const Text(
-                                        'Forgot Password?',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 24),
+                                  // Align(
+                                  //   alignment: Alignment.centerRight,
+                                  //   child: TextButton(
+                                  //     onPressed: () {
+                                  //       // Handle forgot password
+                                  //     },
+                                  //     style: TextButton.styleFrom(
+                                  //       foregroundColor: isDark
+                                  //           ? Colors.blue.shade300
+                                  //           : Colors.blue.shade700,
+                                  //       padding: const EdgeInsets.symmetric(
+                                  //         horizontal: 8,
+                                  //         vertical: 4,
+                                  //       ),
+                                  //     ),
+                                  //     child: const Text(
+                                  //       'Forgot Password?',
+                                  //       style: TextStyle(
+                                  //         fontWeight: FontWeight.w600,
+                                  //       ),
+                                  //     ),
+                                  //   ),
+                                  // ),
+                                  const SizedBox(height: 12),
 
                                   // Login Button
                                   Container(

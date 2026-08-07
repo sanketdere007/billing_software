@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../models/customer.dart';
@@ -6,6 +7,7 @@ import '../../models/city.dart';
 import '../../models/area.dart';
 import '../../models/state_model.dart';
 import '../../services/customer_service.dart';
+import '../../services/customer_excel_export_service.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/city_dropdown.dart';
 import '../../widgets/area_dropdown.dart';
@@ -39,6 +41,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
   String? _selectedAreaName;
   bool? _selectedStatus; // null = All, true = Active, false = Inactive
   bool _isLoading = false;
+  bool _isExporting = false;
   String? _errorMessage;
   List<CustomerListItem> _allCustomers = [];
   List<CustomerListItem> _customers = [];
@@ -353,6 +356,93 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
     }
   }
 
+  Future<void> _exportToExcel() async {
+    if (_customers.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.info_outline_rounded, color: Colors.white, size: 20),
+              SizedBox(width: 8),
+              Text('No customer records available to export.'),
+            ],
+          ),
+          backgroundColor: Colors.orange.shade800,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isExporting = true;
+    });
+
+    try {
+      final result = await CustomerExcelExportService.exportCustomers(
+        customers: _customers,
+      );
+
+      if (!mounted) return;
+
+      if (result.success) {
+        final message = _hasActiveFilters
+            ? 'Exported ${result.recordCount} filtered customer ${_customers.length == 1 ? 'record' : 'records'} to Excel.'
+            : 'Exported all ${result.recordCount} customer ${_customers.length == 1 ? 'record' : 'records'} to Excel.';
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    message,
+                    style: const TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFF166534), // Forest Green
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error_outline_rounded, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Expanded(child: Text(result.message)),
+              ],
+            ),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to export customers: $e'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isExporting = false;
+        });
+      }
+    }
+  }
+
   void _showCustomerDetailsDialog(CustomerListItem customer) {
     showDialog(
       context: context,
@@ -397,6 +487,22 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                               onPressed: _isLoading ? null : _fetchCustomers,
                             ),
                             const SizedBox(width: 8),
+                            OutlinedButton.icon(
+                              onPressed: _isExporting || _isLoading ? null : _exportToExcel,
+                              icon: _isExporting
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    )
+                                  : const Icon(Icons.table_view_outlined, size: 18),
+                              label: Text(_isExporting ? 'Exporting...' : 'Export to Excel'),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
                             FilledButton.icon(
                               onPressed: () => _navigateToEditCustomer(),
                               icon: const Icon(Icons.person_add_rounded, size: 18),
@@ -427,6 +533,17 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
               appBar: AppBar(
                 title: const Text('Customer Master'),
                 actions: [
+                  IconButton(
+                    icon: _isExporting
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.download_rounded),
+                    tooltip: 'Export to Excel',
+                    onPressed: _isExporting || _isLoading ? null : _exportToExcel,
+                  ),
                   IconButton(
                     icon: const Icon(Icons.refresh_rounded),
                     tooltip: 'Refresh',
@@ -586,6 +703,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                     ),
                   ),
                 ),
+
             ],
           ),
           const SizedBox(height: 8),
@@ -735,6 +853,18 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                   onPressed: _clearFilters,
                 ),
               ],
+              const SizedBox(width: 4),
+              IconButton(
+                icon: _isExporting
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.download_rounded),
+                tooltip: 'Export (${_customers.length})',
+                onPressed: _isExporting || _isLoading ? null : _exportToExcel,
+              ),
             ],
           ),
         ],

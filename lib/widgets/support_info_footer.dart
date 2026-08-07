@@ -34,13 +34,13 @@ class SupportInfoFooter extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             InkWell(
-              onTap: () => _launchUrl('https://sankysoft.netlify.app/'),
+              onTap: () => _launchUrl('https://www.sankysoft.in'),
               child: Row(
                 children: [
                   Icon(Icons.language, size: 16, color: iconColor),
                   const SizedBox(width: 8),
                   Text(
-                    'sankysoft.netlify.app',
+                    'www.sankysoft.in',
                     style: TextStyle(color: iconColor, fontSize: 12),
                   ),
                 ],
@@ -104,9 +104,9 @@ class SupportInfoFooter extends StatelessWidget {
                 const SizedBox(width: 24.0),
                 _buildInfoItem(
                   icon: Icons.email,
-                  text: 'support@sankysoft.com',
+                  text: 'sankysoft@gmail.com',
                   color: iconColor,
-                  onTap: () => _launchUrl('mailto:support@sankysoft.com'),
+                  onTap: () => _launchUrl('mailto:sankysoft@gmail.com'),
                 ),
               ],
             ),
