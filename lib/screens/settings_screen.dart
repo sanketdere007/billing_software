@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/shortcut_service.dart';
 import '../services/theme_provider.dart';
+import '../utils/platform_helper.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/direct_back_scope.dart';
 
@@ -9,6 +10,8 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool showShortcut = PlatformHelper.isWindowsDesktopEffective;
+
     return DirectBackScope(
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -24,10 +27,7 @@ class SettingsScreen extends StatelessWidget {
                 padding: EdgeInsets.symmetric(vertical: 8.0),
                 child: Text(
                   'Appearance',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
               ListenableBuilder(
@@ -80,10 +80,7 @@ class SettingsScreen extends StatelessWidget {
                 padding: EdgeInsets.symmetric(vertical: 8.0),
                 child: Text(
                   'Database Backup',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
               Card(
@@ -112,11 +109,66 @@ class SettingsScreen extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  'Database Backup',
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      'Database Backup',
+                                      style: theme.textTheme.titleMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                    ),
+                                    ?showShortcut
+                                        ? Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 6,
+                                                    vertical: 2,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color:
+                                                    Theme.of(
+                                                          context,
+                                                        ).brightness ==
+                                                        Brightness.dark
+                                                    ? Colors.white.withOpacity(
+                                                        0.08,
+                                                      )
+                                                    : Colors.black.withOpacity(
+                                                        0.06,
+                                                      ),
+                                                borderRadius:
+                                                    BorderRadius.circular(4),
+                                                border: Border.all(
+                                                  color:
+                                                      Theme.of(
+                                                            context,
+                                                          ).brightness ==
+                                                          Brightness.dark
+                                                      ? Colors.white12
+                                                      : Colors.black12,
+                                                ),
+                                              ),
+                                              child: Text(
+                                                'Ctrl + Shift + B',
+                                                style: TextStyle(
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.w600,
+                                                  color:
+                                                      Theme.of(
+                                                            context,
+                                                          ).brightness ==
+                                                          Brightness.dark
+                                                      ? Colors.white70
+                                                      : Colors.black54,
+                                                ),
+                                              ),
+                                            ),
+                                          )
+                                        : null,
+                                  ],
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
@@ -204,8 +256,9 @@ class SettingsScreen extends StatelessWidget {
             return Scaffold(
               appBar: AppBar(
                 title: const Text('Settings'),
-                backgroundColor:
-                    isDark ? Colors.grey[900] : Colors.blue.shade700,
+                backgroundColor: isDark
+                    ? Colors.grey[900]
+                    : Colors.blue.shade700,
                 foregroundColor: Colors.white,
                 elevation: 0,
               ),

@@ -9,7 +9,9 @@ class AuthService extends ChangeNotifier {
   // Singleton pattern
   static final AuthService _instance = AuthService._internal();
   factory AuthService() => _instance;
-  AuthService._internal();
+  AuthService._internal() {
+    loadSessionUser();
+  }
 
   UserData? _currentUser;
   UserData? get currentUser => _currentUser;
@@ -59,7 +61,11 @@ class AuthService extends ChangeNotifier {
 
   /// Check if user session is valid
   Future<bool> isAuthenticated() async {
-    return await sessionService.isUserLoggedIn();
+    final isValid = await sessionService.isUserLoggedIn();
+    if (isValid && _currentUser == null) {
+      await loadSessionUser();
+    }
+    return isValid;
   }
 
   /// Logout current user and clear stored credentials

@@ -72,6 +72,32 @@ class UserData {
     return parts.isNotEmpty ? parts : (empUserName ?? 'User');
   }
 
+  /// Returns 'emp_FirstName emp_LastName' if available, otherwise falls back to username or 'User'
+  String get firstAndLastName {
+    final first = (empFirstName ?? '').trim();
+    final last = (empLastName ?? '').trim();
+    final combined = '$first $last'.trim();
+    if (combined.isNotEmpty) return combined;
+    if (empUserName != null && empUserName!.trim().isNotEmpty) {
+      return empUserName!.trim();
+    }
+    return 'User';
+  }
+
+  /// Returns user initials for profile avatar (e.g. 'SD' for 'Sanket Dere')
+  String get initials {
+    final first = (empFirstName ?? '').trim();
+    final last = (empLastName ?? '').trim();
+    if (first.isNotEmpty && last.isNotEmpty) {
+      return '${first[0]}${last[0]}'.toUpperCase();
+    } else if (first.isNotEmpty) {
+      return first[0].toUpperCase();
+    } else if (empUserName != null && empUserName!.trim().isNotEmpty) {
+      return empUserName!.trim()[0].toUpperCase();
+    }
+    return 'U';
+  }
+
   bool get isExpired {
     if (expiration == null || expiration!.isEmpty) return false;
     try {
@@ -84,43 +110,44 @@ class UserData {
 
   factory UserData.fromJson(Map<String, dynamic> json) {
     int? parsedEmpId;
-    if (json['emp_Id'] != null) {
-      if (json['emp_Id'] is int) {
-        parsedEmpId = json['emp_Id'] as int;
-      } else if (json['emp_Id'] is num) {
-        parsedEmpId = (json['emp_Id'] as num).toInt();
-      } else if (json['emp_Id'] is String) {
-        parsedEmpId = int.tryParse(json['emp_Id'] as String);
+    if (json['emp_Id'] != null || json['empId'] != null || json['Emp_Id'] != null) {
+      final rawId = json['emp_Id'] ?? json['empId'] ?? json['Emp_Id'];
+      if (rawId is int) {
+        parsedEmpId = rawId;
+      } else if (rawId is num) {
+        parsedEmpId = rawId.toInt();
+      } else if (rawId is String) {
+        parsedEmpId = int.tryParse(rawId);
       }
     }
 
     bool? parsedIsActive;
-    if (json['emp_IsActive'] != null) {
-      if (json['emp_IsActive'] is bool) {
-        parsedIsActive = json['emp_IsActive'] as bool;
-      } else if (json['emp_IsActive'] is num) {
-        parsedIsActive = (json['emp_IsActive'] as num) == 1;
-      } else if (json['emp_IsActive'] is String) {
-        parsedIsActive = (json['emp_IsActive'] as String).toLowerCase() == 'true' ||
-            (json['emp_IsActive'] as String) == '1';
+    final rawIsActive = json['emp_IsActive'] ?? json['empIsActive'] ?? json['Emp_IsActive'];
+    if (rawIsActive != null) {
+      if (rawIsActive is bool) {
+        parsedIsActive = rawIsActive;
+      } else if (rawIsActive is num) {
+        parsedIsActive = rawIsActive == 1;
+      } else if (rawIsActive is String) {
+        parsedIsActive = rawIsActive.toLowerCase() == 'true' || rawIsActive == '1';
       }
     }
 
     return UserData(
-      token: json['token']?.toString(),
-      expiration: json['expiration']?.toString(),
+      token: (json['token'] ?? json['Token'])?.toString(),
+      expiration: (json['expiration'] ?? json['Expiration'])?.toString(),
       empId: parsedEmpId,
-      empFirstName: json['emp_FirstName']?.toString(),
-      empMiddleName: json['emp_MiddleName']?.toString(),
-      empLastName: json['emp_LastName']?.toString(),
-      empEmail: json['emp_Email']?.toString(),
-      empMobileNumber: json['emp_MobileNumber']?.toString(),
-      empUserName: json['emp_UserName']?.toString(),
-      empGender: json['emp_Gender']?.toString(),
-      empRole: json['emp_Role']?.toString(),
-      empDepartment: json['emp_Department']?.toString(),
-      empDesignation: json['emp_Designation']?.toString(),
-      empJoiningDate: json['emp_JoiningDate']?.toString(),
+      empFirstName: (json['emp_FirstName'] ?? json['empFirstName'] ?? json['Emp_FirstName'] ?? json['emp_firstname'])?.toString(),
+      empMiddleName: (json['emp_MiddleName'] ?? json['empMiddleName'] ?? json['Emp_MiddleName'] ?? json['emp_middlename'])?.toString(),
+      empLastName: (json['emp_LastName'] ?? json['empLastName'] ?? json['Emp_LastName'] ?? json['emp_lastname'])?.toString(),
+      empEmail: (json['emp_Email'] ?? json['empEmail'] ?? json['Emp_Email'])?.toString(),
+      empMobileNumber: (json['emp_MobileNumber'] ?? json['empMobileNumber'] ?? json['Emp_MobileNumber'])?.toString(),
+      empUserName: (json['emp_UserName'] ?? json['empUserName'] ?? json['Emp_UserName'])?.toString(),
+      empGender: (json['emp_Gender'] ?? json['empGender'] ?? json['Emp_Gender'])?.toString(),
+      empRole: (json['emp_Role'] ?? json['empRole'] ?? json['Emp_Role'])?.toString(),
+      empDepartment: (json['emp_Department'] ?? json['empDepartment'] ?? json['Emp_Department'])?.toString(),
+      empDesignation: (json['emp_Designation'] ?? json['empDesignation'] ?? json['Emp_Designation'])?.toString(),
+      empJoiningDate: (json['emp_JoiningDate'] ?? json['empJoiningDate'] ?? json['Emp_JoiningDate'])?.toString(),
       empIsActive: parsedIsActive,
     );
   }

@@ -61,6 +61,14 @@ class _AppDrawerState extends State<AppDrawer> {
   static bool _isSalesMenuExpanded = false;
   static bool _isPurchaseMenuExpanded = false;
 
+  @override
+  void initState() {
+    super.initState();
+    if (authService.currentUser == null) {
+      authService.loadSessionUser();
+    }
+  }
+
   Color _getIconColor(BuildContext context, MaterialColor baseColor) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return isDark ? baseColor.shade300 : baseColor.shade700;
@@ -72,9 +80,8 @@ class _AppDrawerState extends State<AppDrawer> {
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
       child: Column(
         children: [
-          DrawerHeader(
-            margin: EdgeInsets.zero,
-            padding: EdgeInsets.zero,
+          // App Drawer Header with Company Branding & Logged-in User Name (emp_FirstName + emp_LastName)
+          Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
@@ -82,54 +89,56 @@ class _AppDrawerState extends State<AppDrawer> {
                 end: Alignment.bottomRight,
               ),
             ),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return Stack(
-                  children: [
-                    // Background decorative elements
-                    Positioned(
-                      right: -30,
-                      top: -30,
-                      child: Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.05),
-                        ),
+            child: SafeArea(
+              bottom: false,
+              child: Stack(
+                children: [
+                  // Background decorative elements
+                  Positioned(
+                    right: -30,
+                    top: -30,
+                    child: Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withOpacity(0.05),
                       ),
                     ),
-                    Positioned(
-                      left: -20,
-                      bottom: -20,
-                      child: Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.blueAccent.withOpacity(0.1),
-                        ),
+                  ),
+                  Positioned(
+                    left: -20,
+                    bottom: -20,
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.blueAccent.withOpacity(0.1),
                       ),
                     ),
-                    // Main content with animation
-                    Positioned.fill(
-                      child: TweenAnimationBuilder<double>(
-                        tween: Tween<double>(begin: 0.0, end: 1.0),
-                        duration: const Duration(milliseconds: 1200),
-                        curve: Curves.elasticOut,
-                        builder: (context, value, child) {
-                          return Transform.translate(
-                            offset: Offset(0, 40 * (1 - value)),
-                            child: Opacity(
-                              opacity: value.clamp(0.0, 1.0),
-                              child: child,
-                            ),
-                          );
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Main branding content with entrance animation
+                        TweenAnimationBuilder<double>(
+                          tween: Tween<double>(begin: 0.0, end: 1.0),
+                          duration: const Duration(milliseconds: 1000),
+                          curve: Curves.elasticOut,
+                          builder: (context, value, child) {
+                            return Transform.translate(
+                              offset: Offset(0, 30 * (1 - value)),
+                              child: Opacity(
+                                opacity: value.clamp(0.0, 1.0),
+                                child: child,
+                              ),
+                            );
+                          },
                           child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               // Icon container with rotating animation
                               TweenAnimationBuilder<double>(
@@ -137,7 +146,7 @@ class _AppDrawerState extends State<AppDrawer> {
                                   begin: 0,
                                   end: 6.2831853,
                                 ), // 2*PI
-                                duration: const Duration(milliseconds: 1500),
+                                duration: const Duration(milliseconds: 1400),
                                 curve: Curves.easeInOutCubic,
                                 builder: (context, rotationValue, child) {
                                   return Transform.rotate(
@@ -146,7 +155,7 @@ class _AppDrawerState extends State<AppDrawer> {
                                   );
                                 },
                                 child: Container(
-                                  padding: const EdgeInsets.all(12),
+                                  padding: const EdgeInsets.all(10),
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       colors: [
@@ -156,7 +165,7 @@ class _AppDrawerState extends State<AppDrawer> {
                                       begin: Alignment.topLeft,
                                       end: Alignment.bottomRight,
                                     ),
-                                    borderRadius: BorderRadius.circular(16),
+                                    borderRadius: BorderRadius.circular(14),
                                     border: Border.all(
                                       color: Colors.white.withOpacity(0.3),
                                       width: 1.5,
@@ -164,24 +173,24 @@ class _AppDrawerState extends State<AppDrawer> {
                                     boxShadow: [
                                       BoxShadow(
                                         color: Colors.blue.withOpacity(0.2),
-                                        blurRadius: 15,
-                                        spreadRadius: 2,
+                                        blurRadius: 12,
+                                        spreadRadius: 1,
                                       ),
                                     ],
                                   ),
                                   child: const Icon(
                                     Icons.auto_awesome_mosaic_rounded,
                                     color: Colors.white,
-                                    size: 34,
+                                    size: 30,
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 16),
+                              const SizedBox(width: 14),
                               // Texts
                               Expanded(
                                 child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
                                   crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
                                   children: [
                                     FittedBox(
                                       fit: BoxFit.scaleDown,
@@ -190,35 +199,35 @@ class _AppDrawerState extends State<AppDrawer> {
                                         'COMPANY NAME',
                                         style: Theme.of(context)
                                             .textTheme
-                                            .titleLarge
+                                            .titleMedium
                                             ?.copyWith(
                                               color: Colors.white,
                                               fontWeight: FontWeight.w900,
-                                              letterSpacing: 1.5,
+                                              letterSpacing: 1.2,
                                               shadows: [
                                                 Shadow(
                                                   color: Colors.black
                                                       .withOpacity(0.5),
                                                   blurRadius: 6,
-                                                  offset: const Offset(0, 3),
+                                                  offset: const Offset(0, 2),
                                                 ),
                                               ],
                                             ),
                                       ),
                                     ),
-                                    const SizedBox(height: 6),
+                                    const SizedBox(height: 4),
                                     FittedBox(
                                       fit: BoxFit.scaleDown,
                                       alignment: Alignment.centerLeft,
                                       child: Container(
                                         padding: const EdgeInsets.symmetric(
-                                          horizontal: 10,
-                                          vertical: 4,
+                                          horizontal: 8,
+                                          vertical: 3,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: Colors.black.withOpacity(0.2),
+                                          color: Colors.black.withOpacity(0.25),
                                           borderRadius: BorderRadius.circular(
-                                            20,
+                                            16,
                                           ),
                                           border: Border.all(
                                             color: Colors.white.withOpacity(
@@ -235,6 +244,7 @@ class _AppDrawerState extends State<AppDrawer> {
                                                 color: Colors.blue.shade100,
                                                 fontWeight: FontWeight.w600,
                                                 letterSpacing: 0.5,
+                                                fontSize: 10.5,
                                               ),
                                         ),
                                       ),
@@ -245,11 +255,183 @@ class _AppDrawerState extends State<AppDrawer> {
                             ],
                           ),
                         ),
-                      ),
+                        const SizedBox(height: 12),
+                        // Logged-in User Profile Bar (emp_FirstName + emp_LastName)
+                        ListenableBuilder(
+                          listenable: authService,
+                          builder: (context, _) {
+                            final user = authService.currentUser;
+                            final String displayName = () {
+                              if (user != null) {
+                                final first = (user.empFirstName ?? '').trim();
+                                final last = (user.empLastName ?? '').trim();
+                                final combined = '$first $last'.trim();
+                                if (combined.isNotEmpty) return combined;
+                                if (user.empUserName != null &&
+                                    user.empUserName!.trim().isNotEmpty) {
+                                  return user.empUserName!.trim();
+                                }
+                              }
+                              return 'User';
+                            }();
+
+                            final String initials = () {
+                              if (user != null) {
+                                final first = (user.empFirstName ?? '').trim();
+                                final last = (user.empLastName ?? '').trim();
+                                if (first.isNotEmpty && last.isNotEmpty) {
+                                  return '${first[0]}${last[0]}'.toUpperCase();
+                                } else if (first.isNotEmpty) {
+                                  return first[0].toUpperCase();
+                                } else if (user.empUserName != null &&
+                                    user.empUserName!.trim().isNotEmpty) {
+                                  return user.empUserName!.trim()[0].toUpperCase();
+                                }
+                              }
+                              return 'U';
+                            }();
+
+                            final String roleText = () {
+                              if (user != null) {
+                                if (user.empRole != null &&
+                                    user.empRole!.trim().isNotEmpty) {
+                                  return user.empRole!.trim();
+                                }
+                                if (user.empDesignation != null &&
+                                    user.empDesignation!.trim().isNotEmpty) {
+                                  return user.empDesignation!.trim();
+                                }
+                                if (user.empUserName != null &&
+                                    user.empUserName!.trim().isNotEmpty) {
+                                  return '@${user.empUserName!.trim()}';
+                                }
+                              }
+                              return 'Active User';
+                            }();
+
+                            return Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.08),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.15),
+                                  width: 1,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.15),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                children: [
+                                  // User Avatar with Initials
+                                  Container(
+                                    width: 32,
+                                    height: 32,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          Colors.blue.shade500,
+                                          Colors.indigo.shade600,
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                                      border: Border.all(
+                                        color: Colors.white.withOpacity(0.4),
+                                        width: 1.2,
+                                      ),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        initials,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  // User Name (emp_FirstName + emp_LastName) & Role
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Flexible(
+                                              child: Text(
+                                                displayName,
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w700,
+                                                  letterSpacing: 0.2,
+                                                ),
+                                                maxLines: 1,
+                                                overflow:
+                                                    TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 5),
+                                            // Active green dot
+                                            Container(
+                                              width: 6,
+                                              height: 6,
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                color: Colors
+                                                    .greenAccent
+                                                    .shade400,
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.greenAccent
+                                                        .withOpacity(0.6),
+                                                    blurRadius: 4,
+                                                    spreadRadius: 1,
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 1),
+                                        Text(
+                                          roleText,
+                                          style: TextStyle(
+                                            color: Colors.blue.shade200,
+                                            fontSize: 10.5,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     ),
-                  ],
-                );
-              },
+                  ),
+                ],
+              ),
             ),
           ),
           Expanded(
