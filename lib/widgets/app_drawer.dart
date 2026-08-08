@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:billing_software/services/auth_service.dart';
+import 'package:billing_software/services/session_service.dart';
 import '../services/database_backup_service.dart';
 import '../widgets/database_backup_dialog.dart';
 import '../screens/login_screen.dart';
@@ -186,70 +187,97 @@ class _AppDrawerState extends State<AppDrawer> {
                                 ),
                               ),
                               const SizedBox(width: 14),
-                              // Texts
+                              // Texts - Active Company & Branch
                               Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    FittedBox(
-                                      fit: BoxFit.scaleDown,
-                                      alignment: Alignment.centerLeft,
-                                      child: Text(
-                                        'COMPANY NAME',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleMedium
-                                            ?.copyWith(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w900,
-                                              letterSpacing: 1.2,
-                                              shadows: [
-                                                Shadow(
-                                                  color: Colors.black
-                                                      .withOpacity(0.5),
-                                                  blurRadius: 6,
-                                                  offset: const Offset(0, 2),
+                                child: ListenableBuilder(
+                                  listenable: sessionService,
+                                  builder: (context, _) {
+                                    final compName = sessionService.selectedCompName?.trim();
+                                    final branchName = sessionService.selectedBranchName?.trim();
+                                    final displayCompany = (compName != null && compName.isNotEmpty)
+                                        ? compName.toUpperCase()
+                                        : 'COMPANY NAME';
+                                    final displayBranch = (branchName != null && branchName.isNotEmpty)
+                                        ? branchName
+                                        : 'Billing & Management';
+
+                                    return Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          alignment: Alignment.centerLeft,
+                                          child: Text(
+                                            displayCompany,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .titleMedium
+                                                ?.copyWith(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.w900,
+                                                  letterSpacing: 1.2,
+                                                  shadows: [
+                                                    Shadow(
+                                                      color: Colors.black
+                                                          .withOpacity(0.5),
+                                                      blurRadius: 6,
+                                                      offset: const Offset(0, 2),
+                                                    ),
+                                                  ],
+                                                ),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          alignment: Alignment.centerLeft,
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 3,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: Colors.black.withOpacity(0.25),
+                                              borderRadius: BorderRadius.circular(
+                                                16,
+                                              ),
+                                              border: Border.all(
+                                                color: Colors.white.withOpacity(
+                                                  0.1,
+                                                ),
+                                              ),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                if (branchName != null && branchName.isNotEmpty) ...[
+                                                  Icon(
+                                                    Icons.storefront,
+                                                    size: 11,
+                                                    color: Colors.teal.shade200,
+                                                  ),
+                                                  const SizedBox(width: 4),
+                                                ],
+                                                Text(
+                                                  displayBranch,
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodySmall
+                                                      ?.copyWith(
+                                                        color: Colors.blue.shade100,
+                                                        fontWeight: FontWeight.w600,
+                                                        letterSpacing: 0.5,
+                                                        fontSize: 10.5,
+                                                      ),
                                                 ),
                                               ],
                                             ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    FittedBox(
-                                      fit: BoxFit.scaleDown,
-                                      alignment: Alignment.centerLeft,
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 3,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.black.withOpacity(0.25),
-                                          borderRadius: BorderRadius.circular(
-                                            16,
-                                          ),
-                                          border: Border.all(
-                                            color: Colors.white.withOpacity(
-                                              0.1,
-                                            ),
                                           ),
                                         ),
-                                        child: Text(
-                                          'Billing & Management',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodySmall
-                                              ?.copyWith(
-                                                color: Colors.blue.shade100,
-                                                fontWeight: FontWeight.w600,
-                                                letterSpacing: 0.5,
-                                                fontSize: 10.5,
-                                              ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                      ],
+                                    );
+                                  },
                                 ),
                               ),
                             ],

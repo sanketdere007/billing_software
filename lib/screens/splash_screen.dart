@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:billing_software/screens/login_screen.dart';
 import 'package:billing_software/screens/dashboard_screen.dart';
+import 'package:billing_software/screens/company_branch_selection_screen.dart';
 import 'package:billing_software/services/shortcut_service.dart';
 import 'package:billing_software/services/auth_service.dart';
+import 'package:billing_software/services/session_service.dart';
+import 'package:billing_software/services/company_service.dart';
+import 'package:billing_software/services/branch_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -80,16 +84,63 @@ class _SplashScreenState extends State<SplashScreen>
     await Future.delayed(const Duration(milliseconds: 3200));
 
     final isLoggedIn = await authService.isAuthenticated();
+    if (isLoggedIn) {
+      await sessionService.loadSelectedCompanyAndBranch();
+    }
 
     if (!mounted) return;
+
+    final Widget targetScreen;
+    final String routeName;
+
+    if (!isLoggedIn) {
+      targetScreen = const LoginScreen();
+      routeName = AppRoutes.login;
+    } else if (sessionService.hasSelectedContext) {
+      targetScreen = const DashboardScreen();
+      routeName = AppRoutes.dashboard;
+    } else {
+      // User is logged in but hasn't selected context yet. Check if single record exists.
+      bool autoSelected = false;
+      try {
+        final companies = await companyService.getAllCompanies(isActive: true);
+        if (companies.length == 1) {
+          final singleComp = companies.first;
+          final branches = await branchService.getAllBranches(
+            compId: singleComp.compId,
+            isActive: true,
+          );
+          if (branches.length == 1) {
+            final singleBranch = branches.first;
+            await sessionService.setSelectedCompanyAndBranch(
+              compId: singleComp.compId,
+              compName: singleComp.compName,
+              branchId: singleBranch.branchId,
+              branchName: singleBranch.branchName,
+            );
+            autoSelected = true;
+          }
+        }
+      } catch (e) {
+        debugPrint('⚠️ [Splash] Auto-select context check error: $e');
+      }
+
+      if (autoSelected) {
+        targetScreen = const DashboardScreen();
+        routeName = AppRoutes.dashboard;
+      } else {
+        targetScreen = const CompanyBranchSelectionScreen(isChangeMode: false);
+        routeName = '/select-company-branch';
+      }
+    }
+
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
         settings: RouteSettings(
-          name: isLoggedIn ? AppRoutes.dashboard : '/login',
+          name: routeName,
         ),
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            isLoggedIn ? const DashboardScreen() : const LoginScreen(),
+        pageBuilder: (context, animation, secondaryAnimation) => targetScreen,
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(
             opacity: CurvedAnimation(

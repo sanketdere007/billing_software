@@ -12,14 +12,22 @@ class CompanyListScreen extends StatefulWidget {
 }
 
 class _CompanyListScreenState extends State<CompanyListScreen> {
-  final CompanyService _companyService = CompanyService();
+  final CompanyService _companyService = companyService;
   String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
-    _companyService.initializeDummyData();
     _companyService.addListener(_onDataChanged);
+    _loadCompanies();
+  }
+
+  Future<void> _loadCompanies() async {
+    try {
+      await _companyService.getAllCompanies();
+    } catch (_) {
+      _companyService.initializeDummyData();
+    }
   }
 
   @override
@@ -29,10 +37,10 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
   }
 
   void _onDataChanged() {
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
-  List<Company> get _filteredCompanies {
+  List<CompanyListItem> get _filteredCompanies {
     if (_searchQuery.isEmpty) {
       return _companyService.companies;
     }
@@ -184,7 +192,7 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
     );
   }
 
-  Widget _buildListView(List<Company> companies) {
+  Widget _buildListView(List<CompanyListItem> companies) {
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       itemCount: companies.length,
@@ -199,7 +207,7 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
             leading: CircleAvatar(
               backgroundColor: Theme.of(context).colorScheme.primaryContainer,
               child: Text(
-                company.name.substring(0, 1).toUpperCase(),
+                company.name.isNotEmpty ? company.name.substring(0, 1).toUpperCase() : 'C',
                 style: TextStyle(color: Theme.of(context).colorScheme.onPrimaryContainer),
               ),
             ),
@@ -210,11 +218,11 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (company.code != null) ...[
+                if (company.code != null && company.code!.isNotEmpty) ...[
                   const SizedBox(height: 4),
                   Text('Code: ${company.code}'),
                 ],
-                if (company.email != null) ...[
+                if (company.email != null && company.email!.isNotEmpty) ...[
                   const SizedBox(height: 4),
                   Row(
                     children: [
@@ -224,7 +232,7 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                     ],
                   ),
                 ],
-                if (company.city != null) ...[
+                if (company.city != null && company.city!.isNotEmpty) ...[
                   const SizedBox(height: 4),
                   Row(
                     children: [
@@ -254,7 +262,7 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
     );
   }
 
-  Widget _buildDataTable(List<Company> companies) {
+  Widget _buildDataTable(List<CompanyListItem> companies) {
     return SingleChildScrollView(
       scrollDirection: Axis.vertical,
       child: SingleChildScrollView(

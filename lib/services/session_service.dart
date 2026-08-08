@@ -1,14 +1,17 @@
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/login_response.dart';
 import '../utils/api_constants.dart';
 
-class SessionService {
+class SessionService extends ChangeNotifier {
   // Singleton pattern
   static final SessionService _instance = SessionService._internal();
   factory SessionService() => _instance;
-  SessionService._internal();
+  SessionService._internal() {
+    loadSelectedCompanyAndBranch();
+  }
 
-  // Storage Keys
+  // Storage Keys - User Session
   static const String _keyIsLoggedIn = 'isLoggedIn';
   static const String _keyToken = 'auth_token';
   static const String _keyExpiration = 'token_expiration';
@@ -25,6 +28,99 @@ class SessionService {
   static const String _keyEmpDesignation = 'emp_Designation';
   static const String _keyEmpJoiningDate = 'emp_JoiningDate';
   static const String _keyEmpIsActive = 'emp_IsActive';
+
+  // Storage Keys - Selected Organization Context
+  static const String _keySelectedCompId = 'selected_comp_Id';
+  static const String _keySelectedCompName = 'selected_comp_Name';
+  static const String _keySelectedBranchId = 'selected_branch_Id';
+  static const String _keySelectedBranchName = 'selected_branch_Name';
+
+  // In-memory Organization Context
+  int? _selectedCompId;
+  String? _selectedCompName;
+  int? _selectedBranchId;
+  String? _selectedBranchName;
+  bool _isContextLoaded = false;
+
+  int? get selectedCompId => _selectedCompId;
+  String? get selectedCompName => _selectedCompName;
+  int? get selectedBranchId => _selectedBranchId;
+  String? get selectedBranchName => _selectedBranchName;
+  bool get isContextLoaded => _isContextLoaded;
+  bool get hasSelectedCompany => _selectedCompId != null && _selectedCompId! > 0;
+  bool get hasSelectedBranch => _selectedBranchId != null && _selectedBranchId! > 0;
+  bool get hasSelectedContext => hasSelectedCompany && hasSelectedBranch;
+
+  /// Load persisted Selected Company and Branch from SharedPreferences
+  Future<void> loadSelectedCompanyAndBranch() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _selectedCompId = prefs.getInt(_keySelectedCompId);
+      _selectedCompName = prefs.getString(_keySelectedCompName);
+      _selectedBranchId = prefs.getInt(_keySelectedBranchId);
+      _selectedBranchName = prefs.getString(_keySelectedBranchName);
+      _isContextLoaded = true;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('⚠️ [SessionService] Failed to load company/branch context: $e');
+    }
+  }
+
+  /// Save Selected Company to SharedPreferences and update in-memory state
+  Future<void> saveSelectedCompany(int compId, String compName) async {
+    final prefs = await SharedPreferences.getInstance();
+    _selectedCompId = compId;
+    _selectedCompName = compName;
+    await prefs.setInt(_keySelectedCompId, compId);
+    await prefs.setString(_keySelectedCompName, compName);
+    notifyListeners();
+    debugPrint('🏢 [SessionService] Saved Selected Company: ID=$compId, Name="$compName"');
+  }
+
+  /// Save Selected Branch to SharedPreferences and update in-memory state
+  Future<void> saveSelectedBranch(int branchId, String branchName) async {
+    final prefs = await SharedPreferences.getInstance();
+    _selectedBranchId = branchId;
+    _selectedBranchName = branchName;
+    await prefs.setInt(_keySelectedBranchId, branchId);
+    await prefs.setString(_keySelectedBranchName, branchName);
+    notifyListeners();
+    debugPrint('🏬 [SessionService] Saved Selected Branch: ID=$branchId, Name="$branchName"');
+  }
+
+  /// Set both Company and Branch simultaneously
+  Future<void> setSelectedCompanyAndBranch({
+    required int compId,
+    required String compName,
+    required int branchId,
+    required String branchName,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    _selectedCompId = compId;
+    _selectedCompName = compName;
+    _selectedBranchId = branchId;
+    _selectedBranchName = branchName;
+    await prefs.setInt(_keySelectedCompId, compId);
+    await prefs.setString(_keySelectedCompName, compName);
+    await prefs.setInt(_keySelectedBranchId, branchId);
+    await prefs.setString(_keySelectedBranchName, branchName);
+    notifyListeners();
+    debugPrint('🏢🏬 [SessionService] Context Updated -> Comp: ($compId, $compName), Branch: ($branchId, $branchName)');
+  }
+
+  /// Clear selected company and branch
+  Future<void> clearSelectedCompanyAndBranch() async {
+    final prefs = await SharedPreferences.getInstance();
+    _selectedCompId = null;
+    _selectedCompName = null;
+    _selectedBranchId = null;
+    _selectedBranchName = null;
+    await prefs.remove(_keySelectedCompId);
+    await prefs.remove(_keySelectedCompName);
+    await prefs.remove(_keySelectedBranchId);
+    await prefs.remove(_keySelectedBranchName);
+    notifyListeners();
+  }
 
   /// Save session after successful login
   Future<void> saveSession(UserData userData) async {
@@ -77,6 +173,7 @@ class SessionService {
     if (userData.empIsActive != null) {
       await prefs.setBool(_keyEmpIsActive, userData.empIsActive!);
     }
+    notifyListeners();
   }
 
   /// Get stored JWT token
@@ -152,7 +249,7 @@ class SessionService {
     return true;
   }
 
-  /// Clear all stored user session details and tokens on logout
+  /// Clear all stored user session details, company/branch context and tokens on logout
   Future<void> clearSession() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_keyIsLoggedIn);
@@ -171,6 +268,20 @@ class SessionService {
     await prefs.remove(_keyEmpDesignation);
     await prefs.remove(_keyEmpJoiningDate);
     await prefs.remove(_keyEmpIsActive);
+
+    // Clear organization context as well
+    await prefs.remove(_keySelectedCompId);
+    await prefs.remove(_keySelectedCompName);
+    await prefs.remove(_keySelectedBranchId);
+    await prefs.remove(_keySelectedBranchName);
+
+    _selectedCompId = null;
+    _selectedCompName = null;
+    _selectedBranchId = null;
+    _selectedBranchName = null;
+
+    notifyListeners();
+    debugPrint('🔒 [SessionService] Session & Organization Context completely cleared.');
   }
 }
 

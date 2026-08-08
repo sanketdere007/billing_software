@@ -284,8 +284,12 @@ class _CustomerMasterScreenState extends State<CustomerMasterScreen> {
         custCountry: _countryController.text.trim().isNotEmpty
             ? _countryController.text.trim()
             : 'India',
-        custBranchId: 1,
-        custCompId: 1,
+        custBranchId: isEditing
+            ? (widget.customerToEdit?.custBranchId ?? sessionService.selectedBranchId ?? 1)
+            : (sessionService.selectedBranchId ?? 1),
+        custCompId: isEditing
+            ? (widget.customerToEdit?.custCompId ?? sessionService.selectedCompId ?? 1)
+            : (sessionService.selectedCompId ?? 1),
         custIsActive: _isActive,
         custCreatedBy: isEditing ? 0 : _currentEmpId,
         custModifiedBy: _currentEmpId,

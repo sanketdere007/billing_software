@@ -8,6 +8,7 @@ import '../../models/area.dart';
 import '../../models/state_model.dart';
 import '../../services/customer_service.dart';
 import '../../services/customer_excel_export_service.dart';
+import '../../services/session_service.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/city_dropdown.dart';
 import '../../widgets/area_dropdown.dart';
@@ -52,6 +53,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
     super.initState();
     _screenFocusNode.onKeyEvent = _handleKeyEvent;
     _searchFocusNode.onKeyEvent = _handleKeyEvent;
+    sessionService.addListener(_onSessionChanged);
     _fetchCustomers();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -61,8 +63,15 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
     });
   }
 
+  void _onSessionChanged() {
+    if (mounted) {
+      _fetchCustomers();
+    }
+  }
+
   @override
   void dispose() {
+    sessionService.removeListener(_onSessionChanged);
     _debounceTimer?.cancel();
     _searchController.dispose();
     _searchFocusNode.dispose();

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../services/branch_service.dart';
+import '../../services/session_service.dart';
 
 class DashboardFilters extends StatefulWidget {
   final Function(String) onDateRangeChanged;
@@ -17,6 +19,7 @@ class DashboardFilters extends StatefulWidget {
 class _DashboardFiltersState extends State<DashboardFilters> {
   String _selectedDateRange = 'Today';
   String _selectedBranch = 'All Branches';
+  List<String> _branchOptions = ['All Branches'];
 
   final List<String> _dateRanges = [
     'Today',
@@ -27,12 +30,56 @@ class _DashboardFiltersState extends State<DashboardFilters> {
     'Custom',
   ];
 
-  final List<String> _branches = [
-    'All Branches',
-    'Main Branch',
-    'North Branch',
-    'South Branch',
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadBranches();
+    sessionService.addListener(_onSessionChanged);
+  }
+
+  @override
+  void dispose() {
+    sessionService.removeListener(_onSessionChanged);
+    super.dispose();
+  }
+
+  void _onSessionChanged() {
+    _loadBranches();
+  }
+
+  Future<void> _loadBranches() async {
+    try {
+      final branches = await branchService.getAllBranches(
+        compId: sessionService.selectedCompId,
+        isActive: true,
+      );
+      if (mounted) {
+        setState(() {
+          _branchOptions = [
+            'All Branches',
+            ...branches.map((b) => b.branchName).where((name) => name.isNotEmpty),
+          ];
+
+          // If session has active branch and it's in list, we can keep or adapt
+          if (sessionService.selectedBranchName != null &&
+              _branchOptions.contains(sessionService.selectedBranchName)) {
+            _selectedBranch = sessionService.selectedBranchName!;
+          } else if (!_branchOptions.contains(_selectedBranch)) {
+            _selectedBranch = 'All Branches';
+          }
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _branchOptions = [
+            'All Branches',
+            ...branchService.branches.map((b) => b.name).where((name) => name.isNotEmpty),
+          ];
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,18 +94,22 @@ class _DashboardFiltersState extends State<DashboardFilters> {
               items: _dateRanges,
               icon: Icons.calendar_today,
               onChanged: (val) {
-                setState(() => _selectedDateRange = val!);
-                widget.onDateRangeChanged(val!);
+                if (val != null) {
+                  setState(() => _selectedDateRange = val);
+                  widget.onDateRangeChanged(val);
+                }
               },
             ),
             const SizedBox(width: 16),
             _buildDropdown(
-              value: _selectedBranch,
-              items: _branches,
+              value: _branchOptions.contains(_selectedBranch) ? _selectedBranch : 'All Branches',
+              items: _branchOptions,
               icon: Icons.storefront,
               onChanged: (val) {
-                setState(() => _selectedBranch = val!);
-                widget.onBranchChanged(val!);
+                if (val != null) {
+                  setState(() => _selectedBranch = val);
+                  widget.onBranchChanged(val);
+                }
               },
             ),
           ],
@@ -74,7 +125,8 @@ class _DashboardFiltersState extends State<DashboardFilters> {
     required ValueChanged<String?> onChanged,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+    final cleanItems = items.toSet().toList(); // Ensure unique keys
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
@@ -91,8 +143,8 @@ class _DashboardFiltersState extends State<DashboardFilters> {
           const SizedBox(width: 8),
           DropdownButtonHideUnderline(
             child: DropdownButton<String>(
-              value: value,
-              items: items.map((item) {
+              value: cleanItems.contains(value) ? value : (cleanItems.isNotEmpty ? cleanItems.first : null),
+              items: cleanItems.map((item) {
                 return DropdownMenuItem(
                   value: item,
                   child: Text(

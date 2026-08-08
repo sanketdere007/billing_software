@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:billing_software/screens/dashboard_screen.dart';
+import 'package:billing_software/screens/company_branch_selection_screen.dart';
 import 'package:billing_software/services/shortcut_service.dart';
 import 'package:billing_software/services/auth_service.dart';
+import 'package:billing_software/services/session_service.dart';
+import 'package:billing_software/services/company_service.dart';
+import 'package:billing_software/services/branch_service.dart';
 import 'package:billing_software/services/api_service.dart';
 import 'package:billing_software/services/theme_provider.dart';
 import 'package:billing_software/widgets/support_info_footer.dart';
@@ -80,14 +84,59 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         );
 
-        // Navigate to Dashboard and remove Login Screen from navigation stack
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            settings: const RouteSettings(name: AppRoutes.dashboard),
-            builder: (context) => const DashboardScreen(),
-          ),
-        );
+        // Clear any old selected company/branch so the user starts with fresh context
+        await sessionService.clearSelectedCompanyAndBranch();
+
+        // Check if there is only 1 Company and 1 Branch available
+        bool autoSelected = false;
+        try {
+          final companies = await companyService.getAllCompanies(isActive: true);
+          if (companies.length == 1) {
+            final singleCompany = companies.first;
+            final branches = await branchService.getAllBranches(
+              compId: singleCompany.compId,
+              isActive: true,
+            );
+
+            if (branches.length == 1) {
+              final singleBranch = branches.first;
+
+              // Auto-save the single company & branch to local storage
+              await sessionService.setSelectedCompanyAndBranch(
+                compId: singleCompany.compId,
+                compName: singleCompany.compName,
+                branchId: singleBranch.branchId,
+                branchName: singleBranch.branchName,
+              );
+
+              autoSelected = true;
+            }
+          }
+        } catch (e) {
+          debugPrint('⚠️ [Login] Auto-select check error: $e');
+        }
+
+        if (!mounted) return;
+
+        if (autoSelected) {
+          // Single record exists: Skip selection screen and go directly to Dashboard
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              settings: const RouteSettings(name: AppRoutes.dashboard),
+              builder: (context) => const DashboardScreen(),
+            ),
+          );
+        } else {
+          // Multiple companies/branches exist: Show Company & Branch Selection Screen
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  const CompanyBranchSelectionScreen(isChangeMode: false),
+            ),
+          );
+        }
       } catch (e) {
         if (!mounted) return;
 

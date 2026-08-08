@@ -3,6 +3,8 @@ import '../models/login_request.dart';
 import '../models/login_response.dart';
 import '../utils/api_constants.dart';
 import 'api_service.dart';
+import 'company_service.dart';
+import 'branch_service.dart';
 import 'session_service.dart';
 
 class AuthService extends ChangeNotifier {
@@ -68,11 +70,14 @@ class AuthService extends ChangeNotifier {
     return isValid;
   }
 
-  /// Logout current user and clear stored credentials
+  /// Logout current user, clear session, context, and caches
   Future<void> logout() async {
     await sessionService.clearSession();
+    companyService.clearCache();
+    branchService.clearCache();
     _currentUser = null;
     notifyListeners();
+    debugPrint('🚪 [AuthService] User logged out and caches cleared.');
   }
 }
 

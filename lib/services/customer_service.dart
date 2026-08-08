@@ -41,8 +41,12 @@ class CustomerService extends ChangeNotifier {
     notifyListeners();
 
     final cleanSearch = (search == null || search == 'null') ? '' : search.trim();
-    final effectiveBranchId = (branchId != null && branchId > 0) ? branchId : 0;
-    final effectiveCompId = (compId != null && compId > 0) ? compId : 0;
+    final effectiveBranchId = (branchId != null && branchId > 0)
+        ? branchId
+        : (sessionService.selectedBranchId ?? 0);
+    final effectiveCompId = (compId != null && compId > 0)
+        ? compId
+        : (sessionService.selectedCompId ?? 0);
     final effectiveStateId = (stateId != null && stateId > 0) ? stateId : 0;
     final effectiveCityId = (cityId != null && cityId > 0) ? cityId : 0;
     final effectiveAreaId = (areaId != null && areaId > 0) ? areaId : 0;

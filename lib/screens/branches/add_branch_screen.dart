@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../models/branch.dart';
+import '../../models/company.dart';
 import '../../services/branch_service.dart';
+import '../../services/session_service.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/company_dropdown.dart';
 
 class AddBranchScreen extends StatefulWidget {
   const AddBranchScreen({super.key});
@@ -13,12 +16,13 @@ class AddBranchScreen extends StatefulWidget {
 
 class _AddBranchScreenState extends State<AddBranchScreen> {
   final _formKey = GlobalKey<FormState>();
-  final BranchService _branchService = BranchService();
+  final BranchService _branchService = branchService;
   bool _isLoading = false;
   
   String _name = '';
   String _code = '';
-  String _companyId = ''; // Typically a dropdown
+  String _companyId = ''; 
+  int? _selectedCompId;
   String _gst = '';
   String _contactPerson = '';
   String _mobile = '';
@@ -28,6 +32,15 @@ class _AddBranchScreenState extends State<AddBranchScreen> {
   String _state = '';
   String _pincode = '';
   bool _isActive = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedCompId = sessionService.selectedCompId;
+    if (_selectedCompId != null && _selectedCompId! > 0) {
+      _companyId = _selectedCompId.toString();
+    }
+  }
 
   Future<void> _saveBranch({bool saveAndNew = false}) async {
     if (!_formKey.currentState!.validate()) {
@@ -268,21 +281,16 @@ class _AddBranchScreenState extends State<AddBranchScreen> {
   }
 
   Widget _buildCompanyIdField() {
-    // In a real app this would be a DropdownButtonFormField
-    return TextFormField(
-      decoration: const InputDecoration(
-        labelText: 'Company *',
-        border: OutlineInputBorder(),
-        prefixIcon: Icon(Icons.business),
-      ),
-      textInputAction: TextInputAction.next,
-      validator: (value) {
-        if (value == null || value.trim().isEmpty) {
-          return 'Please enter/select company';
-        }
-        return null;
+    return CompanyDropdown(
+      selectedCompId: _selectedCompId,
+      isRequired: true,
+      labelText: 'Company',
+      onChanged: (CompanyListItem? comp) {
+        setState(() {
+          _selectedCompId = comp?.compId;
+          _companyId = comp != null ? comp.compId.toString() : '';
+        });
       },
-      onSaved: (value) => _companyId = value!.trim(),
     );
   }
 

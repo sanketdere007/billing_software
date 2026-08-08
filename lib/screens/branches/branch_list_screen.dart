@@ -12,14 +12,22 @@ class BranchListScreen extends StatefulWidget {
 }
 
 class _BranchListScreenState extends State<BranchListScreen> {
-  final BranchService _branchService = BranchService();
+  final BranchService _branchService = branchService;
   String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
-    _branchService.initializeDummyData();
     _branchService.addListener(_onDataChanged);
+    _loadBranches();
+  }
+
+  Future<void> _loadBranches() async {
+    try {
+      await _branchService.getAllBranches();
+    } catch (_) {
+      _branchService.initializeDummyData();
+    }
   }
 
   @override
@@ -29,10 +37,10 @@ class _BranchListScreenState extends State<BranchListScreen> {
   }
 
   void _onDataChanged() {
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
-  List<Branch> get _filteredBranches {
+  List<BranchListItem> get _filteredBranches {
     if (_searchQuery.isEmpty) {
       return _branchService.branches;
     }
@@ -184,7 +192,7 @@ class _BranchListScreenState extends State<BranchListScreen> {
     );
   }
 
-  Widget _buildListView(List<Branch> branches) {
+  Widget _buildListView(List<BranchListItem> branches) {
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       itemCount: branches.length,
@@ -199,7 +207,7 @@ class _BranchListScreenState extends State<BranchListScreen> {
             leading: CircleAvatar(
               backgroundColor: Theme.of(context).colorScheme.primaryContainer,
               child: Text(
-                branch.name.substring(0, 1).toUpperCase(),
+                branch.name.isNotEmpty ? branch.name.substring(0, 1).toUpperCase() : 'B',
                 style: TextStyle(color: Theme.of(context).colorScheme.onPrimaryContainer),
               ),
             ),
@@ -210,11 +218,11 @@ class _BranchListScreenState extends State<BranchListScreen> {
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (branch.code != null) ...[
+                if (branch.code != null && branch.code!.isNotEmpty) ...[
                   const SizedBox(height: 4),
                   Text('Code: ${branch.code}'),
                 ],
-                if (branch.city != null) ...[
+                if (branch.city != null && branch.city!.isNotEmpty) ...[
                   const SizedBox(height: 4),
                   Row(
                     children: [
@@ -244,7 +252,7 @@ class _BranchListScreenState extends State<BranchListScreen> {
     );
   }
 
-  Widget _buildDataTable(List<Branch> branches) {
+  Widget _buildDataTable(List<BranchListItem> branches) {
     return SingleChildScrollView(
       scrollDirection: Axis.vertical,
       child: SingleChildScrollView(
