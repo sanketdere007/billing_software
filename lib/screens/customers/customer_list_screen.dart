@@ -102,7 +102,8 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
       return KeyEventResult.handled;
     }
 
-    if (key == LogicalKeyboardKey.enter || key == LogicalKeyboardKey.numpadEnter) {
+    if (key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.numpadEnter) {
       if (_highlightedIndex >= 0 && _highlightedIndex < _customers.length) {
         _navigateToEditCustomer(_customers[_highlightedIndex]);
         return KeyEventResult.handled;
@@ -156,27 +157,34 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
       // 2. State Filter
       if (stateId != null && stateId > 0 && c.custStateId > 0) {
         if (c.custStateId != stateId) return false;
-      } else if (stateName != null && stateName.isNotEmpty && c.custState.trim().isNotEmpty) {
+      } else if (stateName != null &&
+          stateName.isNotEmpty &&
+          c.custState.trim().isNotEmpty) {
         if (c.custState.trim().toLowerCase() != stateName) return false;
       }
 
       // 3. City Filter
       if (cityId != null && cityId > 0 && c.custCityId > 0) {
         if (c.custCityId != cityId) return false;
-      } else if (cityName != null && cityName.isNotEmpty && c.custCity.trim().isNotEmpty) {
+      } else if (cityName != null &&
+          cityName.isNotEmpty &&
+          c.custCity.trim().isNotEmpty) {
         if (c.custCity.trim().toLowerCase() != cityName) return false;
       }
 
       // 4. Area Filter
       if (areaId != null && areaId > 0 && c.custAreaId > 0) {
         if (c.custAreaId != areaId) return false;
-      } else if (areaName != null && areaName.isNotEmpty && c.custArea.trim().isNotEmpty) {
+      } else if (areaName != null &&
+          areaName.isNotEmpty &&
+          c.custArea.trim().isNotEmpty) {
         if (c.custArea.trim().toLowerCase() != areaName) return false;
       }
 
       // 5. Search Text Filter
       if (search.isNotEmpty) {
-        final matches = c.custName.toLowerCase().contains(search) ||
+        final matches =
+            c.custName.toLowerCase().contains(search) ||
             c.custMobileNo.toLowerCase().contains(search) ||
             c.custAlternateMobileNo.toLowerCase().contains(search) ||
             c.custCode.toLowerCase().contains(search) ||
@@ -233,7 +241,10 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
     setState(() {
       _selectedCityId = city?.cityId;
       _selectedCityName = city?.cityName;
-      if (city != null && city.stateId != null && city.stateId! > 0 && _selectedStateId == null) {
+      if (city != null &&
+          city.stateId != null &&
+          city.stateId! > 0 &&
+          _selectedStateId == null) {
         _selectedStateId = city.stateId;
         _selectedStateName = city.stateName;
       }
@@ -249,11 +260,15 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
       _selectedAreaId = area?.areaId;
       _selectedAreaName = area?.areaName;
       if (area != null) {
-        if (area.cityId != null && area.cityId! > 0 && _selectedCityId == null) {
+        if (area.cityId != null &&
+            area.cityId! > 0 &&
+            _selectedCityId == null) {
           _selectedCityId = area.cityId;
           _selectedCityName = area.cityName;
         }
-        if (area.stateId != null && area.stateId! > 0 && _selectedStateId == null) {
+        if (area.stateId != null &&
+            area.stateId! > 0 &&
+            _selectedStateId == null) {
           _selectedStateId = area.stateId;
           _selectedStateName = area.stateName;
         }
@@ -297,10 +312,15 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
           } else if (!_hasActiveFilters) {
             _allCustomers = customers;
           }
-          _customers = _applyFilters(_allCustomers.isNotEmpty ? _allCustomers : customers);
+          _customers = _applyFilters(
+            _allCustomers.isNotEmpty ? _allCustomers : customers,
+          );
           _isLoading = false;
           if (_customers.isNotEmpty) {
-            _highlightedIndex = _highlightedIndex.clamp(0, _customers.length - 1);
+            _highlightedIndex = _highlightedIndex.clamp(
+              0,
+              _customers.length - 1,
+            );
           } else {
             _highlightedIndex = 0;
           }
@@ -395,7 +415,11 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
           SnackBar(
             content: Row(
               children: [
-                const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+                const Icon(
+                  Icons.check_circle_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -415,7 +439,11 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
           SnackBar(
             content: Row(
               children: [
-                const Icon(Icons.error_outline_rounded, color: Colors.white, size: 20),
+                const Icon(
+                  Icons.error_outline_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
                 const SizedBox(width: 8),
                 Expanded(child: Text(result.message)),
               ],
@@ -488,28 +516,52 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                             ),
                             const SizedBox(width: 8),
                             OutlinedButton.icon(
-                              onPressed: _isExporting || _isLoading ? null : _exportToExcel,
+                              onPressed: _isExporting || _isLoading
+                                  ? null
+                                  : _exportToExcel,
                               icon: _isExporting
                                   ? const SizedBox(
                                       width: 16,
                                       height: 16,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
                                     )
-                                  : const Icon(Icons.table_view_outlined, size: 18),
-                              label: Text(_isExporting ? 'Exporting...' : 'Export to Excel'),
+                                  : const Icon(
+                                      Icons.table_view_outlined,
+                                      size: 18,
+                                    ),
+                              label: Text(
+                                _isExporting
+                                    ? 'Exporting...'
+                                    : 'Export to Excel',
+                              ),
                               style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 10,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
                               ),
                             ),
                             const SizedBox(width: 8),
                             FilledButton.icon(
                               onPressed: () => _navigateToEditCustomer(),
-                              icon: const Icon(Icons.person_add_rounded, size: 18),
+                              icon: const Icon(
+                                Icons.person_add_rounded,
+                                size: 18,
+                              ),
                               label: const Text('Add Customer'),
                               style: FilledButton.styleFrom(
-                                backgroundColor: Theme.of(context).colorScheme.primary,
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                backgroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.primary,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 10,
+                                ),
                               ),
                             ),
                             const SizedBox(width: 16),
@@ -542,7 +594,9 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                           )
                         : const Icon(Icons.download_rounded),
                     tooltip: 'Export to Excel',
-                    onPressed: _isExporting || _isLoading ? null : _exportToExcel,
+                    onPressed: _isExporting || _isLoading
+                        ? null
+                        : _exportToExcel,
                   ),
                   IconButton(
                     icon: const Icon(Icons.refresh_rounded),
@@ -616,7 +670,10 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                               },
                             )
                           : null,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 0,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -698,12 +755,16 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                     icon: const Icon(Icons.filter_alt_off_rounded, size: 16),
                     label: const Text('Reset'),
                     style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 0,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                   ),
                 ),
-
             ],
           ),
           const SizedBox(height: 8),
@@ -760,8 +821,13 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                       },
                     )
                   : null,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 8,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
               filled: true,
               fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
             ),
@@ -817,7 +883,10 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                 itemBuilder: (context) => [
                   const PopupMenuItem(value: null, child: Text('All Statuses')),
                   const PopupMenuItem(value: true, child: Text('Active Only')),
-                  const PopupMenuItem(value: false, child: Text('Inactive Only')),
+                  const PopupMenuItem(
+                    value: false,
+                    child: Text('Inactive Only'),
+                  ),
                 ],
                 child: Container(
                   height: 48,
@@ -831,7 +900,9 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                       Icon(
                         _selectedStatus == null
                             ? Icons.filter_list_rounded
-                            : (_selectedStatus! ? Icons.check_circle_outline : Icons.pause_circle_outline),
+                            : (_selectedStatus!
+                                  ? Icons.check_circle_outline
+                                  : Icons.pause_circle_outline),
                         size: 18,
                       ),
                       const SizedBox(width: 6),
@@ -877,18 +948,9 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
       height: 44,
       child: SegmentedButton<bool?>(
         segments: const [
-          ButtonSegment<bool?>(
-            value: null,
-            label: Text('All'),
-          ),
-          ButtonSegment<bool?>(
-            value: true,
-            label: Text('Active'),
-          ),
-          ButtonSegment<bool?>(
-            value: false,
-            label: Text('Inactive'),
-          ),
+          ButtonSegment<bool?>(value: null, label: Text('All')),
+          ButtonSegment<bool?>(value: true, label: Text('Active')),
+          ButtonSegment<bool?>(value: false, label: Text('Inactive')),
         ],
         selected: {_selectedStatus},
         onSelectionChanged: (Set<bool?> newSelection) {
@@ -925,7 +987,11 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.error_outline_rounded, size: 48, color: Theme.of(context).colorScheme.error),
+              Icon(
+                Icons.error_outline_rounded,
+                size: 48,
+                color: Theme.of(context).colorScheme.error,
+              ),
               const SizedBox(height: 16),
               Text(
                 _errorMessage!,
@@ -954,7 +1020,9 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primaryContainer.withOpacity(0.3),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -968,9 +1036,9 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                 _hasActiveFilters
                     ? 'No customers match your filter criteria.'
                     : 'No customers added yet.',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Text(
@@ -978,8 +1046,8 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                     ? 'Try clearing filters or search query.'
                     : 'Click "Add Customer" to create your first customer record.',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(height: 20),
               if (_hasActiveFilters)
@@ -1036,11 +1104,19 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                 _buildHeaderCell('Code', width: 100),
                 _buildHeaderCell('Customer Name', flex: 3),
                 _buildHeaderCell('Mobile No', width: 140),
-                _buildHeaderCell('City & State', flex: 2),
+                _buildHeaderCell('City', flex: 2),
                 _buildHeaderCell('Area', flex: 2),
-                _buildHeaderCell('GSTIN', width: 150),
-                _buildHeaderCell('Status', width: 100, alignment: Alignment.center),
-                _buildHeaderCell('Actions', width: 120, alignment: Alignment.centerRight),
+             //   _buildHeaderCell('GSTIN', width: 150),
+                _buildHeaderCell(
+                  'Status',
+                  width: 100,
+                  alignment: Alignment.center,
+                ),
+                _buildHeaderCell(
+                  'Actions',
+                  width: 120,
+                  alignment: Alignment.centerRight,
+                ),
               ],
             ),
           ),
@@ -1056,11 +1132,16 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
 
                 Color rowBackground;
                 if (isHighlighted) {
-                  rowBackground = theme.colorScheme.primaryContainer.withOpacity(isDark ? 0.35 : 0.25);
+                  rowBackground = theme.colorScheme.primaryContainer
+                      .withOpacity(isDark ? 0.35 : 0.25);
                 } else if (index.isOdd) {
-                  rowBackground = isDark ? Colors.white.withOpacity(0.02) : Colors.white;
+                  rowBackground = isDark
+                      ? Colors.white.withOpacity(0.02)
+                      : Colors.white;
                 } else {
-                  rowBackground = isDark ? Colors.transparent : Colors.grey.shade50.withOpacity(0.5);
+                  rowBackground = isDark
+                      ? Colors.transparent
+                      : Colors.grey.shade50.withOpacity(0.5);
                 }
 
                 return InkWell(
@@ -1077,11 +1158,16 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                       color: rowBackground,
                       border: Border(
                         bottom: BorderSide(
-                          color: isDark ? Colors.white10 : Colors.black.withOpacity(0.06),
+                          color: isDark
+                              ? Colors.white10
+                              : Colors.black.withOpacity(0.06),
                           width: 1,
                         ),
                         left: isHighlighted
-                            ? BorderSide(color: theme.colorScheme.primary, width: 4)
+                            ? BorderSide(
+                                color: theme.colorScheme.primary,
+                                width: 4,
+                              )
                             : BorderSide.none,
                       ),
                     ),
@@ -1108,13 +1194,19 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                           child: Align(
                             alignment: Alignment.centerLeft,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
                               decoration: BoxDecoration(
-                                color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+                                color: theme.colorScheme.surfaceVariant
+                                    .withOpacity(0.5),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
-                                customer.custCode.isNotEmpty ? customer.custCode : 'C-${customer.custId}',
+                                customer.custCode.isNotEmpty
+                                    ? customer.custCode
+                                    : 'C-${customer.custId}',
                                 style: const TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
@@ -1159,11 +1251,17 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                           width: 140,
                           child: Row(
                             children: [
-                              Icon(Icons.phone_outlined, size: 14, color: theme.hintColor),
+                              Icon(
+                                Icons.phone_outlined,
+                                size: 14,
+                                color: theme.hintColor,
+                              ),
                               const SizedBox(width: 6),
                               Text(
                                 customer.custMobileNo,
-                                style: const TextStyle(fontWeight: FontWeight.w500),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                             ],
                           ),
@@ -1174,8 +1272,10 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                           flex: 2,
                           child: Text(
                             [
-                              if (customer.custCity.isNotEmpty) customer.custCity,
-                              if (customer.custState.isNotEmpty) customer.custState,
+                              if (customer.custCity.isNotEmpty)
+                                customer.custCity,
+                              // if (customer.custState.isNotEmpty)
+                              //   customer.custState,
                             ].join(', '),
                             style: theme.textTheme.bodyMedium,
                             maxLines: 1,
@@ -1187,9 +1287,13 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                         Expanded(
                           flex: 2,
                           child: Text(
-                            customer.custArea.isNotEmpty ? customer.custArea : '—',
+                            customer.custArea.isNotEmpty
+                                ? customer.custArea
+                                : '—',
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: customer.custArea.isNotEmpty ? null : theme.hintColor,
+                              color: customer.custArea.isNotEmpty
+                                  ? null
+                                  : theme.hintColor,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -1197,17 +1301,21 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                         ),
 
                         // GSTIN
-                        SizedBox(
-                          width: 150,
-                          child: Text(
-                            customer.custGSTNo.isNotEmpty ? customer.custGSTNo : '—',
-                            style: TextStyle(
-                              fontFamily: 'monospace',
-                              fontSize: 12,
-                              color: customer.custGSTNo.isNotEmpty ? null : theme.hintColor,
-                            ),
-                          ),
-                        ),
+                        // SizedBox(
+                        //   width: 150,
+                        //   child: Text(
+                        //     customer.custGSTNo.isNotEmpty
+                        //         ? customer.custGSTNo
+                        //         : '—',
+                        //     style: TextStyle(
+                        //       fontFamily: 'monospace',
+                        //       fontSize: 12,
+                        //       color: customer.custGSTNo.isNotEmpty
+                        //           ? null
+                        //           : theme.hintColor,
+                        //     ),
+                        //   ),
+                        // ),
 
                         // Status Badge
                         SizedBox(
@@ -1224,16 +1332,21 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               IconButton(
-                                icon: const Icon(Icons.visibility_outlined, size: 18),
+                                icon: const Icon(
+                                  Icons.visibility_outlined,
+                                  size: 18,
+                                ),
                                 tooltip: 'View Details',
                                 splashRadius: 18,
-                                onPressed: () => _showCustomerDetailsDialog(customer),
+                                onPressed: () =>
+                                    _showCustomerDetailsDialog(customer),
                               ),
                               IconButton(
                                 icon: const Icon(Icons.edit_outlined, size: 18),
                                 tooltip: 'Edit Customer',
                                 splashRadius: 18,
-                                onPressed: () => _navigateToEditCustomer(customer),
+                                onPressed: () =>
+                                    _navigateToEditCustomer(customer),
                               ),
                             ],
                           ),
@@ -1322,7 +1435,9 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
 
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           elevation: 1.5,
           child: InkWell(
             borderRadius: BorderRadius.circular(12),
@@ -1337,12 +1452,18 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                     children: [
                       CircleAvatar(
                         radius: 20,
-                        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                        backgroundColor: Theme.of(
+                          context,
+                        ).colorScheme.primaryContainer,
                         child: Text(
-                          customer.custName.isNotEmpty ? customer.custName[0].toUpperCase() : 'C',
+                          customer.custName.isNotEmpty
+                              ? customer.custName[0].toUpperCase()
+                              : 'C',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.onPrimaryContainer,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onPrimaryContainer,
                           ),
                         ),
                       ),
@@ -1353,7 +1474,10 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                           children: [
                             Text(
                               customer.custName,
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                              ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -1361,7 +1485,9 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                               Text(
                                 customer.custCompanyName,
                                 style: TextStyle(
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                   fontSize: 12,
                                 ),
                               ),
@@ -1376,20 +1502,33 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                   // Info Rows
                   Row(
                     children: [
-                      const Icon(Icons.phone_iphone_rounded, size: 16, color: Colors.grey),
+                      const Icon(
+                        Icons.phone_iphone_rounded,
+                        size: 16,
+                        color: Colors.grey,
+                      ),
                       const SizedBox(width: 6),
-                      Text(customer.custMobileNo, style: const TextStyle(fontWeight: FontWeight.w500)),
+                      Text(
+                        customer.custMobileNo,
+                        style: const TextStyle(fontWeight: FontWeight.w500),
+                      ),
                       if (customer.custCode.isNotEmpty) ...[
                         const Spacer(),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.grey.withOpacity(0.15),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
                             customer.custCode,
-                            style: const TextStyle(fontSize: 11, fontFamily: 'monospace'),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontFamily: 'monospace',
+                            ),
                           ),
                         ),
                       ],
@@ -1399,7 +1538,11 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                     const SizedBox(height: 6),
                     Row(
                       children: [
-                        const Icon(Icons.email_outlined, size: 16, color: Colors.grey),
+                        const Icon(
+                          Icons.email_outlined,
+                          size: 16,
+                          color: Colors.grey,
+                        ),
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
@@ -1411,18 +1554,26 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                       ],
                     ),
                   ],
-                  if (customer.custCity.isNotEmpty || customer.custArea.isNotEmpty) ...[
+                  if (customer.custCity.isNotEmpty ||
+                      customer.custArea.isNotEmpty) ...[
                     const SizedBox(height: 6),
                     Row(
                       children: [
-                        const Icon(Icons.location_on_outlined, size: 16, color: Colors.grey),
+                        const Icon(
+                          Icons.location_on_outlined,
+                          size: 16,
+                          color: Colors.grey,
+                        ),
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
                             [
-                              if (customer.custArea.isNotEmpty) customer.custArea,
-                              if (customer.custCity.isNotEmpty) customer.custCity,
-                              if (customer.custState.isNotEmpty) customer.custState,
+                              if (customer.custArea.isNotEmpty)
+                                customer.custArea,
+                              if (customer.custCity.isNotEmpty)
+                                customer.custCity,
+                              if (customer.custState.isNotEmpty)
+                                customer.custState,
                             ].join(', '),
                             style: const TextStyle(fontSize: 13),
                             overflow: TextOverflow.ellipsis,
@@ -1465,10 +1616,7 @@ class _CustomerDetailsDialog extends StatefulWidget {
   final CustomerListItem customer;
   final VoidCallback onEdit;
 
-  const _CustomerDetailsDialog({
-    required this.customer,
-    required this.onEdit,
-  });
+  const _CustomerDetailsDialog({required this.customer, required this.onEdit});
 
   @override
   State<_CustomerDetailsDialog> createState() => _CustomerDetailsDialogState();
@@ -1529,8 +1677,12 @@ class _CustomerDetailsDialogState extends State<_CustomerDetailsDialog> {
             Container(
               padding: const EdgeInsets.fromLTRB(20, 18, 16, 16),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                color: isDark
+                    ? const Color(0xFF1E293B)
+                    : const Color(0xFFF1F5F9),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(16),
+                ),
               ),
               child: Row(
                 children: [
@@ -1538,7 +1690,9 @@ class _CustomerDetailsDialogState extends State<_CustomerDetailsDialog> {
                     radius: 24,
                     backgroundColor: theme.colorScheme.primary,
                     child: Text(
-                      _customer.custName.isNotEmpty ? _customer.custName[0].toUpperCase() : 'C',
+                      _customer.custName.isNotEmpty
+                          ? _customer.custName[0].toUpperCase()
+                          : 'C',
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -1595,46 +1749,67 @@ class _CustomerDetailsDialogState extends State<_CustomerDetailsDialog> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Code & General Info Section
-                    _buildSectionHeader('Basic & Contact Information', Icons.contact_page_outlined),
+                    _buildSectionHeader(
+                      'Basic & Contact Information',
+                      Icons.contact_page_outlined,
+                    ),
                     const SizedBox(height: 10),
                     _buildDetailTile(
                       'Customer Code',
-                      _customer.custCode.isNotEmpty ? _customer.custCode : 'C-${_customer.custId}',
-                      onCopy: () => _copyToClipboard('Customer Code', _customer.custCode),
+                      _customer.custCode.isNotEmpty
+                          ? _customer.custCode
+                          : 'C-${_customer.custId}',
+                      onCopy: () =>
+                          _copyToClipboard('Customer Code', _customer.custCode),
                     ),
                     _buildDetailTile(
                       'Mobile Number',
                       _customer.custMobileNo,
                       icon: Icons.phone_iphone_rounded,
-                      onCopy: () => _copyToClipboard('Mobile Number', _customer.custMobileNo),
+                      onCopy: () => _copyToClipboard(
+                        'Mobile Number',
+                        _customer.custMobileNo,
+                      ),
                     ),
                     if (_customer.custAlternateMobileNo.isNotEmpty)
                       _buildDetailTile(
                         'Alternate Mobile',
                         _customer.custAlternateMobileNo,
                         icon: Icons.phone_outlined,
-                        onCopy: () => _copyToClipboard('Alternate Mobile', _customer.custAlternateMobileNo),
+                        onCopy: () => _copyToClipboard(
+                          'Alternate Mobile',
+                          _customer.custAlternateMobileNo,
+                        ),
                       ),
                     if (_customer.custEmail.isNotEmpty)
                       _buildDetailTile(
                         'Email Address',
                         _customer.custEmail,
                         icon: Icons.email_outlined,
-                        onCopy: () => _copyToClipboard('Email', _customer.custEmail),
+                        onCopy: () =>
+                            _copyToClipboard('Email', _customer.custEmail),
                       ),
                     const SizedBox(height: 16),
 
                     // Tax & Identification
-                    _buildSectionHeader('Tax & Registration Details', Icons.badge_outlined),
+                    _buildSectionHeader(
+                      'Tax & Registration Details',
+                      Icons.badge_outlined,
+                    ),
                     const SizedBox(height: 10),
                     Row(
                       children: [
                         Expanded(
                           child: _buildDetailTile(
                             'GSTIN',
-                            _customer.custGSTNo.isNotEmpty ? _customer.custGSTNo : 'Not Provided',
+                            _customer.custGSTNo.isNotEmpty
+                                ? _customer.custGSTNo
+                                : 'Not Provided',
                             onCopy: _customer.custGSTNo.isNotEmpty
-                                ? () => _copyToClipboard('GSTIN', _customer.custGSTNo)
+                                ? () => _copyToClipboard(
+                                    'GSTIN',
+                                    _customer.custGSTNo,
+                                  )
                                 : null,
                           ),
                         ),
@@ -1642,9 +1817,14 @@ class _CustomerDetailsDialogState extends State<_CustomerDetailsDialog> {
                         Expanded(
                           child: _buildDetailTile(
                             'PAN Number',
-                            _customer.custPANNo.isNotEmpty ? _customer.custPANNo : 'Not Provided',
+                            _customer.custPANNo.isNotEmpty
+                                ? _customer.custPANNo
+                                : 'Not Provided',
                             onCopy: _customer.custPANNo.isNotEmpty
-                                ? () => _copyToClipboard('PAN', _customer.custPANNo)
+                                ? () => _copyToClipboard(
+                                    'PAN',
+                                    _customer.custPANNo,
+                                  )
                                 : null,
                           ),
                         ),
@@ -1653,7 +1833,10 @@ class _CustomerDetailsDialogState extends State<_CustomerDetailsDialog> {
                     const SizedBox(height: 16),
 
                     // Location & Address
-                    _buildSectionHeader('Address & Location', Icons.location_on_outlined),
+                    _buildSectionHeader(
+                      'Address & Location',
+                      Icons.location_on_outlined,
+                    ),
                     const SizedBox(height: 10),
                     if (_customer.custAddress.isNotEmpty)
                       _buildDetailTile('Address', _customer.custAddress),
@@ -1662,14 +1845,18 @@ class _CustomerDetailsDialogState extends State<_CustomerDetailsDialog> {
                         Expanded(
                           child: _buildDetailTile(
                             'Area',
-                            _customer.custArea.isNotEmpty ? _customer.custArea : '—',
+                            _customer.custArea.isNotEmpty
+                                ? _customer.custArea
+                                : '—',
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: _buildDetailTile(
                             'City',
-                            _customer.custCity.isNotEmpty ? _customer.custCity : '—',
+                            _customer.custCity.isNotEmpty
+                                ? _customer.custCity
+                                : '—',
                           ),
                         ),
                       ],
@@ -1680,25 +1867,38 @@ class _CustomerDetailsDialogState extends State<_CustomerDetailsDialog> {
                         Expanded(
                           child: _buildDetailTile(
                             'State',
-                            _customer.custState.isNotEmpty ? _customer.custState : '—',
+                            _customer.custState.isNotEmpty
+                                ? _customer.custState
+                                : '—',
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: _buildDetailTile(
                             'Pincode',
-                            _customer.custPincode.isNotEmpty ? _customer.custPincode : '—',
+                            _customer.custPincode.isNotEmpty
+                                ? _customer.custPincode
+                                : '—',
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 8),
-                    _buildDetailTile('Country', _customer.custCountry.isNotEmpty ? _customer.custCountry : 'India'),
+                    _buildDetailTile(
+                      'Country',
+                      _customer.custCountry.isNotEmpty
+                          ? _customer.custCountry
+                          : 'India',
+                    ),
                     const SizedBox(height: 16),
 
                     // Audit Timestamps
-                    if (_customer.custCreatedDate != null || _customer.custModifiedDate != null) ...[
-                      _buildSectionHeader('Audit Information', Icons.history_rounded),
+                    if (_customer.custCreatedDate != null ||
+                        _customer.custModifiedDate != null) ...[
+                      _buildSectionHeader(
+                        'Audit Information',
+                        Icons.history_rounded,
+                      ),
                       const SizedBox(height: 10),
                       Row(
                         children: [
@@ -1767,7 +1967,12 @@ class _CustomerDetailsDialogState extends State<_CustomerDetailsDialog> {
     );
   }
 
-  Widget _buildDetailTile(String label, String value, {IconData? icon, VoidCallback? onCopy}) {
+  Widget _buildDetailTile(
+    String label,
+    String value, {
+    IconData? icon,
+    VoidCallback? onCopy,
+  }) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -1777,7 +1982,9 @@ class _CustomerDetailsDialogState extends State<_CustomerDetailsDialog> {
       decoration: BoxDecoration(
         color: isDark ? Colors.white.withOpacity(0.04) : Colors.grey.shade50,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05)),
+        border: Border.all(
+          color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05),
+        ),
       ),
       child: Row(
         children: [
@@ -1798,7 +2005,10 @@ class _CustomerDetailsDialogState extends State<_CustomerDetailsDialog> {
                 ),
                 Text(
                   value,
-                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
                 ),
               ],
             ),

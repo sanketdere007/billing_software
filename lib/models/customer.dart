@@ -15,10 +15,13 @@ class CustomerListItem {
   final String custAddress;
   final int custAreaId;
   final String custArea;
+  final String custAreaName;
   final int custCityId;
   final String custCity;
+  final String custCityName;
   final int custStateId;
   final String custState;
+  final String custStateName;
   final String custPincode;
   final String custCountry;
   final int custBranchId;
@@ -41,11 +44,14 @@ class CustomerListItem {
     this.custPANNo = '',
     this.custAddress = '',
     this.custAreaId = 0,
-    this.custArea = '',
+    String custArea = '',
+    String custAreaName = '',
     this.custCityId = 0,
-    this.custCity = '',
+    String custCity = '',
+    String custCityName = '',
     this.custStateId = 0,
-    this.custState = '',
+    String custState = '',
+    String custStateName = '',
     this.custPincode = '',
     this.custCountry = 'India',
     this.custBranchId = 0,
@@ -55,7 +61,12 @@ class CustomerListItem {
     this.custCreatedDate,
     this.custModifiedBy = 0,
     this.custModifiedDate,
-  });
+  })  : custArea = custArea.isNotEmpty ? custArea : custAreaName,
+        custAreaName = custAreaName.isNotEmpty ? custAreaName : custArea,
+        custCity = custCity.isNotEmpty ? custCity : custCityName,
+        custCityName = custCityName.isNotEmpty ? custCityName : custCity,
+        custState = custState.isNotEmpty ? custState : custStateName,
+        custStateName = custStateName.isNotEmpty ? custStateName : custState;
 
   // Backwards compatibility getters
   String get id => custId.toString();
@@ -64,8 +75,11 @@ class CustomerListItem {
   String? get email => custEmail.isNotEmpty ? custEmail : null;
   String? get gstNumber => custGSTNo.isNotEmpty ? custGSTNo : null;
   String? get address => custAddress.isNotEmpty ? custAddress : null;
-  String? get city => custCity.isNotEmpty ? custCity : null;
-  String? get state => custState.isNotEmpty ? custState : null;
+  String? get city => custCityName.isNotEmpty ? custCityName : null;
+  String? get cityName => custCityName.isNotEmpty ? custCityName : null;
+  String? get state => custStateName.isNotEmpty ? custStateName : null;
+  String? get stateName => custStateName.isNotEmpty ? custStateName : null;
+  String? get areaName => custAreaName.isNotEmpty ? custAreaName : null;
   String? get pincode => custPincode.isNotEmpty ? custPincode : null;
   bool get isActive => custIsActive;
 
@@ -73,9 +87,9 @@ class CustomerListItem {
   String get fullAddress {
     final parts = [
       if (custAddress.trim().isNotEmpty) custAddress.trim(),
-      if (custArea.trim().isNotEmpty) custArea.trim(),
-      if (custCity.trim().isNotEmpty) custCity.trim(),
-      if (custState.trim().isNotEmpty) custState.trim(),
+      if (custAreaName.trim().isNotEmpty) custAreaName.trim(),
+      if (custCityName.trim().isNotEmpty) custCityName.trim(),
+      if (custStateName.trim().isNotEmpty) custStateName.trim(),
       if (custPincode.trim().isNotEmpty) custPincode.trim(),
       if (custCountry.trim().isNotEmpty && custCountry.trim() != 'India') custCountry.trim(),
     ];
@@ -187,8 +201,12 @@ class CustomerListItem {
     int parsedCustAreaId = 0;
     if (json['cust_Areaid'] != null) {
       parsedCustAreaId = int.tryParse(json['cust_Areaid'].toString()) ?? 0;
+    } else if (json['Cust_Areaid'] != null) {
+      parsedCustAreaId = int.tryParse(json['Cust_Areaid'].toString()) ?? 0;
     } else if (json['cust_AreaId'] != null) {
       parsedCustAreaId = int.tryParse(json['cust_AreaId'].toString()) ?? 0;
+    } else if (json['Cust_AreaId'] != null) {
+      parsedCustAreaId = int.tryParse(json['Cust_AreaId'].toString()) ?? 0;
     } else if (json['custAreaId'] != null) {
       parsedCustAreaId = int.tryParse(json['custAreaId'].toString()) ?? 0;
     } else if (json['custAreaid'] != null) {
@@ -199,24 +217,40 @@ class CustomerListItem {
       parsedCustAreaId = int.tryParse(json['areaId'].toString()) ?? 0;
     }
 
-    // Parse Area Name
-    String parsedCustArea = '';
-    if (json['cust_Area'] != null) {
-      parsedCustArea = json['cust_Area'].toString();
-    } else if (json['custArea'] != null) {
-      parsedCustArea = json['custArea'].toString();
-    } else if (json['area_Name'] != null) {
-      parsedCustArea = json['area_Name'].toString();
-    } else if (json['area'] != null) {
-      parsedCustArea = json['area'].toString();
+    // Parse Area Name (Cust_AreaName)
+    String parsedCustAreaName = '';
+    if (json['Cust_AreaName'] != null && json['Cust_AreaName'].toString().isNotEmpty) {
+      parsedCustAreaName = json['Cust_AreaName'].toString();
+    } else if (json['cust_AreaName'] != null && json['cust_AreaName'].toString().isNotEmpty) {
+      parsedCustAreaName = json['cust_AreaName'].toString();
+    } else if (json['custAreaName'] != null && json['custAreaName'].toString().isNotEmpty) {
+      parsedCustAreaName = json['custAreaName'].toString();
+    } else if (json['AreaName'] != null && json['AreaName'].toString().isNotEmpty) {
+      parsedCustAreaName = json['AreaName'].toString();
+    } else if (json['areaName'] != null && json['areaName'].toString().isNotEmpty) {
+      parsedCustAreaName = json['areaName'].toString();
+    } else if (json['area_Name'] != null && json['area_Name'].toString().isNotEmpty) {
+      parsedCustAreaName = json['area_Name'].toString();
+    } else if (json['Cust_Area'] != null && json['Cust_Area'].toString().isNotEmpty) {
+      parsedCustAreaName = json['Cust_Area'].toString();
+    } else if (json['cust_Area'] != null && json['cust_Area'].toString().isNotEmpty) {
+      parsedCustAreaName = json['cust_Area'].toString();
+    } else if (json['custArea'] != null && json['custArea'].toString().isNotEmpty) {
+      parsedCustAreaName = json['custArea'].toString();
+    } else if (json['area'] != null && json['area'].toString().isNotEmpty) {
+      parsedCustAreaName = json['area'].toString();
     }
 
     // Parse City ID
     int parsedCustCityId = 0;
     if (json['cust_Cityid'] != null) {
       parsedCustCityId = int.tryParse(json['cust_Cityid'].toString()) ?? 0;
+    } else if (json['Cust_Cityid'] != null) {
+      parsedCustCityId = int.tryParse(json['Cust_Cityid'].toString()) ?? 0;
     } else if (json['cust_CityId'] != null) {
       parsedCustCityId = int.tryParse(json['cust_CityId'].toString()) ?? 0;
+    } else if (json['Cust_CityId'] != null) {
+      parsedCustCityId = int.tryParse(json['Cust_CityId'].toString()) ?? 0;
     } else if (json['custCityId'] != null) {
       parsedCustCityId = int.tryParse(json['custCityId'].toString()) ?? 0;
     } else if (json['custCityid'] != null) {
@@ -227,24 +261,40 @@ class CustomerListItem {
       parsedCustCityId = int.tryParse(json['cityId'].toString()) ?? 0;
     }
 
-    // Parse City Name
-    String parsedCustCity = '';
-    if (json['cust_City'] != null) {
-      parsedCustCity = json['cust_City'].toString();
-    } else if (json['custCity'] != null) {
-      parsedCustCity = json['custCity'].toString();
-    } else if (json['city_Name'] != null) {
-      parsedCustCity = json['city_Name'].toString();
-    } else if (json['city'] != null) {
-      parsedCustCity = json['city'].toString();
+    // Parse City Name (Cust_CityName)
+    String parsedCustCityName = '';
+    if (json['Cust_CityName'] != null && json['Cust_CityName'].toString().isNotEmpty) {
+      parsedCustCityName = json['Cust_CityName'].toString();
+    } else if (json['cust_CityName'] != null && json['cust_CityName'].toString().isNotEmpty) {
+      parsedCustCityName = json['cust_CityName'].toString();
+    } else if (json['custCityName'] != null && json['custCityName'].toString().isNotEmpty) {
+      parsedCustCityName = json['custCityName'].toString();
+    } else if (json['CityName'] != null && json['CityName'].toString().isNotEmpty) {
+      parsedCustCityName = json['CityName'].toString();
+    } else if (json['cityName'] != null && json['cityName'].toString().isNotEmpty) {
+      parsedCustCityName = json['cityName'].toString();
+    } else if (json['city_Name'] != null && json['city_Name'].toString().isNotEmpty) {
+      parsedCustCityName = json['city_Name'].toString();
+    } else if (json['Cust_City'] != null && json['Cust_City'].toString().isNotEmpty) {
+      parsedCustCityName = json['Cust_City'].toString();
+    } else if (json['cust_City'] != null && json['cust_City'].toString().isNotEmpty) {
+      parsedCustCityName = json['cust_City'].toString();
+    } else if (json['custCity'] != null && json['custCity'].toString().isNotEmpty) {
+      parsedCustCityName = json['custCity'].toString();
+    } else if (json['city'] != null && json['city'].toString().isNotEmpty) {
+      parsedCustCityName = json['city'].toString();
     }
 
     // Parse State ID
     int parsedCustStateId = 0;
     if (json['cust_Stateid'] != null) {
       parsedCustStateId = int.tryParse(json['cust_Stateid'].toString()) ?? 0;
+    } else if (json['Cust_Stateid'] != null) {
+      parsedCustStateId = int.tryParse(json['Cust_Stateid'].toString()) ?? 0;
     } else if (json['cust_StateId'] != null) {
       parsedCustStateId = int.tryParse(json['cust_StateId'].toString()) ?? 0;
+    } else if (json['Cust_StateId'] != null) {
+      parsedCustStateId = int.tryParse(json['Cust_StateId'].toString()) ?? 0;
     } else if (json['custStateId'] != null) {
       parsedCustStateId = int.tryParse(json['custStateId'].toString()) ?? 0;
     } else if (json['custStateid'] != null) {
@@ -255,22 +305,36 @@ class CustomerListItem {
       parsedCustStateId = int.tryParse(json['stateId'].toString()) ?? 0;
     }
 
-    // Parse State Name
-    String parsedCustState = '';
-    if (json['cust_State'] != null) {
-      parsedCustState = json['cust_State'].toString();
-    } else if (json['custState'] != null) {
-      parsedCustState = json['custState'].toString();
-    } else if (json['state_Name'] != null) {
-      parsedCustState = json['state_Name'].toString();
-    } else if (json['state'] != null) {
-      parsedCustState = json['state'].toString();
+    // Parse State Name (Cust_StateName)
+    String parsedCustStateName = '';
+    if (json['Cust_StateName'] != null && json['Cust_StateName'].toString().isNotEmpty) {
+      parsedCustStateName = json['Cust_StateName'].toString();
+    } else if (json['cust_StateName'] != null && json['cust_StateName'].toString().isNotEmpty) {
+      parsedCustStateName = json['cust_StateName'].toString();
+    } else if (json['custStateName'] != null && json['custStateName'].toString().isNotEmpty) {
+      parsedCustStateName = json['custStateName'].toString();
+    } else if (json['StateName'] != null && json['StateName'].toString().isNotEmpty) {
+      parsedCustStateName = json['StateName'].toString();
+    } else if (json['stateName'] != null && json['stateName'].toString().isNotEmpty) {
+      parsedCustStateName = json['stateName'].toString();
+    } else if (json['state_Name'] != null && json['state_Name'].toString().isNotEmpty) {
+      parsedCustStateName = json['state_Name'].toString();
+    } else if (json['Cust_State'] != null && json['Cust_State'].toString().isNotEmpty) {
+      parsedCustStateName = json['Cust_State'].toString();
+    } else if (json['cust_State'] != null && json['cust_State'].toString().isNotEmpty) {
+      parsedCustStateName = json['cust_State'].toString();
+    } else if (json['custState'] != null && json['custState'].toString().isNotEmpty) {
+      parsedCustStateName = json['custState'].toString();
+    } else if (json['state'] != null && json['state'].toString().isNotEmpty) {
+      parsedCustStateName = json['state'].toString();
     }
 
     // Parse Pincode
     String parsedCustPincode = '';
     if (json['cust_Pincode'] != null) {
       parsedCustPincode = json['cust_Pincode'].toString();
+    } else if (json['Cust_Pincode'] != null) {
+      parsedCustPincode = json['Cust_Pincode'].toString();
     } else if (json['custPincode'] != null) {
       parsedCustPincode = json['custPincode'].toString();
     } else if (json['pincode'] != null) {
@@ -281,6 +345,8 @@ class CustomerListItem {
     String parsedCustCountry = 'India';
     if (json['cust_Country'] != null && json['cust_Country'].toString().isNotEmpty) {
       parsedCustCountry = json['cust_Country'].toString();
+    } else if (json['Cust_Country'] != null && json['Cust_Country'].toString().isNotEmpty) {
+      parsedCustCountry = json['Cust_Country'].toString();
     } else if (json['custCountry'] != null && json['custCountry'].toString().isNotEmpty) {
       parsedCustCountry = json['custCountry'].toString();
     } else if (json['country'] != null && json['country'].toString().isNotEmpty) {
@@ -291,6 +357,8 @@ class CustomerListItem {
     int parsedCustBranchId = 0;
     if (json['cust_BranchId'] != null) {
       parsedCustBranchId = int.tryParse(json['cust_BranchId'].toString()) ?? 0;
+    } else if (json['Cust_BranchId'] != null) {
+      parsedCustBranchId = int.tryParse(json['Cust_BranchId'].toString()) ?? 0;
     } else if (json['custBranchId'] != null) {
       parsedCustBranchId = int.tryParse(json['custBranchId'].toString()) ?? 0;
     } else if (json['branchId'] != null) {
@@ -301,6 +369,8 @@ class CustomerListItem {
     int parsedCustCompId = 0;
     if (json['cust_CompId'] != null) {
       parsedCustCompId = int.tryParse(json['cust_CompId'].toString()) ?? 0;
+    } else if (json['Cust_CompId'] != null) {
+      parsedCustCompId = int.tryParse(json['Cust_CompId'].toString()) ?? 0;
     } else if (json['custCompId'] != null) {
       parsedCustCompId = int.tryParse(json['custCompId'].toString()) ?? 0;
     } else if (json['compId'] != null) {
@@ -311,6 +381,9 @@ class CustomerListItem {
     bool parsedIsActive = true;
     if (json['cust_IsActive'] != null) {
       final val = json['cust_IsActive'];
+      parsedIsActive = val == true || val == 'true' || val == 1 || val == '1';
+    } else if (json['Cust_IsActive'] != null) {
+      final val = json['Cust_IsActive'];
       parsedIsActive = val == true || val == 'true' || val == 1 || val == '1';
     } else if (json['custIsActive'] != null) {
       final val = json['custIsActive'];
@@ -324,6 +397,8 @@ class CustomerListItem {
     int parsedCustCreatedBy = 0;
     if (json['cust_CreatedBy'] != null) {
       parsedCustCreatedBy = int.tryParse(json['cust_CreatedBy'].toString()) ?? 0;
+    } else if (json['Cust_CreatedBy'] != null) {
+      parsedCustCreatedBy = int.tryParse(json['Cust_CreatedBy'].toString()) ?? 0;
     } else if (json['custCreatedBy'] != null) {
       parsedCustCreatedBy = int.tryParse(json['custCreatedBy'].toString()) ?? 0;
     }
@@ -332,6 +407,8 @@ class CustomerListItem {
     String? parsedCustCreatedDate;
     if (json['cust_CreatedDate'] != null) {
       parsedCustCreatedDate = json['cust_CreatedDate'].toString();
+    } else if (json['Cust_CreatedDate'] != null) {
+      parsedCustCreatedDate = json['Cust_CreatedDate'].toString();
     } else if (json['custCreatedDate'] != null) {
       parsedCustCreatedDate = json['custCreatedDate'].toString();
     }
@@ -340,6 +417,8 @@ class CustomerListItem {
     int parsedCustModifiedBy = 0;
     if (json['cust_ModifiedBy'] != null) {
       parsedCustModifiedBy = int.tryParse(json['cust_ModifiedBy'].toString()) ?? 0;
+    } else if (json['Cust_ModifiedBy'] != null) {
+      parsedCustModifiedBy = int.tryParse(json['Cust_ModifiedBy'].toString()) ?? 0;
     } else if (json['custModifiedBy'] != null) {
       parsedCustModifiedBy = int.tryParse(json['custModifiedBy'].toString()) ?? 0;
     }
@@ -348,6 +427,8 @@ class CustomerListItem {
     String? parsedCustModifiedDate;
     if (json['cust_ModifiedDate'] != null) {
       parsedCustModifiedDate = json['cust_ModifiedDate'].toString();
+    } else if (json['Cust_ModifiedDate'] != null) {
+      parsedCustModifiedDate = json['Cust_ModifiedDate'].toString();
     } else if (json['custModifiedDate'] != null) {
       parsedCustModifiedDate = json['custModifiedDate'].toString();
     }
@@ -364,11 +445,14 @@ class CustomerListItem {
       custPANNo: parsedCustPANNo,
       custAddress: parsedCustAddress,
       custAreaId: parsedCustAreaId,
-      custArea: parsedCustArea,
+      custArea: parsedCustAreaName,
+      custAreaName: parsedCustAreaName,
       custCityId: parsedCustCityId,
-      custCity: parsedCustCity,
+      custCity: parsedCustCityName,
+      custCityName: parsedCustCityName,
       custStateId: parsedCustStateId,
-      custState: parsedCustState,
+      custState: parsedCustStateName,
+      custStateName: parsedCustStateName,
       custPincode: parsedCustPincode,
       custCountry: parsedCustCountry,
       custBranchId: parsedCustBranchId,
@@ -394,11 +478,17 @@ class CustomerListItem {
       'cust_PANNo': custPANNo,
       'cust_Address': custAddress,
       'cust_Areaid': custAreaId,
-      'cust_Area': custArea,
+      'cust_Area': custAreaName,
+      'cust_AreaName': custAreaName,
+      'Cust_AreaName': custAreaName,
       'cust_Cityid': custCityId,
-      'cust_City': custCity,
+      'cust_City': custCityName,
+      'cust_CityName': custCityName,
+      'Cust_CityName': custCityName,
       'cust_Stateid': custStateId,
-      'cust_State': custState,
+      'cust_State': custStateName,
+      'cust_StateName': custStateName,
+      'Cust_StateName': custStateName,
       'cust_Pincode': custPincode,
       'cust_Country': custCountry,
       'cust_BranchId': custBranchId,
@@ -424,10 +514,13 @@ class CustomerListItem {
     String? custAddress,
     int? custAreaId,
     String? custArea,
+    String? custAreaName,
     int? custCityId,
     String? custCity,
+    String? custCityName,
     int? custStateId,
     String? custState,
+    String? custStateName,
     String? custPincode,
     String? custCountry,
     int? custBranchId,
@@ -438,6 +531,9 @@ class CustomerListItem {
     int? custModifiedBy,
     String? custModifiedDate,
   }) {
+    final effectiveArea = custAreaName ?? custArea ?? this.custAreaName;
+    final effectiveCity = custCityName ?? custCity ?? this.custCityName;
+    final effectiveState = custStateName ?? custState ?? this.custStateName;
     return CustomerListItem(
       custId: custId ?? this.custId,
       custCode: custCode ?? this.custCode,
@@ -450,11 +546,14 @@ class CustomerListItem {
       custPANNo: custPANNo ?? this.custPANNo,
       custAddress: custAddress ?? this.custAddress,
       custAreaId: custAreaId ?? this.custAreaId,
-      custArea: custArea ?? this.custArea,
+      custArea: effectiveArea,
+      custAreaName: effectiveArea,
       custCityId: custCityId ?? this.custCityId,
-      custCity: custCity ?? this.custCity,
+      custCity: effectiveCity,
+      custCityName: effectiveCity,
       custStateId: custStateId ?? this.custStateId,
-      custState: custState ?? this.custState,
+      custState: effectiveState,
+      custStateName: effectiveState,
       custPincode: custPincode ?? this.custPincode,
       custCountry: custCountry ?? this.custCountry,
       custBranchId: custBranchId ?? this.custBranchId,

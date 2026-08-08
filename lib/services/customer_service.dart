@@ -167,8 +167,11 @@ class CustomerService extends ChangeNotifier {
                 c.custPANNo.toLowerCase().contains(searchLower) ||
                 c.custAddress.toLowerCase().contains(searchLower) ||
                 c.custCity.toLowerCase().contains(searchLower) ||
+                c.custCityName.toLowerCase().contains(searchLower) ||
                 c.custState.toLowerCase().contains(searchLower) ||
+                c.custStateName.toLowerCase().contains(searchLower) ||
                 c.custArea.toLowerCase().contains(searchLower) ||
+                c.custAreaName.toLowerCase().contains(searchLower) ||
                 c.custPincode.toLowerCase().contains(searchLower) ||
                 'c-${c.custId}'.contains(searchLower);
             if (!matches) return false;
