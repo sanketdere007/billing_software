@@ -9,6 +9,22 @@ class ApiConstants {
   static const String getAllCitiesEndpoint = '/api/City/GetAllCities';
   static const String insertOrUpdateCityEndpoint = '/api/City/InsertorUpdateCity';
 
+  // Category Endpoints
+  static const String getAllCategoriesEndpoint = '/api/Category/GetAllCategories';
+  static const String insertOrUpdateCategoryEndpoint = '/api/Category/InsertorUpdateCategory';
+
+  // SubCategory Endpoints
+  static const String getAllSubCategoriesEndpoint = '/api/SubCategory/GetAllSubCategories';
+  static const String insertOrUpdateSubCategoryEndpoint = '/api/SubCategory/InsertorUpdateSubCategory';
+
+  // Brand Endpoints
+  static const String getAllBrandsEndpoint = '/api/Brand/GetAllBrands';
+  static const String insertOrUpdateBrandEndpoint = '/api/Brand/InsertorUpdateBrand';
+
+  // Unit Endpoints
+  static const String getAllUnitsEndpoint = '/api/Unit/GetAllUnits';
+  static const String insertOrUpdateUnitEndpoint = '/api/Unit/InsertorUpdateUnit';
+
   // Area Endpoints
   static const String getAllAreasEndpoint = '/api/Area/GetAllAreas';
   static const String insertOrUpdateAreaEndpoint = '/api/Area/InsertorUpdateArea';

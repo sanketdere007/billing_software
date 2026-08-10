@@ -626,7 +626,7 @@ class _AppDrawerState extends State<AppDrawer> {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
                                   builder: (context) =>
-                                      const SubcategoryListScreen(),
+                                      const SubCategoryListScreen(),
                                 ),
                               );
                             },

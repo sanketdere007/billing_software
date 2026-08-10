@@ -1,9 +1,13 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../models/brand.dart';
 import '../../services/brand_service.dart';
 import '../../widgets/app_drawer.dart';
-import 'add_brand_screen.dart';
+import '../../widgets/direct_back_scope.dart';
+import 'brand_master_screen.dart';
 
+/// Brand List Screen with search, status filter, keyboard navigation, and navigation to BrandMasterScreen
 class BrandListScreen extends StatefulWidget {
   const BrandListScreen({super.key});
 
@@ -12,212 +16,1014 @@ class BrandListScreen extends StatefulWidget {
 }
 
 class _BrandListScreenState extends State<BrandListScreen> {
-  final BrandService _brandService = BrandService();
-  String _searchQuery = '';
+  final BrandService _brandService = brandService;
+
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+  final FocusNode _screenFocusNode = FocusNode();
+  final ScrollController _scrollController = ScrollController();
+  Timer? _debounceTimer;
+
+  bool? _selectedStatus; // null = All, true = Active, false = Inactive
+  bool _isLoading = false;
+  String? _errorMessage;
+  List<BrandListItem> _brands = [];
+  int _highlightedIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    _brandService.initializeDummyData();
-    _brandService.addListener(_onDataChanged);
+    _screenFocusNode.onKeyEvent = _handleKeyEvent;
+    _searchFocusNode.onKeyEvent = _handleKeyEvent;
+    _fetchBrands();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _screenFocusNode.requestFocus();
+      }
+    });
   }
 
   @override
   void dispose() {
-    _brandService.removeListener(_onDataChanged);
+    _debounceTimer?.cancel();
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    _screenFocusNode.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
-  void _onDataChanged() => setState(() {});
+  KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
+    if (event is! KeyDownEvent || _brands.isEmpty) {
+      return KeyEventResult.ignored;
+    }
 
-  List<Brand> get _filteredBrands {
-    if (_searchQuery.isEmpty) return _brandService.brands;
-    return _brandService.brands.where((b) {
-      return b.name.toLowerCase().contains(_searchQuery.toLowerCase());
-    }).toList();
+    final key = event.logicalKey;
+
+    if (key == LogicalKeyboardKey.arrowDown) {
+      setState(() {
+        if (_highlightedIndex < 0) {
+          _highlightedIndex = 0;
+        } else {
+          _highlightedIndex = (_highlightedIndex + 1) % _brands.length;
+        }
+      });
+      _scrollToIndex(_highlightedIndex);
+      return KeyEventResult.handled;
+    }
+
+    if (key == LogicalKeyboardKey.arrowUp) {
+      setState(() {
+        if (_highlightedIndex <= 0) {
+          _highlightedIndex = _brands.length - 1;
+        } else {
+          _highlightedIndex = _highlightedIndex - 1;
+        }
+      });
+      _scrollToIndex(_highlightedIndex);
+      return KeyEventResult.handled;
+    }
+
+    if (key == LogicalKeyboardKey.enter || key == LogicalKeyboardKey.numpadEnter) {
+      if (_highlightedIndex >= 0 && _highlightedIndex < _brands.length) {
+        _navigateToAddBrand(_brands[_highlightedIndex]);
+        return KeyEventResult.handled;
+      }
+    }
+
+    return KeyEventResult.ignored;
   }
 
-  void _navigateToAddBrand() {
-    Navigator.of(context).push(MaterialPageRoute(builder: (context) => const AddBrandScreen()));
+  void _scrollToIndex(int index) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scrollController.hasClients) return;
+      const double rowHeight = 53.0;
+      final targetOffset = index * rowHeight;
+      final currentOffset = _scrollController.offset;
+      final viewportHeight = _scrollController.position.viewportDimension;
+      final maxOffset = _scrollController.position.maxScrollExtent;
+
+      if (targetOffset < currentOffset) {
+        _scrollController.animateTo(
+          targetOffset.clamp(0.0, maxOffset),
+          duration: const Duration(milliseconds: 80),
+          curve: Curves.easeOut,
+        );
+      } else if (targetOffset + rowHeight > currentOffset + viewportHeight) {
+        _scrollController.animateTo(
+          (targetOffset + rowHeight - viewportHeight).clamp(0.0, maxOffset),
+          duration: const Duration(milliseconds: 80),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  void _onSearchChanged(String value) {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 400), () {
+      _applyFilters();
+    });
+  }
+
+  Future<void> _fetchBrands() async {
+    if (!mounted) return;
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await _brandService.getAllBrands(
+        isActive: _selectedStatus,
+      );
+
+      _applyFilters();
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString().replaceAll('ApiException: ', '');
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  void _applyFilters() {
+    if (!mounted) return;
+    
+    final allBrands = _brandService.brands;
+    final query = _searchController.text.trim().toLowerCase();
+    
+    setState(() {
+      if (query.isEmpty) {
+        _brands = allBrands;
+      } else {
+        _brands = allBrands.where((b) {
+          return b.brandName.toLowerCase().contains(query);
+        }).toList();
+      }
+      
+      _isLoading = false;
+      if (_brands.isNotEmpty) {
+        _highlightedIndex = _highlightedIndex.clamp(0, _brands.length - 1);
+      } else {
+        _highlightedIndex = 0;
+      }
+    });
+    
+    if (_brands.isNotEmpty) {
+      _scrollToIndex(_highlightedIndex);
+    }
+  }
+
+  void _clearFilters() {
+    _debounceTimer?.cancel();
+    _searchController.clear();
+    setState(() {
+      _selectedStatus = null;
+      _highlightedIndex = 0;
+    });
+    _fetchBrands();
+  }
+
+  bool get _hasActiveFilters =>
+      _searchController.text.isNotEmpty || _selectedStatus != null;
+
+  void _navigateToAddBrand([BrandListItem? brand]) async {
+    final result = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (context) => BrandMasterScreen(brandToEdit: brand),
+      ),
+    );
+
+    if (result == true) {
+      _fetchBrands();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final bool isDesktop = constraints.maxWidth >= 800;
+    return Focus(
+      focusNode: _screenFocusNode,
+      autofocus: true,
+      onKeyEvent: _handleKeyEvent,
+      child: DirectBackScope(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isDesktop = constraints.maxWidth >= 800;
 
-        Widget content = Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search brands...',
-                  prefixIcon: const Icon(Icons.search),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 0),
-                ),
-                onChanged: (value) => setState(() => _searchQuery = value),
-              ),
-            ),
-            Expanded(
-              child: LayoutBuilder(
-                builder: (context, innerConstraints) {
-                  final brands = _filteredBrands;
-                  if (brands.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.branding_watermark_outlined, size: 64, color: Colors.grey.shade400),
-                          const SizedBox(height: 16),
-                          Text('No brands found', style: TextStyle(fontSize: 18, color: Colors.grey.shade600)),
+          if (isDesktop) {
+            return Scaffold(
+              body: Row(
+                children: [
+                  const SizedBox(
+                    width: 250,
+                    child: AppDrawer(isPermanent: true),
+                  ),
+                  const VerticalDivider(width: 1, thickness: 1),
+                  Expanded(
+                    child: Scaffold(
+                      appBar: AppBar(
+                        title: const Text('Brand Master'),
+                        actions: [
+                          IconButton(
+                            icon: const Icon(Icons.refresh_rounded),
+                            tooltip: 'Refresh Brands',
+                            onPressed: _isLoading ? null : _fetchBrands,
+                          ),
+                          const SizedBox(width: 8),
+                          FilledButton.icon(
+                            onPressed: () => _navigateToAddBrand(),
+                            icon: const Icon(Icons.add_rounded, size: 18),
+                            label: const Text('Add Brand'),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: Theme.of(context).colorScheme.primary,
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
                         ],
                       ),
-                    );
-                  }
-                  if (innerConstraints.maxWidth >= 600) return _buildDataTable(brands);
-                  return _buildListView(brands);
-                },
-              ),
-            ),
-          ],
-        );
-
-        if (isDesktop) {
-          return Scaffold(
-            body: Row(
-              children: [
-                const SizedBox(width: 250, child: AppDrawer(isPermanent: true)),
-                const VerticalDivider(width: 1, thickness: 1),
-                Expanded(
-                  child: Scaffold(
-                    appBar: AppBar(
-                      title: const Text('Brand Master'),
-                      actions: [
-                        IconButton(
-                          icon: const Icon(Icons.refresh),
-                          onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Refreshing list...'))),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: FilledButton.icon(onPressed: _navigateToAddBrand, icon: const Icon(Icons.add), label: const Text('Add Brand')),
-                        ),
-                      ],
+                      body: Column(
+                        children: [
+                          _buildDesktopFilterBar(),
+                          Expanded(child: _buildBodyContent(isDesktop: true)),
+                        ],
+                      ),
                     ),
-                    body: content,
                   ),
-                ),
-              ],
-            ),
-          );
-        } else {
+                ],
+              ),
+            );
+          }
+
+          // Mobile / Tablet view
           return Scaffold(
             appBar: AppBar(
               title: const Text('Brand Master'),
               actions: [
                 IconButton(
-                  icon: const Icon(Icons.refresh),
-                  onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Refreshing list...'))),
+                  icon: const Icon(Icons.refresh_rounded),
+                  tooltip: 'Refresh',
+                  onPressed: _isLoading ? null : _fetchBrands,
                 ),
-                if (constraints.maxWidth >= 600)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: FilledButton.icon(onPressed: _navigateToAddBrand, icon: const Icon(Icons.add), label: const Text('Add Brand')),
-                  ),
               ],
             ),
             drawer: const AppDrawer(isPermanent: false),
-            floatingActionButton: constraints.maxWidth < 600 ? FloatingActionButton(onPressed: _navigateToAddBrand, child: const Icon(Icons.add)) : null,
-            body: content,
+            floatingActionButton: FloatingActionButton.extended(
+              onPressed: () => _navigateToAddBrand(),
+              icon: const Icon(Icons.add_rounded),
+              label: const Text('Add Brand'),
+            ),
+            body: Column(
+              children: [
+                _buildMobileFilterBar(),
+                Expanded(child: _buildBodyContent(isDesktop: false)),
+              ],
+            ),
           );
-        }
-      },
+        },
+      ),
+    ),
     );
   }
 
-  Widget _buildListView(List<Brand> brands) {
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      itemCount: brands.length,
-      itemBuilder: (context, index) {
-        final brand = brands[index];
-        return Card(
-          elevation: 2,
-          margin: const EdgeInsets.only(bottom: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: ListTile(
-            contentPadding: const EdgeInsets.all(16),
-            leading: CircleAvatar(
-              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-              child: Text(brand.name.substring(0, 1).toUpperCase(), style: TextStyle(color: Theme.of(context).colorScheme.onPrimaryContainer)),
-            ),
-            title: Text(brand.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: brand.description != null ? Text(brand.description!) : null,
-            trailing: Chip(
-              label: Text(
-                brand.isActive ? 'Active' : 'Inactive',
-                style: TextStyle(color: brand.isActive ? Colors.green.shade700 : Colors.red.shade700, fontSize: 12),
+  // Desktop Filter Bar
+  Widget _buildDesktopFilterBar() {
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        border: Border(
+          bottom: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.5)),
+        ),
+      ),
+      child: Row(
+        children: [
+          // Search Field
+          Expanded(
+            flex: 3,
+            child: TextField(
+              controller: _searchController,
+              focusNode: _searchFocusNode,
+              onChanged: _onSearchChanged,
+              decoration: InputDecoration(
+                hintText: 'Search by brand name...',
+                prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear, size: 18),
+                        onPressed: () {
+                          _searchController.clear();
+                          _applyFilters();
+                        },
+                      )
+                    : null,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 0),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                filled: true,
+                fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.2),
               ),
-              backgroundColor: brand.isActive ? Colors.green.shade100 : Colors.red.shade100,
-              side: BorderSide.none,
+            ),
+          ),
+          const SizedBox(width: 12),
+
+          // Status Filter Segmented Button
+          Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: theme.colorScheme.outlineVariant),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: SegmentedButton<bool?>(
+              showSelectedIcon: false,
+              segments: const [
+                ButtonSegment<bool?>(value: null, label: Text('All')),
+                ButtonSegment<bool?>(value: true, label: Text('Active')),
+                ButtonSegment<bool?>(value: false, label: Text('Inactive')),
+              ],
+              selected: {_selectedStatus},
+              onSelectionChanged: (Set<bool?> selection) {
+                setState(() {
+                  _selectedStatus = selection.first;
+                });
+                _fetchBrands();
+              },
+              style: SegmentedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+            ),
+          ),
+
+          if (_hasActiveFilters) ...[
+            const SizedBox(width: 12),
+            OutlinedButton.icon(
+              onPressed: _clearFilters,
+              icon: const Icon(Icons.filter_alt_off_rounded, size: 16),
+              label: const Text('Reset'),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  // Mobile Filter Bar
+  Widget _buildMobileFilterBar() {
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        border: Border(
+          bottom: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.5)),
+        ),
+      ),
+      child: Column(
+        children: [
+          // Search Field
+          TextField(
+            controller: _searchController,
+            focusNode: _searchFocusNode,
+            onChanged: _onSearchChanged,
+            decoration: InputDecoration(
+              hintText: 'Search brand name...',
+              prefixIcon: const Icon(Icons.search_rounded, size: 20),
+              suffixIcon: _searchController.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear, size: 18),
+                      onPressed: () {
+                        _searchController.clear();
+                        _applyFilters();
+                      },
+                    )
+                  : null,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 0),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              filled: true,
+              fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.2),
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // Filters Row
+          Row(
+            children: [
+              Expanded(
+                child: PopupMenuButton<bool?>(
+                  initialValue: _selectedStatus,
+                  tooltip: 'Filter Status',
+                  onSelected: (val) {
+                    setState(() {
+                      _selectedStatus = val;
+                    });
+                    _fetchBrands();
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(value: null, child: Text('All Statuses')),
+                    const PopupMenuItem(value: true, child: Text('Active Only')),
+                    const PopupMenuItem(value: false, child: Text('Inactive Only')),
+                  ],
+                  child: Container(
+                    height: 52,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: _selectedStatus != null
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.outline,
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                      color: _selectedStatus != null
+                          ? theme.colorScheme.primaryContainer.withOpacity(0.3)
+                          : null,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.filter_list_rounded,
+                          size: 20,
+                          color: _selectedStatus != null
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          _selectedStatus == null
+                              ? 'Status'
+                              : (_selectedStatus! ? 'Active' : 'Inactive'),
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: _selectedStatus != null ? FontWeight.bold : FontWeight.normal,
+                            color: _selectedStatus != null
+                                ? theme.colorScheme.primary
+                                : null,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              if (_hasActiveFilters) ...[
+                const SizedBox(width: 6),
+                IconButton(
+                  icon: const Icon(Icons.filter_alt_off_rounded, size: 20),
+                  tooltip: 'Clear filters',
+                  splashRadius: 20,
+                  onPressed: _clearFilters,
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Body Content (Table on Desktop, Cards on Mobile)
+  Widget _buildBodyContent({required bool isDesktop}) {
+    if (_isLoading) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Loading brands from server...'),
+          ],
+        ),
+      );
+    }
+
+    if (_errorMessage != null && _brands.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline_rounded, size: 56, color: Theme.of(context).colorScheme.error),
+              const SizedBox(height: 16),
+              Text(
+                'Failed to load brands',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _errorMessage!,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey.shade600),
+              ),
+              const SizedBox(height: 20),
+              FilledButton.icon(
+                onPressed: _fetchBrands,
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+                label: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_brands.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.branding_watermark_rounded,
+                  size: 64,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                _hasActiveFilters ? 'No brands match your filter' : 'No brands found',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _hasActiveFilters
+                    ? 'Try clearing your search query'
+                    : 'Get started by creating your first brand master record',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey.shade600),
+              ),
+              const SizedBox(height: 20),
+              if (_hasActiveFilters)
+                OutlinedButton.icon(
+                  onPressed: _clearFilters,
+                  icon: const Icon(Icons.filter_alt_off_rounded, size: 18),
+                  label: const Text('Clear Filters'),
+                )
+              else
+                FilledButton.icon(
+                  onPressed: () => _navigateToAddBrand(),
+                  icon: const Icon(Icons.add_rounded, size: 18),
+                  label: const Text('Add First Brand'),
+                ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (isDesktop) {
+      return _buildDesktopDataTable();
+    } else {
+      return _buildMobileCardList();
+    }
+  }
+
+  // Desktop Data Table with Sticky Header
+  Widget _buildDesktopDataTable() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          color: theme.colorScheme.surfaceVariant.withOpacity(0.15),
+          child: Row(
+            children: [
+              Text(
+                'Showing ${_brands.length} ${_brands.length == 1 ? 'brand' : 'brands'}',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.white.withOpacity(0.06)
+                      : Colors.black.withOpacity(0.04),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.keyboard_outlined, size: 14, color: theme.hintColor),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Use ↑ / ↓ to navigate • Enter / Click to Edit',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontSize: 11,
+                        color: theme.hintColor,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Card(
+              elevation: 1,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.5)),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  const double minTableWidth = 600.0;
+                  final tableWidth = constraints.maxWidth < minTableWidth ? minTableWidth : constraints.maxWidth;
+
+                  Widget tableContent = SizedBox(
+                    width: tableWidth,
+                    child: Column(
+                      children: [
+                        Container(
+                          height: 48,
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primaryContainer.withOpacity(0.35),
+                            border: Border(
+                              bottom: BorderSide(
+                                color: theme.colorScheme.outlineVariant.withOpacity(0.6),
+                                width: 1.5,
+                              ),
+                            ),
+                          ),
+                          child: const Row(
+                            children: [
+                              SizedBox(
+                                width: 60,
+                                child: Text('#', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                              ),
+                              Expanded(
+                                flex: 4,
+                                child: Text('Brand Name', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                              ),
+                              Expanded(
+                                flex: 5,
+                                child: Text('Description', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                              ),
+                              Expanded(
+                                flex: 2,
+                                child: Text('Status', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                              ),
+                              SizedBox(
+                                width: 120,
+                                child: Text('Actions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        Expanded(
+                          child: ListView.separated(
+                            controller: _scrollController,
+                            itemCount: _brands.length,
+                            separatorBuilder: (context, index) => Divider(
+                              height: 1,
+                              thickness: 1,
+                              color: theme.colorScheme.outlineVariant.withOpacity(0.3),
+                            ),
+                            itemBuilder: (context, index) {
+                              final brand = _brands[index];
+                              final isHighlighted = index == _highlightedIndex;
+
+                              return Material(
+                                color: isHighlighted
+                                    ? theme.colorScheme.primary.withOpacity(isDark ? 0.22 : 0.12)
+                                    : Colors.transparent,
+                                child: InkWell(
+                                  hoverColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                                  onTap: () {
+                                    setState(() => _highlightedIndex = index);
+                                    _navigateToAddBrand(brand);
+                                  },
+                                  child: Container(
+                                    height: 52,
+                                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                                    child: Row(
+                                      children: [
+                                        SizedBox(
+                                          width: 60,
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              if (isHighlighted)
+                                                Container(
+                                                  width: 3.5,
+                                                  height: 24,
+                                                  margin: const EdgeInsets.only(right: 6),
+                                                  decoration: BoxDecoration(
+                                                    color: theme.colorScheme.primary,
+                                                    borderRadius: BorderRadius.circular(2),
+                                                  ),
+                                                ),
+                                              Text(
+                                                '${index + 1}',
+                                                style: TextStyle(
+                                                  color: isHighlighted
+                                                      ? theme.colorScheme.primary
+                                                      : Colors.grey.shade600,
+                                                  fontWeight: isHighlighted ? FontWeight.bold : FontWeight.normal,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        Expanded(
+                                          flex: 4,
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Container(
+                                                padding: const EdgeInsets.all(6),
+                                                decoration: BoxDecoration(
+                                                  color: theme.colorScheme.primary.withOpacity(0.1),
+                                                  borderRadius: BorderRadius.circular(6),
+                                                ),
+                                                child: Icon(Icons.branding_watermark_rounded, size: 16, color: theme.colorScheme.primary),
+                                              ),
+                                              const SizedBox(width: 10),
+                                              Flexible(
+                                                child: Text(
+                                                  brand.brandName,
+                                                  style: TextStyle(
+                                                    fontWeight: isHighlighted ? FontWeight.bold : FontWeight.w600,
+                                                    color: isHighlighted ? theme.colorScheme.primary : null,
+                                                  ),
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        Expanded(
+                                          flex: 5,
+                                          child: Text(
+                                            brand.brandDescription.isNotEmpty ? brand.brandDescription : '-',
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        Expanded(
+                                          flex: 2,
+                                          child: Align(
+                                            alignment: Alignment.centerLeft,
+                                            child: Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                              decoration: BoxDecoration(
+                                                color: brand.brandIsActive
+                                                    ? Colors.green.shade50
+                                                    : Colors.red.shade50,
+                                                borderRadius: BorderRadius.circular(12),
+                                                border: Border.all(
+                                                  color: brand.brandIsActive
+                                                      ? Colors.green.shade300
+                                                      : Colors.red.shade300,
+                                                ),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(
+                                                    brand.brandIsActive ? Icons.check_circle : Icons.cancel,
+                                                    size: 14,
+                                                    color: brand.brandIsActive ? Colors.green.shade700 : Colors.red.shade700,
+                                                  ),
+                                                  const SizedBox(width: 4),
+                                                  Text(
+                                                    brand.brandIsActive ? 'Active' : 'Inactive',
+                                                    style: TextStyle(
+                                                      color: brand.brandIsActive ? Colors.green.shade800 : Colors.red.shade800,
+                                                      fontSize: 12,
+                                                      fontWeight: FontWeight.w600,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(
+                                          width: 120,
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              if (isHighlighted)
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                  margin: const EdgeInsets.only(right: 6),
+                                                  decoration: BoxDecoration(
+                                                    color: theme.colorScheme.primaryContainer,
+                                                    borderRadius: BorderRadius.circular(4),
+                                                  ),
+                                                  child: Text(
+                                                    '↵ Enter',
+                                                    style: TextStyle(
+                                                      fontSize: 10,
+                                                      fontWeight: FontWeight.bold,
+                                                      color: theme.colorScheme.onPrimaryContainer,
+                                                    ),
+                                                  ),
+                                                ),
+                                              IconButton(
+                                                icon: Icon(
+                                                  Icons.edit_outlined,
+                                                  size: 20,
+                                                  color: isHighlighted ? theme.colorScheme.primary : Colors.blueAccent,
+                                                ),
+                                                tooltip: 'Edit Brand',
+                                                splashRadius: 20,
+                                                onPressed: () {
+                                                  setState(() => _highlightedIndex = index);
+                                                  _navigateToAddBrand(brand);
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (constraints.maxWidth < minTableWidth) {
+                    return SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: tableContent,
+                    );
+                  }
+                  return tableContent;
+                },
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Mobile / Tablet Card List
+  Widget _buildMobileCardList() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return ListView.separated(
+      controller: _scrollController,
+      padding: const EdgeInsets.all(14),
+      itemCount: _brands.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 10),
+      itemBuilder: (context, index) {
+        final brand = _brands[index];
+        final isHighlighted = index == _highlightedIndex;
+
+        return Card(
+          elevation: isHighlighted ? 3 : 1,
+          color: isHighlighted
+              ? theme.colorScheme.primary.withOpacity(isDark ? 0.22 : 0.08)
+              : null,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(
+              color: isHighlighted
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.outlineVariant.withOpacity(0.5),
+              width: isHighlighted ? 2 : 1,
+            ),
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () {
+              setState(() => _highlightedIndex = index);
+              _navigateToAddBrand(brand);
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: isHighlighted
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.branding_watermark_rounded,
+                      color: isHighlighted
+                          ? theme.colorScheme.onPrimary
+                          : theme.colorScheme.onPrimaryContainer,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          brand.brandName,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: isHighlighted ? theme.colorScheme.primary : null,
+                          ),
+                        ),
+                        if (brand.brandDescription.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            brand.brandDescription,
+                            style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: brand.brandIsActive ? Colors.green.shade50 : Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: brand.brandIsActive ? Colors.green.shade300 : Colors.red.shade300,
+                          ),
+                        ),
+                        child: Text(
+                          brand.brandIsActive ? 'Active' : 'Inactive',
+                          style: TextStyle(
+                            color: brand.brandIsActive ? Colors.green.shade800 : Colors.red.shade800,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (isHighlighted)
+                            Padding(
+                              padding: const EdgeInsets.only(right: 4),
+                              child: Text(
+                                '↵ Enter',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ),
+                            ),
+                          Icon(
+                            Icons.chevron_right_rounded,
+                            color: isHighlighted
+                                ? theme.colorScheme.primary
+                                : Colors.grey.shade400,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         );
       },
-    );
-  }
-
-  Widget _buildDataTable(List<Brand> brands) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.vertical,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Card(
-            elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child: DataTable(
-              headingRowColor: WidgetStateProperty.resolveWith((states) => Theme.of(context).colorScheme.surfaceContainerHighest),
-              columns: const [
-                DataColumn(label: Text('Name', style: TextStyle(fontWeight: FontWeight.bold))),
-                DataColumn(label: Text('Description', style: TextStyle(fontWeight: FontWeight.bold))),
-                DataColumn(label: Text('Status', style: TextStyle(fontWeight: FontWeight.bold))),
-                DataColumn(label: Text('Actions', style: TextStyle(fontWeight: FontWeight.bold))),
-              ],
-              rows: brands.map((brand) {
-                return DataRow(
-                  cells: [
-                    DataCell(Text(brand.name)),
-                    DataCell(Text(brand.description ?? '-')),
-                    DataCell(
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(color: brand.isActive ? Colors.green.shade100 : Colors.red.shade100, borderRadius: BorderRadius.circular(12)),
-                        child: Text(
-                          brand.isActive ? 'Active' : 'Inactive',
-                          style: TextStyle(color: brand.isActive ? Colors.green.shade700 : Colors.red.shade700, fontSize: 12),
-                        ),
-                      ),
-                    ),
-                    DataCell(
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(icon: const Icon(Icons.edit, size: 20, color: Colors.blue), onPressed: () {}),
-                          IconButton(icon: const Icon(Icons.delete, size: 20, color: Colors.red), onPressed: () {}),
-                        ],
-                      ),
-                    ),
-                  ],
-                );
-              }).toList(),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }
