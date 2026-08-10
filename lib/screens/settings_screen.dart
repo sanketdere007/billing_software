@@ -130,7 +130,9 @@ class SettingsScreen extends StatelessWidget {
             return Scaffold(
               appBar: AppBar(
                 title: const Text('Settings'),
-                backgroundColor: isDark ? Colors.grey[900] : Colors.blue.shade700,
+                backgroundColor: isDark
+                    ? Colors.grey[900]
+                    : Colors.blue.shade700,
                 foregroundColor: Colors.white,
                 elevation: 0,
               ),
@@ -213,7 +215,9 @@ class _CompanyBranchSettingsSectionState
 
       // Check if current branch belongs to this company
       final currentBranchId = sessionService.selectedBranchId;
-      final bool currentBranchBelongs = branches.any((b) => b.branchId == currentBranchId);
+      final bool currentBranchBelongs = branches.any(
+        (b) => b.branchId == currentBranchId,
+      );
 
       if (!currentBranchBelongs && branches.isNotEmpty) {
         // Auto-select first branch of the new company
@@ -239,10 +243,7 @@ class _CompanyBranchSettingsSectionState
   void _onBranchSelected(BranchListItem? branch) async {
     if (branch == null) return;
 
-    await sessionService.saveSelectedBranch(
-      branch.branchId,
-      branch.branchName,
-    );
+    await sessionService.saveSelectedBranch(branch.branchId, branch.branchName);
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -292,7 +293,10 @@ class _CompanyBranchSettingsSectionState
                     icon: const Icon(Icons.refresh_rounded, size: 18),
                     label: const Text('Refresh'),
                     style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                     ),
                   ),
               ],
@@ -311,99 +315,28 @@ class _CompanyBranchSettingsSectionState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Information header
-                    // Row(
-                    //   crossAxisAlignment: CrossAxisAlignment.start,
-                    //   children: [
-                    //     Container(
-                    //       padding: const EdgeInsets.all(10),
-                    //       decoration: BoxDecoration(
-                    //         gradient: LinearGradient(
-                    //           colors: [
-                    //             Colors.blue.shade600,
-                    //             Colors.indigo.shade600,
-                    //           ],
-                    //           begin: Alignment.topLeft,
-                    //           end: Alignment.bottomRight,
-                    //         ),
-                    //         borderRadius: BorderRadius.circular(12),
-                    //         boxShadow: [
-                    //           BoxShadow(
-                    //             color: Colors.blue.withOpacity(0.3),
-                    //             blurRadius: 8,
-                    //             offset: const Offset(0, 2),
-                    //           ),
-                    //         ],
-                    //       ),
-                    //       child: const Icon(
-                    //         Icons.domain_rounded,
-                    //         color: Colors.white,
-                    //         size: 26,
-                    //       ),
-                    //     ),
-                    //     // const SizedBox(width: 14),
-                    //     // Expanded(
-                    //     //   child: Column(
-                    //     //     crossAxisAlignment: CrossAxisAlignment.start,
-                    //     //     children: [
-                    //     //       Text(
-                    //     //         'Global Business Context',
-                    //     //         style: theme.textTheme.titleMedium?.copyWith(
-                    //     //           fontWeight: FontWeight.bold,
-                    //     //         ),
-                    //     //       ),
-                    //     //       const SizedBox(height: 4),
-                    //     //       Text(
-                    //     //         'Select your active Company and Branch. Changing these will globally update all modules, transaction entries, and filtered lists throughout the application.',
-                    //     //         style: theme.textTheme.bodySmall?.copyWith(
-                    //     //           color: theme.textTheme.bodySmall?.color?.withOpacity(0.75),
-                    //     //           height: 1.35,
-                    //     //         ),
-                    //     //       ),
-                    //     //     ],
-                    //     //   ),
-                    //     // ),
-                    //     const SizedBox(width: 8),
-                    //     FilledButton.tonalIcon(
-                    //       onPressed: () {
-                    //         Navigator.push(
-                    //           context,
-                    //           MaterialPageRoute(
-                    //             builder: (context) =>
-                    //                 const CompanyBranchSelectionScreen(
-                    //               isChangeMode: true,
-                    //             ),
-                    //           ),
-                    //         );
-                    //       },
-                    //       icon: const Icon(Icons.swap_horiz_rounded, size: 18),
-                    //       label: const Text('Change'),
-                    //       style: FilledButton.styleFrom(
-                    //         padding: const EdgeInsets.symmetric(
-                    //           horizontal: 12,
-                    //           vertical: 6,
-                    //         ),
-                    //       ),
-                    //     ),
-                    //   ],
-                    // ),
-
-                    // const SizedBox(height: 18),
-                    // const Divider(height: 1),
-                    // const SizedBox(height: 18),
-
-                    // Active Context Badges
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
                         color: hasCompany && hasBranch
-                            ? (isDark ? Colors.green.withOpacity(0.12) : Colors.green.shade50)
-                            : (isDark ? Colors.amber.withOpacity(0.12) : Colors.amber.shade50),
+                            ? (isDark
+                                  ? Colors.green.withOpacity(0.12)
+                                  : Colors.green.shade50)
+                            : (isDark
+                                  ? Colors.amber.withOpacity(0.12)
+                                  : Colors.amber.shade50),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                           color: hasCompany && hasBranch
-                              ? (isDark ? Colors.green.shade800 : Colors.green.shade200)
-                              : (isDark ? Colors.amber.shade800 : Colors.amber.shade300),
+                              ? (isDark
+                                    ? Colors.green.shade800
+                                    : Colors.green.shade200)
+                              : (isDark
+                                    ? Colors.amber.shade800
+                                    : Colors.amber.shade300),
                         ),
                       ),
                       child: Row(
@@ -428,19 +361,26 @@ class _CompanyBranchSettingsSectionState
                                   text: TextSpan(
                                     style: TextStyle(
                                       fontSize: 13,
-                                      color: isDark ? Colors.white70 : Colors.black87,
+                                      color: isDark
+                                          ? Colors.white70
+                                          : Colors.black87,
                                     ),
                                     children: [
                                       const TextSpan(
                                         text: 'Active Company: ',
-                                        style: TextStyle(fontWeight: FontWeight.bold),
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                       TextSpan(
-                                        text: selectedCompName ?? 'None Selected',
+                                        text:
+                                            selectedCompName ?? 'None Selected',
                                         style: TextStyle(
                                           fontWeight: FontWeight.w600,
                                           color: hasCompany
-                                              ? (isDark ? Colors.lightBlueAccent : Colors.blue.shade800)
+                                              ? (isDark
+                                                    ? Colors.lightBlueAccent
+                                                    : Colors.blue.shade800)
                                               : Colors.grey,
                                         ),
                                       ),
@@ -451,19 +391,27 @@ class _CompanyBranchSettingsSectionState
                                   text: TextSpan(
                                     style: TextStyle(
                                       fontSize: 13,
-                                      color: isDark ? Colors.white70 : Colors.black87,
+                                      color: isDark
+                                          ? Colors.white70
+                                          : Colors.black87,
                                     ),
                                     children: [
                                       const TextSpan(
                                         text: 'Active Branch: ',
-                                        style: TextStyle(fontWeight: FontWeight.bold),
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                       TextSpan(
-                                        text: selectedBranchName ?? 'None Selected',
+                                        text:
+                                            selectedBranchName ??
+                                            'None Selected',
                                         style: TextStyle(
                                           fontWeight: FontWeight.w600,
                                           color: hasBranch
-                                              ? (isDark ? Colors.tealAccent : Colors.teal.shade800)
+                                              ? (isDark
+                                                    ? Colors.tealAccent
+                                                    : Colors.teal.shade800)
                                               : Colors.grey,
                                         ),
                                       ),
@@ -612,13 +560,15 @@ class _DatabaseBackupSection extends StatelessWidget {
                                       vertical: 2,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: Theme.of(context).brightness ==
+                                      color:
+                                          Theme.of(context).brightness ==
                                               Brightness.dark
                                           ? Colors.white.withOpacity(0.08)
                                           : Colors.black.withOpacity(0.06),
                                       borderRadius: BorderRadius.circular(4),
                                       border: Border.all(
-                                        color: Theme.of(context).brightness ==
+                                        color:
+                                            Theme.of(context).brightness ==
                                                 Brightness.dark
                                             ? Colors.white12
                                             : Colors.black12,
@@ -629,7 +579,8 @@ class _DatabaseBackupSection extends StatelessWidget {
                                       style: TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.w600,
-                                        color: Theme.of(context).brightness ==
+                                        color:
+                                            Theme.of(context).brightness ==
                                                 Brightness.dark
                                             ? Colors.white70
                                             : Colors.black54,

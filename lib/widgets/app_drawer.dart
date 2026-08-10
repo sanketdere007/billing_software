@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/login_response.dart';
 import 'package:billing_software/services/auth_service.dart';
 import 'package:billing_software/services/session_service.dart';
 import '../services/database_backup_service.dart';
@@ -192,17 +193,26 @@ class _AppDrawerState extends State<AppDrawer> {
                                 child: ListenableBuilder(
                                   listenable: sessionService,
                                   builder: (context, _) {
-                                    final compName = sessionService.selectedCompName?.trim();
-                                    final branchName = sessionService.selectedBranchName?.trim();
-                                    final displayCompany = (compName != null && compName.isNotEmpty)
+                                    final compName = sessionService
+                                        .selectedCompName
+                                        ?.trim();
+                                    final branchName = sessionService
+                                        .selectedBranchName
+                                        ?.trim();
+                                    final displayCompany =
+                                        (compName != null &&
+                                            compName.isNotEmpty)
                                         ? compName.toUpperCase()
                                         : 'COMPANY NAME';
-                                    final displayBranch = (branchName != null && branchName.isNotEmpty)
+                                    final displayBranch =
+                                        (branchName != null &&
+                                            branchName.isNotEmpty)
                                         ? branchName
                                         : 'Billing & Management';
 
                                     return Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         FittedBox(
@@ -222,7 +232,10 @@ class _AppDrawerState extends State<AppDrawer> {
                                                       color: Colors.black
                                                           .withOpacity(0.5),
                                                       blurRadius: 6,
-                                                      offset: const Offset(0, 2),
+                                                      offset: const Offset(
+                                                        0,
+                                                        2,
+                                                      ),
                                                     ),
                                                   ],
                                                 ),
@@ -238,10 +251,11 @@ class _AppDrawerState extends State<AppDrawer> {
                                               vertical: 3,
                                             ),
                                             decoration: BoxDecoration(
-                                              color: Colors.black.withOpacity(0.25),
-                                              borderRadius: BorderRadius.circular(
-                                                16,
+                                              color: Colors.black.withOpacity(
+                                                0.25,
                                               ),
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
                                               border: Border.all(
                                                 color: Colors.white.withOpacity(
                                                   0.1,
@@ -251,7 +265,8 @@ class _AppDrawerState extends State<AppDrawer> {
                                             child: Row(
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
-                                                if (branchName != null && branchName.isNotEmpty) ...[
+                                                if (branchName != null &&
+                                                    branchName.isNotEmpty) ...[
                                                   Icon(
                                                     Icons.storefront,
                                                     size: 11,
@@ -265,8 +280,11 @@ class _AppDrawerState extends State<AppDrawer> {
                                                       .textTheme
                                                       .bodySmall
                                                       ?.copyWith(
-                                                        color: Colors.blue.shade100,
-                                                        fontWeight: FontWeight.w600,
+                                                        color: Colors
+                                                            .blue
+                                                            .shade100,
+                                                        fontWeight:
+                                                            FontWeight.w600,
                                                         letterSpacing: 0.5,
                                                         fontSize: 10.5,
                                                       ),
@@ -313,7 +331,9 @@ class _AppDrawerState extends State<AppDrawer> {
                                   return first[0].toUpperCase();
                                 } else if (user.empUserName != null &&
                                     user.empUserName!.trim().isNotEmpty) {
-                                  return user.empUserName!.trim()[0].toUpperCase();
+                                  return user.empUserName!
+                                      .trim()[0]
+                                      .toUpperCase();
                                 }
                               }
                               return 'U';
@@ -338,17 +358,8 @@ class _AppDrawerState extends State<AppDrawer> {
                             }();
 
                             return Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 6,
-                              ),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.08),
                                 borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                  color: Colors.white.withOpacity(0.15),
-                                  width: 1,
-                                ),
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.15),
@@ -357,100 +368,129 @@ class _AppDrawerState extends State<AppDrawer> {
                                   ),
                                 ],
                               ),
-                              child: Row(
-                                children: [
-                                  // User Avatar with Initials
-                                  Container(
-                                    width: 32,
-                                    height: 32,
+                              child: Material(
+                                color: Colors.white.withOpacity(0.08),
+                                borderRadius: BorderRadius.circular(10),
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(10),
+                                  onTap: () {
+                                    if (user != null) {
+                                      _showEmployeeDetails(context, user);
+                                    }
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 6,
+                                    ),
                                     decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          Colors.blue.shade500,
-                                          Colors.indigo.shade600,
-                                        ],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      ),
+                                      borderRadius: BorderRadius.circular(10),
                                       border: Border.all(
-                                        color: Colors.white.withOpacity(0.4),
-                                        width: 1.2,
+                                        color: Colors.white.withOpacity(0.15),
+                                        width: 1,
                                       ),
                                     ),
-                                    child: Center(
-                                      child: Text(
-                                        initials,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                          letterSpacing: 0.5,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  // User Name (emp_FirstName + emp_LastName) & Role
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisSize: MainAxisSize.min,
+                                    child: Row(
                                       children: [
-                                        Row(
-                                          children: [
-                                            Flexible(
-                                              child: Text(
-                                                displayName,
-                                                style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 13,
-                                                  fontWeight: FontWeight.w700,
-                                                  letterSpacing: 0.2,
-                                                ),
-                                                maxLines: 1,
-                                                overflow:
-                                                    TextOverflow.ellipsis,
+                                        // User Avatar with Initials
+                                        Container(
+                                          width: 32,
+                                          height: 32,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            gradient: LinearGradient(
+                                              colors: [
+                                                Colors.blue.shade500,
+                                                Colors.indigo.shade600,
+                                              ],
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                            ),
+                                            border: Border.all(
+                                              color: Colors.white.withOpacity(
+                                                0.4,
+                                              ),
+                                              width: 1.2,
+                                            ),
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              initials,
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                                letterSpacing: 0.5,
                                               ),
                                             ),
-                                            const SizedBox(width: 5),
-                                            // Active green dot
-                                            Container(
-                                              width: 6,
-                                              height: 6,
-                                              decoration: BoxDecoration(
-                                                shape: BoxShape.circle,
-                                                color: Colors
-                                                    .greenAccent
-                                                    .shade400,
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: Colors.greenAccent
-                                                        .withOpacity(0.6),
-                                                    blurRadius: 4,
-                                                    spreadRadius: 1,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        // User Name (emp_FirstName + emp_LastName) & Role
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  Flexible(
+                                                    child: Text(
+                                                      displayName,
+                                                      style: const TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 13,
+                                                        fontWeight:
+                                                            FontWeight.w700,
+                                                        letterSpacing: 0.2,
+                                                      ),
+                                                      maxLines: 1,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 5),
+                                                  // Active green dot
+                                                  Container(
+                                                    width: 6,
+                                                    height: 6,
+                                                    decoration: BoxDecoration(
+                                                      shape: BoxShape.circle,
+                                                      color: Colors
+                                                          .greenAccent
+                                                          .shade400,
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                          color: Colors
+                                                              .greenAccent
+                                                              .withOpacity(0.6),
+                                                          blurRadius: 4,
+                                                          spreadRadius: 1,
+                                                        ),
+                                                      ],
+                                                    ),
                                                   ),
                                                 ],
                                               ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 1),
-                                        Text(
-                                          roleText,
-                                          style: TextStyle(
-                                            color: Colors.blue.shade200,
-                                            fontSize: 10.5,
-                                            fontWeight: FontWeight.w500,
+                                              const SizedBox(height: 1),
+                                              Text(
+                                                roleText,
+                                                style: TextStyle(
+                                                  color: Colors.blue.shade200,
+                                                  fontSize: 10.5,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ],
                                           ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       ],
                                     ),
                                   ),
-                                ],
+                                ),
                               ),
                             );
                           },
@@ -1131,6 +1171,210 @@ class _AppDrawerState extends State<AppDrawer> {
           // const SupportInfoFooter(isCompact: true),
         ],
       ),
+    );
+  }
+
+  void _showEmployeeDetails(BuildContext context, UserData user) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 10,
+                offset: const Offset(0, -2),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withOpacity(0.4),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                CircleAvatar(
+                  radius: 45,
+                  backgroundColor: isDark
+                      ? Colors.blue.shade600
+                      : Colors.blue.shade500,
+                  child: Text(
+                    user.initials,
+                    style: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  user.fullName,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                if (user.empRole != null || user.empDesignation != null) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? Colors.blue.withOpacity(0.2)
+                          : Colors.blue.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      user.empRole ?? user.empDesignation ?? '',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: isDark
+                            ? Colors.blue.shade300
+                            : Colors.blue.shade700,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 24),
+                const Divider(),
+                const SizedBox(height: 16),
+                _buildDetailRow(
+                  context,
+                  Icons.email_outlined,
+                  'Email',
+                  user.empEmail?.isNotEmpty == true ? user.empEmail! : 'N/A',
+                ),
+                const SizedBox(height: 16),
+                _buildDetailRow(
+                  context,
+                  Icons.phone_outlined,
+                  'Mobile',
+                  user.empMobileNumber?.isNotEmpty == true
+                      ? user.empMobileNumber!
+                      : 'N/A',
+                ),
+                const SizedBox(height: 16),
+                _buildDetailRow(
+                  context,
+                  Icons.business_outlined,
+                  'Department',
+                  user.empDepartment?.isNotEmpty == true
+                      ? user.empDepartment!
+                      : 'N/A',
+                ),
+                const SizedBox(height: 16),
+                _buildDetailRow(
+                  context,
+                  Icons.calendar_today_outlined,
+                  'Joined',
+                  user.empJoiningDate?.isNotEmpty == true
+                      ? user.empJoiningDate!
+                      : 'N/A',
+                ),
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                      backgroundColor: isDark
+                          ? Colors.grey.shade800
+                          : Colors.grey.shade200,
+                      foregroundColor: isDark ? Colors.white : Colors.black87,
+                    ),
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text(
+                      'Close',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDetailRow(
+    BuildContext context,
+    IconData icon,
+    String label,
+    String value,
+  ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: isDark
+                ? Colors.grey.withOpacity(0.15)
+                : Colors.grey.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            icon,
+            color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
+            size: 22,
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
