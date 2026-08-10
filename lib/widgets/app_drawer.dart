@@ -657,20 +657,20 @@ class _AppDrawerState extends State<AppDrawer> {
                               );
                             },
                           ),
-                          _buildDrawerItem(
-                            context: context,
-                            icon: Icons.account_balance_rounded,
-                            iconColor: _getIconColor(context, Colors.purple),
-                            title: 'HSN/SAC Master',
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const HsnSacListScreen(),
-                                ),
-                              );
-                            },
-                          ),
+                          // _buildDrawerItem(
+                          //   context: context,
+                          //   icon: Icons.account_balance_rounded,
+                          //   iconColor: _getIconColor(context, Colors.purple),
+                          //   title: 'HSN/SAC Master',
+                          //   onTap: () {
+                          //     Navigator.of(context).push(
+                          //       MaterialPageRoute(
+                          //         builder: (context) =>
+                          //             const HsnSacListScreen(),
+                          //       ),
+                          //     );
+                          //   },
+                          // ),
                           _buildDrawerItem(
                             context: context,
                             icon: Icons.receipt_long_rounded,
@@ -760,234 +760,234 @@ class _AppDrawerState extends State<AppDrawer> {
                               );
                             },
                           ),
-                          _buildDrawerItem(
-                            context: context,
-                            icon: Icons.warehouse_rounded,
-                            iconColor: _getIconColor(context, Colors.teal),
-                            title: 'Warehouse Master',
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const WarehouseListScreen(),
-                                ),
-                              );
-                            },
-                          ),
-                          _buildDrawerItem(
-                            context: context,
-                            icon: Icons.manage_accounts_rounded,
-                            iconColor: _getIconColor(context, Colors.teal),
-                            title: 'User Master',
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => const UserListScreen(),
-                                ),
-                              );
-                            },
-                          ),
-                          _buildDrawerItem(
-                            context: context,
-                            icon: Icons.security_rounded,
-                            iconColor: _getIconColor(context, Colors.teal),
-                            title: 'Role & Permission Master',
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => const RoleListScreen(),
-                                ),
-                              );
-                            },
-                          ),
-                          _buildDrawerItem(
-                            context: context,
-                            icon: Icons.support_agent_rounded,
-                            iconColor: _getIconColor(context, Colors.teal),
-                            title: 'Salesperson Master',
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const SalespersonListScreen(),
-                                ),
-                              );
-                            },
-                          ),
-                          _buildDrawerItem(
-                            context: context,
-                            icon: Icons.account_balance_wallet_rounded,
-                            iconColor: _getIconColor(context, Colors.teal),
-                            title: 'Bank Account Master',
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const BankAccountListScreen(),
-                                ),
-                              );
-                            },
-                          ),
+                          // _buildDrawerItem(
+                          //   context: context,
+                          //   icon: Icons.warehouse_rounded,
+                          //   iconColor: _getIconColor(context, Colors.teal),
+                          //   title: 'Warehouse Master',
+                          //   onTap: () {
+                          //     Navigator.of(context).push(
+                          //       MaterialPageRoute(
+                          //         builder: (context) =>
+                          //             const WarehouseListScreen(),
+                          //       ),
+                          //     );
+                          //   },
+                          // ),
+                          // _buildDrawerItem(
+                          //   context: context,
+                          //   icon: Icons.manage_accounts_rounded,
+                          //   iconColor: _getIconColor(context, Colors.teal),
+                          //   title: 'User Master',
+                          //   onTap: () {
+                          //     Navigator.of(context).push(
+                          //       MaterialPageRoute(
+                          //         builder: (context) => const UserListScreen(),
+                          //       ),
+                          //     );
+                          //   },
+                          // ),
+                          // _buildDrawerItem(
+                          //   context: context,
+                          //   icon: Icons.security_rounded,
+                          //   iconColor: _getIconColor(context, Colors.teal),
+                          //   title: 'Role & Permission Master',
+                          //   onTap: () {
+                          //     Navigator.of(context).push(
+                          //       MaterialPageRoute(
+                          //         builder: (context) => const RoleListScreen(),
+                          //       ),
+                          //     );
+                          //   },
+                          // ),
+                          // _buildDrawerItem(
+                          //   context: context,
+                          //   icon: Icons.support_agent_rounded,
+                          //   iconColor: _getIconColor(context, Colors.teal),
+                          //   title: 'Salesperson Master',
+                          //   onTap: () {
+                          //     Navigator.of(context).push(
+                          //       MaterialPageRoute(
+                          //         builder: (context) =>
+                          //             const SalespersonListScreen(),
+                          //       ),
+                          //     );
+                          //   },
+                          // ),
+                          // _buildDrawerItem(
+                          //   context: context,
+                          //   icon: Icons.account_balance_wallet_rounded,
+                          //   iconColor: _getIconColor(context, Colors.teal),
+                          //   title: 'Bank Account Master',
+                          //   onTap: () {
+                          //     Navigator.of(context).push(
+                          //       MaterialPageRoute(
+                          //         builder: (context) =>
+                          //             const BankAccountListScreen(),
+                          //       ),
+                          //     );
+                          //   },
+                          // ),
                         ],
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 14.0),
-                      child: ExpansionTile(
-                        initiallyExpanded: _isConfigurationMastersExpanded,
-                        onExpansionChanged: (expanded) {
-                          _isConfigurationMastersExpanded = expanded;
-                        },
-                        leading: Icon(
-                          Icons.tune_rounded,
-                          color: _getIconColor(context, Colors.orange),
-                        ),
-                        title: Text(
-                          'Configuration Masters',
-                          style: TextStyle(
-                            fontSize: 15,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                        ),
-                        children: [
-                          _buildDrawerItem(
-                            context: context,
-                            icon: Icons.payments_rounded,
-                            iconColor: _getIconColor(
-                              context,
-                              Colors.deepOrange,
-                            ),
-                            title: 'Payment Mode Master',
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const PaymentModeListScreen(),
-                                ),
-                              );
-                            },
-                          ),
-                          _buildDrawerItem(
-                            context: context,
-                            icon: Icons.request_quote_rounded,
-                            iconColor: _getIconColor(
-                              context,
-                              Colors.deepOrange,
-                            ),
-                            title: 'Price List Master',
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => const PriceListScreen(),
-                                ),
-                              );
-                            },
-                          ),
-                          _buildDrawerItem(
-                            context: context,
-                            icon: Icons.money_off_rounded,
-                            iconColor: _getIconColor(
-                              context,
-                              Colors.deepOrange,
-                            ),
-                            title: 'Expense Category Master',
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const ExpenseCategoryListScreen(),
-                                ),
-                              );
-                            },
-                          ),
-                          _buildDrawerItem(
-                            context: context,
-                            icon: Icons.attach_money_rounded,
-                            iconColor: _getIconColor(
-                              context,
-                              Colors.deepOrange,
-                            ),
-                            title: 'Income Category Master',
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const IncomeCategoryListScreen(),
-                                ),
-                              );
-                            },
-                          ),
-                          _buildDrawerItem(
-                            context: context,
-                            icon: Icons.currency_exchange_rounded,
-                            iconColor: _getIconColor(
-                              context,
-                              Colors.deepOrange,
-                            ),
-                            title: 'Currency Master',
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const CurrencyListScreen(),
-                                ),
-                              );
-                            },
-                          ),
-                          _buildDrawerItem(
-                            context: context,
-                            icon: Icons.qr_code_2_rounded,
-                            iconColor: _getIconColor(
-                              context,
-                              Colors.deepOrange,
-                            ),
-                            title: 'Barcode Settings',
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const BarcodeSettingsListScreen(),
-                                ),
-                              );
-                            },
-                          ),
-                          _buildDrawerItem(
-                            context: context,
-                            icon: Icons.print_rounded,
-                            iconColor: _getIconColor(
-                              context,
-                              Colors.deepOrange,
-                            ),
-                            title: 'Printer Settings',
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const PrinterSettingsListScreen(),
-                                ),
-                              );
-                            },
-                          ),
-                          _buildDrawerItem(
-                            context: context,
-                            icon: Icons.gavel_rounded,
-                            iconColor: _getIconColor(
-                              context,
-                              Colors.deepOrange,
-                            ),
-                            title: 'Terms & Conditions Master',
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const TermsConditionsListScreen(),
-                                ),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
+                    // Padding(
+                    //   padding: const EdgeInsets.only(left: 14.0),
+                    //   child: ExpansionTile(
+                    //     initiallyExpanded: _isConfigurationMastersExpanded,
+                    //     onExpansionChanged: (expanded) {
+                    //       _isConfigurationMastersExpanded = expanded;
+                    //     },
+                    //     leading: Icon(
+                    //       Icons.tune_rounded,
+                    //       color: _getIconColor(context, Colors.orange),
+                    //     ),
+                    //     title: Text(
+                    //       'Configuration Masters',
+                    //       style: TextStyle(
+                    //         fontSize: 15,
+                    //         color: Theme.of(context).colorScheme.onSurface,
+                    //       ),
+                    //     ),
+                    //     children: [
+                    //       // _buildDrawerItem(
+                    //       //   context: context,
+                    //       //   icon: Icons.payments_rounded,
+                    //       //   iconColor: _getIconColor(
+                    //       //     context,
+                    //       //     Colors.deepOrange,
+                    //       //   ),
+                    //       //   title: 'Payment Mode Master',
+                    //       //   onTap: () {
+                    //       //     Navigator.of(context).push(
+                    //       //       MaterialPageRoute(
+                    //       //         builder: (context) =>
+                    //       //             const PaymentModeListScreen(),
+                    //       //       ),
+                    //       //     );
+                    //       //   },
+                    //       // ),
+                    //       // _buildDrawerItem(
+                    //       //   context: context,
+                    //       //   icon: Icons.request_quote_rounded,
+                    //       //   iconColor: _getIconColor(
+                    //       //     context,
+                    //       //     Colors.deepOrange,
+                    //       //   ),
+                    //       //   title: 'Price List Master',
+                    //       //   onTap: () {
+                    //       //     Navigator.of(context).push(
+                    //       //       MaterialPageRoute(
+                    //       //         builder: (context) => const PriceListScreen(),
+                    //       //       ),
+                    //       //     );
+                    //       //   },
+                    //       // ),
+                    //       // _buildDrawerItem(
+                    //       //   context: context,
+                    //       //   icon: Icons.money_off_rounded,
+                    //       //   iconColor: _getIconColor(
+                    //       //     context,
+                    //       //     Colors.deepOrange,
+                    //       //   ),
+                    //       //   title: 'Expense Category Master',
+                    //       //   onTap: () {
+                    //       //     Navigator.of(context).push(
+                    //       //       MaterialPageRoute(
+                    //       //         builder: (context) =>
+                    //       //             const ExpenseCategoryListScreen(),
+                    //       //       ),
+                    //       //     );
+                    //       //   },
+                    //       // ),
+                    //       // _buildDrawerItem(
+                    //       //   context: context,
+                    //       //   icon: Icons.attach_money_rounded,
+                    //       //   iconColor: _getIconColor(
+                    //       //     context,
+                    //       //     Colors.deepOrange,
+                    //       //   ),
+                    //       //   title: 'Income Category Master',
+                    //       //   onTap: () {
+                    //       //     Navigator.of(context).push(
+                    //       //       MaterialPageRoute(
+                    //       //         builder: (context) =>
+                    //       //             const IncomeCategoryListScreen(),
+                    //       //       ),
+                    //       //     );
+                    //       //   },
+                    //       // ),
+                    //       _buildDrawerItem(
+                    //         context: context,
+                    //         icon: Icons.currency_exchange_rounded,
+                    //         iconColor: _getIconColor(
+                    //           context,
+                    //           Colors.deepOrange,
+                    //         ),
+                    //         title: 'Currency Master',
+                    //         onTap: () {
+                    //           Navigator.of(context).push(
+                    //             MaterialPageRoute(
+                    //               builder: (context) =>
+                    //                   const CurrencyListScreen(),
+                    //             ),
+                    //           );
+                    //         },
+                    //       ),
+                    //       _buildDrawerItem(
+                    //         context: context,
+                    //         icon: Icons.qr_code_2_rounded,
+                    //         iconColor: _getIconColor(
+                    //           context,
+                    //           Colors.deepOrange,
+                    //         ),
+                    //         title: 'Barcode Settings',
+                    //         onTap: () {
+                    //           Navigator.of(context).push(
+                    //             MaterialPageRoute(
+                    //               builder: (context) =>
+                    //                   const BarcodeSettingsListScreen(),
+                    //             ),
+                    //           );
+                    //         },
+                    //       ),
+                    //       _buildDrawerItem(
+                    //         context: context,
+                    //         icon: Icons.print_rounded,
+                    //         iconColor: _getIconColor(
+                    //           context,
+                    //           Colors.deepOrange,
+                    //         ),
+                    //         title: 'Printer Settings',
+                    //         onTap: () {
+                    //           Navigator.of(context).push(
+                    //             MaterialPageRoute(
+                    //               builder: (context) =>
+                    //                   const PrinterSettingsListScreen(),
+                    //             ),
+                    //           );
+                    //         },
+                    //       ),
+                    //       _buildDrawerItem(
+                    //         context: context,
+                    //         icon: Icons.gavel_rounded,
+                    //         iconColor: _getIconColor(
+                    //           context,
+                    //           Colors.deepOrange,
+                    //         ),
+                    //         title: 'Terms & Conditions Master',
+                    //         onTap: () {
+                    //           Navigator.of(context).push(
+                    //             MaterialPageRoute(
+                    //               builder: (context) =>
+                    //                   const TermsConditionsListScreen(),
+                    //             ),
+                    //           );
+                    //         },
+                    //       ),
+                    //     ],
+                    //   ),
+                    // ),
                   ],
                 ),
 

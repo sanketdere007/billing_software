@@ -86,7 +86,7 @@ void main() async {
     }
     
     String listContent = listTemplate;
-    mapping["replacements"]?.forEach((k, v) {
+    (mapping["replacements"] as Map<String, String>?)?.forEach((k, v) {
       listContent = listContent.replaceAll(k.toString(), v.toString());
     });
     
@@ -94,7 +94,7 @@ void main() async {
     await listOut.writeAsString(listContent);
     
     String masterContent = masterTemplate;
-    mapping["replacements"]?.forEach((k, v) {
+    (mapping["replacements"] as Map<String, String>?)?.forEach((k, v) {
       masterContent = masterContent.replaceAll(k.toString(), v.toString());
     });
     
