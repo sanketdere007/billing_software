@@ -24,7 +24,6 @@ class _AddSupplierScreenState extends State<AddSupplierScreen> {
   bool _isLoading = false;
 
   late int _id;
-  String _code = '';
   String _name = '';
   String _companyName = '';
   String _mobile = '';
@@ -51,7 +50,6 @@ class _AddSupplierScreenState extends State<AddSupplierScreen> {
     final editSupplier = widget.supplierToEdit;
     if (editSupplier != null) {
       _id = editSupplier.suppId;
-      _code = editSupplier.suppCode;
       _name = editSupplier.suppName;
       _companyName = editSupplier.suppCompanyName;
       _mobile = editSupplier.suppMobileNo;
@@ -88,7 +86,7 @@ class _AddSupplierScreenState extends State<AddSupplierScreen> {
     try {
       final request = SupplierUpsertRequest(
         suppId: _id,
-        suppCode: _code,
+        suppCode: "0",
         suppName: _name,
         suppCompanyName: _companyName,
         suppMobileNo: _mobile,
@@ -121,7 +119,6 @@ class _AddSupplierScreenState extends State<AddSupplierScreen> {
         _formKey.currentState!.reset();
         setState(() {
           _id = 0;
-          _code = '';
           _name = '';
           _companyName = '';
           _mobile = '';
@@ -218,36 +215,16 @@ class _AddSupplierScreenState extends State<AddSupplierScreen> {
                                   ],
                                 ),
                                 const SizedBox(height: 16),
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Expanded(
-                                      child: TextFormField(
-                                        initialValue: _code,
-                                        decoration: InputDecoration(
-                                          labelText: 'Supplier Code',
-                                          prefixIcon: const Icon(Icons.tag_rounded),
-                                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                                        ),
-                                        onSaved: (val) => _code = val?.trim() ?? '',
-                                        textInputAction: TextInputAction.next,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    Expanded(
-                                      child: TextFormField(
-                                        initialValue: _email,
-                                        decoration: InputDecoration(
-                                          labelText: 'Email Address',
-                                          prefixIcon: const Icon(Icons.email_rounded),
-                                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                                        ),
-                                        keyboardType: TextInputType.emailAddress,
-                                        onSaved: (val) => _email = val?.trim() ?? '',
-                                        textInputAction: TextInputAction.next,
-                                      ),
-                                    ),
-                                  ],
+                                TextFormField(
+                                  initialValue: _email,
+                                  decoration: InputDecoration(
+                                    labelText: 'Email Address',
+                                    prefixIcon: const Icon(Icons.email_rounded),
+                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                  ),
+                                  keyboardType: TextInputType.emailAddress,
+                                  onSaved: (val) => _email = val?.trim() ?? '',
+                                  textInputAction: TextInputAction.next,
                                 ),
                               ],
                             ),

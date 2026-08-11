@@ -39,7 +39,6 @@ class _SupplierMasterScreenState extends State<SupplierMasterScreen> {
   // Form Controllers
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _companyController = TextEditingController();
-  final TextEditingController _codeController = TextEditingController();
   final TextEditingController _mobileController = TextEditingController();
   final TextEditingController _altMobileController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -55,7 +54,6 @@ class _SupplierMasterScreenState extends State<SupplierMasterScreen> {
   // Focus Nodes for keyboard navigation
   final FocusNode _nameFocusNode = FocusNode();
   final FocusNode _companyFocusNode = FocusNode();
-  final FocusNode _codeFocusNode = FocusNode();
   final FocusNode _mobileFocusNode = FocusNode();
   final FocusNode _altMobileFocusNode = FocusNode();
   final FocusNode _emailFocusNode = FocusNode();
@@ -102,7 +100,6 @@ class _SupplierMasterScreenState extends State<SupplierMasterScreen> {
   void dispose() {
     _nameController.dispose();
     _companyController.dispose();
-    _codeController.dispose();
     _mobileController.dispose();
     _altMobileController.dispose();
     _emailController.dispose();
@@ -117,7 +114,6 @@ class _SupplierMasterScreenState extends State<SupplierMasterScreen> {
 
     _nameFocusNode.dispose();
     _companyFocusNode.dispose();
-    _codeFocusNode.dispose();
     _mobileFocusNode.dispose();
     _altMobileFocusNode.dispose();
     _emailFocusNode.dispose();
@@ -187,7 +183,6 @@ class _SupplierMasterScreenState extends State<SupplierMasterScreen> {
     _suppId = supplier.suppId;
     _nameController.text = supplier.suppName;
     _companyController.text = supplier.suppCompanyName;
-    _codeController.text = supplier.suppCode;
     _mobileController.text = supplier.suppMobileNo;
     _altMobileController.text = supplier.suppAlternateMobileNo;
     _emailController.text = supplier.suppEmail;
@@ -274,7 +269,7 @@ class _SupplierMasterScreenState extends State<SupplierMasterScreen> {
 
       final request = SupplierUpsertRequest(
         suppId: isEditing ? _suppId : 0,
-        suppCode: _codeController.text.trim(),
+        suppCode: "0",
         suppName: _nameController.text.trim(),
         suppCompanyName: _companyController.text.trim(),
         suppMobileNo: _mobileController.text.trim(),
@@ -328,7 +323,6 @@ class _SupplierMasterScreenState extends State<SupplierMasterScreen> {
         _formKey.currentState?.reset();
         _nameController.clear();
         _companyController.clear();
-        _codeController.clear();
         _mobileController.clear();
         _altMobileController.clear();
         _emailController.clear();
@@ -493,14 +487,10 @@ class _SupplierMasterScreenState extends State<SupplierMasterScreen> {
                       Expanded(child: _buildCompanyNameField()),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  _buildCodeField(),
                 ] else ...[
                   _buildSupplierNameField(),
                   const SizedBox(height: 14),
                   _buildCompanyNameField(),
-                  const SizedBox(height: 14),
-                  _buildCodeField(),
                 ],
               ],
             ),
@@ -949,26 +939,11 @@ class _SupplierMasterScreenState extends State<SupplierMasterScreen> {
       inputFormatters: const [
         CapitalizeWordsInputFormatter(),
       ],
-      onFieldSubmitted: (_) => _codeFocusNode.requestFocus(),
+      onFieldSubmitted: (_) => _mobileFocusNode.requestFocus(),
       decoration: InputDecoration(
         labelText: 'Company / Business Name',
         hintText: 'e.g. Acme Enterprises',
         prefixIcon: const Icon(Icons.business_outlined, size: 20),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-    );
-  }
-
-  Widget _buildCodeField() {
-    return TextFormField(
-      controller: _codeController,
-      focusNode: _codeFocusNode,
-      textInputAction: TextInputAction.next,
-      onFieldSubmitted: (_) => _mobileFocusNode.requestFocus(),
-      decoration: InputDecoration(
-        labelText: 'Supplier Code',
-        hintText: 'e.g. SUP-001',
-        prefixIcon: const Icon(Icons.tag_rounded, size: 20),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
