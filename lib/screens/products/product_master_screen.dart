@@ -41,6 +41,7 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
   final FocusNode _unitFocusNode = FocusNode();
   final FocusNode _hsnFocusNode = FocusNode();
   final FocusNode _gstFocusNode = FocusNode();
+  final FocusNode _saveButtonFocusNode = FocusNode();
 
   int? _selectedCategoryId;
   int? _selectedSubcategoryId;
@@ -84,6 +85,7 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
     _unitFocusNode.dispose();
     _hsnFocusNode.dispose();
     _gstFocusNode.dispose();
+    _saveButtonFocusNode.dispose();
 
     super.dispose();
   }
@@ -605,6 +607,7 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
                     ],
                     const SizedBox(width: 12),
                     FilledButton.icon(
+                      focusNode: _saveButtonFocusNode,
                       onPressed: _isLoading
                           ? null
                           : () => _saveProduct(saveAndNew: false),
@@ -828,7 +831,7 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
     return GstDropdown(
       selectedGstId: _selectedGstId,
       focusNode: _gstFocusNode,
-      onSelectionComplete: () => _saveProduct(),
+      onSelectionComplete: () => _saveButtonFocusNode.requestFocus(),
       onChanged: (val) {
         setState(() {
           _selectedGstId = val?.gstTaxId;
