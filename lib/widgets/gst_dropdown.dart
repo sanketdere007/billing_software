@@ -13,6 +13,7 @@ class GstDropdown extends StatefulWidget {
   final bool enabled;
   final FocusNode? focusNode;
   final FocusNode? nextFocusNode;
+  final VoidCallback? onSelectionComplete;
 
   const GstDropdown({
     super.key,
@@ -25,6 +26,7 @@ class GstDropdown extends StatefulWidget {
     this.enabled = true,
     this.focusNode,
     this.nextFocusNode,
+    this.onSelectionComplete,
   });
 
   @override
@@ -136,6 +138,8 @@ class _GstDropdownState extends State<GstDropdown> {
         if (!mounted) return;
         if (widget.nextFocusNode != null) {
           widget.nextFocusNode!.requestFocus();
+        } else if (widget.onSelectionComplete != null) {
+          widget.onSelectionComplete!();
         } else {
           FocusScope.of(context).nextFocus();
         }

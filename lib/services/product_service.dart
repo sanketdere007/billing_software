@@ -31,7 +31,9 @@ class ProductService extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
 
-    final cleanSearch = (search == null || search == 'null') ? '' : search.trim();
+    final cleanSearch = (search == null || search == 'null')
+        ? ''
+        : search.trim();
     final effectiveBranchId = (branchId != null && branchId > 0)
         ? branchId
         : (sessionService.selectedBranchId ?? 0);
@@ -47,7 +49,9 @@ class ProductService extends ChangeNotifier {
       queryParameters['Prod_IsActive'] = isActive.toString();
     }
 
-    debugPrint('📦 [ProductService.getAllProducts] Requesting with query parameters: $queryParameters');
+    debugPrint(
+      '📦 [ProductService.getAllProducts] Requesting with query parameters: $queryParameters',
+    );
 
     try {
       final dynamic response = await apiService.get(
@@ -93,7 +97,8 @@ class ProductService extends ChangeNotifier {
           }
 
           if (searchLower.isNotEmpty) {
-            final matches = p.prodName.toLowerCase().contains(searchLower) ||
+            final matches =
+                p.prodName.toLowerCase().contains(searchLower) ||
                 p.prodCode.toLowerCase().contains(searchLower) ||
                 p.prodHSNCode.toLowerCase().contains(searchLower) ||
                 p.prodCompanyName.toLowerCase().contains(searchLower) ||
@@ -121,7 +126,9 @@ class ProductService extends ChangeNotifier {
   }
 
   /// Insert or update product via POST `/api/Product/InsertOrUpdateProduct`
-  Future<ProductUpsertResponse> insertOrUpdateProduct(ProductUpsertRequest request) async {
+  Future<ProductUpsertResponse> insertOrUpdateProduct(
+    ProductUpsertRequest request,
+  ) async {
     int createdBy = request.prodCreatedBy;
     int modifiedBy = request.prodModifiedBy;
 
@@ -156,7 +163,9 @@ class ProductService extends ChangeNotifier {
       prodModifiedBy: modifiedBy,
     );
 
-    debugPrint('📦 [ProductService.insertOrUpdateProduct] Request payload: ${finalRequest.toJson()}');
+    debugPrint(
+      '📦 [ProductService.insertOrUpdateProduct] Request payload: ${finalRequest.toJson()}',
+    );
 
     try {
       final dynamic response = await apiService.post(
@@ -171,7 +180,8 @@ class ProductService extends ChangeNotifier {
 
       final upsertResponse = ProductUpsertResponse.fromJson(response);
 
-      if (upsertResponse.status || (upsertResponse.data != null && upsertResponse.data!.status)) {
+      if (upsertResponse.status ||
+          (upsertResponse.data != null && upsertResponse.data!.status)) {
         return upsertResponse;
       } else {
         final msg = upsertResponse.message.isNotEmpty

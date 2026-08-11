@@ -7,35 +7,45 @@ class ApiConstants {
 
   // City Endpoints
   static const String getAllCitiesEndpoint = '/api/City/GetAllCities';
-  static const String insertOrUpdateCityEndpoint = '/api/City/InsertorUpdateCity';
+  static const String insertOrUpdateCityEndpoint =
+      '/api/City/InsertorUpdateCity';
 
   // GST Tax Endpoints
   static const String getAllGSTTaxesEndpoint = '/api/GSTTax/GetAllGSTTaxes';
-  static const String insertOrUpdateGSTTaxEndpoint = '/api/GSTTax/InsertOrUpdateGSTTax';
+  static const String insertOrUpdateGSTTaxEndpoint =
+      '/api/GSTTax/InsertOrUpdateGSTTax';
 
   // Supplier Endpoints
   static const String getAllSuppliersEndpoint = '/api/Supplier/GetAllSuppliers';
-  static const String insertOrUpdateSupplierEndpoint = '/api/Supplier/InsertorUpdateSupplier';
+  static const String insertOrUpdateSupplierEndpoint =
+      '/api/Supplier/InsertorUpdateSupplier';
 
   // Category Endpoints
-  static const String getAllCategoriesEndpoint = '/api/Category/GetAllCategories';
-  static const String insertOrUpdateCategoryEndpoint = '/api/Category/InsertorUpdateCategory';
+  static const String getAllCategoriesEndpoint =
+      '/api/Category/GetAllCategories';
+  static const String insertOrUpdateCategoryEndpoint =
+      '/api/Category/InsertorUpdateCategory';
 
   // SubCategory Endpoints
-  static const String getAllSubCategoriesEndpoint = '/api/SubCategory/GetAllSubCategories';
-  static const String insertOrUpdateSubCategoryEndpoint = '/api/SubCategory/InsertorUpdateSubCategory';
+  static const String getAllSubCategoriesEndpoint =
+      '/api/SubCategory/GetAllSubCategories';
+  static const String insertOrUpdateSubCategoryEndpoint =
+      '/api/SubCategory/InsertorUpdateSubCategory';
 
   // Brand Endpoints
   static const String getAllBrandsEndpoint = '/api/Brand/GetAllBrands';
-  static const String insertOrUpdateBrandEndpoint = '/api/Brand/InsertorUpdateBrand';
+  static const String insertOrUpdateBrandEndpoint =
+      '/api/Brand/InsertorUpdateBrand';
 
   // Unit Endpoints
   static const String getAllUnitsEndpoint = '/api/Unit/GetAllUnits';
-  static const String insertOrUpdateUnitEndpoint = '/api/Unit/InsertorUpdateUnit';
+  static const String insertOrUpdateUnitEndpoint =
+      '/api/Unit/InsertorUpdateUnit';
 
   // Area Endpoints
   static const String getAllAreasEndpoint = '/api/Area/GetAllAreas';
-  static const String insertOrUpdateAreaEndpoint = '/api/Area/InsertorUpdateArea';
+  static const String insertOrUpdateAreaEndpoint =
+      '/api/Area/InsertorUpdateArea';
 
   // State Endpoints
   static const String getAllStatesEndpoint = '/api/State/GetAllStates';
@@ -43,14 +53,17 @@ class ApiConstants {
   // Customer Endpoints
   static const String getAllCustomersEndpoint = '/api/Customer/GetAllCustomers';
   static const String getCustomerByIdEndpoint = '/api/Customer/GetCustomerById';
-  static const String insertOrUpdateCustomerEndpoint = '/api/Customer/InsertorUpdateCustomer';
+  static const String insertOrUpdateCustomerEndpoint =
+      '/api/Customer/InsertorUpdateCustomer';
 
   // Product Endpoints
   static const String getAllProductsEndpoint = '/api/Product/GetAllProducts';
-  static const String insertOrUpdateProductEndpoint = '/api/Product/InsertOrUpdateProduct';
+  static const String insertOrUpdateProductEndpoint =
+      '/api/Product/InsertOrUpdateProduct';
 
   // Database Backup Endpoints
-  static const String createDatabaseBackupEndpoint = '/api/DatabaseBackup/CreateDatabaseBackup';
+  static const String createDatabaseBackupEndpoint =
+      '/api/DatabaseBackup/CreateDatabaseBackup';
 
   // Company Endpoints
   static const String getAllCompaniesEndpoint = '/api/Company/GetAllCompanies';

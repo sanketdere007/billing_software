@@ -9,10 +9,16 @@ class SubcategoryDropdown extends StatefulWidget {
   final String? Function(SubCategoryListItem?)? validator;
   final String labelText;
   final String hintText;
+  final bool isFilter;
+  final String? allOptionLabel;
   final bool isRequired;
   final bool enabled;
+  final EdgeInsetsGeometry? contentPadding;
+  final Widget? prefixIcon;
   final FocusNode? focusNode;
   final FocusNode? nextFocusNode;
+  final bool autofocus;
+  final VoidCallback? onSelectionComplete;
 
   const SubcategoryDropdown({
     super.key,
@@ -21,10 +27,16 @@ class SubcategoryDropdown extends StatefulWidget {
     this.validator,
     this.labelText = 'Sub Category',
     this.hintText = 'Select Sub Category',
+    this.isFilter = false,
+    this.allOptionLabel = 'All Subcategories',
     this.isRequired = false,
     this.enabled = true,
+    this.contentPadding,
+    this.prefixIcon,
     this.focusNode,
     this.nextFocusNode,
+    this.autofocus = false,
+    this.onSelectionComplete,
   });
 
   @override
@@ -123,17 +135,25 @@ class _SubcategoryDropdownState extends State<SubcategoryDropdown> {
 
     final picked = await showDialog<SubCategoryListItem?>(
       context: context,
-      builder: (context) => _SearchDialog(items: _items, selectedId: _selectedItem?.subCatId),
+      builder: (context) => _SearchDialog(
+        items: _items,
+        selectedId: _selectedItem?.subCatId,
+        isFilter: widget.isFilter,
+        allOptionLabel: widget.allOptionLabel ?? 'All Subcategories',
+      ),
     );
 
     if (picked != null) {
-      setState(() => _selectedItem = picked);
-      fieldState?.didChange(picked);
-      widget.onChanged?.call(picked);
+      final effectiveItem = (picked.subCatId == -1 || picked.subCatName == '__ALL_SUBCATEGORIES__') ? null : picked;
+      setState(() => _selectedItem = effectiveItem);
+      fieldState?.didChange(effectiveItem);
+      widget.onChanged?.call(effectiveItem);
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         if (widget.nextFocusNode != null) {
           widget.nextFocusNode!.requestFocus();
+        } else if (widget.onSelectionComplete != null) {
+          widget.onSelectionComplete!();
         } else {
           FocusScope.of(context).nextFocus();
         }
@@ -158,11 +178,24 @@ class _SubcategoryDropdownState extends State<SubcategoryDropdown> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    final isDark = theme.brightness == Brightness.dark;
+    final effectiveLabel = widget.isRequired ? '${widget.labelText} *' : widget.labelText;
+
     if (_isLoading) {
       return Container(
         height: 52, padding: const EdgeInsets.symmetric(horizontal: 14),
         decoration: BoxDecoration(border: Border.all(color: theme.colorScheme.outlineVariant), borderRadius: BorderRadius.circular(8)),
-        child: Row(children: [const Icon(Icons.subdirectory_arrow_right_rounded, size: 20, color: Colors.grey), const SizedBox(width: 10), Expanded(child: Text('Loading...', style: TextStyle(color: theme.colorScheme.onSurfaceVariant))), const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))]),
+        child: Row(children: [
+          if (widget.prefixIcon != null) ...[
+            widget.prefixIcon!,
+            const SizedBox(width: 10),
+          ] else ...[
+            const Icon(Icons.subdirectory_arrow_right_rounded, size: 20, color: Colors.grey),
+            const SizedBox(width: 10),
+          ],
+          Expanded(child: Text('Loading...', style: TextStyle(color: theme.colorScheme.onSurfaceVariant))),
+          const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+        ]),
       );
     }
 
@@ -183,39 +216,73 @@ class _SubcategoryDropdownState extends State<SubcategoryDropdown> {
       },
       builder: (fieldState) {
         final hasError = fieldState.hasError;
+        final displayText = _selectedItem != null
+            ? _selectedItem!.subCatName
+            : (widget.isFilter ? (widget.allOptionLabel ?? 'All Subcategories') : widget.hintText);
+        final isPlaceholder = _selectedItem == null && !widget.isFilter;
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
             Focus(
               focusNode: _focusNode,
+              autofocus: widget.autofocus,
               onKeyEvent: (node, event) => _handleKeyEvent(node, event, fieldState),
               child: InkWell(
                 onTap: widget.enabled ? () => _openSearchDialog(fieldState) : null,
                 borderRadius: BorderRadius.circular(8),
                 child: Container(
-                  height: 52, padding: const EdgeInsets.symmetric(horizontal: 12),
+                  constraints: BoxConstraints(minHeight: widget.isFilter ? 40 : 52),
+                  padding: widget.contentPadding ?? EdgeInsets.symmetric(horizontal: 12, vertical: widget.isFilter ? 4 : 10),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: hasError ? theme.colorScheme.error : (_isFocused ? theme.colorScheme.primary : theme.colorScheme.outline), width: (_isFocused || hasError) ? 2 : 1),
+                    border: Border.all(
+                      color: hasError
+                          ? theme.colorScheme.error
+                          : (_isFocused
+                              ? theme.colorScheme.primary
+                              : (widget.enabled ? theme.colorScheme.outline : theme.colorScheme.outlineVariant.withOpacity(0.5))),
+                      width: (_isFocused || hasError) ? 2 : 1,
+                    ),
+                    boxShadow: _isFocused ? [BoxShadow(color: theme.colorScheme.primary.withOpacity(isDark ? 0.3 : 0.15), blurRadius: 6)] : null,
                     color: widget.enabled ? theme.colorScheme.surface : theme.colorScheme.surfaceVariant.withOpacity(0.3),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.subdirectory_arrow_right_rounded, size: 20, color: _isFocused ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant),
-                      const SizedBox(width: 8),
+                      if (widget.prefixIcon != null) ...[
+                        widget.prefixIcon!,
+                        const SizedBox(width: 8),
+                      ] else ...[
+                        Icon(Icons.subdirectory_arrow_right_rounded, size: 18, color: _isFocused ? theme.colorScheme.primary : (widget.enabled ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant.withOpacity(0.5))),
+                        const SizedBox(width: 8),
+                      ],
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            if (_selectedItem != null) Text(widget.isRequired ? '${widget.labelText} *' : widget.labelText, style: TextStyle(fontSize: 11, color: _isFocused ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant, fontWeight: _isFocused ? FontWeight.bold : FontWeight.w500)),
-                            Text(_selectedItem?.subCatName ?? widget.hintText, style: TextStyle(color: _selectedItem == null ? theme.colorScheme.onSurfaceVariant : theme.colorScheme.onSurface), maxLines: 1, overflow: TextOverflow.ellipsis),
-                          ],
-                        ),
+                        child: widget.isFilter
+                            ? Text(displayText, style: theme.textTheme.bodyMedium?.copyWith(color: isPlaceholder ? theme.colorScheme.onSurfaceVariant.withOpacity(0.7) : theme.colorScheme.onSurface, fontWeight: _selectedItem != null ? FontWeight.w500 : FontWeight.normal, fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis)
+                            : Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (_selectedItem != null) Text(effectiveLabel, style: TextStyle(fontSize: 11, color: hasError ? theme.colorScheme.error : (_isFocused ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant), fontWeight: _isFocused ? FontWeight.bold : FontWeight.w500)),
+                                  Text(displayText, style: theme.textTheme.bodyMedium?.copyWith(color: isPlaceholder ? theme.colorScheme.onSurfaceVariant.withOpacity(0.6) : theme.colorScheme.onSurface, fontWeight: _selectedItem != null ? FontWeight.w500 : FontWeight.normal), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                ],
+                              ),
                       ),
-                      if (_isFocused) Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), margin: const EdgeInsets.only(right: 6), decoration: BoxDecoration(color: theme.colorScheme.primaryContainer, borderRadius: BorderRadius.circular(4)), child: Text('↵ Enter', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: theme.colorScheme.onPrimaryContainer))),
-                      Icon(Icons.arrow_drop_down_rounded, color: _isFocused ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant),
+                      if (widget.isFilter && _selectedItem != null)
+                        InkWell(
+                          onTap: () {
+                            setState(() => _selectedItem = null);
+                            fieldState.didChange(null);
+                            widget.onChanged?.call(null);
+                          },
+                          borderRadius: BorderRadius.circular(12),
+                          child: Padding(padding: const EdgeInsets.all(4), child: Icon(Icons.close_rounded, size: 16, color: theme.colorScheme.onSurfaceVariant)),
+                        )
+                      else ...[
+                        if (_isFocused) Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), margin: const EdgeInsets.only(right: 6), decoration: BoxDecoration(color: theme.colorScheme.primaryContainer, borderRadius: BorderRadius.circular(4)), child: Text('↵ Enter', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: theme.colorScheme.onPrimaryContainer))),
+                        Icon(Icons.arrow_drop_down_rounded, color: _isFocused ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant),
+                      ],
                     ],
                   ),
                 ),
@@ -230,9 +297,21 @@ class _SubcategoryDropdownState extends State<SubcategoryDropdown> {
 }
 
 class _SearchDialog extends StatefulWidget {
+  static SubCategoryListItem allOption = SubCategoryListItem(
+    subCatId: -1,
+    subCatName: '__ALL_SUBCATEGORIES__',
+    subCatDescription: '',
+    subCatCatId: 0,
+    catName: '',
+    subCatCreatedBy: 0,
+    subCatModifiedBy: 0,
+  );
+
   final List<SubCategoryListItem> items;
   final int? selectedId;
-  const _SearchDialog({required this.items, this.selectedId});
+  final bool isFilter;
+  final String allOptionLabel;
+  const _SearchDialog({required this.items, this.selectedId, required this.isFilter, required this.allOptionLabel});
   @override
   State<_SearchDialog> createState() => _SearchDialogState();
 }
@@ -249,9 +328,11 @@ class _SearchDialogState extends State<_SearchDialog> {
     super.initState();
     _filtered = widget.items;
     _searchCtrl.addListener(_onSearch);
-    if (widget.selectedId != null) {
+    if (widget.isFilter && widget.selectedId == null) {
+      _highlightedIndex = 0;
+    } else if (widget.selectedId != null) {
       final idx = widget.items.indexWhere((e) => e.subCatId == widget.selectedId);
-      if (idx != -1) _highlightedIndex = idx;
+      if (idx != -1) _highlightedIndex = widget.isFilter ? idx + 1 : idx;
     }
     _searchFocus.onKeyEvent = _handleKey;
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -261,9 +342,12 @@ class _SearchDialogState extends State<_SearchDialog> {
 
   @override
   void dispose() {
+    _searchCtrl.removeListener(_onSearch);
     _searchCtrl.dispose(); _searchFocus.dispose(); _scrollCtrl.dispose();
     super.dispose();
   }
+
+  int get _totalItems => _filtered.length + (widget.isFilter ? 1 : 0);
 
   void _onSearch() {
     final query = _searchCtrl.text.trim().toLowerCase();
@@ -289,16 +373,24 @@ class _SearchDialogState extends State<_SearchDialog> {
   KeyEventResult _handleKey(FocusNode node, KeyEvent event) {
     if (event is! KeyDownEvent) return KeyEventResult.ignored;
     final key = event.logicalKey;
+    final total = _totalItems;
     if (key == LogicalKeyboardKey.arrowDown) {
-      if (_filtered.isNotEmpty) setState(() => _highlightedIndex = (_highlightedIndex + 1) % _filtered.length);
+      if (total > 0) setState(() => _highlightedIndex = (_highlightedIndex + 1) % total);
       _scrollToIndex(_highlightedIndex);
       return KeyEventResult.handled;
     } else if (key == LogicalKeyboardKey.arrowUp) {
-      if (_filtered.isNotEmpty) setState(() => _highlightedIndex = (_highlightedIndex - 1 + _filtered.length) % _filtered.length);
+      if (total > 0) setState(() => _highlightedIndex = (_highlightedIndex - 1 + total) % total);
       _scrollToIndex(_highlightedIndex);
       return KeyEventResult.handled;
     } else if (key == LogicalKeyboardKey.enter || key == LogicalKeyboardKey.numpadEnter) {
-      if (_filtered.isNotEmpty) Navigator.of(context).pop(_filtered[_highlightedIndex]);
+      if (total > 0 && _highlightedIndex >= 0 && _highlightedIndex < total) {
+        if (widget.isFilter && _highlightedIndex == 0) {
+          Navigator.of(context).pop(_SearchDialog.allOption);
+        } else {
+          final idx = widget.isFilter ? _highlightedIndex - 1 : _highlightedIndex;
+          if (idx >= 0 && idx < _filtered.length) Navigator.of(context).pop(_filtered[idx]);
+        }
+      }
       return KeyEventResult.handled;
     } else if (key == LogicalKeyboardKey.escape) {
       Navigator.of(context).pop();
@@ -318,13 +410,25 @@ class _SearchDialogState extends State<_SearchDialog> {
           children: [
             Padding(padding: const EdgeInsets.all(16), child: TextField(controller: _searchCtrl, focusNode: _searchFocus, decoration: InputDecoration(hintText: 'Search subcategory...', prefixIcon: const Icon(Icons.search), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)), filled: true))),
             Expanded(
-              child: _filtered.isEmpty ? const Center(child: Text('No subcategories found')) : ListView.builder(
+              child: _totalItems == 0 ? const Center(child: Text('No subcategories found')) : ListView.builder(
                 controller: _scrollCtrl,
-                itemCount: _filtered.length,
+                itemCount: _totalItems,
                 itemBuilder: (context, index) {
-                  final item = _filtered[index];
-                  final isSel = item.subCatId == widget.selectedId;
                   final isHigh = index == _highlightedIndex;
+                  if (widget.isFilter && index == 0) {
+                    final isSel = widget.selectedId == null;
+                    return Container(
+                      height: 56,
+                      color: isHigh ? theme.colorScheme.primary.withOpacity(0.2) : Colors.transparent,
+                      child: ListTile(
+                        title: Text(widget.allOptionLabel, style: TextStyle(color: isSel || isHigh ? theme.colorScheme.primary : null, fontWeight: isSel || isHigh ? FontWeight.bold : FontWeight.normal)),
+                        trailing: isSel ? Icon(Icons.check, color: theme.colorScheme.primary) : null,
+                        onTap: () => Navigator.of(context).pop(_SearchDialog.allOption),
+                      ),
+                    );
+                  }
+                  final item = _filtered[widget.isFilter ? index - 1 : index];
+                  final isSel = item.subCatId == widget.selectedId;
                   return Container(
                     height: 56,
                     color: isHigh ? theme.colorScheme.primary.withOpacity(0.2) : Colors.transparent,

@@ -1,15 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../models/product.dart';
-import '../../models/category.dart';
-import '../../models/subcategory.dart';
-import '../../models/brand.dart';
-import '../../models/unit.dart';
 import '../../services/product_service.dart';
-import '../../services/category_service.dart';
-import '../../services/subcategory_service.dart';
-import '../../services/brand_service.dart';
-import '../../services/unit_service.dart';
 import '../../services/session_service.dart';
 import '../../utils/text_formatters.dart';
 import '../../widgets/app_drawer.dart';
@@ -35,13 +27,6 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
   final ProductService _productService = productService;
   final SessionService _sessionService = sessionService;
 
-  // Placeholder instances since these services might not be singletons yet in this codebase
-  // We will assume they expose lists of their respective models or we will fetch them
-  final CategoryService _categoryService = CategoryService();
-  final SubCategoryService _subcategoryService = SubCategoryService();
-  final BrandService _brandService = BrandService();
-  final UnitService _unitService = UnitService();
-
   // Form Controllers
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _codeController = TextEditingController();
@@ -64,11 +49,6 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
   int? _selectedGstId;
   double _selectedGstPercent = 0.0;
 
-  List<CategoryListItem> _categories = [];
-  List<SubCategoryListItem> _subcategories = [];
-  List<BrandListItem> _brands = [];
-  List<UnitListItem> _units = [];
-
   bool _isActive = true;
   bool _isLoading = false;
   bool _isFetchingDetails = false;
@@ -81,7 +61,6 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
   void initState() {
     super.initState();
     _initUserData();
-    _fetchDropdownData();
     _initFormData();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -109,25 +88,6 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
     super.dispose();
   }
 
-  Future<void> _fetchDropdownData() async {
-    try {
-      final cats = await _categoryService.getAllCategories();
-      final subcats = await _subcategoryService.getAllSubCategories();
-      final brnds = await _brandService.getAllBrands();
-      final unts = await _unitService.getAllUnits();
-      if (mounted) {
-        setState(() {
-          _categories = cats;
-          _subcategories = subcats;
-          _brands = brnds;
-          _units = unts;
-        });
-      }
-    } catch (e) {
-      debugPrint('Error fetching dropdown data: $e');
-    }
-  }
-
   Future<void> _initUserData() async {
     try {
       final user = await _sessionService.getUserData();
@@ -153,8 +113,6 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
     });
 
     try {
-      // Assuming getProductByIdFromCache or an API call exists in ProductService.
-      // We added getProductByIdFromCache in productService.
       final prod = _productService.getProductByIdFromCache(prodId);
       if (prod != null && mounted) {
         _populateProductFields(prod);
@@ -183,12 +141,7 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
     _codeController.text = product.prodCode;
     _hsnController.text = product.prodHSNCode;
 
-    // We only have the percentage from the product model, not the ID.
-    // However, if we need to preselect the GST dropdown, we would need to know its ID.
-    // For now, we will store the percentage. If we want to preselect, we'd find the ID matching the percentage later.
     _selectedGstPercent = product.prodGSTPercent;
-    // We will attempt to find the matching gstTaxId later if possible, but the backend doesn't seem to store prodGstTaxId.
-
     _selectedCategoryId = product.prodCategoryId > 0 ? product.prodCategoryId : null;
     _selectedSubcategoryId = product.prodSubCategoryId > 0 ? product.prodSubCategoryId : null;
     _selectedBrandId = product.prodBrandId > 0 ? product.prodBrandId : null;
@@ -233,25 +186,43 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
 
       if (!mounted) return;
 
+      if (!response.status) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error_outline_rounded, color: Colors.white, size: 20),
+                const SizedBox(width: 10),
+                Expanded(child: Text(response.message.isNotEmpty ? response.message : 'Failed to save product.')),
+              ],
+            ),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+
       final successMsg = response.message.isNotEmpty
           ? response.message
           : (isEditing ? 'Product updated successfully!' : 'Product created successfully!');
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
-              const SizedBox(width: 10),
-              Expanded(child: Text(successMsg)),
-            ],
-          ),
-          backgroundColor: Colors.green.shade700,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-
       if (saveAndNew && !isEditing) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+                const SizedBox(width: 10),
+                Expanded(child: Text(successMsg)),
+              ],
+            ),
+            backgroundColor: Colors.green.shade700,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+
         _formKey.currentState?.reset();
         _nameController.clear();
         _codeController.clear();
@@ -269,6 +240,21 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
         });
         _nameFocusNode.requestFocus();
       } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text(successMsg)),
+                ],
+              ),
+              backgroundColor: Colors.green.shade700,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
         Navigator.of(context).pop(true);
       }
     } catch (e) {
@@ -424,7 +410,7 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
           ),
           const SizedBox(height: 8),
 
-          // Section 2: Classification
+          // Section 2: Classification Details
           _buildCardSection(
             context,
             title: 'Classification Details',
@@ -468,7 +454,7 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
           _buildCardSection(
             context,
             title: 'Tax Details',
-            icon: Icons.request_quote_outlined,
+            icon: Icons.receipt_long_outlined,
             color: Colors.indigo,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -768,6 +754,8 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
       selectedCategoryId: _selectedCategoryId,
       focusNode: _categoryFocusNode,
       nextFocusNode: _subcategoryFocusNode,
+      labelText: 'Category',
+      hintText: 'Select Category',
       onChanged: (val) {
         setState(() {
           _selectedCategoryId = val?.catId;
@@ -781,6 +769,8 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
       selectedSubcategoryId: _selectedSubcategoryId,
       focusNode: _subcategoryFocusNode,
       nextFocusNode: _brandFocusNode,
+      labelText: 'Subcategory',
+      hintText: 'Select Subcategory',
       onChanged: (val) {
         setState(() {
           _selectedSubcategoryId = val?.subCatId;
@@ -794,6 +784,8 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
       selectedBrandId: _selectedBrandId,
       focusNode: _brandFocusNode,
       nextFocusNode: _unitFocusNode,
+      labelText: 'Brand',
+      hintText: 'Select Brand',
       onChanged: (val) {
         setState(() {
           _selectedBrandId = val?.brandId;
@@ -807,6 +799,8 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
       selectedUnitId: _selectedUnitId,
       focusNode: _unitFocusNode,
       nextFocusNode: _hsnFocusNode,
+      labelText: 'Unit',
+      hintText: 'Select Unit',
       onChanged: (val) {
         setState(() {
           _selectedUnitId = val?.unitId;
@@ -834,14 +828,13 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
     return GstDropdown(
       selectedGstId: _selectedGstId,
       focusNode: _gstFocusNode,
+      onSelectionComplete: () => _saveProduct(),
       onChanged: (val) {
         setState(() {
           _selectedGstId = val?.gstTaxId;
           _selectedGstPercent = val?.gstTaxPercentage ?? 0.0;
         });
       },
-      // Since there's no specific next focus node, we can just trigger a save when Enter is pressed,
-      // or let it unfocus.
     );
   }
 }
