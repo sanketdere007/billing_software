@@ -34,7 +34,7 @@ class _AddPurchaseOrderScreenState extends State<AddPurchaseOrderScreen> {
   void initState() {
     super.initState();
     _supplierService.getAllSuppliers();
-    _productService.initializeDummyData();
+    _productService.getAllProducts();
   }
 
   @override
@@ -68,8 +68,8 @@ class _AddPurchaseOrderScreenState extends State<AddPurchaseOrderScreen> {
         'productId': first.id,
         'productName': first.name,
         'quantity': 1.0,
-        'unit': first.unit ?? 'PCS',
-        'price': first.purchasePrice > 0 ? first.purchasePrice : 100.0,
+        'unit': 'PCS',
+        'price': 100.0,
       });
       _calculateTotals();
     });

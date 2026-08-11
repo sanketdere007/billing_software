@@ -1633,7 +1633,6 @@ class _CustomerDetailsDialog extends StatefulWidget {
 
 class _CustomerDetailsDialogState extends State<_CustomerDetailsDialog> {
   late CustomerListItem _customer;
-  bool _isLoading = false;
 
   @override
   void initState() {

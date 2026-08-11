@@ -18,7 +18,6 @@ class CompanyMasterScreen extends StatefulWidget {
 class _CompanyMasterScreenState extends State<CompanyMasterScreen> {
   final _formKey = GlobalKey<FormState>();
   final CompanyService _companyService = companyService;
-  final SessionService _sessionService = sessionService;
 
   final FocusNode _nameFocusNode = FocusNode();
   

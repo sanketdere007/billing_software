@@ -35,7 +35,7 @@ class _AddPurchaseReturnScreenState extends State<AddPurchaseReturnScreen> {
   void initState() {
     super.initState();
     _supplierService.getAllSuppliers();
-    _productService.initializeDummyData();
+    _productService.getAllProducts();
   }
 
   @override
@@ -70,8 +70,8 @@ class _AddPurchaseReturnScreenState extends State<AddPurchaseReturnScreen> {
         'productId': first.id,
         'productName': first.name,
         'quantity': 1.0,
-        'unit': first.unit ?? 'PCS',
-        'price': first.purchasePrice > 0 ? first.purchasePrice : 100.0,
+        'unit': 'PCS',
+        'price': 100.0,
         'reason': 'Damaged / Excess stock',
       });
       _calculateTotals();
