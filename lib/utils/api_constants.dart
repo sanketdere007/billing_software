@@ -9,6 +9,14 @@ class ApiConstants {
   static const String getAllCitiesEndpoint = '/api/City/GetAllCities';
   static const String insertOrUpdateCityEndpoint = '/api/City/InsertorUpdateCity';
 
+  // GST Tax Endpoints
+  static const String getAllGSTTaxesEndpoint = '/api/GSTTax/GetAllGSTTaxes';
+  static const String insertOrUpdateGSTTaxEndpoint = '/api/GSTTax/InsertOrUpdateGSTTax';
+
+  // Supplier Endpoints
+  static const String getAllSuppliersEndpoint = '/api/Supplier/GetAllSuppliers';
+  static const String insertOrUpdateSupplierEndpoint = '/api/Supplier/InsertorUpdateSupplier';
+
   // Category Endpoints
   static const String getAllCategoriesEndpoint = '/api/Category/GetAllCategories';
   static const String insertOrUpdateCategoryEndpoint = '/api/Category/InsertorUpdateCategory';

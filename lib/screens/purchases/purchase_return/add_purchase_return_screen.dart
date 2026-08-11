@@ -19,7 +19,7 @@ class _AddPurchaseReturnScreenState extends State<AddPurchaseReturnScreen> {
   final _returnNoController = TextEditingController(text: 'PRET-AUTO-001');
   final _invoiceNoController = TextEditingController(text: 'PINV-2023-001');
   DateTime _selectedDate = DateTime.now();
-  String? _selectedSupplier;
+  int? _selectedSupplier;
   final DateFormat _dateFormat = DateFormat('dd/MM/yyyy');
 
   final List<Map<String, dynamic>> _products = [];
@@ -34,7 +34,7 @@ class _AddPurchaseReturnScreenState extends State<AddPurchaseReturnScreen> {
   @override
   void initState() {
     super.initState();
-    _supplierService.initializeDummyData();
+    _supplierService.getAllSuppliers();
     _productService.initializeDummyData();
   }
 
@@ -121,7 +121,7 @@ class _AddPurchaseReturnScreenState extends State<AddPurchaseReturnScreen> {
     }
 
     final supplier = _supplierService.suppliers.firstWhere(
-      (s) => s.id == _selectedSupplier,
+      (s) => s.suppId == _selectedSupplier,
       orElse: () => _supplierService.suppliers.first,
     );
 
@@ -135,8 +135,8 @@ class _AddPurchaseReturnScreenState extends State<AddPurchaseReturnScreen> {
       returnNo: _returnNoController.text.trim(),
       returnDate: _selectedDate,
       invoiceNo: _invoiceNoController.text.trim(),
-      supplierId: supplier.id,
-      supplierName: supplier.name,
+      supplierId: supplier.suppId.toString(),
+      supplierName: supplier.suppName,
       products: _products.map((p) {
         final qty = p['quantity'] as double;
         final price = p['price'] as double;
@@ -224,7 +224,7 @@ class _AddPurchaseReturnScreenState extends State<AddPurchaseReturnScreen> {
                     ),
                     SizedBox(
                       width: isMobile ? double.infinity : 260,
-                      child: DropdownButtonFormField<String>(
+                      child: DropdownButtonFormField<int>(
                         decoration: const InputDecoration(
                           labelText: 'Supplier',
                           border: OutlineInputBorder(),
@@ -232,7 +232,7 @@ class _AddPurchaseReturnScreenState extends State<AddPurchaseReturnScreen> {
                         value: _selectedSupplier,
                         hint: const Text('Select Supplier'),
                         items: _supplierService.suppliers.map((s) {
-                          return DropdownMenuItem(value: s.id, child: Text(s.name));
+                          return DropdownMenuItem(value: s.suppId, child: Text(s.suppName));
                         }).toList(),
                         onChanged: (val) => setState(() => _selectedSupplier = val),
                       ),

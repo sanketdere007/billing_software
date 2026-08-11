@@ -4,7 +4,7 @@ void main() async {
   final baseDir = 'd:\\FlutterProject\\billing_software\\lib\\screens';
   final cityListPath = '$baseDir\\cities\\city_list_screen.dart';
   final cityMasterPath = '$baseDir\\cities\\city_master_screen.dart';
-  
+
   final listTemplate = await File(cityListPath).readAsString();
   final masterTemplate = await File(cityMasterPath).readAsString();
 
@@ -23,8 +23,8 @@ void main() async {
         "cities": "categories",
         "cityName": "catName",
         "cityIsActive": "catIsActive",
-        "cityId": "catId"
-      }
+        "cityId": "catId",
+      },
     },
     {
       "name": "subcategories",
@@ -40,8 +40,8 @@ void main() async {
         "cities": "subcategories",
         "cityName": "subCatName",
         "cityIsActive": "subCatIsActive",
-        "cityId": "subCatId"
-      }
+        "cityId": "subCatId",
+      },
     },
     {
       "name": "brands",
@@ -57,8 +57,8 @@ void main() async {
         "cities": "brands",
         "cityName": "brandName",
         "cityIsActive": "brandIsActive",
-        "cityId": "brandId"
-      }
+        "cityId": "brandId",
+      },
     },
     {
       "name": "units",
@@ -74,9 +74,9 @@ void main() async {
         "cities": "units",
         "cityName": "unitName",
         "cityIsActive": "unitIsActive",
-        "cityId": "unitId"
-      }
-    }
+        "cityId": "unitId",
+      },
+    },
   ];
 
   for (var mapping in mappings) {
@@ -84,23 +84,27 @@ void main() async {
     if (!await outDir.exists()) {
       await outDir.create(recursive: true);
     }
-    
+
     String listContent = listTemplate;
     (mapping["replacements"] as Map<String, String>?)?.forEach((k, v) {
       listContent = listContent.replaceAll(k.toString(), v.toString());
     });
-    
-    final listOut = File('${outDir.path}\\${mapping["file_prefix"]}_list_screen.dart');
+
+    final listOut = File(
+      '${outDir.path}\\${mapping["file_prefix"]}_list_screen.dart',
+    );
     await listOut.writeAsString(listContent);
-    
+
     String masterContent = masterTemplate;
     (mapping["replacements"] as Map<String, String>?)?.forEach((k, v) {
       masterContent = masterContent.replaceAll(k.toString(), v.toString());
     });
-    
-    final masterOut = File('${outDir.path}\\${mapping["file_prefix"]}_master_screen.dart');
+
+    final masterOut = File(
+      '${outDir.path}\\${mapping["file_prefix"]}_master_screen.dart',
+    );
     await masterOut.writeAsString(masterContent);
-    
+
     print('Generated ${mapping["name"]} screens');
   }
 }

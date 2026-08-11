@@ -1,64 +1,169 @@
 import 'package:flutter/foundation.dart';
 import '../models/supplier.dart';
+import '../utils/api_constants.dart';
+import 'api_service.dart';
+import 'session_service.dart';
 
 class SupplierService extends ChangeNotifier {
-  // Singleton pattern
   static final SupplierService _instance = SupplierService._internal();
   factory SupplierService() => _instance;
   SupplierService._internal();
 
-  // In-memory list of suppliers
-  final List<Supplier> _suppliers = [];
+  List<SupplierListItem> _suppliers = [];
+  bool _isLoading = false;
+  String? _errorMessage;
 
-  List<Supplier> get suppliers => List.unmodifiable(_suppliers);
+  List<SupplierListItem> get suppliers => List.unmodifiable(_suppliers);
+  bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
 
-  // Initialize with some dummy data for testing
-  void initializeDummyData() {
-    if (_suppliers.isEmpty) {
-      _suppliers.addAll([
-        Supplier(
-          id: 'SUP-001',
-          name: 'Tech Distributors',
-          mobile: '9876541111',
-          email: 'sales@techdist.com',
-          city: 'Mumbai',
-          state: 'Maharashtra',
-          isActive: true,
-        ),
-        Supplier(
-          id: 'SUP-002',
-          name: 'Global Goods Supplier',
-          mobile: '9876542222',
-          email: 'info@globalgoods.com',
-          city: 'Delhi',
-          state: 'Delhi',
-          isActive: true,
-          openingBalance: 5000.0,
-        ),
-      ]);
-      notifyListeners();
-    }
-  }
-
-  Future<void> addSupplier(Supplier supplier) async {
-    // Simulate network delay
-    await Future.delayed(const Duration(milliseconds: 500));
-    _suppliers.add(supplier);
+  /// Fetch all Suppliers
+  Future<List<SupplierListItem>> getAllSuppliers({
+    int? suppId,
+    bool? isActive,
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
     notifyListeners();
-  }
 
-  Future<void> updateSupplier(Supplier supplier) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    final index = _suppliers.indexWhere((s) => s.id == supplier.id);
-    if (index != -1) {
-      _suppliers[index] = supplier;
+    final Map<String, String> queryParameters = {};
+
+    if (suppId != null && suppId > 0) {
+      queryParameters['Supp_Id'] = suppId.toString();
+    }
+    if (isActive != null) {
+      queryParameters['Supp_IsActive'] = isActive.toString();
+    }
+
+    debugPrint('🏢 [SupplierService.getAllSuppliers] Requesting with parameters: $queryParameters');
+
+    try {
+      final dynamic response = await apiService.get(
+        ApiConstants.getAllSuppliersEndpoint,
+        queryParameters: queryParameters,
+        requiresAuth: true,
+      );
+
+      if (response is Map<String, dynamic>) {
+        final suppResponse = SupplierListResponse.fromJson(response);
+        if (suppResponse.status || suppResponse.data.isNotEmpty) {
+          _suppliers = suppResponse.data;
+        } else if (response['data'] is List) {
+          _suppliers = (response['data'] as List)
+              .whereType<Map<String, dynamic>>()
+              .map((e) => SupplierListItem.fromJson(e))
+              .toList();
+        } else {
+          _suppliers = [];
+          _errorMessage = suppResponse.message.isNotEmpty
+              ? suppResponse.message
+              : 'Failed to fetch suppliers.';
+        }
+      } else if (response is List) {
+        _suppliers = response
+            .whereType<Map<String, dynamic>>()
+            .map((e) => SupplierListItem.fromJson(e))
+            .toList();
+      } else {
+        _suppliers = [];
+      }
+
+      _errorMessage = null;
+      return _suppliers;
+    } on ApiException catch (e) {
+      _errorMessage = e.message;
+      _suppliers = [];
+      rethrow;
+    } catch (e) {
+      _errorMessage = 'Error fetching suppliers: $e';
+      _suppliers = [];
+      throw ApiException(_errorMessage!);
+    } finally {
+      _isLoading = false;
       notifyListeners();
     }
   }
 
-  Future<void> deleteSupplier(String id) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    _suppliers.removeWhere((s) => s.id == id);
+  /// Insert or update Supplier
+  Future<SupplierUpsertResponse> insertOrUpdateSupplier(SupplierUpsertRequest request) async {
+    int createdBy = request.suppCreatedBy;
+    int modifiedBy = request.suppModifiedBy;
+    int compId = request.suppCompId;
+    int branchId = request.suppBranchId;
+
+    // Resolve current user empId and session comp/branch if not set
+    try {
+      final user = await sessionService.getUserData();
+      final currentEmpId = user?.empId ?? 0;
+      if (createdBy == 0) createdBy = currentEmpId;
+      if (modifiedBy == 0) modifiedBy = currentEmpId;
+      
+      if (compId == 0) compId = sessionService.selectedCompId ?? 0;
+      if (branchId == 0) branchId = sessionService.selectedBranchId ?? 0;
+    } catch (_) {}
+
+    final finalRequest = SupplierUpsertRequest(
+      suppId: request.suppId,
+      suppCode: request.suppCode,
+      suppName: request.suppName,
+      suppCompanyName: request.suppCompanyName,
+      suppMobileNo: request.suppMobileNo,
+      suppAlternateMobileNo: request.suppAlternateMobileNo,
+      suppEmail: request.suppEmail,
+      suppGSTNo: request.suppGSTNo,
+      suppPANNo: request.suppPANNo,
+      suppAddress: request.suppAddress,
+      suppAreaId: request.suppAreaId,
+      suppCityId: request.suppCityId,
+      suppStateId: request.suppStateId,
+      suppPincode: request.suppPincode,
+      suppCountry: request.suppCountry,
+      suppPaymentTerms: request.suppPaymentTerms,
+      suppCreditLimit: request.suppCreditLimit,
+      suppCreditDays: request.suppCreditDays,
+      suppIsActive: request.suppIsActive,
+      suppCreatedBy: createdBy,
+      suppModifiedBy: modifiedBy,
+      suppCompId: compId,
+      suppBranchId: branchId,
+    );
+
+    debugPrint('🏢 [SupplierService.insertOrUpdateSupplier] Request payload: ${finalRequest.toJson()}');
+
+    try {
+      final dynamic response = await apiService.post(
+        ApiConstants.insertOrUpdateSupplierEndpoint,
+        body: finalRequest.toJson(),
+        requiresAuth: true,
+      );
+
+      if (response is! Map<String, dynamic>) {
+        throw ApiException('Invalid response format from server.');
+      }
+
+      final upsertResponse = SupplierUpsertResponse.fromJson(response);
+
+      if (upsertResponse.status || (upsertResponse.data != null && upsertResponse.data!.status)) {
+        return upsertResponse;
+      } else {
+        final msg = upsertResponse.message.isNotEmpty
+            ? upsertResponse.message
+            : (upsertResponse.data?.message ?? 'Failed to save supplier.');
+        throw ApiException(msg);
+      }
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException('Error saving supplier: $e');
+    }
+  }
+
+  /// Clear in-memory cached suppliers
+  void clearCache() {
+    _suppliers = [];
+    _errorMessage = null;
     notifyListeners();
   }
 }
+
+final supplierService = SupplierService();

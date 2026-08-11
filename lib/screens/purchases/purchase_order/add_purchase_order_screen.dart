@@ -18,7 +18,7 @@ class _AddPurchaseOrderScreenState extends State<AddPurchaseOrderScreen> {
   final _formKey = GlobalKey<FormState>();
   final _orderNoController = TextEditingController(text: 'PO-AUTO-001');
   DateTime _selectedDate = DateTime.now();
-  String? _selectedSupplier;
+  int? _selectedSupplier;
   final DateFormat _dateFormat = DateFormat('dd/MM/yyyy');
 
   final List<Map<String, dynamic>> _products = [];
@@ -33,7 +33,7 @@ class _AddPurchaseOrderScreenState extends State<AddPurchaseOrderScreen> {
   @override
   void initState() {
     super.initState();
-    _supplierService.initializeDummyData();
+    _supplierService.getAllSuppliers();
     _productService.initializeDummyData();
   }
 
@@ -118,7 +118,7 @@ class _AddPurchaseOrderScreenState extends State<AddPurchaseOrderScreen> {
     }
 
     final supplier = _supplierService.suppliers.firstWhere(
-      (s) => s.id == _selectedSupplier,
+      (s) => s.suppId == _selectedSupplier,
       orElse: () => _supplierService.suppliers.first,
     );
 
@@ -126,8 +126,8 @@ class _AddPurchaseOrderScreenState extends State<AddPurchaseOrderScreen> {
       id: 'PO-${DateTime.now().millisecondsSinceEpoch}',
       orderNo: _orderNoController.text.trim(),
       orderDate: _selectedDate,
-      supplierId: supplier.id,
-      supplierName: supplier.name,
+      supplierId: supplier.suppId.toString(),
+      supplierName: supplier.suppName,
       products: _products.map((p) {
         final qty = p['quantity'] as double;
         final price = p['price'] as double;
@@ -203,7 +203,7 @@ class _AddPurchaseOrderScreenState extends State<AddPurchaseOrderScreen> {
                     ),
                     SizedBox(
                       width: isMobile ? double.infinity : 280,
-                      child: DropdownButtonFormField<String>(
+                      child: DropdownButtonFormField<int>(
                         decoration: const InputDecoration(
                           labelText: 'Supplier',
                           border: OutlineInputBorder(),
@@ -211,7 +211,7 @@ class _AddPurchaseOrderScreenState extends State<AddPurchaseOrderScreen> {
                         value: _selectedSupplier,
                         hint: const Text('Select Supplier'),
                         items: _supplierService.suppliers.map((s) {
-                          return DropdownMenuItem(value: s.id, child: Text(s.name));
+                          return DropdownMenuItem(value: s.suppId, child: Text(s.suppName));
                         }).toList(),
                         onChanged: (val) => setState(() => _selectedSupplier = val),
                       ),
