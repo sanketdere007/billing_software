@@ -233,10 +233,42 @@ class _SupplierMasterScreenState extends State<SupplierMasterScreen> {
     }
   }
 
+  void _focusFirstError() {
+    if (_nameController.text.trim().isEmpty || _nameController.text.trim().length < 2) {
+      _nameFocusNode.requestFocus();
+      return;
+    }
+    if (_mobileController.text.trim().isEmpty || _mobileController.text.trim().length != 10) {
+      _mobileFocusNode.requestFocus();
+      return;
+    }
+    if (_altMobileController.text.trim().isNotEmpty && _altMobileController.text.trim().length != 10) {
+      _altMobileFocusNode.requestFocus();
+      return;
+    }
+    if (_emailController.text.trim().isNotEmpty && !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(_emailController.text.trim())) {
+      _emailFocusNode.requestFocus();
+      return;
+    }
+    if (_gstController.text.trim().isNotEmpty && _gstController.text.trim().length != 15) {
+      _gstFocusNode.requestFocus();
+      return;
+    }
+    if (_panController.text.trim().isNotEmpty && _panController.text.trim().length != 10) {
+      _panFocusNode.requestFocus();
+      return;
+    }
+    if (_pincodeController.text.trim().isNotEmpty && _pincodeController.text.trim().length != 6) {
+      _pincodeFocusNode.requestFocus();
+      return;
+    }
+  }
+
   Future<void> _saveSupplier({bool saveAndNew = false}) async {
     FocusScope.of(context).unfocus();
 
     if (!_formKey.currentState!.validate()) {
+      _focusFirstError();
       return;
     }
 

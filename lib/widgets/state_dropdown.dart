@@ -93,6 +93,13 @@ class _StateDropdownState extends State<StateDropdown> {
       setState(() {
         _isFocused = _focusNode.hasFocus;
       });
+      if (_focusNode.hasFocus) {
+        Scrollable.ensureVisible(
+          context,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      }
     }
   }
 
