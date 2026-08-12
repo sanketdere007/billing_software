@@ -84,7 +84,8 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
       return KeyEventResult.handled;
     }
 
-    if (key == LogicalKeyboardKey.enter || key == LogicalKeyboardKey.numpadEnter) {
+    if (key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.numpadEnter) {
       if (_highlightedIndex >= 0 && _highlightedIndex < _suppliers.length) {
         _navigateToAddSupplier(_suppliers[_highlightedIndex]);
         return KeyEventResult.handled;
@@ -146,7 +147,10 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
           _suppliers = suppliers;
           _isLoading = false;
           if (_suppliers.isNotEmpty) {
-            _highlightedIndex = _highlightedIndex.clamp(0, _suppliers.length - 1);
+            _highlightedIndex = _highlightedIndex.clamp(
+              0,
+              _suppliers.length - 1,
+            );
           } else {
             _highlightedIndex = 0;
           }
@@ -166,12 +170,15 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
   List<SupplierListItem> get _filteredSuppliers {
     if (_searchController.text.trim().isEmpty) return _suppliers;
     final query = _searchController.text.trim().toLowerCase();
-    return _suppliers.where((s) =>
-        s.suppName.toLowerCase().contains(query) ||
-        s.suppMobileNo.toLowerCase().contains(query) ||
-        s.suppEmail.toLowerCase().contains(query) ||
-        (s.suppCityName?.toLowerCase().contains(query) ?? false)
-    ).toList();
+    return _suppliers
+        .where(
+          (s) =>
+              s.suppName.toLowerCase().contains(query) ||
+              s.suppMobileNo.toLowerCase().contains(query) ||
+              s.suppEmail.toLowerCase().contains(query) ||
+              (s.suppCityName?.toLowerCase().contains(query) ?? false),
+        )
+        .toList();
   }
 
   void _clearFilters() {
@@ -185,13 +192,15 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
   }
 
   bool get _hasActiveFilters =>
-      _searchController.text.isNotEmpty ||
-      _selectedStatus != null;
+      _searchController.text.isNotEmpty || _selectedStatus != null;
 
   void _navigateToAddSupplier([SupplierListItem? supplier]) async {
     final result = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
-        builder: (context) => SupplierMasterScreen(supplierToEdit: supplier, supplierId: supplier?.suppId),
+        builder: (context) => SupplierMasterScreen(
+          supplierToEdit: supplier,
+          supplierId: supplier?.suppId,
+        ),
       ),
     );
 
@@ -236,8 +245,13 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
                               icon: const Icon(Icons.add_rounded, size: 18),
                               label: const Text('Add Supplier'),
                               style: FilledButton.styleFrom(
-                                backgroundColor: Theme.of(context).colorScheme.primary,
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                backgroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.primary,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 10,
+                                ),
                               ),
                             ),
                             const SizedBox(width: 16),
@@ -296,7 +310,9 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         border: Border(
-          bottom: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.5)),
+          bottom: BorderSide(
+            color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+          ),
         ),
       ),
       child: Row(
@@ -320,8 +336,13 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
                         },
                       )
                     : null,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 0),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 0,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
                 filled: true,
                 fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.2),
               ),
@@ -351,7 +372,9 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
               },
               style: SegmentedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
             ),
           ),
@@ -363,8 +386,13 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
               icon: const Icon(Icons.filter_alt_off_rounded, size: 16),
               label: const Text('Reset'),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 14,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
             ),
           ],
@@ -382,7 +410,9 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         border: Border(
-          bottom: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.5)),
+          bottom: BorderSide(
+            color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+          ),
         ),
       ),
       child: Column(
@@ -404,8 +434,13 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
                       },
                     )
                   : null,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 0),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 0,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
               filled: true,
               fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.2),
             ),
@@ -426,9 +461,18 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
                     _fetchSuppliers();
                   },
                   itemBuilder: (context) => [
-                    const PopupMenuItem(value: null, child: Text('All Statuses')),
-                    const PopupMenuItem(value: true, child: Text('Active Only')),
-                    const PopupMenuItem(value: false, child: Text('Inactive Only')),
+                    const PopupMenuItem(
+                      value: null,
+                      child: Text('All Statuses'),
+                    ),
+                    const PopupMenuItem(
+                      value: true,
+                      child: Text('Active Only'),
+                    ),
+                    const PopupMenuItem(
+                      value: false,
+                      child: Text('Inactive Only'),
+                    ),
                   ],
                   child: Container(
                     height: 52,
@@ -461,7 +505,9 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
                               : (_selectedStatus! ? 'Active' : 'Inactive'),
                           style: TextStyle(
                             fontSize: 14,
-                            fontWeight: _selectedStatus != null ? FontWeight.bold : FontWeight.normal,
+                            fontWeight: _selectedStatus != null
+                                ? FontWeight.bold
+                                : FontWeight.normal,
                             color: _selectedStatus != null
                                 ? theme.colorScheme.primary
                                 : null,
@@ -510,11 +556,17 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline_rounded, size: 56, color: Theme.of(context).colorScheme.error),
+              Icon(
+                Icons.error_outline_rounded,
+                size: 56,
+                color: Theme.of(context).colorScheme.error,
+              ),
               const SizedBox(height: 16),
               Text(
                 'Failed to load suppliers',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Text(
@@ -546,7 +598,9 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primaryContainer.withOpacity(0.3),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -557,8 +611,12 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
               ),
               const SizedBox(height: 18),
               Text(
-                _hasActiveFilters ? 'No suppliers match your filter' : 'No suppliers found',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                _hasActiveFilters
+                    ? 'No suppliers match your filter'
+                    : 'No suppliers found',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Text(
@@ -615,7 +673,10 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
               ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: isDark
                       ? Colors.white.withOpacity(0.06)
@@ -625,7 +686,11 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.keyboard_outlined, size: 14, color: theme.hintColor),
+                    Icon(
+                      Icons.keyboard_outlined,
+                      size: 14,
+                      color: theme.hintColor,
+                    ),
                     const SizedBox(width: 6),
                     Text(
                       'Use ↑ / ↓ to navigate • Enter / Click to Edit',
@@ -649,13 +714,17 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
               elevation: 1,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
-                side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.5)),
+                side: BorderSide(
+                  color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+                ),
               ),
               clipBehavior: Clip.antiAlias,
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   const double minTableWidth = 1000.0;
-                  final tableWidth = constraints.maxWidth < minTableWidth ? minTableWidth : constraints.maxWidth;
+                  final tableWidth = constraints.maxWidth < minTableWidth
+                      ? minTableWidth
+                      : constraints.maxWidth;
 
                   return SizedBox(
                     width: tableWidth,
@@ -666,23 +735,89 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
                           height: 48,
                           padding: const EdgeInsets.symmetric(horizontal: 20),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.primaryContainer.withOpacity(0.35),
+                            color: theme.colorScheme.primaryContainer
+                                .withOpacity(0.35),
                             border: Border(
                               bottom: BorderSide(
-                                color: theme.colorScheme.outlineVariant.withOpacity(0.6),
+                                color: theme.colorScheme.outlineVariant
+                                    .withOpacity(0.6),
                                 width: 1.5,
                               ),
                             ),
                           ),
                           child: const Row(
                             children: [
-                              SizedBox(width: 60, child: Text('#', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13))),
-                              Expanded(flex: 4, child: Text('Name', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13))),
-                              Expanded(flex: 3, child: Text('Company', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13))),
-                              Expanded(flex: 3, child: Text('Contact', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13))),
-                              Expanded(flex: 3, child: Text('City/State', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13))),
-                              Expanded(flex: 2, child: Text('Status', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13))),
-                              SizedBox(width: 100, child: Text('Actions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center)),
+                              SizedBox(
+                                width: 60,
+                                child: Text(
+                                  '#',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                flex: 4,
+                                child: Text(
+                                  'Name',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                flex: 3,
+                                child: Text(
+                                  'Contact',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                flex: 3,
+                                child: Text(
+                                  'Area',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                flex: 3,
+                                child: Text(
+                                  'City',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                flex: 2,
+                                child: Text(
+                                  'Status',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(
+                                width: 100,
+                                child: Text(
+                                  'Actions',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -695,7 +830,8 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
                             separatorBuilder: (context, index) => Divider(
                               height: 1,
                               thickness: 1,
-                              color: theme.colorScheme.outlineVariant.withOpacity(0.3),
+                              color: theme.colorScheme.outlineVariant
+                                  .withOpacity(0.3),
                             ),
                             itemBuilder: (context, index) {
                               final supplier = displayList[index];
@@ -703,17 +839,22 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
 
                               return Material(
                                 color: isHighlighted
-                                    ? theme.colorScheme.primary.withOpacity(isDark ? 0.22 : 0.12)
+                                    ? theme.colorScheme.primary.withOpacity(
+                                        isDark ? 0.22 : 0.12,
+                                      )
                                     : Colors.transparent,
                                 child: InkWell(
-                                  hoverColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                                  hoverColor: theme.colorScheme.surfaceVariant
+                                      .withOpacity(0.3),
                                   onTap: () {
                                     setState(() => _highlightedIndex = index);
                                     _navigateToAddSupplier(supplier);
                                   },
                                   child: Container(
                                     height: 58,
-                                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                    ),
                                     child: Row(
                                       children: [
                                         SizedBox(
@@ -725,19 +866,30 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
                                                 Container(
                                                   width: 3.5,
                                                   height: 24,
-                                                  margin: const EdgeInsets.only(right: 6),
+                                                  margin: const EdgeInsets.only(
+                                                    right: 6,
+                                                  ),
                                                   decoration: BoxDecoration(
-                                                    color: theme.colorScheme.primary,
-                                                    borderRadius: BorderRadius.circular(2),
+                                                    color: theme
+                                                        .colorScheme
+                                                        .primary,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          2,
+                                                        ),
                                                   ),
                                                 ),
                                               Text(
                                                 '${index + 1}',
                                                 style: TextStyle(
                                                   color: isHighlighted
-                                                      ? theme.colorScheme.primary
+                                                      ? theme
+                                                            .colorScheme
+                                                            .primary
                                                       : Colors.grey.shade600,
-                                                  fontWeight: isHighlighted ? FontWeight.bold : FontWeight.normal,
+                                                  fontWeight: isHighlighted
+                                                      ? FontWeight.bold
+                                                      : FontWeight.normal,
                                                 ),
                                               ),
                                             ],
@@ -746,39 +898,79 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
                                         Expanded(
                                           flex: 4,
                                           child: Column(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
-                                              Text(supplier.suppName, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                                              Text(
+                                                supplier.suppName,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 13,
+                                                ),
+                                              ),
                                               if (supplier.suppCode.isNotEmpty)
-                                                Text(supplier.suppCode, style: TextStyle(fontSize: 11, color: theme.hintColor)),
+                                                Text(
+                                                  supplier.suppCode,
+                                                  style: TextStyle(
+                                                    fontSize: 11,
+                                                    color: theme.hintColor,
+                                                  ),
+                                                ),
                                             ],
                                           ),
                                         ),
                                         Expanded(
                                           flex: 3,
-                                          child: Text(supplier.suppCompanyName, maxLines: 2, overflow: TextOverflow.ellipsis),
-                                        ),
-                                        Expanded(
-                                          flex: 3,
                                           child: Column(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
-                                              Text(supplier.suppMobileNo, style: const TextStyle(fontSize: 13)),
+                                              Text(
+                                                supplier.suppMobileNo,
+                                                style: const TextStyle(
+                                                  fontSize: 13,
+                                                ),
+                                              ),
                                               if (supplier.suppEmail.isNotEmpty)
-                                                Text(supplier.suppEmail, style: TextStyle(fontSize: 11, color: theme.hintColor), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                                Text(
+                                                  supplier.suppEmail,
+                                                  style: TextStyle(
+                                                    fontSize: 11,
+                                                    color: theme.hintColor,
+                                                  ),
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
                                             ],
                                           ),
                                         ),
                                         Expanded(
                                           flex: 3,
+                                          child: Text(
+                                            supplier.suppAreaName ?? '-',
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        Expanded(
+                                          flex: 3,
                                           child: Column(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
-                                              Text(supplier.suppCityName ?? '-', style: const TextStyle(fontSize: 13)),
-                                              Text(supplier.suppStateName ?? '-', style: TextStyle(fontSize: 11, color: theme.hintColor)),
+                                              Text(
+                                                supplier.suppCityName ?? '-',
+                                                style: const TextStyle(
+                                                  fontSize: 13,
+                                                ),
+                                              ),
                                             ],
                                           ),
                                         ),
@@ -787,24 +979,50 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
                                           child: Align(
                                             alignment: Alignment.centerLeft,
                                             child: Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 8,
+                                                    vertical: 4,
+                                                  ),
                                               decoration: BoxDecoration(
                                                 color: supplier.suppIsActive
-                                                    ? Colors.green.withOpacity(0.15)
-                                                    : Colors.red.withOpacity(0.15),
-                                                borderRadius: BorderRadius.circular(20),
+                                                    ? Colors.green.withOpacity(
+                                                        0.15,
+                                                      )
+                                                    : Colors.red.withOpacity(
+                                                        0.15,
+                                                      ),
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
                                                 border: Border.all(
                                                   color: supplier.suppIsActive
-                                                      ? Colors.green.withOpacity(0.3)
-                                                      : Colors.red.withOpacity(0.3),
+                                                      ? Colors.green
+                                                            .withOpacity(0.3)
+                                                      : Colors.red.withOpacity(
+                                                          0.3,
+                                                        ),
                                                 ),
                                               ),
                                               child: Text(
-                                                supplier.suppIsActive ? 'Active' : 'Inactive',
+                                                supplier.suppIsActive
+                                                    ? 'Active'
+                                                    : 'Inactive',
                                                 style: TextStyle(
                                                   color: supplier.suppIsActive
-                                                      ? (isDark ? Colors.green.shade300 : Colors.green.shade700)
-                                                      : (isDark ? Colors.red.shade300 : Colors.red.shade700),
+                                                      ? (isDark
+                                                            ? Colors
+                                                                  .green
+                                                                  .shade300
+                                                            : Colors
+                                                                  .green
+                                                                  .shade700)
+                                                      : (isDark
+                                                            ? Colors
+                                                                  .red
+                                                                  .shade300
+                                                            : Colors
+                                                                  .red
+                                                                  .shade700),
                                                   fontSize: 11,
                                                   fontWeight: FontWeight.bold,
                                                 ),
@@ -815,16 +1033,26 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
                                         SizedBox(
                                           width: 100,
                                           child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
                                             children: [
                                               IconButton(
-                                                icon: const Icon(Icons.edit_outlined, size: 18),
-                                                color: theme.colorScheme.primary,
+                                                icon: const Icon(
+                                                  Icons.edit_outlined,
+                                                  size: 18,
+                                                ),
+                                                color:
+                                                    theme.colorScheme.primary,
                                                 tooltip: 'Edit Supplier',
                                                 splashRadius: 20,
                                                 onPressed: () {
-                                                  setState(() => _highlightedIndex = index);
-                                                  _navigateToAddSupplier(supplier);
+                                                  setState(
+                                                    () => _highlightedIndex =
+                                                        index,
+                                                  );
+                                                  _navigateToAddSupplier(
+                                                    supplier,
+                                                  );
                                                 },
                                               ),
                                             ],
@@ -865,7 +1093,9 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
           margin: const EdgeInsets.only(bottom: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.5)),
+            side: BorderSide(
+              color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+            ),
           ),
           child: InkWell(
             borderRadius: BorderRadius.circular(12),
@@ -887,7 +1117,10 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: supplier.suppIsActive
                               ? Colors.green.withOpacity(0.15)
@@ -898,8 +1131,12 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
                           supplier.suppIsActive ? 'Active' : 'Inactive',
                           style: TextStyle(
                             color: supplier.suppIsActive
-                                ? (isDark ? Colors.green.shade300 : Colors.green.shade700)
-                                : (isDark ? Colors.red.shade300 : Colors.red.shade700),
+                                ? (isDark
+                                      ? Colors.green.shade300
+                                      : Colors.green.shade700)
+                                : (isDark
+                                      ? Colors.red.shade300
+                                      : Colors.red.shade700),
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
                           ),
@@ -907,29 +1144,42 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
                       ),
                     ],
                   ),
-                  if (supplier.suppCompanyName.isNotEmpty) ...[
+                  if (supplier.suppAreaName != null &&
+                      supplier.suppAreaName!.isNotEmpty) ...[
                     const SizedBox(height: 4),
                     Text(
-                      supplier.suppCompanyName,
+                      supplier.suppAreaName!,
                       style: TextStyle(color: theme.hintColor, fontSize: 13),
                     ),
                   ],
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      Icon(Icons.phone_outlined, size: 14, color: theme.hintColor),
+                      Icon(
+                        Icons.phone_outlined,
+                        size: 14,
+                        color: theme.hintColor,
+                      ),
                       const SizedBox(width: 6),
-                      Text(supplier.suppMobileNo, style: const TextStyle(fontSize: 13)),
+                      Text(
+                        supplier.suppMobileNo,
+                        style: const TextStyle(fontSize: 13),
+                      ),
                     ],
                   ),
-                  if (supplier.suppCityName != null || supplier.suppStateName != null) ...[
+                  if (supplier.suppCityName != null &&
+                      supplier.suppCityName!.isNotEmpty) ...[
                     const SizedBox(height: 6),
                     Row(
                       children: [
-                        Icon(Icons.location_on_outlined, size: 14, color: theme.hintColor),
+                        Icon(
+                          Icons.location_on_outlined,
+                          size: 14,
+                          color: theme.hintColor,
+                        ),
                         const SizedBox(width: 6),
                         Text(
-                          [supplier.suppCityName, supplier.suppStateName].where((e) => e != null && e.isNotEmpty).join(', '),
+                          supplier.suppCityName!,
                           style: const TextStyle(fontSize: 13),
                         ),
                       ],
