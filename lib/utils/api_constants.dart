@@ -71,6 +71,9 @@ class ApiConstants {
   // Branch Endpoints
   static const String getAllBranchesEndpoint = '/api/Branch/GetAllBranches';
 
+  // Purchase Entry Endpoints
+  static const String insertOrUpdatePurchaseEntryEndpoint = '/api/PurchaseEntry/InsertOrUpdatePurchaseEntry';
+
   // Default JSON Headers
   static const Map<String, String> defaultHeaders = {
     'Content-Type': 'application/json',

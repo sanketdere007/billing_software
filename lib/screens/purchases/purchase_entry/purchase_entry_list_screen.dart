@@ -10,7 +10,8 @@ class PurchaseEntryListScreen extends StatefulWidget {
   const PurchaseEntryListScreen({super.key});
 
   @override
-  State<PurchaseEntryListScreen> createState() => _PurchaseEntryListScreenState();
+  State<PurchaseEntryListScreen> createState() =>
+      _PurchaseEntryListScreenState();
 }
 
 class _PurchaseEntryListScreenState extends State<PurchaseEntryListScreen> {
@@ -79,7 +80,10 @@ class _PurchaseEntryListScreenState extends State<PurchaseEntryListScreen> {
                 icon: const Icon(Icons.add),
                 label: const Text('New Entry (F7)'),
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
                 ),
               ),
             ],
@@ -93,11 +97,17 @@ class _PurchaseEntryListScreenState extends State<PurchaseEntryListScreen> {
                   itemBuilder: (context, index) {
                     final entry = _filteredEntries[index];
                     return Card(
-                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       child: ListTile(
                         leading: CircleAvatar(
                           backgroundColor: Colors.teal.shade100,
-                          child: const Icon(Icons.receipt_long, color: Colors.teal),
+                          child: const Icon(
+                            Icons.receipt_long,
+                            color: Colors.teal,
+                          ),
                         ),
                         title: Text(
                           entry.invoiceNo,
@@ -130,7 +140,9 @@ class _PurchaseEntryListScreenState extends State<PurchaseEntryListScreen> {
             const VerticalDivider(width: 1, thickness: 1),
             Expanded(
               child: Scaffold(
-                appBar: AppBar(title: const Text('Purchase Entries / Invoices')),
+                appBar: AppBar(
+                  title: const Text('Purchase Entries / Invoices'),
+                ),
                 body: content,
               ),
             ),
