@@ -329,7 +329,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
       return Container(
         width: width,
         padding:
-            padding ?? const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding ?? const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         alignment: isNumeric ? Alignment.centerRight : Alignment.centerLeft,
         decoration: BoxDecoration(
           border: isLast
@@ -466,7 +466,6 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                                               style: const TextStyle(
                                                 fontWeight: FontWeight.w500,
                                               ),
-                                              overflow: TextOverflow.ellipsis,
                                             ),
                                             const SizedBox(height: 4),
                                             Text(
@@ -496,8 +495,8 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                                             isDense: true,
                                             contentPadding:
                                                 const EdgeInsets.symmetric(
-                                                  horizontal: 10,
-                                                  vertical: 10,
+                                                  horizontal: 8,
+                                                  vertical: 6,
                                                 ),
                                             border: OutlineInputBorder(
                                               borderRadius:
@@ -527,8 +526,8 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                                         ),
                                         colQty,
                                         padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 8,
+                                          horizontal: 6,
+                                          vertical: 4,
                                         ),
                                       ),
                                       buildDataCell(
@@ -545,8 +544,8 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                                             isDense: true,
                                             contentPadding:
                                                 const EdgeInsets.symmetric(
-                                                  horizontal: 10,
-                                                  vertical: 10,
+                                                  horizontal: 8,
+                                                  vertical: 6,
                                                 ),
                                             border: OutlineInputBorder(
                                               borderRadius:
@@ -576,8 +575,8 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                                         ),
                                         colRate,
                                         padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 8,
+                                          horizontal: 6,
+                                          vertical: 4,
                                         ),
                                       ),
                                       buildDataCell(
@@ -602,8 +601,8 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                                             isDense: true,
                                             contentPadding:
                                                 const EdgeInsets.symmetric(
-                                                  horizontal: 10,
-                                                  vertical: 10,
+                                                  horizontal: 8,
+                                                  vertical: 6,
                                                 ),
                                             border: OutlineInputBorder(
                                               borderRadius:
@@ -633,8 +632,8 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                                         ),
                                         colDiscount,
                                         padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 8,
+                                          horizontal: 6,
+                                          vertical: 4,
                                         ),
                                       ),
                                       buildDataCell(
@@ -671,10 +670,12 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                                           icon: const Icon(
                                             Icons.delete_outline,
                                             color: Colors.red,
-                                            size: 22,
+                                            size: 20,
                                           ),
+                                          padding: EdgeInsets.zero,
+                                          constraints: const BoxConstraints(),
                                           tooltip: 'Remove',
-                                          splashRadius: 24,
+                                          splashRadius: 20,
                                           onPressed: () =>
                                               _removeProduct(index),
                                         ),
@@ -710,61 +711,59 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.all(4.0),
-                child: Wrap(
-                  spacing: 16,
-                  runSpacing: 16,
-                  children: [
-                    SizedBox(
-                      width: isMobile ? double.infinity : 200,
-                      child: TextFormField(
-                        controller: _invoiceNoController,
+            child: Padding(
+              padding: const EdgeInsets.all(4.0),
+              child: Wrap(
+                spacing: 16,
+                runSpacing: 16,
+                children: [
+                  SizedBox(
+                    width: isMobile ? double.infinity : 200,
+                    child: TextFormField(
+                      controller: _invoiceNoController,
+                      decoration: const InputDecoration(
+                        labelText: 'Invoice / Bill Number',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (val) =>
+                          val == null || val.isEmpty ? 'Required' : null,
+                    ),
+                  ),
+                  SizedBox(
+                    width: isMobile ? double.infinity : 220,
+                    child: InkWell(
+                      onTap: () => _selectDate(context),
+                      child: InputDecorator(
                         decoration: const InputDecoration(
-                          labelText: 'Invoice / Bill Number',
+                          labelText: 'Invoice Date',
                           border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.calendar_today),
                         ),
-                        validator: (val) =>
-                            val == null || val.isEmpty ? 'Required' : null,
+                        child: Text(_dateFormat.format(_selectedDate)),
                       ),
                     ),
-                    SizedBox(
-                      width: isMobile ? double.infinity : 220,
-                      child: InkWell(
-                        onTap: () => _selectDate(context),
-                        child: InputDecorator(
-                          decoration: const InputDecoration(
-                            labelText: 'Invoice Date',
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.calendar_today),
-                          ),
-                          child: Text(_dateFormat.format(_selectedDate)),
-                        ),
+                  ),
+                  SizedBox(
+                    width: isMobile ? double.infinity : 280,
+                    child: DropdownButtonFormField<int>(
+                      decoration: const InputDecoration(
+                        labelText: 'Supplier',
+                        border: OutlineInputBorder(),
                       ),
+                      value: _selectedSupplier,
+                      hint: const Text('Select Supplier'),
+                      items: _supplierService.suppliers.map((s) {
+                        return DropdownMenuItem(
+                          value: s.suppId,
+                          child: Text(s.suppName),
+                        );
+                      }).toList(),
+                      onChanged: (val) =>
+                          setState(() => _selectedSupplier = val),
+                      validator: (val) => val == null ? 'Required' : null,
                     ),
-                    SizedBox(
-                      width: isMobile ? double.infinity : 280,
-                      child: DropdownButtonFormField<int>(
-                        decoration: const InputDecoration(
-                          labelText: 'Supplier',
-                          border: OutlineInputBorder(),
-                        ),
-                        value: _selectedSupplier,
-                        hint: const Text('Select Supplier'),
-                        items: _supplierService.suppliers.map((s) {
-                          return DropdownMenuItem(
-                            value: s.suppId,
-                            child: Text(s.suppName),
-                          );
-                        }).toList(),
-                        onChanged: (val) =>
-                            setState(() => _selectedSupplier = val),
-                        validator: (val) => val == null ? 'Required' : null,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -787,10 +786,26 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                           style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(fontWeight: FontWeight.bold),
                         ),
-                        ElevatedButton.icon(
+                        FilledButton.icon(
                           onPressed: _addProduct,
-                          icon: const Icon(Icons.add),
-                          label: const Text('Add Product'),
+                          icon: const Icon(Icons.add_shopping_cart, size: 20),
+                          label: const Text(
+                            'Add Product',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          style: FilledButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
+                            elevation: 4,
+                            shadowColor: Theme.of(
+                              context,
+                            ).colorScheme.primary.withOpacity(0.4),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -893,9 +908,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                   child: ElevatedButton.icon(
                     onPressed: _isLoading ? null : _saveEntry,
                     icon: _isLoading
-                        ? const CircularProgressIndicator(
-                            color: Colors.white,
-                          )
+                        ? const CircularProgressIndicator(color: Colors.white)
                         : const Icon(Icons.check),
                     label: Text(
                       _isLoading ? 'Saving...' : 'Save Purchase Entry',
