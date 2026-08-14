@@ -444,6 +444,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                               final isEven = index.isEven;
 
                               return Container(
+                                key: ValueKey(prod.prodId),
                                 color: isEven
                                     ? theme.colorScheme.surfaceVariant
                                           .withOpacity(0.1)
@@ -708,10 +709,10 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
       child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
             child: Card(
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(4.0),
                 child: Wrap(
                   spacing: 16,
                   runSpacing: 16,
@@ -777,7 +778,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.all(4.0),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -801,112 +802,112 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Total Quantity:',
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        Text(_totalQuantity.toStringAsFixed(2)),
-                      ],
+                    const Text(
+                      'Total Quantity:',
+                      style: TextStyle(fontWeight: FontWeight.w600),
                     ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Gross Total:',
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        Text('₹${_grossTotal.toStringAsFixed(2)}'),
-                      ],
+                    Text(_totalQuantity.toStringAsFixed(2)),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Gross Total:',
+                      style: TextStyle(fontWeight: FontWeight.w600),
                     ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Total GST:',
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        Text('₹${_totalGST.toStringAsFixed(2)}'),
-                      ],
+                    Text('₹${_grossTotal.toStringAsFixed(2)}'),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Total GST:',
+                      style: TextStyle(fontWeight: FontWeight.w600),
                     ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Bill Discount:',
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        SizedBox(
-                          width: 150,
-                          child: TextFormField(
-                            controller: _billDiscountController,
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.allow(
-                                RegExp(r'^\d+\.?\d*'),
-                              ),
-                            ],
-                            decoration: const InputDecoration(
-                              isDense: true,
-                              border: OutlineInputBorder(),
-                            ),
-                          ),
-                        ),
-                      ],
+                    Text('₹${_totalGST.toStringAsFixed(2)}'),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Bill Discount:',
+                      style: TextStyle(fontWeight: FontWeight.w600),
                     ),
-                    const Divider(height: 32),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Final Payable Amount:',
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          '₹${_finalPayable.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.teal,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
                     SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: _isLoading ? null : _saveEntry,
-                        icon: _isLoading
-                            ? const CircularProgressIndicator(
-                                color: Colors.white,
-                              )
-                            : const Icon(Icons.check),
-                        label: Text(
-                          _isLoading ? 'Saving...' : 'Save Purchase Entry',
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.teal,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
+                      width: 100,
+                      height: 35,
+                      child: TextFormField(
+                        controller: _billDiscountController,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'^\d+\.?\d*'),
+                          ),
+                        ],
+                        decoration: const InputDecoration(
+                          isDense: true,
+                          contentPadding: EdgeInsets.all(0),
+                          border: OutlineInputBorder(),
                         ),
                       ),
                     ),
                   ],
                 ),
-              ),
+                const Divider(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Final Payable Amount:',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.teal,
+                      ),
+                    ),
+                    Text(
+                      '₹${_finalPayable.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.teal,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: _isLoading ? null : _saveEntry,
+                    icon: _isLoading
+                        ? const CircularProgressIndicator(
+                            color: Colors.white,
+                          )
+                        : const Icon(Icons.check),
+                    label: Text(
+                      _isLoading ? 'Saving...' : 'Save Purchase Entry',
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.teal,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
