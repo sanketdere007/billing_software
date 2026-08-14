@@ -21,7 +21,7 @@ class AddPurchaseEntryScreen extends StatefulWidget {
 
 class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
   final _formKey = GlobalKey<FormState>();
-  
+
   // Focus Nodes for Main Fields
   final _invoiceNoNode = FocusNode();
   final _invoiceDateNode = FocusNode();
@@ -53,10 +53,10 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
     _supplierService.getAllSuppliers();
     _productService.getAllProducts();
     _billDiscountController.addListener(_calculateTotals);
-    
+
     // Auto-add first empty row
     _addNewEmptyRow();
-    
+
     // Focus invoice number on load
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _invoiceNoNode.requestFocus();
@@ -91,7 +91,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
     _supplierNode.dispose();
     _invoiceNoController.dispose();
     _billDiscountController.dispose();
-    
+
     for (var p in _products) {
       (p['qtyController'] as TextEditingController).dispose();
       (p['rateController'] as TextEditingController).dispose();
@@ -161,14 +161,16 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
     if (selectedProduct != null) {
       // Check if product already exists in another row
       final exists = _products.asMap().entries.any(
-        (e) => e.key != index && e.value['product']?.prodId == selectedProduct.prodId,
+        (e) =>
+            e.key != index &&
+            e.value['product']?.prodId == selectedProduct.prodId,
       );
-      
+
       if (exists) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Product already added!'))
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Product already added!')));
         return;
       }
 
@@ -179,7 +181,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
         // Keep existing values or reset if needed, currently keeping default 1.0 qty, 0.0 rate
       });
       _calculateTotals();
-      
+
       // Auto-focus quantity field of this row
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
@@ -246,17 +248,25 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
   Future<void> _saveEntry() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedSupplier == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a supplier'))
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please select a supplier')));
       return;
     }
-    
+
     final validProducts = _products.where((p) => p['product'] != null).toList();
     if (validProducts.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please add at least one product'))
+        const SnackBar(content: Text('Please add at least one product')),
       );
+      return;
+    }
+
+    final hasZeroRate = validProducts.any((p) => (p['rate'] ?? 0.0) <= 0.0);
+    if (hasZeroRate) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Product rate cannot be 0')));
       return;
     }
 
@@ -348,7 +358,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
       _invoiceNoController.clear();
       _billDiscountController.text = '0';
       _selectedSupplier = null;
-      
+
       // Clear and re-init products
       for (var p in _products) {
         (p['qtyController'] as TextEditingController).dispose();
@@ -361,7 +371,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
       }
       _products.clear();
       _addNewEmptyRow();
-      
+
       _selectedDate = DateTime.now();
       _calculateTotals();
     });
@@ -432,7 +442,8 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
     }) {
       return Container(
         width: width,
-        padding: padding ?? const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        padding:
+            padding ?? const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         alignment: isNumeric ? Alignment.centerRight : Alignment.centerLeft,
         decoration: BoxDecoration(
           border: isLast
@@ -471,15 +482,31 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          buildHeaderCell('Product Name', effectiveProductNameWidth),
+                          buildHeaderCell(
+                            'Product Name',
+                            effectiveProductNameWidth,
+                          ),
                           buildHeaderCell('Qty', colQty, isNumeric: true),
                           buildHeaderCell('Rate', colRate, isNumeric: true),
                           buildHeaderCell('Gross', colGross, isNumeric: true),
-                          buildHeaderCell('Discount', colDiscount, isNumeric: true),
+                          buildHeaderCell(
+                            'Discount',
+                            colDiscount,
+                            isNumeric: true,
+                          ),
                           buildHeaderCell('GST %', colGstPct, isNumeric: true),
-                          buildHeaderCell('GST Amt', colGstAmt, isNumeric: true),
+                          buildHeaderCell(
+                            'GST Amt',
+                            colGstAmt,
+                            isNumeric: true,
+                          ),
                           buildHeaderCell('Net Amt', colNet, isNumeric: true),
-                          buildHeaderCell('Act', colAction, isNumeric: true, isLast: true),
+                          buildHeaderCell(
+                            'Act',
+                            colAction,
+                            isNumeric: true,
+                            isLast: true,
+                          ),
                         ],
                       ),
                     ),
@@ -491,19 +518,23 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                       itemCount: _products.length,
                       separatorBuilder: (context, index) => Divider(
                         height: 1,
-                        color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+                        color: theme.colorScheme.outlineVariant.withOpacity(
+                          0.5,
+                        ),
                       ),
                       itemBuilder: (context, index) {
                         final p = _products[index];
                         final ProductListItem? prod = p['product'];
                         final isEven = index.isEven;
-                        
+
                         final bool isEmptyRow = prod == null;
 
                         return Container(
                           key: ValueKey(prod?.prodId ?? 'empty_$index'),
                           color: isEven
-                              ? theme.colorScheme.surfaceVariant.withOpacity(0.1)
+                              ? theme.colorScheme.surfaceVariant.withOpacity(
+                                  0.1,
+                                )
                               : null,
                           child: IntrinsicHeight(
                             child: Row(
@@ -513,69 +544,111 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                                   Focus(
                                     focusNode: p['productNode'],
                                     onKeyEvent: (node, event) {
-                                      if (event is KeyDownEvent && 
-                                          (event.logicalKey == LogicalKeyboardKey.enter || 
-                                           event.logicalKey == LogicalKeyboardKey.numpadEnter ||
-                                           event.logicalKey == LogicalKeyboardKey.space)) {
+                                      if (event is KeyDownEvent &&
+                                          (event.logicalKey ==
+                                                  LogicalKeyboardKey.enter ||
+                                              event.logicalKey ==
+                                                  LogicalKeyboardKey
+                                                      .numpadEnter ||
+                                              event.logicalKey ==
+                                                  LogicalKeyboardKey.space)) {
                                         _selectProductForEmptyRow(index);
                                         return KeyEventResult.handled;
                                       }
                                       return KeyEventResult.ignored;
                                     },
-                                    child: Builder(builder: (context) {
-                                      final isFocused = Focus.of(context).hasFocus;
-                                      return InkWell(
-                                        onTap: () => _selectProductForEmptyRow(index),
-                                        borderRadius: BorderRadius.circular(6),
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                          decoration: BoxDecoration(
-                                            border: Border.all(
-                                              color: isFocused 
-                                                  ? theme.colorScheme.primary 
-                                                  : Colors.transparent,
-                                              width: 1.5,
-                                            ),
-                                            borderRadius: BorderRadius.circular(6),
-                                            color: isFocused 
-                                                ? theme.colorScheme.primaryContainer.withOpacity(0.2)
-                                                : Colors.transparent,
+                                    child: Builder(
+                                      builder: (context) {
+                                        final isFocused = Focus.of(
+                                          context,
+                                        ).hasFocus;
+                                        return InkWell(
+                                          onTap: () =>
+                                              _selectProductForEmptyRow(index),
+                                          borderRadius: BorderRadius.circular(
+                                            6,
                                           ),
-                                          child: isEmptyRow 
-                                            ? Row(
-                                                children: [
-                                                  Icon(Icons.search, size: 16, color: theme.hintColor),
-                                                  const SizedBox(width: 8),
-                                                  Text('Select Product (Enter)', 
-                                                    style: TextStyle(color: theme.hintColor, fontStyle: FontStyle.italic)),
-                                                ],
-                                              )
-                                            : Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                children: [
-                                                  Text(
-                                                    prod.prodName,
-                                                    style: const TextStyle(fontWeight: FontWeight.w500),
-                                                    maxLines: 1,
-                                                    overflow: TextOverflow.ellipsis,
-                                                  ),
-                                                  const SizedBox(height: 2),
-                                                  Text(
-                                                    prod.prodCode,
-                                                    style: TextStyle(
-                                                      color: theme.colorScheme.onSurfaceVariant,
-                                                      fontSize: 11,
-                                                    ),
-                                                  ),
-                                                ],
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 10,
+                                              vertical: 8,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              border: Border.all(
+                                                color: isFocused
+                                                    ? theme.colorScheme.primary
+                                                    : Colors.transparent,
+                                                width: 1.5,
                                               ),
-                                        ),
-                                      );
-                                    }),
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
+                                              color: isFocused
+                                                  ? theme
+                                                        .colorScheme
+                                                        .primaryContainer
+                                                        .withOpacity(0.2)
+                                                  : Colors.transparent,
+                                            ),
+                                            child: isEmptyRow
+                                                ? Row(
+                                                    children: [
+                                                      Icon(
+                                                        Icons.search,
+                                                        size: 16,
+                                                        color: theme.hintColor,
+                                                      ),
+                                                      const SizedBox(width: 8),
+                                                      Text(
+                                                        'Select Product (Enter)',
+                                                        style: TextStyle(
+                                                          color:
+                                                              theme.hintColor,
+                                                          fontStyle:
+                                                              FontStyle.italic,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  )
+                                                : Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      Text(
+                                                        prod.prodName,
+                                                        style: const TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                        ),
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                      ),
+                                                      const SizedBox(height: 2),
+                                                      Text(
+                                                        prod.prodCode,
+                                                        style: TextStyle(
+                                                          color: theme
+                                                              .colorScheme
+                                                              .onSurfaceVariant,
+                                                          fontSize: 11,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                          ),
+                                        );
+                                      },
+                                    ),
                                   ),
                                   effectiveProductNameWidth,
-                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                    vertical: 4,
+                                  ),
                                 ),
                                 buildDataCell(
                                   TextFormField(
@@ -585,16 +658,25 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                                     keyboardType: TextInputType.number,
                                     textAlign: TextAlign.right,
                                     textInputAction: TextInputAction.next,
-                                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d*'))],
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.allow(
+                                        RegExp(r'^\d+\.?\d*'),
+                                      ),
+                                    ],
                                     decoration: _gridInputDecoration(theme),
                                     onChanged: (val) {
                                       p['qty'] = double.tryParse(val) ?? 0.0;
                                       _calculateTotals();
                                     },
-                                    onFieldSubmitted: (_) => (p['rateNode'] as FocusNode).requestFocus(),
+                                    onFieldSubmitted: (_) =>
+                                        (p['rateNode'] as FocusNode)
+                                            .requestFocus(),
                                   ),
                                   colQty,
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 4,
+                                  ),
                                 ),
                                 buildDataCell(
                                   TextFormField(
@@ -604,21 +686,69 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                                     keyboardType: TextInputType.number,
                                     textAlign: TextAlign.right,
                                     textInputAction: TextInputAction.next,
-                                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d*'))],
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.allow(
+                                        RegExp(r'^\d+\.?\d*'),
+                                      ),
+                                    ],
                                     decoration: _gridInputDecoration(theme),
                                     onChanged: (val) {
-                                      p['rate'] = double.tryParse(val) ?? 0.0;
+                                      final newRate =
+                                          double.tryParse(val) ?? 0.0;
+                                      p['rate'] = newRate;
+                                      if (newRate <= 0.0) {
+                                        p['discAmt'] = 0.0;
+                                        (p['discAmtController']
+                                                    as TextEditingController)
+                                                .text =
+                                            '0.0';
+                                      }
                                       _calculateTotals();
                                     },
-                                    onFieldSubmitted: (_) => (p['discNode'] as FocusNode).requestFocus(),
+                                    onFieldSubmitted: (_) {
+                                      if ((p['rate'] ?? 0.0) > 0.0) {
+                                        (p['discNode'] as FocusNode)
+                                            .requestFocus();
+                                      } else {
+                                        if (index == _products.length - 1) {
+                                          setState(() {
+                                            _addNewEmptyRow();
+                                          });
+                                          WidgetsBinding.instance
+                                              .addPostFrameCallback((_) {
+                                                if (mounted) {
+                                                  final newNode =
+                                                      _products
+                                                              .last['productNode']
+                                                          as FocusNode;
+                                                  newNode.requestFocus();
+                                                }
+                                              });
+                                        } else {
+                                          (_products[index + 1]['productNode']
+                                                  as FocusNode)
+                                              .requestFocus();
+                                        }
+                                      }
+                                    },
                                   ),
                                   colRate,
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 4,
+                                  ),
                                 ),
                                 buildDataCell(
                                   Text(
-                                    isEmptyRow ? '-' : (p['gross'] as double).toStringAsFixed(2),
-                                    style: TextStyle(color: isEmptyRow ? theme.hintColor : null),
+                                    isEmptyRow
+                                        ? '-'
+                                        : (p['gross'] as double)
+                                              .toStringAsFixed(2),
+                                    style: TextStyle(
+                                      color: isEmptyRow
+                                          ? theme.hintColor
+                                          : null,
+                                    ),
                                   ),
                                   colGross,
                                   isNumeric: true,
@@ -627,14 +757,20 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                                   TextFormField(
                                     controller: p['discAmtController'],
                                     focusNode: p['discNode'],
-                                    enabled: !isEmptyRow,
+                                    enabled:
+                                        !isEmptyRow && (p['rate'] ?? 0.0) > 0.0,
                                     keyboardType: TextInputType.number,
                                     textAlign: TextAlign.right,
                                     textInputAction: TextInputAction.next,
-                                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d*'))],
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.allow(
+                                        RegExp(r'^\d+\.?\d*'),
+                                      ),
+                                    ],
                                     decoration: _gridInputDecoration(theme),
                                     onChanged: (val) {
-                                      p['discAmt'] = double.tryParse(val) ?? 0.0;
+                                      p['discAmt'] =
+                                          double.tryParse(val) ?? 0.0;
                                       _calculateTotals();
                                     },
                                     onFieldSubmitted: (_) {
@@ -644,58 +780,96 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                                           _addNewEmptyRow();
                                         });
                                         // Wait for UI to build new row, then focus it
-                                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                                          if (mounted) {
-                                            final newNode = _products.last['productNode'] as FocusNode;
-                                            newNode.requestFocus();
-                                          }
-                                        });
+                                        WidgetsBinding.instance
+                                            .addPostFrameCallback((_) {
+                                              if (mounted) {
+                                                final newNode =
+                                                    _products
+                                                            .last['productNode']
+                                                        as FocusNode;
+                                                newNode.requestFocus();
+                                              }
+                                            });
                                       } else {
                                         // Otherwise focus next row's product node
-                                        (_products[index + 1]['productNode'] as FocusNode).requestFocus();
+                                        (_products[index + 1]['productNode']
+                                                as FocusNode)
+                                            .requestFocus();
                                       }
                                     },
                                   ),
                                   colDiscount,
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 4,
+                                  ),
                                 ),
                                 buildDataCell(
                                   Text(
-                                    isEmptyRow ? '-' : (p['gstPct'] as double).toStringAsFixed(2),
-                                    style: TextStyle(color: isEmptyRow ? theme.hintColor : null),
+                                    isEmptyRow
+                                        ? '-'
+                                        : (p['gstPct'] as double)
+                                              .toStringAsFixed(2),
+                                    style: TextStyle(
+                                      color: isEmptyRow
+                                          ? theme.hintColor
+                                          : null,
+                                    ),
                                   ),
                                   colGstPct,
                                   isNumeric: true,
                                 ),
                                 buildDataCell(
                                   Text(
-                                    isEmptyRow ? '-' : (p['gstAmt'] as double).toStringAsFixed(2),
-                                    style: TextStyle(color: isEmptyRow ? theme.hintColor : null),
+                                    isEmptyRow
+                                        ? '-'
+                                        : (p['gstAmt'] as double)
+                                              .toStringAsFixed(2),
+                                    style: TextStyle(
+                                      color: isEmptyRow
+                                          ? theme.hintColor
+                                          : null,
+                                    ),
                                   ),
                                   colGstAmt,
                                   isNumeric: true,
                                 ),
                                 buildDataCell(
                                   Text(
-                                    isEmptyRow ? '-' : (p['net'] as double).toStringAsFixed(2),
+                                    isEmptyRow
+                                        ? '-'
+                                        : (p['net'] as double).toStringAsFixed(
+                                            2,
+                                          ),
                                     style: TextStyle(
-                                      fontWeight: isEmptyRow ? FontWeight.normal : FontWeight.bold,
+                                      fontWeight: isEmptyRow
+                                          ? FontWeight.normal
+                                          : FontWeight.bold,
                                       fontSize: isEmptyRow ? 14 : 15,
-                                      color: isEmptyRow ? theme.hintColor : null,
+                                      color: isEmptyRow
+                                          ? theme.hintColor
+                                          : null,
                                     ),
                                   ),
                                   colNet,
                                   isNumeric: true,
                                 ),
                                 buildDataCell(
-                                  isEmptyRow ? const SizedBox.shrink() : IconButton(
-                                    icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
-                                    padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(),
-                                    tooltip: 'Remove',
-                                    splashRadius: 20,
-                                    onPressed: () => _removeProduct(index),
-                                  ),
+                                  isEmptyRow
+                                      ? const SizedBox.shrink()
+                                      : IconButton(
+                                          icon: const Icon(
+                                            Icons.delete_outline,
+                                            color: Colors.red,
+                                            size: 20,
+                                          ),
+                                          padding: EdgeInsets.zero,
+                                          constraints: const BoxConstraints(),
+                                          tooltip: 'Remove',
+                                          splashRadius: 20,
+                                          onPressed: () =>
+                                              _removeProduct(index),
+                                        ),
                                   colAction,
                                   isNumeric: true,
                                   isLast: true,
@@ -722,11 +896,15 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
       contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(4),
-        borderSide: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.5)),
+        borderSide: BorderSide(
+          color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+        ),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(4),
-        borderSide: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.5)),
+        borderSide: BorderSide(
+          color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+        ),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(4),
@@ -765,7 +943,8 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                         labelText: 'Invoice / Bill Number',
                         border: OutlineInputBorder(),
                       ),
-                      validator: (val) => val == null || val.isEmpty ? 'Required' : null,
+                      validator: (val) =>
+                          val == null || val.isEmpty ? 'Required' : null,
                       onFieldSubmitted: (_) => _invoiceDateNode.requestFocus(),
                     ),
                   ),
@@ -774,36 +953,42 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                     child: Focus(
                       focusNode: _invoiceDateNode,
                       onKeyEvent: (node, event) {
-                        if (event is KeyDownEvent && 
-                           (event.logicalKey == LogicalKeyboardKey.enter || 
-                            event.logicalKey == LogicalKeyboardKey.numpadEnter)) {
-                          _supplierNode.requestFocus();
+                        if (event is KeyDownEvent &&
+                            (event.logicalKey == LogicalKeyboardKey.enter ||
+                                event.logicalKey ==
+                                    LogicalKeyboardKey.numpadEnter ||
+                                event.logicalKey == LogicalKeyboardKey.space)) {
+                          _selectDate(context);
                           return KeyEventResult.handled;
                         }
                         return KeyEventResult.ignored;
                       },
-                      child: Builder(builder: (context) {
-                        final isFocused = Focus.of(context).hasFocus;
-                        return InkWell(
-                          onTap: () => _selectDate(context),
-                          borderRadius: BorderRadius.circular(4),
-                          child: InputDecorator(
-                            isFocused: isFocused,
-                            decoration: InputDecoration(
-                              labelText: 'Invoice Date',
-                              border: const OutlineInputBorder(),
-                              prefixIcon: const Icon(Icons.calendar_today),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: Theme.of(context).colorScheme.primary,
-                                  width: 2.0,
+                      child: Builder(
+                        builder: (context) {
+                          final isFocused = Focus.of(context).hasFocus;
+                          return InkWell(
+                            onTap: () => _selectDate(context),
+                            borderRadius: BorderRadius.circular(4),
+                            child: InputDecorator(
+                              isFocused: isFocused,
+                              decoration: InputDecoration(
+                                labelText: 'Invoice Date',
+                                border: const OutlineInputBorder(),
+                                prefixIcon: const Icon(Icons.calendar_today),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                    width: 2.0,
+                                  ),
                                 ),
                               ),
+                              child: Text(_dateFormat.format(_selectedDate)),
                             ),
-                            child: Text(_dateFormat.format(_selectedDate)),
-                          ),
-                        );
-                      }),
+                          );
+                        },
+                      ),
                     ),
                   ),
                   SizedBox(
@@ -822,7 +1007,8 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                         if (_products.isNotEmpty) {
                           WidgetsBinding.instance.addPostFrameCallback((_) {
                             if (mounted) {
-                              (_products.first['productNode'] as FocusNode).requestFocus();
+                              (_products.first['productNode'] as FocusNode)
+                                  .requestFocus();
                             }
                           });
                         }
@@ -836,7 +1022,9 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
           Expanded(
             child: Card(
               margin: EdgeInsets.zero,
-              shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.zero,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -847,7 +1035,8 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                       children: [
                         Text(
                           'Items (${_products.where((p) => p['product'] != null).length})',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         // Add product button is less relevant with the empty row approach, but keeping it for mouse users
                         FilledButton.icon(
@@ -860,24 +1049,31 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                             }
                             WidgetsBinding.instance.addPostFrameCallback((_) {
                               if (mounted) {
-                                (_products.last['productNode'] as FocusNode).requestFocus();
+                                (_products.last['productNode'] as FocusNode)
+                                    .requestFocus();
                                 _selectProductForEmptyRow(_products.length - 1);
                               }
                             });
                           },
                           icon: const Icon(Icons.add_shopping_cart, size: 20),
-                          label: const Text('Add Product', style: TextStyle(fontWeight: FontWeight.bold)),
+                          label: const Text(
+                            'Add Product',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
                           style: FilledButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  Expanded(
-                    child: _buildProductTable(),
-                  ),
+                  Expanded(child: _buildProductTable()),
                 ],
               ),
             ),
@@ -903,16 +1099,32 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                     spacing: 24,
                     runSpacing: 12,
                     children: [
-                      _buildSummaryItem('Total Qty', _totalQuantity.toStringAsFixed(2)),
-                      _buildSummaryItem('Gross Total', '₹${_grossTotal.toStringAsFixed(2)}'),
-                      _buildSummaryItem('Prod. Discount', '₹${_totalProductDiscount.toStringAsFixed(2)}'),
-                      _buildSummaryItem('Total GST', '₹${_totalGST.toStringAsFixed(2)}'),
+                      _buildSummaryItem(
+                        'Total Qty',
+                        _totalQuantity.toStringAsFixed(2),
+                      ),
+                      _buildSummaryItem(
+                        'Gross Total',
+                        '₹${_grossTotal.toStringAsFixed(2)}',
+                      ),
+                      _buildSummaryItem(
+                        'Prod. Discount',
+                        '₹${_totalProductDiscount.toStringAsFixed(2)}',
+                      ),
+                      _buildSummaryItem(
+                        'Total GST',
+                        '₹${_totalGST.toStringAsFixed(2)}',
+                      ),
                       SizedBox(
                         width: 150,
                         child: TextFormField(
                           controller: _billDiscountController,
                           keyboardType: TextInputType.number,
-                          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d*'))],
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                              RegExp(r'^\d+\.?\d*'),
+                            ),
+                          ],
                           decoration: const InputDecoration(
                             labelText: 'Bill Discount',
                             border: OutlineInputBorder(),
@@ -937,10 +1149,11 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                     ),
                     Text(
                       '₹${_finalPayable.toStringAsFixed(2)}',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
+                      style: Theme.of(context).textTheme.headlineMedium
+                          ?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
                     ),
                     const SizedBox(height: 12),
                     SizedBox(
@@ -948,12 +1161,24 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                       height: 48,
                       child: FilledButton.icon(
                         onPressed: _isLoading ? null : _saveEntry,
-                        icon: _isLoading 
-                            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        icon: _isLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
                             : const Icon(Icons.save_rounded),
-                        label: Text(_isLoading ? 'Saving...' : 'Save Purchase', style: const TextStyle(fontSize: 16)),
+                        label: Text(
+                          _isLoading ? 'Saving...' : 'Save Purchase',
+                          style: const TextStyle(fontSize: 16),
+                        ),
                         style: FilledButton.styleFrom(
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
                       ),
                     ),
@@ -1007,9 +1232,9 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
         const SizedBox(height: 4),
         Text(
           value,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
       ],
     );
