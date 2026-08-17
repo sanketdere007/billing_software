@@ -380,6 +380,134 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
     });
   }
 
+  KeyEventResult _handleGridKeyEvent(
+    FocusNode node,
+    KeyEvent event,
+    int index,
+    String fieldName,
+  ) {
+    if (event is! KeyDownEvent) return KeyEventResult.ignored;
+
+    final key = event.logicalKey;
+    final p = _products[index];
+
+    // 1. Delete row
+    if (key == LogicalKeyboardKey.delete && fieldName == 'product') {
+      if (p['product'] != null) {
+        _removeProduct(index);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            final targetIndex = index < _products.length
+                ? index
+                : _products.length - 1;
+            (_products[targetIndex]['productNode'] as FocusNode).requestFocus();
+          }
+        });
+        return KeyEventResult.handled;
+      }
+    }
+
+    // Enter key for Product
+    if (fieldName == 'product' &&
+        (key == LogicalKeyboardKey.enter ||
+            key == LogicalKeyboardKey.numpadEnter ||
+            key == LogicalKeyboardKey.space)) {
+      _selectProductForEmptyRow(index);
+      return KeyEventResult.handled;
+    }
+
+    // 2. Up Arrow
+    if (key == LogicalKeyboardKey.arrowUp) {
+      if (index > 0) {
+        (_products[index - 1]['${fieldName}Node'] as FocusNode).requestFocus();
+        return KeyEventResult.handled;
+      }
+    }
+
+    // 3. Down Arrow
+    if (key == LogicalKeyboardKey.arrowDown) {
+      if (index < _products.length - 1) {
+        (_products[index + 1]['${fieldName}Node'] as FocusNode).requestFocus();
+        return KeyEventResult.handled;
+      }
+    }
+
+    // 4. Left / Right Arrow text editing check
+    if ((key == LogicalKeyboardKey.arrowLeft ||
+            key == LogicalKeyboardKey.arrowRight) &&
+        fieldName != 'product') {
+      String controllerKey = fieldName == 'disc'
+          ? 'discAmtController'
+          : '${fieldName}Controller';
+      final controller = p[controllerKey] as TextEditingController;
+      if (controller.selection.isValid) {
+        if (controller.selection.baseOffset !=
+            controller.selection.extentOffset) {
+          return KeyEventResult.ignored;
+        }
+        if (key == LogicalKeyboardKey.arrowLeft &&
+            controller.selection.baseOffset > 0) {
+          return KeyEventResult.ignored;
+        }
+        if (key == LogicalKeyboardKey.arrowRight &&
+            controller.selection.baseOffset < controller.text.length) {
+          return KeyEventResult.ignored;
+        }
+      }
+    }
+
+    // 5. Left Arrow move focus
+    if (key == LogicalKeyboardKey.arrowLeft) {
+      if (fieldName == 'disc') {
+        (p['rateNode'] as FocusNode).requestFocus();
+        return KeyEventResult.handled;
+      } else if (fieldName == 'rate') {
+        (p['qtyNode'] as FocusNode).requestFocus();
+        return KeyEventResult.handled;
+      } else if (fieldName == 'qty') {
+        (p['productNode'] as FocusNode).requestFocus();
+        return KeyEventResult.handled;
+      } else if (fieldName == 'product') {
+        if (index > 0) {
+          final prevP = _products[index - 1];
+          if ((prevP['rate'] ?? 0.0) > 0.0) {
+            (prevP['discNode'] as FocusNode).requestFocus();
+          } else {
+            (prevP['rateNode'] as FocusNode).requestFocus();
+          }
+          return KeyEventResult.handled;
+        }
+      }
+    }
+
+    // 6. Right Arrow move focus
+    if (key == LogicalKeyboardKey.arrowRight) {
+      if (fieldName == 'product') {
+        if (p['product'] != null) {
+          (p['qtyNode'] as FocusNode).requestFocus();
+          return KeyEventResult.handled;
+        }
+      } else if (fieldName == 'qty') {
+        (p['rateNode'] as FocusNode).requestFocus();
+        return KeyEventResult.handled;
+      } else if (fieldName == 'rate') {
+        if ((p['rate'] ?? 0.0) > 0.0) {
+          (p['discNode'] as FocusNode).requestFocus();
+        } else if (index < _products.length - 1) {
+          (_products[index + 1]['productNode'] as FocusNode).requestFocus();
+        }
+        return KeyEventResult.handled;
+      } else if (fieldName == 'disc') {
+        if (index < _products.length - 1) {
+          (_products[index + 1]['productNode'] as FocusNode).requestFocus();
+          return KeyEventResult.handled;
+        }
+      }
+    }
+
+    return KeyEventResult.ignored;
+  }
+
   Widget _buildProductTable() {
     final theme = Theme.of(context);
 
@@ -529,13 +657,48 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
 
                         final bool isEmptyRow = prod == null;
 
-                        return Container(
-                          key: ValueKey(prod?.prodId ?? 'empty_$index'),
-                          color: isEven
-                              ? theme.colorScheme.surfaceVariant.withOpacity(
-                                  0.1,
-                                )
-                              : null,
+                        (p['productNode'] as FocusNode).onKeyEvent =
+                            (node, event) => _handleGridKeyEvent(
+                              node,
+                              event,
+                              index,
+                              'product',
+                            );
+                        (p['qtyNode'] as FocusNode).onKeyEvent =
+                            (node, event) =>
+                                _handleGridKeyEvent(node, event, index, 'qty');
+                        (p['rateNode'] as FocusNode).onKeyEvent =
+                            (node, event) =>
+                                _handleGridKeyEvent(node, event, index, 'rate');
+                        (p['discNode'] as FocusNode).onKeyEvent =
+                            (node, event) =>
+                                _handleGridKeyEvent(node, event, index, 'disc');
+
+                        return AnimatedBuilder(
+                          animation: Listenable.merge([
+                            p['productNode'] as FocusNode,
+                            p['qtyNode'] as FocusNode,
+                            p['rateNode'] as FocusNode,
+                            p['discNode'] as FocusNode,
+                          ]),
+                          builder: (context, child) {
+                            final isRowFocused =
+                                (p['productNode'] as FocusNode).hasFocus ||
+                                (p['qtyNode'] as FocusNode).hasFocus ||
+                                (p['rateNode'] as FocusNode).hasFocus ||
+                                (p['discNode'] as FocusNode).hasFocus;
+                            return Container(
+                              key: ValueKey(prod?.prodId ?? 'empty_$index'),
+                              color: isRowFocused
+                                  ? theme.colorScheme.primaryContainer
+                                        .withOpacity(0.4)
+                                  : (isEven
+                                        ? theme.colorScheme.surfaceVariant
+                                              .withOpacity(0.1)
+                                        : null),
+                              child: child,
+                            );
+                          },
                           child: IntrinsicHeight(
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -543,20 +706,6 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                                 buildDataCell(
                                   Focus(
                                     focusNode: p['productNode'],
-                                    onKeyEvent: (node, event) {
-                                      if (event is KeyDownEvent &&
-                                          (event.logicalKey ==
-                                                  LogicalKeyboardKey.enter ||
-                                              event.logicalKey ==
-                                                  LogicalKeyboardKey
-                                                      .numpadEnter ||
-                                              event.logicalKey ==
-                                                  LogicalKeyboardKey.space)) {
-                                        _selectProductForEmptyRow(index);
-                                        return KeyEventResult.handled;
-                                      }
-                                      return KeyEventResult.ignored;
-                                    },
                                     child: Builder(
                                       builder: (context) {
                                         final isFocused = Focus.of(
