@@ -7,6 +7,7 @@ import '../widgets/database_backup_dialog.dart';
 import '../screens/login_screen.dart';
 import '../screens/settings_screen.dart';
 import '../screens/dashboard_screen.dart';
+import '../screens/send_mail_screen.dart';
 import '../screens/customers/customer_list_screen.dart';
 import '../screens/suppliers/supplier_list_screen.dart';
 import '../screens/products/product_list_screen.dart';
@@ -39,6 +40,10 @@ import '../screens/sales/sales_return/add_sales_return_screen.dart';
 import '../screens/purchases/purchase_order/add_purchase_order_screen.dart';
 import '../screens/purchases/purchase_entry/add_purchase_entry_screen.dart';
 import '../screens/purchases/purchase_return/add_purchase_return_screen.dart';
+import '../screens/accounts/payment_screen.dart';
+import '../screens/accounts/receipt_entry_screen.dart';
+import '../screens/accounts/payment_list_screen.dart';
+import '../screens/accounts/receipt_list_screen.dart';
 import '../services/shortcut_service.dart';
 import '../utils/platform_helper.dart';
 import '../screens/about_screen.dart';
@@ -62,6 +67,7 @@ class _AppDrawerState extends State<AppDrawer> {
   static bool _isConfigurationMastersExpanded = false;
   static bool _isSalesMenuExpanded = false;
   static bool _isPurchaseMenuExpanded = false;
+  static bool _isAccountMenuExpanded = false;
 
   @override
   void initState() {
@@ -520,6 +526,19 @@ class _AppDrawerState extends State<AppDrawer> {
                         builder: (context) => const DashboardScreen(),
                       ),
                       (route) => false,
+                    );
+                  },
+                ),
+                _buildDrawerItem(
+                  context: context,
+                  icon: Icons.mail_outline_rounded,
+                  iconColor: _getIconColor(context, Colors.red),
+                  title: 'Send Mail',
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const SendMailScreen(),
+                      ),
                     );
                   },
                 ),
@@ -1110,6 +1129,60 @@ class _AppDrawerState extends State<AppDrawer> {
                     ),
                   ],
                 ),
+
+                ExpansionTile(
+                  initiallyExpanded: _isAccountMenuExpanded,
+                  onExpansionChanged: (expanded) {
+                    _isAccountMenuExpanded = expanded;
+                  },
+                  leading: Icon(
+                    Icons.account_balance_wallet_rounded,
+                    color: _getIconColor(context, Colors.orange),
+                  ),
+                  title: Text(
+                    'Account',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                  children: [
+                    _buildDrawerItem(
+                      context: context,
+                      icon: Icons.payments_rounded,
+                      iconColor: _getIconColor(context, Colors.orange),
+                      title: 'Payments',
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            settings: const RouteSettings(
+                              name: AppRoutes.paymentScreen,
+                            ),
+                            builder: (context) => const PaymentListScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _buildDrawerItem(
+                      context: context,
+                      icon: Icons.receipt_long_rounded,
+                      iconColor: _getIconColor(context, Colors.orange),
+                      title: 'Receipts',
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            settings: const RouteSettings(
+                              name: AppRoutes.receiptEntryScreen,
+                            ),
+                            builder: (context) => const ReceiptListScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+
                 _buildDrawerItem(
                   context: context,
                   icon: Icons.settings_rounded,

@@ -92,6 +92,7 @@ class PurchaseEntryMasterData {
   final String remark;
   final int createdBy;
   final int modifiedBy;
+  final int ledgerId;
 
   PurchaseEntryMasterData({
     this.compId = 0,
@@ -110,6 +111,7 @@ class PurchaseEntryMasterData {
     this.remark = '',
     this.createdBy = 0,
     this.modifiedBy = 0,
+    this.ledgerId = 0,
   });
 
   Map<String, dynamic> toJson() {
@@ -130,6 +132,7 @@ class PurchaseEntryMasterData {
       "purchaseMaster_Remark": remark,
       "purchaseMaster_CreatedBy": createdBy,
       "purchaseMaster_ModifiedBy": modifiedBy,
+      "purchaseMaster_LedgerId": ledgerId,
     };
   }
 }

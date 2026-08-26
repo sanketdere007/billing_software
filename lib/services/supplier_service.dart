@@ -21,6 +21,8 @@ class SupplierService extends ChangeNotifier {
   Future<List<SupplierListItem>> getAllSuppliers({
     int? suppId,
     bool? isActive,
+    int? pageNumber,
+    int? pageSize,
   }) async {
     _isLoading = true;
     _errorMessage = null;
@@ -33,6 +35,12 @@ class SupplierService extends ChangeNotifier {
     }
     if (isActive != null) {
       queryParameters['Supp_IsActive'] = isActive.toString();
+    }
+    if (pageNumber != null) {
+      queryParameters['PageNumber'] = pageNumber.toString();
+    }
+    if (pageSize != null) {
+      queryParameters['PageSize'] = pageSize.toString();
     }
 
     debugPrint('🏢 [SupplierService.getAllSuppliers] Requesting with parameters: $queryParameters');

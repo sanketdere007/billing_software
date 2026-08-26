@@ -26,6 +26,8 @@ class AppRoutes {
   static const String purchaseOrderAdd = '/purchases/order/add';
   static const String purchaseEntryAdd = '/purchases/entry/add';
   static const String purchaseReturnAdd = '/purchases/return/add';
+  static const String paymentScreen = '/accounts/payment';
+  static const String receiptEntryScreen = '/accounts/receipt';
   static const String settings = '/settings';
   static const String about = '/about';
   static const String helpSupport = '/help-support';

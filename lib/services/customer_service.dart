@@ -35,12 +35,16 @@ class CustomerService extends ChangeNotifier {
     String? city,
     String? state,
     bool? isActive,
+    int? pageNumber,
+    int? pageSize,
   }) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
-    final cleanSearch = (search == null || search == 'null') ? '' : search.trim();
+    final cleanSearch = (search == null || search == 'null')
+        ? ''
+        : search.trim();
     final effectiveBranchId = (branchId != null && branchId > 0)
         ? branchId
         : (sessionService.selectedBranchId ?? 0);
@@ -61,6 +65,8 @@ class CustomerService extends ChangeNotifier {
       if (effectiveStateId > 0) 'StateId': effectiveStateId.toString(),
       if (effectiveCityId > 0) 'CityId': effectiveCityId.toString(),
       if (effectiveAreaId > 0) 'AreaId': effectiveAreaId.toString(),
+      if (pageNumber != null) 'PageNumber': pageNumber.toString(),
+      if (pageSize != null) 'PageSize': pageSize.toString(),
     };
 
     if (cleanArea.isNotEmpty) {
@@ -80,7 +86,9 @@ class CustomerService extends ChangeNotifier {
       queryParameters['Cust_IsActive'] = isActive.toString();
     }
 
-    debugPrint('👥 [CustomerService.getAllCustomers] Requesting with query parameters: $queryParameters');
+    debugPrint(
+      '👥 [CustomerService.getAllCustomers] Requesting with query parameters: $queryParameters',
+    );
 
     try {
       final dynamic response = await apiService.get(
@@ -117,7 +125,8 @@ class CustomerService extends ChangeNotifier {
 
       // Apply client-side fallback filtering on fetched list
       List<CustomerListItem> filteredResult = _customers;
-      final bool hasFilters = cleanSearch.isNotEmpty ||
+      final bool hasFilters =
+          cleanSearch.isNotEmpty ||
           effectiveStateId > 0 ||
           effectiveCityId > 0 ||
           effectiveAreaId > 0 ||
@@ -161,7 +170,8 @@ class CustomerService extends ChangeNotifier {
 
           // Search text filter
           if (searchLower.isNotEmpty) {
-            final matches = c.custName.toLowerCase().contains(searchLower) ||
+            final matches =
+                c.custName.toLowerCase().contains(searchLower) ||
                 c.custMobileNo.toLowerCase().contains(searchLower) ||
                 c.custAlternateMobileNo.toLowerCase().contains(searchLower) ||
                 c.custCode.toLowerCase().contains(searchLower) ||
@@ -205,7 +215,9 @@ class CustomerService extends ChangeNotifier {
     if (custId <= 0) return null;
 
     final endpoint = '${ApiConstants.getCustomerByIdEndpoint}/$custId';
-    debugPrint('👥 [CustomerService.getCustomerById] Requesting URL: $endpoint');
+    debugPrint(
+      '👥 [CustomerService.getCustomerById] Requesting URL: $endpoint',
+    );
 
     try {
       final dynamic response = await apiService.get(
@@ -224,7 +236,9 @@ class CustomerService extends ChangeNotifier {
           }
           return detailResponse.data;
         } else if (response['data'] is Map<String, dynamic>) {
-          return CustomerListItem.fromJson(response['data'] as Map<String, dynamic>);
+          return CustomerListItem.fromJson(
+            response['data'] as Map<String, dynamic>,
+          );
         }
       }
       return null;
@@ -236,7 +250,9 @@ class CustomerService extends ChangeNotifier {
   }
 
   /// Insert or update customer via POST `/api/Customer/InsertorUpdateCustomer`
-  Future<CustomerUpsertResponse> insertOrUpdateCustomer(CustomerUpsertRequest request) async {
+  Future<CustomerUpsertResponse> insertOrUpdateCustomer(
+    CustomerUpsertRequest request,
+  ) async {
     int createdBy = request.custCreatedBy;
     int modifiedBy = request.custModifiedBy;
 
@@ -272,7 +288,9 @@ class CustomerService extends ChangeNotifier {
       custModifiedBy: modifiedBy,
     );
 
-    debugPrint('👥 [CustomerService.insertOrUpdateCustomer] Request payload: ${finalRequest.toJson()}');
+    debugPrint(
+      '👥 [CustomerService.insertOrUpdateCustomer] Request payload: ${finalRequest.toJson()}',
+    );
 
     try {
       final dynamic response = await apiService.post(
@@ -287,7 +305,8 @@ class CustomerService extends ChangeNotifier {
 
       final upsertResponse = CustomerUpsertResponse.fromJson(response);
 
-      if (upsertResponse.status || (upsertResponse.data != null && upsertResponse.data!.status)) {
+      if (upsertResponse.status ||
+          (upsertResponse.data != null && upsertResponse.data!.status)) {
         return upsertResponse;
       } else {
         final msg = upsertResponse.message.isNotEmpty
@@ -327,9 +346,7 @@ class CustomerService extends ChangeNotifier {
   CustomerListItem? getCustomerByMobile(String mobile) {
     try {
       final trimmed = mobile.trim();
-      return _customers.firstWhere(
-        (c) => c.custMobileNo.trim() == trimmed,
-      );
+      return _customers.firstWhere((c) => c.custMobileNo.trim() == trimmed);
     } catch (_) {
       return null;
     }
@@ -346,51 +363,75 @@ class CustomerService extends ChangeNotifier {
   void initializeDummyData() {}
 
   Future<void> addCustomer(CustomerListItem customer) async {
-    await insertOrUpdateCustomer(CustomerUpsertRequest(
-      custId: customer.custId,
-      custName: customer.custName,
-      custCompanyName: customer.custCompanyName,
-      custMobileNo: customer.custMobileNo,
-      custAlternateMobileNo: customer.custAlternateMobileNo,
-      custEmail: customer.custEmail,
-      custGSTNo: customer.custGSTNo,
-      custPANNo: customer.custPANNo,
-      custAddress: customer.custAddress,
-      custAreaId: customer.custAreaId,
-      custCityId: customer.custCityId,
-      custStateId: customer.custStateId,
-      custPincode: customer.custPincode,
-      custCountry: customer.custCountry,
-      custBranchId: customer.custBranchId > 0 ? customer.custBranchId : (sessionService.selectedBranchId != null && sessionService.selectedBranchId! > 0 ? sessionService.selectedBranchId! : 1),
-      custCompId: customer.custCompId > 0 ? customer.custCompId : (sessionService.selectedCompId != null && sessionService.selectedCompId! > 0 ? sessionService.selectedCompId! : 1),
-      custIsActive: customer.custIsActive,
-      custCreatedBy: customer.custCreatedBy,
-      custModifiedBy: customer.custModifiedBy,
-    ));
+    await insertOrUpdateCustomer(
+      CustomerUpsertRequest(
+        custId: customer.custId,
+        custName: customer.custName,
+        custCompanyName: customer.custCompanyName,
+        custMobileNo: customer.custMobileNo,
+        custAlternateMobileNo: customer.custAlternateMobileNo,
+        custEmail: customer.custEmail,
+        custGSTNo: customer.custGSTNo,
+        custPANNo: customer.custPANNo,
+        custAddress: customer.custAddress,
+        custAreaId: customer.custAreaId,
+        custCityId: customer.custCityId,
+        custStateId: customer.custStateId,
+        custPincode: customer.custPincode,
+        custCountry: customer.custCountry,
+        custBranchId: customer.custBranchId > 0
+            ? customer.custBranchId
+            : (sessionService.selectedBranchId != null &&
+                      sessionService.selectedBranchId! > 0
+                  ? sessionService.selectedBranchId!
+                  : 1),
+        custCompId: customer.custCompId > 0
+            ? customer.custCompId
+            : (sessionService.selectedCompId != null &&
+                      sessionService.selectedCompId! > 0
+                  ? sessionService.selectedCompId!
+                  : 1),
+        custIsActive: customer.custIsActive,
+        custCreatedBy: customer.custCreatedBy,
+        custModifiedBy: customer.custModifiedBy,
+      ),
+    );
   }
 
   Future<void> updateCustomer(CustomerListItem customer) async {
-    await insertOrUpdateCustomer(CustomerUpsertRequest(
-      custId: customer.custId,
-      custName: customer.custName,
-      custCompanyName: customer.custCompanyName,
-      custMobileNo: customer.custMobileNo,
-      custAlternateMobileNo: customer.custAlternateMobileNo,
-      custEmail: customer.custEmail,
-      custGSTNo: customer.custGSTNo,
-      custPANNo: customer.custPANNo,
-      custAddress: customer.custAddress,
-      custAreaId: customer.custAreaId,
-      custCityId: customer.custCityId,
-      custStateId: customer.custStateId,
-      custPincode: customer.custPincode,
-      custCountry: customer.custCountry,
-      custBranchId: customer.custBranchId > 0 ? customer.custBranchId : (sessionService.selectedBranchId != null && sessionService.selectedBranchId! > 0 ? sessionService.selectedBranchId! : 1),
-      custCompId: customer.custCompId > 0 ? customer.custCompId : (sessionService.selectedCompId != null && sessionService.selectedCompId! > 0 ? sessionService.selectedCompId! : 1),
-      custIsActive: customer.custIsActive,
-      custCreatedBy: customer.custCreatedBy,
-      custModifiedBy: customer.custModifiedBy,
-    ));
+    await insertOrUpdateCustomer(
+      CustomerUpsertRequest(
+        custId: customer.custId,
+        custName: customer.custName,
+        custCompanyName: customer.custCompanyName,
+        custMobileNo: customer.custMobileNo,
+        custAlternateMobileNo: customer.custAlternateMobileNo,
+        custEmail: customer.custEmail,
+        custGSTNo: customer.custGSTNo,
+        custPANNo: customer.custPANNo,
+        custAddress: customer.custAddress,
+        custAreaId: customer.custAreaId,
+        custCityId: customer.custCityId,
+        custStateId: customer.custStateId,
+        custPincode: customer.custPincode,
+        custCountry: customer.custCountry,
+        custBranchId: customer.custBranchId > 0
+            ? customer.custBranchId
+            : (sessionService.selectedBranchId != null &&
+                      sessionService.selectedBranchId! > 0
+                  ? sessionService.selectedBranchId!
+                  : 1),
+        custCompId: customer.custCompId > 0
+            ? customer.custCompId
+            : (sessionService.selectedCompId != null &&
+                      sessionService.selectedCompId! > 0
+                  ? sessionService.selectedCompId!
+                  : 1),
+        custIsActive: customer.custIsActive,
+        custCreatedBy: customer.custCreatedBy,
+        custModifiedBy: customer.custModifiedBy,
+      ),
+    );
   }
 
   Future<void> deleteCustomer(String id) async {

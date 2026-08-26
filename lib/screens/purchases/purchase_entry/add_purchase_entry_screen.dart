@@ -24,10 +24,12 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
 
   // Focus Nodes for Main Fields
   final _invoiceNoNode = FocusNode();
+  final _invoiceAmountNode = FocusNode();
   final _invoiceDateNode = FocusNode();
   final _supplierNode = FocusNode();
 
   final _invoiceNoController = TextEditingController();
+  final _invoiceAmountController = TextEditingController();
   final _billDiscountController = TextEditingController(text: '0');
   DateTime _selectedDate = DateTime.now();
   int? _selectedSupplier;
@@ -87,9 +89,11 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
   @override
   void dispose() {
     _invoiceNoNode.dispose();
+    _invoiceAmountNode.dispose();
     _invoiceDateNode.dispose();
     _supplierNode.dispose();
     _invoiceNoController.dispose();
+    _invoiceAmountController.dispose();
     _billDiscountController.dispose();
 
     for (var p in _products) {
@@ -262,6 +266,17 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
       return;
     }
 
+    final enteredAmount = double.tryParse(_invoiceAmountController.text) ?? 0.0;
+    if (enteredAmount.toStringAsFixed(2) != _finalPayable.toStringAsFixed(2)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('invoice amount final amount are not same'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     final hasZeroRate = validProducts.any((p) => (p['rate'] ?? 0.0) <= 0.0);
     if (hasZeroRate) {
       ScaffoldMessenger.of(
@@ -280,6 +295,14 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
       int branchId = sessionService.selectedBranchId ?? 1;
       int empId = user?.empId ?? 1;
 
+      int ledgerId = 0;
+      try {
+        final supplier = _supplierService.suppliers.firstWhere((s) => s.suppId == _selectedSupplier);
+        ledgerId = supplier.suppLedgerId;
+      } catch (e) {
+        // ignore
+      }
+
       final masterData = PurchaseEntryMasterData(
         compId: compId,
         branchId: branchId,
@@ -297,6 +320,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
         remark: '',
         createdBy: empId,
         modifiedBy: empId,
+        ledgerId: ledgerId,
       );
 
       final detailData = validProducts.map((p) {
@@ -356,6 +380,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
   void _resetForm() {
     setState(() {
       _invoiceNoController.clear();
+      _invoiceAmountController.clear();
       _billDiscountController.text = '0';
       _selectedSupplier = null;
 
@@ -1090,6 +1115,27 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                       textInputAction: TextInputAction.next,
                       decoration: const InputDecoration(
                         labelText: 'Invoice / Bill Number',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (val) =>
+                          val == null || val.isEmpty ? 'Required' : null,
+                      onFieldSubmitted: (_) => _invoiceAmountNode.requestFocus(),
+                    ),
+                  ),
+                  SizedBox(
+                    width: isMobile ? double.infinity : 200,
+                    child: TextFormField(
+                      controller: _invoiceAmountController,
+                      focusNode: _invoiceAmountNode,
+                      keyboardType: TextInputType.number,
+                      textInputAction: TextInputAction.next,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r'^\d+\.?\d*'),
+                        ),
+                      ],
+                      decoration: const InputDecoration(
+                        labelText: 'Invoice Amount',
                         border: OutlineInputBorder(),
                       ),
                       validator: (val) =>

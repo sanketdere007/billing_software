@@ -24,6 +24,7 @@ class SupplierListItem {
   final DateTime? suppModifiedDate;
   final int suppCompId;
   final int suppBranchId;
+  final int suppLedgerId;
   
   final String? suppAreaName;
   final String? suppCityName;
@@ -57,6 +58,7 @@ class SupplierListItem {
     this.suppModifiedDate,
     required this.suppCompId,
     required this.suppBranchId,
+    this.suppLedgerId = 0,
     this.suppAreaName,
     this.suppCityName,
     this.suppStateName,
@@ -95,6 +97,7 @@ class SupplierListItem {
           : null,
       suppCompId: json['supp_CompId'] ?? 0,
       suppBranchId: json['supp_BranchId'] ?? 0,
+      suppLedgerId: int.tryParse((json['Supp_LeadgerId'] ?? json['supp_LeadgerId'] ?? json['suppLeadgerId'] ?? json['Supp_LedgerId'] ?? json['supp_LedgerId'] ?? json['suppLedgerId'] ?? '0').toString()) ?? 0,
       suppAreaName: json['supp_AreaName'],
       suppCityName: json['supp_CityName'],
       suppStateName: json['supp_StateName'],
@@ -130,6 +133,7 @@ class SupplierListItem {
       'supp_ModifiedDate': suppModifiedDate?.toIso8601String(),
       'supp_CompId': suppCompId,
       'supp_BranchId': suppBranchId,
+      'Supp_LeadgerId': suppLedgerId,
       'supp_AreaName': suppAreaName,
       'supp_CityName': suppCityName,
       'supp_StateName': suppStateName,

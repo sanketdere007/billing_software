@@ -114,7 +114,7 @@ class SupportInfoFooter extends StatelessWidget {
 
           const SizedBox(height: 4),
           Text(
-            '© 2026 SankySoft Technologies. All Rights Reserved.',
+            '© 2026 SankySoft Solutions. All Rights Reserved.',
             style: TextStyle(color: textColor, fontSize: 12),
             textAlign: TextAlign.center,
           ),

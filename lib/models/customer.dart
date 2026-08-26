@@ -31,6 +31,7 @@ class CustomerListItem {
   final String? custCreatedDate;
   final int custModifiedBy;
   final String? custModifiedDate;
+  final int custLedgerId;
 
   CustomerListItem({
     required this.custId,
@@ -61,6 +62,7 @@ class CustomerListItem {
     this.custCreatedDate,
     this.custModifiedBy = 0,
     this.custModifiedDate,
+    this.custLedgerId = 0,
   })  : custArea = custArea.isNotEmpty ? custArea : custAreaName,
         custAreaName = custAreaName.isNotEmpty ? custAreaName : custArea,
         custCity = custCity.isNotEmpty ? custCity : custCityName,
@@ -433,6 +435,16 @@ class CustomerListItem {
       parsedCustModifiedDate = json['custModifiedDate'].toString();
     }
 
+    // Parse Ledger ID
+    int parsedCustLedgerId = 0;
+    if (json['Cust_LedgerId'] != null) {
+      parsedCustLedgerId = int.tryParse(json['Cust_LedgerId'].toString()) ?? 0;
+    } else if (json['cust_LedgerId'] != null) {
+      parsedCustLedgerId = int.tryParse(json['cust_LedgerId'].toString()) ?? 0;
+    } else if (json['custLedgerId'] != null) {
+      parsedCustLedgerId = int.tryParse(json['custLedgerId'].toString()) ?? 0;
+    }
+
     return CustomerListItem(
       custId: parsedCustId,
       custCode: parsedCustCode,
@@ -462,6 +474,7 @@ class CustomerListItem {
       custCreatedDate: parsedCustCreatedDate,
       custModifiedBy: parsedCustModifiedBy,
       custModifiedDate: parsedCustModifiedDate,
+      custLedgerId: parsedCustLedgerId,
     );
   }
 
@@ -498,6 +511,7 @@ class CustomerListItem {
       if (custCreatedDate != null) 'cust_CreatedDate': custCreatedDate,
       'cust_ModifiedBy': custModifiedBy,
       if (custModifiedDate != null) 'cust_ModifiedDate': custModifiedDate,
+      'Cust_LedgerId': custLedgerId,
     };
   }
 
@@ -530,6 +544,7 @@ class CustomerListItem {
     String? custCreatedDate,
     int? custModifiedBy,
     String? custModifiedDate,
+    int? custLedgerId,
   }) {
     final effectiveArea = custAreaName ?? custArea ?? this.custAreaName;
     final effectiveCity = custCityName ?? custCity ?? this.custCityName;
@@ -563,6 +578,7 @@ class CustomerListItem {
       custCreatedDate: custCreatedDate ?? this.custCreatedDate,
       custModifiedBy: custModifiedBy ?? this.custModifiedBy,
       custModifiedDate: custModifiedDate ?? this.custModifiedDate,
+      custLedgerId: custLedgerId ?? this.custLedgerId,
     );
   }
 

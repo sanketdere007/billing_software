@@ -72,7 +72,15 @@ class ApiConstants {
   static const String getAllBranchesEndpoint = '/api/Branch/GetAllBranches';
 
   // Purchase Entry Endpoints
-  static const String insertOrUpdatePurchaseEntryEndpoint = '/api/PurchaseEntry/InsertOrUpdatePurchaseEntry';
+  static const String insertOrUpdatePurchaseEntryEndpoint =
+      '/api/PurchaseEntry/InsertOrUpdatePurchaseEntry';
+
+  // Payment Endpoints
+  static const String insertOrUpdatePaymentEndpoint =
+      '/api/Payment/InsertOrUpdatePayment';
+
+  // Email Endpoints
+  static const String sendEmailEndpoint = '/api/Email/send';
 
   // Default JSON Headers
   static const Map<String, String> defaultHeaders = {

@@ -665,7 +665,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                     focusNode: _searchFocusNode,
                     onChanged: _onSearchChanged,
                     decoration: InputDecoration(
-                      hintText: 'Search by Name, Mobile, Email, Code, GST...',
+                      hintText: 'Search by Name, Mobile, Email, GST...',
                       prefixIcon: const Icon(Icons.search_rounded, size: 20),
                       suffixIcon: _searchController.text.isNotEmpty
                           ? IconButton(
@@ -1110,7 +1110,6 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
             child: Row(
               children: [
                 _buildHeaderCell('#', width: 50, alignment: Alignment.center),
-                _buildHeaderCell('Code', width: 100),
                 _buildHeaderCell('Customer Name', flex: 3),
                 _buildHeaderCell('Mobile No', width: 140),
                 _buildHeaderCell('City', flex: 2),
@@ -1192,35 +1191,6 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: theme.hintColor,
                                 fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        // Code
-                        SizedBox(
-                          width: 100,
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 3,
-                              ),
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.surfaceVariant
-                                    .withOpacity(0.5),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                customer.custCode.isNotEmpty
-                                    ? customer.custCode
-                                    : 'C-${customer.custId}',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: 'monospace',
-                                ),
                               ),
                             ),
                           ),
@@ -1521,26 +1491,6 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                         customer.custMobileNo,
                         style: const TextStyle(fontWeight: FontWeight.w500),
                       ),
-                      if (customer.custCode.isNotEmpty) ...[
-                        const Spacer(),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            customer.custCode,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontFamily: 'monospace',
-                            ),
-                          ),
-                        ),
-                      ],
                     ],
                   ),
                   if (customer.custEmail.isNotEmpty) ...[
@@ -1762,14 +1712,6 @@ class _CustomerDetailsDialogState extends State<_CustomerDetailsDialog> {
                       Icons.contact_page_outlined,
                     ),
                     const SizedBox(height: 10),
-                    _buildDetailTile(
-                      'Customer Code',
-                      _customer.custCode.isNotEmpty
-                          ? _customer.custCode
-                          : 'C-${_customer.custId}',
-                      onCopy: () =>
-                          _copyToClipboard('Customer Code', _customer.custCode),
-                    ),
                     _buildDetailTile(
                       'Mobile Number',
                       _customer.custMobileNo,
