@@ -19,7 +19,7 @@ class _AddPurchaseReturnScreenState extends State<AddPurchaseReturnScreen> {
   final _formKey = GlobalKey<FormState>();
   final _returnNoController = TextEditingController(text: 'PRET-AUTO-001');
   final _invoiceNoController = TextEditingController(text: 'PINV-2023-001');
-  DateTime _selectedDate = DateTime.now();
+  DateTime _selectedDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
   int? _selectedSupplier;
   final DateFormat _dateFormat = DateFormat('dd/MM/yyyy');
 

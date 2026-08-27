@@ -88,8 +88,8 @@ class _PaymentMasterScreenState extends State<PaymentMasterScreen> {
   final FocusNode _otherRemarkNode = FocusNode();
   final FocusNode _remarksNode = FocusNode();
 
-  DateTime _paymentDate = DateTime.now();
-  DateTime _invoiceDate = DateTime.now();
+  DateTime _paymentDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+  DateTime _invoiceDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
   DateTime? _chequeDate;
   DateTime? _bankDate;
   DateTime? _otherDate;
@@ -319,8 +319,8 @@ class _PaymentMasterScreenState extends State<PaymentMasterScreen> {
     _otherReferenceController.clear();
     _otherRemarksController.clear();
     setState(() {
-      _paymentDate = DateTime.now();
-      _invoiceDate = DateTime.now();
+      _paymentDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+      _invoiceDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
       _chequeDate = null;
       _bankDate = null;
       _otherDate = null;

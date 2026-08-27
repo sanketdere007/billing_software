@@ -32,7 +32,11 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
   final _invoiceNoController = TextEditingController();
   final _invoiceAmountController = TextEditingController();
   final _billDiscountController = TextEditingController(text: '0');
-  DateTime _selectedDate = DateTime.now();
+  DateTime _selectedDate = DateTime(
+    DateTime.now().year,
+    DateTime.now().month,
+    DateTime.now().day,
+  );
   int? _selectedSupplier;
   final DateFormat _dateFormat = DateFormat('yyyy-MM-dd');
 
@@ -288,7 +292,9 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
 
       int ledgerId = 0;
       try {
-        final supplier = _supplierService.suppliers.firstWhere((s) => s.suppId == _selectedSupplier);
+        final supplier = _supplierService.suppliers.firstWhere(
+          (s) => s.suppId == _selectedSupplier,
+        );
         ledgerId = supplier.suppLedgerId;
       } catch (e) {
         // ignore
@@ -382,7 +388,11 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
       _products.clear();
       _addNewEmptyRow();
 
-      _selectedDate = DateTime.now();
+      _selectedDate = DateTime(
+        DateTime.now().year,
+        DateTime.now().month,
+        DateTime.now().day,
+      );
       _calculateTotals();
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1104,7 +1114,8 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                       ),
                       validator: (val) =>
                           val == null || val.isEmpty ? 'Required' : null,
-                      onFieldSubmitted: (_) => _invoiceAmountNode.requestFocus(),
+                      onFieldSubmitted: (_) =>
+                          _invoiceAmountNode.requestFocus(),
                     ),
                   ),
                   SizedBox(
@@ -1260,7 +1271,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
           ),
           // Footer totals
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surface,
               boxShadow: [
@@ -1316,17 +1327,16 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(width: 24),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                Row(
                   children: [
                     Text(
                       'Final Payable',
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 24,
                       ),
                     ),
+                    SizedBox(width: 10),
                     Text(
                       '₹${_finalPayable.toStringAsFixed(2)}',
                       style: Theme.of(context).textTheme.headlineMedium
@@ -1335,6 +1345,28 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                             color: Theme.of(context).colorScheme.primary,
                           ),
                     ),
+                    SizedBox(width: 10),
+                  ],
+                ),
+                // const SizedBox(width: 24),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    // Text(
+                    //   'Final Payable',
+                    //   style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    //     color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    //   ),
+                    // ),
+                    // Text(
+                    //   '₹${_finalPayable.toStringAsFixed(2)}',
+                    //   style: Theme.of(context).textTheme.headlineMedium
+                    //       ?.copyWith(
+                    //         fontWeight: FontWeight.bold,
+                    //         color: Theme.of(context).colorScheme.primary,
+                    //       ),
+                    // ),
                     const SizedBox(height: 12),
                     SizedBox(
                       width: 200,

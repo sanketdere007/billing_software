@@ -23,7 +23,7 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
   final TextEditingController _otherReferenceController = TextEditingController();
   final TextEditingController _otherRemarksController = TextEditingController();
 
-  DateTime _receiptDate = DateTime.now();
+  DateTime _receiptDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
   DateTime? _referenceDate;
   DateTime? _otherDate;
 

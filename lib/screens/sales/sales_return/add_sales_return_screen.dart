@@ -14,7 +14,7 @@ class AddSalesReturnScreen extends StatefulWidget {
 class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
   final _formKey = GlobalKey<FormState>();
   final _returnNoController = TextEditingController(text: 'RET-AUTO-001');
-  DateTime _selectedDate = DateTime.now();
+  DateTime _selectedDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
   String? _selectedInvoice;
   final DateFormat _dateFormat = DateFormat('dd/MM/yyyy');
 

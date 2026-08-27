@@ -18,7 +18,7 @@ class AddPurchaseOrderScreen extends StatefulWidget {
 class _AddPurchaseOrderScreenState extends State<AddPurchaseOrderScreen> {
   final _formKey = GlobalKey<FormState>();
   final _orderNoController = TextEditingController(text: 'PO-AUTO-001');
-  DateTime _selectedDate = DateTime.now();
+  DateTime _selectedDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
   int? _selectedSupplier;
   final DateFormat _dateFormat = DateFormat('dd/MM/yyyy');
 
