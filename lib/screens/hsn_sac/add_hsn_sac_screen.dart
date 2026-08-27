@@ -4,6 +4,8 @@ import '../../services/hsn_sac_service.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/app_message_dialog.dart';
 
+import '../../widgets/save_clear_shortcuts.dart';
+
 class AddHsnSacScreen extends StatefulWidget {
   const AddHsnSacScreen({super.key});
 
@@ -58,7 +60,21 @@ class _AddHsnSacScreenState extends State<AddHsnSacScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
+    return SaveClearShortcuts(
+      onSave: () {
+        if (!_isLoading) {
+          _saveHsnSac(saveAndNew: false);
+        }
+      },
+      onClear: () {
+        if (!_isLoading) {
+          _formKey.currentState?.reset();
+          setState(() {
+            _isActive = true;
+          });
+        }
+      },
+      child: LayoutBuilder(
       builder: (context, constraints) {
         final bool isDesktop = constraints.maxWidth >= 800;
 
@@ -160,6 +176,6 @@ class _AddHsnSacScreenState extends State<AddHsnSacScreen> {
           );
         }
       },
-    );
+    ));
   }
 }

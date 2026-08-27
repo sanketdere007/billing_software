@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../widgets/app_drawer.dart';
 import '../../../widgets/app_message_dialog.dart';
+import '../../../widgets/save_clear_shortcuts.dart';
 import 'sales_return_list_screen.dart';
 
 class AddSalesReturnScreen extends StatefulWidget {
@@ -135,8 +136,9 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
       ),
     );
 
+    Widget scaffoldWidget;
     if (isDesktop) {
-      return Scaffold(
+      scaffoldWidget = Scaffold(
         body: Row(
           children: [
             const SizedBox(
@@ -157,7 +159,7 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
         ),
       );
     } else {
-      return Scaffold(
+      scaffoldWidget = Scaffold(
         appBar: AppBar(
           title: const Text('Sales Return'),
           actions: _buildAppBarActions(isMobile: true),
@@ -166,6 +168,27 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
         body: content,
       );
     }
+
+    return SaveClearShortcuts(
+      onSave: () async {
+        if (_formKey.currentState!.validate()) {
+          await showSuccessDialog(context, 'Sales Return Saved successfully');
+        }
+      },
+      onClear: () {
+        _formKey.currentState?.reset();
+        _returnNoController.clear();
+        setState(() {
+          _selectedInvoice = null;
+          _selectedRefundMode = null;
+          _products.clear();
+          _returnAmount = 0.0;
+          _taxAdjustment = 0.0;
+          _grandRefund = 0.0;
+        });
+      },
+      child: scaffoldWidget,
+    );
   }
 
   List<Widget> _buildAppBarActions({bool isMobile = false}) {

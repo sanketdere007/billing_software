@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../../widgets/app_drawer.dart';
 import '../../../widgets/app_message_dialog.dart';
 import 'sales_order_list_screen.dart';
+import '../../../widgets/save_clear_shortcuts.dart';
 
 class AddSalesOrderScreen extends StatefulWidget {
   const AddSalesOrderScreen({super.key});
@@ -79,6 +80,12 @@ class _AddSalesOrderScreenState extends State<AddSalesOrderScreen> {
     );
   }
 
+  Future<void> _saveOrder() async {
+    if (_formKey.currentState!.validate()) {
+      await showSuccessDialog(context, 'Order Saved successfully');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -99,24 +106,37 @@ class _AddSalesOrderScreenState extends State<AddSalesOrderScreen> {
           : _buildTotalsCard(),
     );
 
-    Widget content = Form(
-      key: _formKey,
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-            child: _buildBasicDetailsCard(isMobile),
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: _buildProductsCard(isMobile),
+    Widget content = SaveClearShortcuts(
+      onSave: _saveOrder,
+      onClear: () {
+        _formKey.currentState?.reset();
+        _orderNoController.text = 'ORD-AUTO-001';
+        setState(() {
+          _selectedCustomer = null;
+          _selectedDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+          _products.clear();
+          _calculateTotals();
+        });
+      },
+      child: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              child: _buildBasicDetailsCard(isMobile),
             ),
-          ),
-          const SizedBox(height: 16),
-          stickyBottomBar,
-        ],
+            const SizedBox(height: 16),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: _buildProductsCard(isMobile),
+              ),
+            ),
+            const SizedBox(height: 16),
+            stickyBottomBar,
+          ],
+        ),
       ),
     );
 
@@ -162,11 +182,7 @@ class _AddSalesOrderScreenState extends State<AddSalesOrderScreen> {
           tooltip: 'View Orders',
         ),
         IconButton(
-          onPressed: () async {
-            if (_formKey.currentState!.validate()) {
-              await showSuccessDialog(context, 'Order Saved successfully');
-            }
-          },
+          onPressed: _saveOrder,
           icon: const Icon(Icons.save),
           tooltip: 'Save',
         ),
@@ -180,11 +196,7 @@ class _AddSalesOrderScreenState extends State<AddSalesOrderScreen> {
       ),
       const SizedBox(width: 8),
       FilledButton.icon(
-        onPressed: () async {
-          if (_formKey.currentState!.validate()) {
-            await showSuccessDialog(context, 'Order Saved successfully');
-          }
-        },
+        onPressed: _saveOrder,
         icon: const Icon(Icons.save),
         label: const Text('Save'),
       ),

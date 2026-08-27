@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/direct_back_scope.dart';
+import '../../widgets/save_clear_shortcuts.dart';
 
 class ReceiptMasterScreen extends StatefulWidget {
   const ReceiptMasterScreen({super.key});
@@ -20,10 +21,15 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
   final TextEditingController _remarksController = TextEditingController();
 
   final TextEditingController _otherTypeController = TextEditingController();
-  final TextEditingController _otherReferenceController = TextEditingController();
+  final TextEditingController _otherReferenceController =
+      TextEditingController();
   final TextEditingController _otherRemarksController = TextEditingController();
 
-  DateTime _receiptDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+  DateTime _receiptDate = DateTime(
+    DateTime.now().year,
+    DateTime.now().month,
+    DateTime.now().day,
+  );
   DateTime? _referenceDate;
   DateTime? _otherDate;
 
@@ -42,7 +48,7 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
     'UPI',
     'NEFT',
     'RTGS',
-    'Other'
+    'Other',
   ];
 
   @override
@@ -57,7 +63,11 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
     super.dispose();
   }
 
-  Future<void> _selectDate(BuildContext context, DateTime initialDate, ValueChanged<DateTime> onDateSelected) async {
+  Future<void> _selectDate(
+    BuildContext context,
+    DateTime initialDate,
+    ValueChanged<DateTime> onDateSelected,
+  ) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: initialDate,
@@ -106,60 +116,76 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return DirectBackScope(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final isDesktop = constraints.maxWidth >= 800;
-          final formCard = _buildFormCard(context, isDesktop);
+    return SaveClearShortcuts(
+      onSave: () {
+        if (!_isLoading) _saveReceipt();
+      },
+      onClear: () {
+        _formKey.currentState?.reset();
+        setState(() {
+          _selectedReceiptMode = 'Cash';
+        });
+      },
+      child: DirectBackScope(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isDesktop = constraints.maxWidth >= 800;
+            final formCard = _buildFormCard(context, isDesktop);
 
-          if (isDesktop) {
-            return Scaffold(
-              body: Row(
-                children: [
-                  const SizedBox(
-                    width: 250,
-                    child: AppDrawer(isPermanent: true),
-                  ),
-                  const VerticalDivider(width: 1, thickness: 1),
-                  Expanded(
-                    child: Scaffold(
-                      appBar: AppBar(
-                        title: const Text('Receipt Entry'),
-                        leading: IconButton(
-                          icon: const Icon(Icons.arrow_back),
-                          tooltip: 'Back',
-                          onPressed: () => Navigator.of(context).pop(),
+            if (isDesktop) {
+              return Scaffold(
+                body: Row(
+                  children: [
+                    const SizedBox(
+                      width: 250,
+                      child: AppDrawer(isPermanent: true),
+                    ),
+                    const VerticalDivider(width: 1, thickness: 1),
+                    Expanded(
+                      child: Scaffold(
+                        appBar: AppBar(
+                          title: const Text('Receipt Entry'),
+                          leading: IconButton(
+                            icon: const Icon(Icons.arrow_back),
+                            tooltip: 'Back',
+                            onPressed: () => Navigator.of(context).pop(),
+                          ),
                         ),
-                      ),
-                      body: Container(
-                        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.15),
-                        child: Center(
-                          child: SingleChildScrollView(
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 800),
-                              child: formCard,
+                        body: Container(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surfaceVariant.withOpacity(0.15),
+                          child: Center(
+                            child: SingleChildScrollView(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 32,
+                              ),
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 800,
+                                ),
+                                child: formCard,
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+              );
+            }
+
+            return Scaffold(
+              appBar: AppBar(title: const Text('Receipt Entry')),
+              body: SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: formCard,
               ),
             );
-          }
-
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('Receipt Entry'),
-            ),
-            body: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: formCard,
-            ),
-          );
-        },
+          },
+        ),
       ),
     );
   }
@@ -286,7 +312,9 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
                 const SizedBox(height: 24),
                 Text(
                   'Other Details',
-                  style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 if (isDesktop) ...[
@@ -315,7 +343,7 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
                   _buildOtherDateField(theme),
                   const SizedBox(height: 16),
                   _buildOtherRemarksField(theme),
-                ]
+                ],
               ],
 
               const SizedBox(height: 28),
@@ -324,24 +352,38 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     OutlinedButton(
-                      onPressed: _isLoading ? null : () {
-                        _formKey.currentState?.reset();
-                        setState(() {
-                          _selectedReceiptMode = 'Cash';
-                        });
-                      },
+                      onPressed: _isLoading
+                          ? null
+                          : () {
+                              _formKey.currentState?.reset();
+                              setState(() {
+                                _selectedReceiptMode = 'Cash';
+                              });
+                            },
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 14,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                       child: const Text('Clear'),
                     ),
                     const SizedBox(width: 12),
                     OutlinedButton(
-                      onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+                      onPressed: _isLoading
+                          ? null
+                          : () => Navigator.of(context).pop(),
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 14,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                       child: const Text('Cancel'),
                     ),
@@ -349,14 +391,22 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
                     FilledButton(
                       onPressed: _isLoading ? null : _saveReceipt,
                       style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 28,
+                          vertical: 14,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                       child: _isLoading
                           ? const SizedBox(
                               width: 18,
                               height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             )
                           : const Text('Save Receipt'),
                     ),
@@ -370,36 +420,49 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
                       onPressed: _isLoading ? null : _saveReceipt,
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                       child: _isLoading
                           ? const SizedBox(
                               width: 18,
                               height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             )
                           : const Text('Save Receipt'),
                     ),
                     const SizedBox(height: 10),
                     OutlinedButton(
-                      onPressed: _isLoading ? null : () {
-                        _formKey.currentState?.reset();
-                        setState(() {
-                          _selectedReceiptMode = 'Cash';
-                        });
-                      },
+                      onPressed: _isLoading
+                          ? null
+                          : () {
+                              _formKey.currentState?.reset();
+                              setState(() {
+                                _selectedReceiptMode = 'Cash';
+                              });
+                            },
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                       child: const Text('Clear'),
                     ),
                     const SizedBox(height: 10),
                     OutlinedButton(
-                      onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+                      onPressed: _isLoading
+                          ? null
+                          : () => Navigator.of(context).pop(),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                       child: const Text('Cancel'),
                     ),
@@ -414,11 +477,16 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
 
   Widget _buildReceiptDateField(ThemeData theme) {
     return InkWell(
-      onTap: () => _selectDate(context, _receiptDate, (date) => setState(() => _receiptDate = date)),
+      onTap: () => _selectDate(
+        context,
+        _receiptDate,
+        (date) => setState(() => _receiptDate = date),
+      ),
       child: InputDecorator(
-        decoration: _inputDecoration('Receipt Date *', theme).copyWith(
-          prefixIcon: const Icon(Icons.calendar_today, size: 20),
-        ),
+        decoration: _inputDecoration(
+          'Receipt Date *',
+          theme,
+        ).copyWith(prefixIcon: const Icon(Icons.calendar_today, size: 20)),
         child: Text(_dateFormat.format(_receiptDate)),
       ),
     );
@@ -439,10 +507,12 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
 
   Widget _buildPartyField(ThemeData theme) {
     return TextFormField(
-      decoration: _inputDecoration('Customer / Party *', theme).copyWith(
-        prefixIcon: const Icon(Icons.person, size: 20),
-      ),
-      validator: (value) => value == null || value.isEmpty ? 'Required field' : null,
+      decoration: _inputDecoration(
+        'Customer / Party *',
+        theme,
+      ).copyWith(prefixIcon: const Icon(Icons.person, size: 20)),
+      validator: (value) =>
+          value == null || value.isEmpty ? 'Required field' : null,
       onChanged: (val) => _selectedParty = val,
     );
   }
@@ -451,13 +521,17 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
     return TextFormField(
       controller: _amountController,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))],
-      decoration: _inputDecoration('Amount *', theme).copyWith(
-        prefixIcon: const Icon(Icons.currency_rupee, size: 20),
-      ),
+      inputFormatters: [
+        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+      ],
+      decoration: _inputDecoration(
+        'Amount *',
+        theme,
+      ).copyWith(prefixIcon: const Icon(Icons.currency_rupee, size: 20)),
       validator: (value) {
         if (value == null || value.isEmpty) return 'Required';
-        if (double.tryParse(value) == null || double.parse(value) <= 0) return 'Invalid amount';
+        if (double.tryParse(value) == null || double.parse(value) <= 0)
+          return 'Invalid amount';
         return null;
       },
     );
@@ -467,7 +541,9 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
     return DropdownButtonFormField<String>(
       value: _selectedReceiptMode,
       decoration: _inputDecoration('Receipt Mode *', theme),
-      items: _receiptModes.map((mode) => DropdownMenuItem(value: mode, child: Text(mode))).toList(),
+      items: _receiptModes
+          .map((mode) => DropdownMenuItem(value: mode, child: Text(mode)))
+          .toList(),
       onChanged: (val) {
         setState(() {
           _selectedReceiptMode = val;
@@ -494,15 +570,20 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
   Widget _buildReferenceDateField(ThemeData theme) {
     return InkWell(
       onTap: () => _selectDate(
-        context, 
-        _referenceDate ?? DateTime.now(), 
-        (date) => setState(() => _referenceDate = date)
+        context,
+        _referenceDate ?? DateTime.now(),
+        (date) => setState(() => _referenceDate = date),
       ),
       child: InputDecorator(
-        decoration: _inputDecoration('Reference Date', theme).copyWith(
-          prefixIcon: const Icon(Icons.calendar_today, size: 20),
+        decoration: _inputDecoration(
+          'Reference Date',
+          theme,
+        ).copyWith(prefixIcon: const Icon(Icons.calendar_today, size: 20)),
+        child: Text(
+          _referenceDate != null
+              ? _dateFormat.format(_referenceDate!)
+              : 'Select Date',
         ),
-        child: Text(_referenceDate != null ? _dateFormat.format(_referenceDate!) : 'Select Date'),
       ),
     );
   }
@@ -532,15 +613,18 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
   Widget _buildOtherDateField(ThemeData theme) {
     return InkWell(
       onTap: () => _selectDate(
-        context, 
-        _otherDate ?? DateTime.now(), 
-        (date) => setState(() => _otherDate = date)
+        context,
+        _otherDate ?? DateTime.now(),
+        (date) => setState(() => _otherDate = date),
       ),
       child: InputDecorator(
-        decoration: _inputDecoration('Other Date', theme).copyWith(
-          prefixIcon: const Icon(Icons.calendar_today, size: 20),
+        decoration: _inputDecoration(
+          'Other Date',
+          theme,
+        ).copyWith(prefixIcon: const Icon(Icons.calendar_today, size: 20)),
+        child: Text(
+          _otherDate != null ? _dateFormat.format(_otherDate!) : 'Select Date',
         ),
-        child: Text(_otherDate != null ? _dateFormat.format(_otherDate!) : 'Select Date'),
       ),
     );
   }
@@ -555,9 +639,7 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
   InputDecoration _inputDecoration(String label, ThemeData theme) {
     return InputDecoration(
       labelText: label,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
       filled: true,
       fillColor: theme.colorScheme.surface,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),

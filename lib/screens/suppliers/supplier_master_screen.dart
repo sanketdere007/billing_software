@@ -15,6 +15,7 @@ import '../../widgets/app_message_dialog.dart';
 import '../../widgets/city_dropdown.dart';
 import '../../widgets/area_dropdown.dart';
 import '../../widgets/direct_back_scope.dart';
+import '../../widgets/save_clear_shortcuts.dart';
 import '../../widgets/state_dropdown.dart';
 
 /// Supplier Master / Add / Edit screen
@@ -381,8 +382,42 @@ class _SupplierMasterScreenState extends State<SupplierMasterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return DirectBackScope(
-      child: LayoutBuilder(
+    return SaveClearShortcuts(
+      onSave: () {
+        if (!_isLoading) {
+          _saveSupplier(saveAndNew: false);
+        }
+      },
+      onClear: () {
+        if (!isEditing) {
+          _formKey.currentState?.reset();
+          _nameController.clear();
+          _companyController.clear();
+          _mobileController.clear();
+          _altMobileController.clear();
+          _emailController.clear();
+          _gstController.clear();
+          _panController.clear();
+          _creditLimitController.clear();
+          _creditDaysController.clear();
+          _addressController.clear();
+          _areaController.clear();
+          _pincodeController.clear();
+          _countryController.text = 'India';
+          setState(() {
+            _selectedStateId = null;
+            _selectedStateName = '';
+            _selectedCityId = null;
+            _selectedCityName = '';
+            _selectedAreaId = null;
+            _selectedAreaName = '';
+            _isActive = true;
+          });
+          _nameFocusNode.requestFocus();
+        }
+      },
+      child: DirectBackScope(
+        child: LayoutBuilder(
         builder: (context, constraints) {
           final isDesktop = constraints.maxWidth >= 800;
 
@@ -464,7 +499,7 @@ class _SupplierMasterScreenState extends State<SupplierMasterScreen> {
           );
         },
       ),
-    );
+    ));
   }
 
   Widget _buildFormCard(BuildContext context, bool isDesktop) {

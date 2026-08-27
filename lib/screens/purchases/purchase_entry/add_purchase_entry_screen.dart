@@ -12,6 +12,7 @@ import '../../../widgets/app_message_dialog.dart';
 import '../../../widgets/supplier_dropdown.dart';
 import 'purchase_entry_list_screen.dart';
 import 'product_selection_dialog.dart';
+import '../../../widgets/save_clear_shortcuts.dart';
 
 class AddPurchaseEntryScreen extends StatefulWidget {
   const AddPurchaseEntryScreen({super.key});
@@ -606,15 +607,20 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
       );
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final double tableWidth = constraints.maxWidth > totalWidth
-            ? constraints.maxWidth
-            : totalWidth;
-        final double extraWidth = constraints.maxWidth > totalWidth
-            ? constraints.maxWidth - totalWidth
-            : 0.0;
-        final double effectiveProductNameWidth = colProductName + extraWidth;
+    return SaveClearShortcuts(
+      onSave: () {
+        if (!_isLoading) _saveEntry();
+      },
+      onClear: _resetForm,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final double tableWidth = constraints.maxWidth > totalWidth
+              ? constraints.maxWidth
+              : totalWidth;
+          final double extraWidth = constraints.maxWidth > totalWidth
+              ? constraints.maxWidth - totalWidth
+              : 0.0;
+          final double effectiveProductNameWidth = colProductName + extraWidth;
 
         return Container(
           child: SingleChildScrollView(
@@ -1056,7 +1062,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
           ),
         );
       },
-    );
+    ));
   }
 
   InputDecoration _gridInputDecoration(ThemeData theme) {

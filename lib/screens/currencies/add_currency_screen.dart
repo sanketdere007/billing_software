@@ -5,6 +5,8 @@ import '../../services/currency_service.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/app_message_dialog.dart';
 
+import '../../widgets/save_clear_shortcuts.dart';
+
 class AddCurrencyScreen extends StatefulWidget {
   const AddCurrencyScreen({super.key});
 
@@ -77,7 +79,24 @@ class _AddCurrencyScreenState extends State<AddCurrencyScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
+    return SaveClearShortcuts(
+      onSave: () {
+        if (!_isLoading) {
+          _saveCurrency(saveAndNew: false);
+        }
+      },
+      onClear: () {
+        if (!_isLoading) {
+          _formKey.currentState?.reset();
+          setState(() {
+            _isDefault = false;
+            _isActive = true;
+            _decimalPlaces = 2;
+            _exchangeRate = 1.0;
+          });
+        }
+      },
+      child: LayoutBuilder(
       builder: (context, constraints) {
         final bool isDesktop = constraints.maxWidth >= 800;
 
@@ -170,7 +189,7 @@ class _AddCurrencyScreenState extends State<AddCurrencyScreen> {
           );
         }
       },
-    );
+    ));
   }
 
   Widget _buildNameField() {

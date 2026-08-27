@@ -4,6 +4,7 @@ import '../../models/printer_settings.dart';
 import '../../services/printer_settings_service.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/app_message_dialog.dart';
+import '../../widgets/save_clear_shortcuts.dart';
 
 class AddPrinterSettingsScreen extends StatefulWidget {
   const AddPrinterSettingsScreen({super.key});
@@ -84,9 +85,23 @@ class _AddPrinterSettingsScreenState extends State<AddPrinterSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final bool isDesktop = constraints.maxWidth >= 800;
+    return SaveClearShortcuts(
+      onSave: () {
+        if (!_isLoading) _saveSettings(saveAndNew: false);
+      },
+      onClear: () {
+        _formKey.currentState?.reset();
+        setState(() {
+          _type = 'Thermal';
+          _autoPrint = false;
+          _isDefault = false;
+          _isActive = true;
+          _numberOfCopies = 1;
+        });
+      },
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final bool isDesktop = constraints.maxWidth >= 800;
 
         Widget content = _isLoading
             ? const Center(child: CircularProgressIndicator())
@@ -179,7 +194,7 @@ class _AddPrinterSettingsScreenState extends State<AddPrinterSettingsScreen> {
           );
         }
       },
-    );
+    ));
   }
 
   Widget _buildNameField() {

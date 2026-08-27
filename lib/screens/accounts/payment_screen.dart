@@ -8,6 +8,7 @@ import '../../services/payment_service.dart';
 import '../../services/session_service.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/direct_back_scope.dart';
+import '../../widgets/save_clear_shortcuts.dart';
 import '../../widgets/supplier_dropdown.dart';
 
 class PaymentMasterScreen extends StatefulWidget {
@@ -485,9 +486,14 @@ class _PaymentMasterScreenState extends State<PaymentMasterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return DirectBackScope(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
+    return SaveClearShortcuts(
+      onSave: () {
+        if (!_isLoading) _savePayment();
+      },
+      onClear: _clearForm,
+      child: DirectBackScope(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
           final isDesktop = constraints.maxWidth >= 800;
           final formCard = _buildFormCard(context, isDesktop);
 
@@ -543,7 +549,7 @@ class _PaymentMasterScreenState extends State<PaymentMasterScreen> {
           );
         },
       ),
-    );
+    ));
   }
 
   Widget _buildFormCard(BuildContext context, bool isDesktop) {

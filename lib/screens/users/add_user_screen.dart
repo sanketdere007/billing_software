@@ -4,6 +4,7 @@ import '../../models/user.dart';
 import '../../services/user_service.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/app_message_dialog.dart';
+import '../../widgets/save_clear_shortcuts.dart';
 
 class AddUserScreen extends StatefulWidget {
   const AddUserScreen({super.key});
@@ -79,142 +80,156 @@ class _AddUserScreenState extends State<AddUserScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final bool isDesktop = constraints.maxWidth >= 800;
-
-        Widget content = _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : SingleChildScrollView(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Center(
-                    child: Container(
-                      constraints: const BoxConstraints(maxWidth: 800),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'User Information',
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                            ),
-                            const SizedBox(height: 16),
-                            if (constraints.maxWidth >= 600) ...[
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(child: _buildFullNameField()),
-                                  const SizedBox(width: 16),
-                                  Expanded(child: _buildUsernameField()),
-                                ],
+    return SaveClearShortcuts(
+      onSave: () {
+        if (!_isLoading) {
+          _saveUser(saveAndNew: false);
+        }
+      },
+      onClear: () {
+        _formKey.currentState?.reset();
+        setState(() {
+          _isActive = true;
+          _password = '';
+        });
+      },
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final bool isDesktop = constraints.maxWidth >= 800;
+  
+          Widget content = _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Center(
+                      child: Container(
+                        constraints: const BoxConstraints(maxWidth: 800),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'User Information',
+                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
                               ),
                               const SizedBox(height: 16),
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(child: _buildEmailField()),
-                                  const SizedBox(width: 16),
-                                  Expanded(child: _buildMobileField()),
-                                ],
+                              if (constraints.maxWidth >= 600) ...[
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(child: _buildFullNameField()),
+                                    const SizedBox(width: 16),
+                                    Expanded(child: _buildUsernameField()),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(child: _buildEmailField()),
+                                    const SizedBox(width: 16),
+                                    Expanded(child: _buildMobileField()),
+                                  ],
+                                ),
+                              ] else ...[
+                                _buildFullNameField(),
+                                const SizedBox(height: 16),
+                                _buildUsernameField(),
+                                const SizedBox(height: 16),
+                                _buildEmailField(),
+                                const SizedBox(height: 16),
+                                _buildMobileField(),
+                              ],
+                              const SizedBox(height: 24),
+                              Text(
+                                'Security',
+                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
                               ),
-                            ] else ...[
-                              _buildFullNameField(),
                               const SizedBox(height: 16),
-                              _buildUsernameField(),
+                              if (constraints.maxWidth >= 600) ...[
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(child: _buildPasswordField()),
+                                    const SizedBox(width: 16),
+                                    Expanded(child: _buildConfirmPasswordField()),
+                                  ],
+                                ),
+                              ] else ...[
+                                _buildPasswordField(),
+                                const SizedBox(height: 16),
+                                _buildConfirmPasswordField(),
+                              ],
+                              const SizedBox(height: 24),
+                              Text(
+                                'Assignment Details',
+                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                              ),
                               const SizedBox(height: 16),
-                              _buildEmailField(),
+                              if (constraints.maxWidth >= 600) ...[
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(child: _buildCompanyIdField()),
+                                    const SizedBox(width: 16),
+                                    Expanded(child: _buildBranchIdField()),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                _buildRoleIdField(),
+                              ] else ...[
+                                _buildCompanyIdField(),
+                                const SizedBox(height: 16),
+                                _buildBranchIdField(),
+                                const SizedBox(height: 16),
+                                _buildRoleIdField(),
+                              ],
                               const SizedBox(height: 16),
-                              _buildMobileField(),
+                              _buildStatusField(),
+                              const SizedBox(height: 32),
+                              _buildActionButtons(constraints.maxWidth >= 600),
+                              const SizedBox(height: 32),
                             ],
-                            const SizedBox(height: 24),
-                            Text(
-                              'Security',
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                            ),
-                            const SizedBox(height: 16),
-                            if (constraints.maxWidth >= 600) ...[
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(child: _buildPasswordField()),
-                                  const SizedBox(width: 16),
-                                  Expanded(child: _buildConfirmPasswordField()),
-                                ],
-                              ),
-                            ] else ...[
-                              _buildPasswordField(),
-                              const SizedBox(height: 16),
-                              _buildConfirmPasswordField(),
-                            ],
-                            const SizedBox(height: 24),
-                            Text(
-                              'Assignment Details',
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                            ),
-                            const SizedBox(height: 16),
-                            if (constraints.maxWidth >= 600) ...[
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(child: _buildCompanyIdField()),
-                                  const SizedBox(width: 16),
-                                  Expanded(child: _buildBranchIdField()),
-                                ],
-                              ),
-                              const SizedBox(height: 16),
-                              _buildRoleIdField(),
-                            ] else ...[
-                              _buildCompanyIdField(),
-                              const SizedBox(height: 16),
-                              _buildBranchIdField(),
-                              const SizedBox(height: 16),
-                              _buildRoleIdField(),
-                            ],
-                            const SizedBox(height: 16),
-                            _buildStatusField(),
-                            const SizedBox(height: 32),
-                            _buildActionButtons(constraints.maxWidth >= 600),
-                            const SizedBox(height: 32),
-                          ],
+                          ),
                         ),
                       ),
                     ),
+                  );
+  
+          if (isDesktop) {
+            return Scaffold(
+              body: Row(
+                children: [
+                  const SizedBox(
+                    width: 250,
+                    child: AppDrawer(isPermanent: true),
                   ),
-                );
-
-        if (isDesktop) {
-          return Scaffold(
-            body: Row(
-              children: [
-                const SizedBox(
-                  width: 250,
-                  child: AppDrawer(isPermanent: true),
-                ),
-                const VerticalDivider(width: 1, thickness: 1),
-                Expanded(
-                  child: Scaffold(
-                    appBar: AppBar(title: const Text('Add User')),
-                    body: content,
+                  const VerticalDivider(width: 1, thickness: 1),
+                  Expanded(
+                    child: Scaffold(
+                      appBar: AppBar(title: const Text('Add User')),
+                      body: content,
+                    ),
                   ),
-                ),
-              ],
-            ),
-          );
-        } else {
-          return Scaffold(
-            appBar: AppBar(title: const Text('Add User')),
-            drawer: const AppDrawer(isPermanent: false),
-            body: content,
-          );
-        }
-      },
+                ],
+              ),
+            );
+          } else {
+            return Scaffold(
+              appBar: AppBar(title: const Text('Add User')),
+              drawer: const AppDrawer(isPermanent: false),
+              body: content,
+            );
+          }
+        },
+      ),
     );
   }
 

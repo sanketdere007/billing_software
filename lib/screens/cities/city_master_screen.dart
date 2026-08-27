@@ -8,6 +8,7 @@ import '../../widgets/app_drawer.dart';
 import '../../widgets/app_message_dialog.dart';
 import '../../widgets/direct_back_scope.dart';
 import '../../widgets/state_dropdown.dart';
+import '../../widgets/save_clear_shortcuts.dart';
 
 /// Screen to Insert or Update City details via `/api/City/InsertorUpdateCity`
 class CityMasterScreen extends StatefulWidget {
@@ -156,9 +157,22 @@ class _CityMasterScreenState extends State<CityMasterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return DirectBackScope(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
+    return SaveClearShortcuts(
+      onSave: () {
+        if (!_isLoading) _saveCity(saveAndNew: false);
+      },
+      onClear: () {
+        _formKey.currentState?.reset();
+        _cityNameController.clear();
+        setState(() {
+          _isActive = true;
+          _isLoading = false;
+        });
+        _stateFocusNode.requestFocus();
+      },
+      child: DirectBackScope(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
           final isDesktop = constraints.maxWidth >= 800;
 
           final formCard = _buildFormCard(context, isDesktop);
@@ -213,7 +227,7 @@ class _CityMasterScreenState extends State<CityMasterScreen> {
           );
         },
       ),
-    );
+    ));
   }
 
   Widget _buildFormCard(BuildContext context, bool isDesktop) {

@@ -5,6 +5,8 @@ import '../../services/payment_mode_service.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/app_message_dialog.dart';
 
+import '../../widgets/save_clear_shortcuts.dart';
+
 class AddPaymentModeScreen extends StatefulWidget {
   const AddPaymentModeScreen({super.key});
 
@@ -73,7 +75,22 @@ class _AddPaymentModeScreenState extends State<AddPaymentModeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
+    return SaveClearShortcuts(
+      onSave: () {
+        if (!_isLoading) {
+          _savePaymentMode(saveAndNew: false);
+        }
+      },
+      onClear: () {
+        if (!_isLoading) {
+          _formKey.currentState?.reset();
+          setState(() {
+            _type = 'Cash';
+            _isActive = true;
+          });
+        }
+      },
+      child: LayoutBuilder(
       builder: (context, constraints) {
         final bool isDesktop = constraints.maxWidth >= 800;
 
@@ -162,7 +179,7 @@ class _AddPaymentModeScreenState extends State<AddPaymentModeScreen> {
           );
         }
       },
-    );
+    ));
   }
 
   Widget _buildNameField() {

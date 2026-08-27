@@ -5,6 +5,7 @@ import '../../services/session_service.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/app_message_dialog.dart';
 import '../../widgets/direct_back_scope.dart';
+import '../../widgets/save_clear_shortcuts.dart';
 
 /// Screen to Insert or Update Unit details via `/api/Unit/InsertorUpdateUnit`
 class UnitMasterScreen extends StatefulWidget {
@@ -22,7 +23,8 @@ class _UnitMasterScreenState extends State<UnitMasterScreen> {
   final SessionService _sessionService = sessionService;
 
   final TextEditingController _unitNameController = TextEditingController();
-  final TextEditingController _unitShortNameController = TextEditingController();
+  final TextEditingController _unitShortNameController =
+      TextEditingController();
   final FocusNode _unitNameFocusNode = FocusNode();
   final FocusNode _unitShortNameFocusNode = FocusNode();
 
@@ -103,7 +105,9 @@ class _UnitMasterScreenState extends State<UnitMasterScreen> {
 
       final successMsg = response.message.isNotEmpty
           ? response.message
-          : (isEditing ? 'Unit updated successfully!' : 'Unit created successfully!');
+          : (isEditing
+                ? 'Unit updated successfully!'
+                : 'Unit created successfully!');
 
       await showSuccessDialog(context, successMsg);
       if (!mounted) return;
@@ -137,62 +141,87 @@ class _UnitMasterScreenState extends State<UnitMasterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return DirectBackScope(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final isDesktop = constraints.maxWidth >= 800;
+    return SaveClearShortcuts(
+      onSave: () {
+        if (!_isLoading) {
+          _saveUnit(saveAndNew: false);
+        }
+      },
+      onClear: () {
+        if (!isEditing) {
+          _formKey.currentState?.reset();
+          _unitNameController.clear();
+          _unitShortNameController.clear();
+          setState(() {
+            _isActive = true;
+          });
+          _unitNameFocusNode.requestFocus();
+        }
+      },
+      child: DirectBackScope(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isDesktop = constraints.maxWidth >= 800;
 
-          final formCard = _buildFormCard(context, isDesktop);
+            final formCard = _buildFormCard(context, isDesktop);
 
-          if (isDesktop) {
-            return Scaffold(
-              body: Row(
-                children: [
-                  const SizedBox(
-                    width: 250,
-                    child: AppDrawer(isPermanent: true),
-                  ),
-                  const VerticalDivider(width: 1, thickness: 1),
-                  Expanded(
-                    child: Scaffold(
-                      appBar: AppBar(
-                        title: Text(isEditing ? 'Edit Unit' : 'Add New Unit'),
-                        leading: IconButton(
-                          icon: const Icon(Icons.arrow_back),
-                          tooltip: 'Back to Unit List',
-                          onPressed: () => Navigator.of(context).pop(),
+            if (isDesktop) {
+              return Scaffold(
+                body: Row(
+                  children: [
+                    const SizedBox(
+                      width: 250,
+                      child: AppDrawer(isPermanent: true),
+                    ),
+                    const VerticalDivider(width: 1, thickness: 1),
+                    Expanded(
+                      child: Scaffold(
+                        appBar: AppBar(
+                          title: Text(isEditing ? 'Edit Unit' : 'Add New Unit'),
+                          leading: IconButton(
+                            icon: const Icon(Icons.arrow_back),
+                            tooltip: 'Back to Unit List',
+                            onPressed: () => Navigator.of(context).pop(),
+                          ),
                         ),
-                      ),
-                      body: Container(
-                        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.15),
-                        child: Center(
-                          child: SingleChildScrollView(
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 680),
-                              child: formCard,
+                        body: Container(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surfaceVariant.withOpacity(0.15),
+                          child: Center(
+                            child: SingleChildScrollView(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 32,
+                              ),
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 680,
+                                ),
+                                child: formCard,
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+              );
+            }
+
+            // Mobile / Tablet layout
+            return Scaffold(
+              appBar: AppBar(
+                title: Text(isEditing ? 'Edit Unit' : 'Add New Unit'),
+              ),
+              body: SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: formCard,
               ),
             );
-          }
-
-          // Mobile / Tablet layout
-          return Scaffold(
-            appBar: AppBar(
-              title: Text(isEditing ? 'Edit Unit' : 'Add New Unit'),
-            ),
-            body: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: formCard,
-            ),
-          );
-        },
+          },
+        ),
       ),
     );
   }
@@ -237,7 +266,9 @@ class _UnitMasterScreenState extends State<UnitMasterScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          isEditing ? 'Update Unit Details' : 'Create Unit Master',
+                          isEditing
+                              ? 'Update Unit Details'
+                              : 'Create Unit Master',
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
@@ -256,7 +287,10 @@ class _UnitMasterScreenState extends State<UnitMasterScreen> {
                   ),
                   if (isEditing)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.secondaryContainer,
                         borderRadius: BorderRadius.circular(8),
@@ -286,7 +320,11 @@ class _UnitMasterScreenState extends State<UnitMasterScreen> {
                 decoration: InputDecoration(
                   labelText: 'Unit Name *',
                   hintText: 'Enter unit name (e.g. Kilogram, Box)',
-                  prefixIcon: const Icon(Icons.straighten_rounded, size: 20, color: Colors.blueAccent),
+                  prefixIcon: const Icon(
+                    Icons.straighten_rounded,
+                    size: 20,
+                    color: Colors.blueAccent,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -318,7 +356,11 @@ class _UnitMasterScreenState extends State<UnitMasterScreen> {
                 decoration: InputDecoration(
                   labelText: 'Unit Short Name *',
                   hintText: 'Enter short name (e.g. KG, PCS)',
-                  prefixIcon: const Icon(Icons.short_text_rounded, size: 20, color: Colors.blueAccent),
+                  prefixIcon: const Icon(
+                    Icons.short_text_rounded,
+                    size: 20,
+                    color: Colors.blueAccent,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -367,10 +409,14 @@ class _UnitMasterScreenState extends State<UnitMasterScreen> {
                     ),
                   ),
                   secondary: Icon(
-                    _isActive ? Icons.check_circle_outline_rounded : Icons.block_rounded,
+                    _isActive
+                        ? Icons.check_circle_outline_rounded
+                        : Icons.block_rounded,
                     color: _isActive ? Colors.green : Colors.grey,
                   ),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
               const SizedBox(height: 28),
@@ -381,36 +427,60 @@ class _UnitMasterScreenState extends State<UnitMasterScreen> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     OutlinedButton(
-                      onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+                      onPressed: _isLoading
+                          ? null
+                          : () => Navigator.of(context).pop(),
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 14,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                       child: const Text('Cancel'),
                     ),
                     if (!isEditing) ...[
                       const SizedBox(width: 12),
                       FilledButton.tonal(
-                        onPressed: _isLoading ? null : () => _saveUnit(saveAndNew: true),
+                        onPressed: _isLoading
+                            ? null
+                            : () => _saveUnit(saveAndNew: true),
                         style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 14,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
                         child: const Text('Save & Add Another'),
                       ),
                     ],
                     const SizedBox(width: 12),
                     FilledButton(
-                      onPressed: _isLoading ? null : () => _saveUnit(saveAndNew: false),
+                      onPressed: _isLoading
+                          ? null
+                          : () => _saveUnit(saveAndNew: false),
                       style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 28,
+                          vertical: 14,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                       child: _isLoading
                           ? const SizedBox(
                               width: 18,
                               height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             )
                           : Text(isEditing ? 'Update Unit' : 'Save Unit'),
                     ),
@@ -421,36 +491,51 @@ class _UnitMasterScreenState extends State<UnitMasterScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     FilledButton(
-                      onPressed: _isLoading ? null : () => _saveUnit(saveAndNew: false),
+                      onPressed: _isLoading
+                          ? null
+                          : () => _saveUnit(saveAndNew: false),
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                       child: _isLoading
                           ? const SizedBox(
                               width: 18,
                               height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             )
                           : Text(isEditing ? 'Update Unit' : 'Save Unit'),
                     ),
                     if (!isEditing) ...[
                       const SizedBox(height: 10),
                       FilledButton.tonal(
-                        onPressed: _isLoading ? null : () => _saveUnit(saveAndNew: true),
+                        onPressed: _isLoading
+                            ? null
+                            : () => _saveUnit(saveAndNew: true),
                         style: FilledButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
                         child: const Text('Save & Add Another'),
                       ),
                     ],
                     const SizedBox(height: 10),
                     OutlinedButton(
-                      onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+                      onPressed: _isLoading
+                          ? null
+                          : () => Navigator.of(context).pop(),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                       child: const Text('Cancel'),
                     ),

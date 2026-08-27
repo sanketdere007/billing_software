@@ -7,6 +7,7 @@ import '../../../services/product_service.dart';
 import '../../../widgets/app_drawer.dart';
 import '../../../widgets/app_message_dialog.dart';
 import 'purchase_return_list_screen.dart';
+import '../../../widgets/save_clear_shortcuts.dart';
 
 class AddPurchaseReturnScreen extends StatefulWidget {
   const AddPurchaseReturnScreen({super.key});
@@ -167,12 +168,27 @@ class _AddPurchaseReturnScreenState extends State<AddPurchaseReturnScreen> {
     final bool isDesktop = screenWidth >= 1000;
     final bool isMobile = screenWidth < 600;
 
-    Widget content = Form(
-      key: _formKey,
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
+    Widget content = SaveClearShortcuts(
+      onSave: _saveReturn,
+      onClear: () {
+        _formKey.currentState?.reset();
+        _returnNoController.text = 'PRET-AUTO-001';
+        _invoiceNoController.text = 'PINV-2023-001';
+        setState(() {
+          _selectedSupplier = null;
+          _selectedDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+          _products.clear();
+          _returnAmount = 0.0;
+          _taxAdjustment = 0.0;
+          _grandRefund = 0.0;
+        });
+      },
+      child: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
             child: Card(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -345,7 +361,7 @@ class _AddPurchaseReturnScreenState extends State<AddPurchaseReturnScreen> {
           ),
         ],
       ),
-    );
+    ));
 
     if (isDesktop) {
       return Scaffold(

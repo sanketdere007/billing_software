@@ -4,6 +4,7 @@ import '../../models/barcode_settings.dart';
 import '../../services/barcode_settings_service.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/app_message_dialog.dart';
+import '../../widgets/save_clear_shortcuts.dart';
 
 class AddBarcodeSettingsScreen extends StatefulWidget {
   const AddBarcodeSettingsScreen({super.key});
@@ -82,8 +83,21 @@ class _AddBarcodeSettingsScreenState extends State<AddBarcodeSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
+    return SaveClearShortcuts(
+      onSave: () {
+        if (!_isLoading) _saveSettings(saveAndNew: false);
+      },
+      onClear: () {
+        _formKey.currentState?.reset();
+        setState(() {
+          _format = 'CODE128';
+          _autoGenerate = true;
+          _isActive = true;
+          _isLoading = false;
+        });
+      },
+      child: LayoutBuilder(
+        builder: (context, constraints) {
         final bool isDesktop = constraints.maxWidth >= 800;
 
         Widget content = _isLoading
@@ -192,7 +206,7 @@ class _AddBarcodeSettingsScreenState extends State<AddBarcodeSettingsScreen> {
           );
         }
       },
-    );
+    ));
   }
 
   Widget _buildFormatField() {

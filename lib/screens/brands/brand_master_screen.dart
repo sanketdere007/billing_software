@@ -5,6 +5,7 @@ import '../../services/session_service.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/app_message_dialog.dart';
 import '../../widgets/direct_back_scope.dart';
+import '../../widgets/save_clear_shortcuts.dart';
 
 /// Screen to Insert or Update Brand details
 class BrandMasterScreen extends StatefulWidget {
@@ -135,9 +136,23 @@ class _BrandMasterScreenState extends State<BrandMasterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return DirectBackScope(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
+    return SaveClearShortcuts(
+      onSave: () {
+        if (!_isLoading) _saveBrand(saveAndNew: false);
+      },
+      onClear: () {
+        _formKey.currentState?.reset();
+        _brandNameController.clear();
+        _brandDescriptionController.clear();
+        setState(() {
+          _isActive = true;
+          _isLoading = false;
+        });
+        _brandNameFocusNode.requestFocus();
+      },
+      child: DirectBackScope(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
           final isDesktop = constraints.maxWidth >= 800;
 
           final formCard = _buildFormCard(context, isDesktop);
@@ -191,7 +206,7 @@ class _BrandMasterScreenState extends State<BrandMasterScreen> {
           );
         },
       ),
-    );
+    ));
   }
 
   Widget _buildFormCard(BuildContext context, bool isDesktop) {

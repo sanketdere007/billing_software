@@ -8,6 +8,7 @@ import '../../widgets/app_drawer.dart';
 import '../../widgets/app_message_dialog.dart';
 import '../../widgets/company_dropdown.dart';
 import '../../widgets/direct_back_scope.dart';
+import '../../widgets/save_clear_shortcuts.dart';
 
 class BranchMasterScreen extends StatefulWidget {
   final BranchListItem? branchToEdit;
@@ -188,9 +189,32 @@ class _BranchMasterScreenState extends State<BranchMasterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return DirectBackScope(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
+    return SaveClearShortcuts(
+      onSave: () {
+        if (!_isLoading) _saveBranch(saveAndNew: false);
+      },
+      onClear: () {
+        _formKey.currentState?.reset();
+        _nameController.clear();
+        _codeController.clear();
+        _contactPersonController.clear();
+        _mobileController.clear();
+        _emailController.clear();
+        _gstController.clear();
+        _addressController.clear();
+        _cityController.clear();
+        _stateController.clear();
+        _pincodeController.clear();
+        
+        setState(() {
+          _isActive = true;
+          _isLoading = false;
+        });
+        _companyFocusNode.requestFocus();
+      },
+      child: DirectBackScope(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
           final isDesktop = constraints.maxWidth >= 800;
 
           final formCard = _buildFormCard(context, isDesktop);
@@ -244,7 +268,7 @@ class _BranchMasterScreenState extends State<BranchMasterScreen> {
           );
         },
       ),
-    );
+    ));
   }
 
   Widget _buildFormCard(BuildContext context, bool isDesktop) {

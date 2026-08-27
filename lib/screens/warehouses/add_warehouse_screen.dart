@@ -4,6 +4,7 @@ import '../../models/warehouse.dart';
 import '../../services/warehouse_service.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/app_message_dialog.dart';
+import '../../widgets/save_clear_shortcuts.dart';
 
 class AddWarehouseScreen extends StatefulWidget {
   const AddWarehouseScreen({super.key});
@@ -76,118 +77,131 @@ class _AddWarehouseScreenState extends State<AddWarehouseScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final bool isDesktop = constraints.maxWidth >= 800;
-
-        Widget content = _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : SingleChildScrollView(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Center(
-                    child: Container(
-                      constraints: const BoxConstraints(maxWidth: 800),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Warehouse Information',
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                            ),
-                            const SizedBox(height: 16),
-                            if (constraints.maxWidth >= 600) ...[
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(child: _buildNameField()),
-                                  const SizedBox(width: 16),
-                                  Expanded(child: _buildCodeField()),
-                                ],
+    return SaveClearShortcuts(
+      onSave: () {
+        if (!_isLoading) {
+          _saveWarehouse(saveAndNew: false);
+        }
+      },
+      onClear: () {
+        _formKey.currentState?.reset();
+        setState(() {
+          _isActive = true;
+        });
+      },
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final bool isDesktop = constraints.maxWidth >= 800;
+  
+          Widget content = _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Center(
+                      child: Container(
+                        constraints: const BoxConstraints(maxWidth: 800),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Warehouse Information',
+                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
                               ),
                               const SizedBox(height: 16),
-                              _buildBranchIdField(),
-                            ] else ...[
-                              _buildNameField(),
-                              const SizedBox(height: 16),
-                              _buildCodeField(),
-                              const SizedBox(height: 16),
-                              _buildBranchIdField(),
-                            ],
-                            const SizedBox(height: 24),
-                            Text(
-                              'Contact Details',
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                            ),
-                            const SizedBox(height: 16),
-                            if (constraints.maxWidth >= 600) ...[
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(child: _buildManagerNameField()),
-                                  const SizedBox(width: 16),
-                                  Expanded(child: _buildMobileField()),
-                                ],
+                              if (constraints.maxWidth >= 600) ...[
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(child: _buildNameField()),
+                                    const SizedBox(width: 16),
+                                    Expanded(child: _buildCodeField()),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                _buildBranchIdField(),
+                              ] else ...[
+                                _buildNameField(),
+                                const SizedBox(height: 16),
+                                _buildCodeField(),
+                                const SizedBox(height: 16),
+                                _buildBranchIdField(),
+                              ],
+                              const SizedBox(height: 24),
+                              Text(
+                                'Contact Details',
+                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
                               ),
-                            ] else ...[
-                              _buildManagerNameField(),
                               const SizedBox(height: 16),
-                              _buildMobileField(),
+                              if (constraints.maxWidth >= 600) ...[
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(child: _buildManagerNameField()),
+                                    const SizedBox(width: 16),
+                                    Expanded(child: _buildMobileField()),
+                                  ],
+                                ),
+                              ] else ...[
+                                _buildManagerNameField(),
+                                const SizedBox(height: 16),
+                                _buildMobileField(),
+                              ],
+                              const SizedBox(height: 24),
+                              Text(
+                                'Address Details',
+                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                              ),
+                              const SizedBox(height: 16),
+                              _buildAddressField(),
+                              const SizedBox(height: 16),
+                              _buildDescriptionField(),
+                              const SizedBox(height: 16),
+                              _buildStatusField(),
+                              const SizedBox(height: 32),
+                              _buildActionButtons(constraints.maxWidth >= 600),
+                              const SizedBox(height: 32),
                             ],
-                            const SizedBox(height: 24),
-                            Text(
-                              'Address Details',
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                            ),
-                            const SizedBox(height: 16),
-                            _buildAddressField(),
-                            const SizedBox(height: 16),
-                            _buildDescriptionField(),
-                            const SizedBox(height: 16),
-                            _buildStatusField(),
-                            const SizedBox(height: 32),
-                            _buildActionButtons(constraints.maxWidth >= 600),
-                            const SizedBox(height: 32),
-                          ],
+                          ),
                         ),
                       ),
                     ),
+                  );
+  
+          if (isDesktop) {
+            return Scaffold(
+              body: Row(
+                children: [
+                  const SizedBox(
+                    width: 250,
+                    child: AppDrawer(isPermanent: true),
                   ),
-                );
-
-        if (isDesktop) {
-          return Scaffold(
-            body: Row(
-              children: [
-                const SizedBox(
-                  width: 250,
-                  child: AppDrawer(isPermanent: true),
-                ),
-                const VerticalDivider(width: 1, thickness: 1),
-                Expanded(
-                  child: Scaffold(
-                    appBar: AppBar(title: const Text('Add Warehouse')),
-                    body: content,
+                  const VerticalDivider(width: 1, thickness: 1),
+                  Expanded(
+                    child: Scaffold(
+                      appBar: AppBar(title: const Text('Add Warehouse')),
+                      body: content,
+                    ),
                   ),
-                ),
-              ],
-            ),
-          );
-        } else {
-          return Scaffold(
-            appBar: AppBar(title: const Text('Add Warehouse')),
-            drawer: const AppDrawer(isPermanent: false),
-            body: content,
-          );
-        }
-      },
+                ],
+              ),
+            );
+          } else {
+            return Scaffold(
+              appBar: AppBar(title: const Text('Add Warehouse')),
+              drawer: const AppDrawer(isPermanent: false),
+              body: content,
+            );
+          }
+        },
+      ),
     );
   }
 

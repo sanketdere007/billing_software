@@ -11,6 +11,7 @@ import '../../widgets/app_drawer.dart';
 import '../../widgets/app_message_dialog.dart';
 import '../../widgets/city_dropdown.dart';
 import '../../widgets/direct_back_scope.dart';
+import '../../widgets/save_clear_shortcuts.dart';
 import '../../widgets/state_dropdown.dart';
 
 /// Screen to Insert or Update Area details via `/api/Area/InsertorUpdateArea`
@@ -196,9 +197,23 @@ class _AreaMasterScreenState extends State<AreaMasterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return DirectBackScope(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
+    return SaveClearShortcuts(
+      onSave: () {
+        if (!_isLoading) _saveArea(saveAndNew: false);
+      },
+      onClear: () {
+        _formKey.currentState?.reset();
+        _areaNameController.clear();
+        _pincodeController.clear();
+        setState(() {
+          _isActive = true;
+          _isLoading = false;
+        });
+        _areaNameFocusNode.requestFocus();
+      },
+      child: DirectBackScope(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
           final isDesktop = constraints.maxWidth >= 800;
 
           final formCard = _buildFormCard(context, isDesktop);
@@ -257,8 +272,9 @@ class _AreaMasterScreenState extends State<AreaMasterScreen> {
           );
         },
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildFormCard(BuildContext context, bool isDesktop) {
     final theme = Theme.of(context);

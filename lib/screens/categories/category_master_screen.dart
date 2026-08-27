@@ -5,6 +5,7 @@ import '../../services/session_service.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/app_message_dialog.dart';
 import '../../widgets/direct_back_scope.dart';
+import '../../widgets/save_clear_shortcuts.dart';
 
 /// Screen to Insert or Update Category details
 class CategoryMasterScreen extends StatefulWidget {
@@ -137,9 +138,23 @@ class _CategoryMasterScreenState extends State<CategoryMasterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return DirectBackScope(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
+    return SaveClearShortcuts(
+      onSave: () {
+        if (!_isLoading) _saveCategory(saveAndNew: false);
+      },
+      onClear: () {
+        _formKey.currentState?.reset();
+        _categoryNameController.clear();
+        _categoryDescriptionController.clear();
+        setState(() {
+          _isActive = true;
+          _isLoading = false;
+        });
+        _categoryNameFocusNode.requestFocus();
+      },
+      child: DirectBackScope(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
           final isDesktop = constraints.maxWidth >= 800;
 
           final formCard = _buildFormCard(context, isDesktop);
@@ -194,8 +209,9 @@ class _CategoryMasterScreenState extends State<CategoryMasterScreen> {
           );
         },
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildFormCard(BuildContext context, bool isDesktop) {
     final theme = Theme.of(context);

@@ -5,6 +5,8 @@ import '../../services/price_list_service.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/app_message_dialog.dart';
 
+import '../../widgets/save_clear_shortcuts.dart';
+
 class AddPriceListScreen extends StatefulWidget {
   const AddPriceListScreen({super.key});
 
@@ -102,7 +104,24 @@ class _AddPriceListScreenState extends State<AddPriceListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
+    return SaveClearShortcuts(
+      onSave: () {
+        if (!_isLoading) {
+          _savePriceList(saveAndNew: false);
+        }
+      },
+      onClear: () {
+        if (!_isLoading) {
+          _formKey.currentState?.reset();
+          setState(() {
+            _effectiveFrom = null;
+            _effectiveTo = null;
+            _isDefault = false;
+            _isActive = true;
+          });
+        }
+      },
+      child: LayoutBuilder(
       builder: (context, constraints) {
         final bool isDesktop = constraints.maxWidth >= 800;
 
@@ -182,7 +201,7 @@ class _AddPriceListScreenState extends State<AddPriceListScreen> {
           );
         }
       },
-    );
+    ));
   }
 
   Widget _buildNameField() {

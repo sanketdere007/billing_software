@@ -4,6 +4,7 @@ import '../../models/bank_account.dart';
 import '../../services/bank_account_service.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/app_message_dialog.dart';
+import '../../widgets/save_clear_shortcuts.dart';
 
 class AddBankAccountScreen extends StatefulWidget {
   const AddBankAccountScreen({super.key});
@@ -76,8 +77,19 @@ class _AddBankAccountScreenState extends State<AddBankAccountScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
+    return SaveClearShortcuts(
+      onSave: () {
+        if (!_isLoading) _saveBankAccount(saveAndNew: false);
+      },
+      onClear: () {
+        _formKey.currentState?.reset();
+        setState(() {
+          _isActive = true;
+          _isLoading = false;
+        });
+      },
+      child: LayoutBuilder(
+        builder: (context, constraints) {
         final bool isDesktop = constraints.maxWidth >= 800;
 
         Widget content = _isLoading
@@ -188,8 +200,9 @@ class _AddBankAccountScreenState extends State<AddBankAccountScreen> {
           );
         }
       },
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildBankNameField() {
     return TextFormField(

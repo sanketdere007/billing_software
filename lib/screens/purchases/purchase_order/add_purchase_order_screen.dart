@@ -7,6 +7,7 @@ import '../../../services/product_service.dart';
 import '../../../widgets/app_drawer.dart';
 import '../../../widgets/app_message_dialog.dart';
 import 'purchase_order_list_screen.dart';
+import '../../../widgets/save_clear_shortcuts.dart';
 
 class AddPurchaseOrderScreen extends StatefulWidget {
   const AddPurchaseOrderScreen({super.key});
@@ -157,9 +158,24 @@ class _AddPurchaseOrderScreenState extends State<AddPurchaseOrderScreen> {
     final bool isDesktop = screenWidth >= 1000;
     final bool isMobile = screenWidth < 600;
 
-    Widget content = Form(
-      key: _formKey,
-      child: Column(
+    Widget content = SaveClearShortcuts(
+      onSave: _saveOrder,
+      onClear: () {
+        _formKey.currentState?.reset();
+        _orderNoController.text = 'PO-AUTO-001';
+        setState(() {
+          _selectedSupplier = null;
+          _selectedDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+          _products.clear();
+          _subtotal = 0.0;
+          _discount = 0.0;
+          _gst = 0.0;
+          _grandTotal = 0.0;
+        });
+      },
+      child: Form(
+        key: _formKey,
+        child: Column(
         children: [
           Padding(
             padding: const EdgeInsets.all(16.0),
@@ -324,7 +340,7 @@ class _AddPurchaseOrderScreenState extends State<AddPurchaseOrderScreen> {
           ),
         ],
       ),
-    );
+    ));
 
     if (isDesktop) {
       return Scaffold(

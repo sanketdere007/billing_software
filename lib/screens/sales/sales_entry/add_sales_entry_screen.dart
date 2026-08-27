@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../../widgets/app_drawer.dart';
 import '../../../widgets/app_message_dialog.dart';
 import 'sales_entry_list_screen.dart';
+import '../../../widgets/save_clear_shortcuts.dart';
 
 class AddSalesEntryScreen extends StatefulWidget {
   const AddSalesEntryScreen({super.key});
@@ -92,6 +93,12 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
     );
   }
 
+  Future<void> _saveEntry() async {
+    if (_formKey.currentState!.validate()) {
+      await showSuccessDialog(context, 'Invoice Saved successfully');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -120,24 +127,40 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
             ),
     );
 
-    Widget content = Form(
-      key: _formKey,
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
-            child: _buildBasicDetailsCard(isDesktop, isTablet, isMobile),
-          ),
-          const SizedBox(height: 4),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: _buildProductsCard(isDesktop, isTablet, isMobile),
+    Widget content = SaveClearShortcuts(
+      onSave: _saveEntry,
+      onClear: () {
+        _formKey.currentState?.reset();
+        _invoiceNoController.text = 'INV-AUTO-001';
+        setState(() {
+          _selectedCustomer = null;
+          _selectedDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+          _products.clear();
+          _payments['Cash'] = 0.0;
+          _payments['UPI'] = 0.0;
+          _payments['Card'] = 0.0;
+          _calculateTotals();
+        });
+      },
+      child: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+              child: _buildBasicDetailsCard(isDesktop, isTablet, isMobile),
             ),
-          ),
-          const SizedBox(height: 16),
-          stickyBottomBar,
-        ],
+            const SizedBox(height: 4),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: _buildProductsCard(isDesktop, isTablet, isMobile),
+              ),
+            ),
+            const SizedBox(height: 16),
+            stickyBottomBar,
+          ],
+        ),
       ),
     );
 
@@ -212,11 +235,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
         label: const Text('Hold', style: TextStyle(color: Colors.orange)),
       ),
       FilledButton.icon(
-        onPressed: () async {
-          if (_formKey.currentState!.validate()) {
-            await showSuccessDialog(context, 'Invoice Saved successfully');
-          }
-        },
+        onPressed: _saveEntry,
         icon: const Icon(Icons.save),
         label: const Text('Save'),
       ),

@@ -4,6 +4,8 @@ import '../../services/expense_category_service.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/app_message_dialog.dart';
 
+import '../../widgets/save_clear_shortcuts.dart';
+
 class AddExpenseCategoryScreen extends StatefulWidget {
   const AddExpenseCategoryScreen({super.key});
 
@@ -65,7 +67,21 @@ class _AddExpenseCategoryScreenState extends State<AddExpenseCategoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
+    return SaveClearShortcuts(
+      onSave: () {
+        if (!_isLoading) {
+          _saveCategory(saveAndNew: false);
+        }
+      },
+      onClear: () {
+        if (!_isLoading) {
+          _formKey.currentState?.reset();
+          setState(() {
+            _isActive = true;
+          });
+        }
+      },
+      child: LayoutBuilder(
       builder: (context, constraints) {
         final bool isDesktop = constraints.maxWidth >= 800;
 
@@ -128,7 +144,7 @@ class _AddExpenseCategoryScreenState extends State<AddExpenseCategoryScreen> {
           );
         }
       },
-    );
+    ));
   }
 
   Widget _buildNameField() {

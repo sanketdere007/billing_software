@@ -5,6 +5,8 @@ import '../../services/gst_service.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/app_message_dialog.dart';
 
+import '../../widgets/save_clear_shortcuts.dart';
+
 class AddGstScreen extends StatefulWidget {
   final GstTaxListItem? gstToEdit;
   const AddGstScreen({super.key, this.gstToEdit});
@@ -131,7 +133,27 @@ class _AddGstScreenState extends State<AddGstScreen> {
     final isEditMode = _id != 0;
     final title = isEditMode ? 'Edit GST Tax' : 'Add GST Tax';
 
-    return LayoutBuilder(
+    return SaveClearShortcuts(
+      onSave: () {
+        if (!_isLoading) {
+          _saveGst(saveAndNew: false);
+        }
+      },
+      onClear: () {
+        if (!_isLoading) {
+          _formKey.currentState?.reset();
+          setState(() {
+            _id = 0;
+            _percentage = 0;
+            _cgst = 0;
+            _sgst = 0;
+            _igst = 0;
+            _isActive = true;
+          });
+          _nameFocus.requestFocus();
+        }
+      },
+      child: LayoutBuilder(
       builder: (context, constraints) {
         final bool isDesktop = constraints.maxWidth >= 800;
 
@@ -373,6 +395,6 @@ class _AddGstScreenState extends State<AddGstScreen> {
           );
         }
       },
-    );
+    ));
   }
 }

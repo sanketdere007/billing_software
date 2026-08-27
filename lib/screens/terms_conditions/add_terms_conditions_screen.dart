@@ -3,6 +3,7 @@ import '../../models/terms_conditions.dart';
 import '../../services/terms_conditions_service.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/app_message_dialog.dart';
+import '../../widgets/save_clear_shortcuts.dart';
 
 class AddTermsConditionsScreen extends StatefulWidget {
   const AddTermsConditionsScreen({super.key});
@@ -68,71 +69,85 @@ class _AddTermsConditionsScreenState extends State<AddTermsConditionsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final bool isDesktop = constraints.maxWidth >= 800;
-
-        Widget content = _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Center(
-                  child: Container(
-                    constraints: const BoxConstraints(maxWidth: 800),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Terms & Conditions Details',
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                          const SizedBox(height: 16),
-                          _buildTitleField(),
-                          const SizedBox(height: 16),
-                          _buildTermsField(),
-                          const SizedBox(height: 16),
-                          _buildDisplayOnInvoiceField(),
-                          const SizedBox(height: 8),
-                          _buildStatusField(),
-                          const SizedBox(height: 32),
-                          _buildActionButtons(constraints.maxWidth >= 600),
-                        ],
+    return SaveClearShortcuts(
+      onSave: () {
+        if (!_isLoading) {
+          _saveTerms(saveAndNew: false);
+        }
+      },
+      onClear: () {
+        _formKey.currentState?.reset();
+        setState(() {
+          _displayOnInvoice = true;
+          _isActive = true;
+        });
+      },
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final bool isDesktop = constraints.maxWidth >= 800;
+  
+          Widget content = _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Center(
+                    child: Container(
+                      constraints: const BoxConstraints(maxWidth: 800),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Terms & Conditions Details',
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
+                            const SizedBox(height: 16),
+                            _buildTitleField(),
+                            const SizedBox(height: 16),
+                            _buildTermsField(),
+                            const SizedBox(height: 16),
+                            _buildDisplayOnInvoiceField(),
+                            const SizedBox(height: 8),
+                            _buildStatusField(),
+                            const SizedBox(height: 32),
+                            _buildActionButtons(constraints.maxWidth >= 600),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              );
-
-        if (isDesktop) {
-          return Scaffold(
-            body: Row(
-              children: [
-                const SizedBox(
-                  width: 250,
-                  child: AppDrawer(isPermanent: true),
-                ),
-                const VerticalDivider(width: 1, thickness: 1),
-                Expanded(
-                  child: Scaffold(
-                    appBar: AppBar(title: const Text('Add Terms & Conditions')),
-                    body: content,
+                );
+  
+          if (isDesktop) {
+            return Scaffold(
+              body: Row(
+                children: [
+                  const SizedBox(
+                    width: 250,
+                    child: AppDrawer(isPermanent: true),
                   ),
-                ),
-              ],
-            ),
-          );
-        } else {
-          return Scaffold(
-            appBar: AppBar(title: const Text('Add Terms & Conditions')),
-            drawer: const AppDrawer(isPermanent: false),
-            body: content,
-          );
-        }
-      },
+                  const VerticalDivider(width: 1, thickness: 1),
+                  Expanded(
+                    child: Scaffold(
+                      appBar: AppBar(title: const Text('Add Terms & Conditions')),
+                      body: content,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          } else {
+            return Scaffold(
+              appBar: AppBar(title: const Text('Add Terms & Conditions')),
+              drawer: const AppDrawer(isPermanent: false),
+              body: content,
+            );
+          }
+        },
+      ),
     );
   }
 

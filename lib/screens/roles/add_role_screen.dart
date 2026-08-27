@@ -3,6 +3,7 @@ import '../../models/role.dart';
 import '../../services/role_service.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/app_message_dialog.dart';
+import '../../widgets/save_clear_shortcuts.dart';
 
 class AddRoleScreen extends StatefulWidget {
   const AddRoleScreen({super.key});
@@ -73,14 +74,24 @@ class _AddRoleScreenState extends State<AddRoleScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final bool isDesktop = constraints.maxWidth >= 800;
+    return SaveClearShortcuts(
+      onSave: () {
+        if (!_isLoading) _saveRole(saveAndNew: false);
+      },
+      onClear: () {
+        _formKey.currentState?.reset();
+        setState(() {
+          _selectedPermissions.clear();
+        });
+      },
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final bool isDesktop = constraints.maxWidth >= 800;
 
-        Widget content = _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : SingleChildScrollView(
-                  padding: const EdgeInsets.all(16.0),
+          Widget content = _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+                    padding: const EdgeInsets.all(16.0),
                   child: Center(
                     child: Container(
                       constraints: const BoxConstraints(maxWidth: 800),
@@ -144,7 +155,7 @@ class _AddRoleScreenState extends State<AddRoleScreen> {
           );
         }
       },
-    );
+    ));
   }
 
   Widget _buildNameField() {

@@ -7,6 +7,8 @@ import '../../widgets/app_drawer.dart';
 import '../../widgets/app_message_dialog.dart';
 import '../../widgets/direct_back_scope.dart';
 
+import '../../widgets/save_clear_shortcuts.dart';
+
 class CompanyMasterScreen extends StatefulWidget {
   final CompanyListItem? companyToEdit;
 
@@ -177,8 +179,36 @@ class _CompanyMasterScreenState extends State<CompanyMasterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return DirectBackScope(
-      child: LayoutBuilder(
+    return SaveClearShortcuts(
+      onSave: () {
+        if (!_isLoading) {
+          _saveCompany(saveAndNew: false);
+        }
+      },
+      onClear: () {
+        if (!_isLoading) {
+          _formKey.currentState?.reset();
+          _nameController.clear();
+          _codeController.clear();
+          _emailController.clear();
+          _mobileController.clear();
+          _gstController.clear();
+          _panController.clear();
+          _websiteController.clear();
+          _addressController.clear();
+          _cityController.clear();
+          _stateController.clear();
+          _pincodeController.clear();
+          _financialYearController.clear();
+          _currencyController.clear();
+          setState(() {
+            _isActive = true;
+          });
+          _nameFocusNode.requestFocus();
+        }
+      },
+      child: DirectBackScope(
+        child: LayoutBuilder(
         builder: (context, constraints) {
           final isDesktop = constraints.maxWidth >= 800;
 
@@ -233,7 +263,7 @@ class _CompanyMasterScreenState extends State<CompanyMasterScreen> {
           );
         },
       ),
-    );
+    ));
   }
 
   Widget _buildFormCard(BuildContext context, bool isDesktop) {

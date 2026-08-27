@@ -12,6 +12,7 @@ import '../../widgets/subcategory_dropdown.dart';
 import '../../widgets/brand_dropdown.dart';
 import '../../widgets/unit_dropdown.dart';
 import '../../widgets/gst_dropdown.dart';
+import '../../widgets/save_clear_shortcuts.dart';
 
 class ProductMasterScreen extends StatefulWidget {
   final ProductListItem? productToEdit;
@@ -239,10 +240,32 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return DirectBackScope(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final isDesktop = constraints.maxWidth >= 800;
+    return SaveClearShortcuts(
+      onSave: () {
+        if (!_isLoading) _saveProduct(saveAndNew: false);
+      },
+      onClear: () {
+        if (!isEditing) {
+          _formKey.currentState?.reset();
+          _nameController.clear();
+          _codeController.clear();
+          _hsnController.clear();
+          setState(() {
+            _selectedCategoryId = null;
+            _selectedSubcategoryId = null;
+            _selectedBrandId = null;
+            _selectedUnitId = null;
+            _selectedGstId = null;
+            _selectedGstPercent = 0.0;
+            _isActive = true;
+          });
+          _nameFocusNode.requestFocus();
+        }
+      },
+      child: DirectBackScope(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isDesktop = constraints.maxWidth >= 800;
 
           if (_isFetchingDetails) {
             return const Scaffold(
@@ -325,7 +348,7 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
           );
         },
       ),
-    );
+    ));
   }
 
   Widget _buildFormCard(BuildContext context, bool isDesktop) {
