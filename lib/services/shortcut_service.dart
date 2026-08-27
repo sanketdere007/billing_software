@@ -686,8 +686,16 @@ class ShortcutService {
     }
   }
 
+  DateTime _lastEscapeTime = DateTime.fromMillisecondsSinceEpoch(0);
+
   /// Handle Escape key logic
   bool _handleEscapeKey() {
+    final now = DateTime.now();
+    if (now.difference(_lastEscapeTime).inMilliseconds < 300) {
+      return true; // Ignore rapid multiple presses
+    }
+    _lastEscapeTime = now;
+
     // Condition: If user is on Dashboard screen, pressing Esc does nothing.
     if (isDashboardActive) {
       return false;

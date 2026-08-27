@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../models/supplier.dart';
+import '../models/supplier_reports.dart';
 import '../utils/api_constants.dart';
 import 'api_service.dart';
 import 'session_service.dart';
@@ -163,6 +164,122 @@ class SupplierService extends ChangeNotifier {
       rethrow;
     } catch (e) {
       throw ApiException('Error saving supplier: $e');
+    }
+  }
+
+  /// Fetch Supplier Outstanding Report
+  Future<List<SupplierOutstandingReportItem>> getSupplierOutstandingReport({
+    int compId = 0,
+    int branchId = 0,
+    int ledgerId = 0,
+    int supplierId = 0,
+    String search = '',
+    bool isActive = true,
+    int pageNumber = 1,
+    int pageSize = 10,
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    final Map<String, String> queryParameters = {
+      if (compId > 0) 'CompId': compId.toString(),
+      if (branchId > 0) 'BranchId': branchId.toString(),
+      if (ledgerId > 0) 'LedgerId': ledgerId.toString(),
+      if (supplierId > 0) 'SupplierId': supplierId.toString(),
+      if (search.isNotEmpty) 'Search': search,
+      'IsActive': isActive.toString(),
+      'PageNumber': pageNumber.toString(),
+      'PageSize': pageSize.toString(),
+    };
+
+    debugPrint('🏢 [SupplierService.getSupplierOutstandingReport] Requesting with parameters: $queryParameters');
+
+    try {
+      final dynamic response = await apiService.get(
+        ApiConstants.getSupplierOutstandingReportEndpoint,
+        queryParameters: queryParameters,
+        requiresAuth: true,
+      );
+
+      if (response is Map<String, dynamic>) {
+        final repResponse = SupplierOutstandingReportResponse.fromJson(response);
+        if (repResponse.status || repResponse.data.isNotEmpty) {
+          return repResponse.data;
+        } else {
+          _errorMessage = repResponse.message.isNotEmpty
+              ? repResponse.message
+              : 'Failed to fetch outstanding report.';
+          return [];
+        }
+      }
+      return [];
+    } on ApiException catch (e) {
+      _errorMessage = e.message;
+      rethrow;
+    } catch (e) {
+      _errorMessage = 'Error fetching outstanding report: $e';
+      throw ApiException(_errorMessage!);
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Fetch Supplier Pending Invoice Report
+  Future<List<SupplierPendingInvoiceItem>> getSupplierPendingInvoice({
+    int supplierId = 0,
+    int compId = 0,
+    int branchId = 0,
+    int ledgerId = 0,
+    String search = '',
+    int pageNumber = 1,
+    int pageSize = 10,
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    final Map<String, String> queryParameters = {
+      if (supplierId > 0) 'SupplierId': supplierId.toString(),
+      if (compId > 0) 'CompId': compId.toString(),
+      if (branchId > 0) 'BranchId': branchId.toString(),
+      if (ledgerId > 0) 'LedgerId': ledgerId.toString(),
+      if (search.isNotEmpty) 'Search': search,
+      'PageNumber': pageNumber.toString(),
+      'PageSize': pageSize.toString(),
+    };
+
+    debugPrint('🏢 [SupplierService.getSupplierPendingInvoice] Requesting with parameters: $queryParameters');
+
+    try {
+      final dynamic response = await apiService.get(
+        ApiConstants.getSupplierPendingInvoiceEndpoint,
+        queryParameters: queryParameters,
+        requiresAuth: true,
+      );
+
+      if (response is Map<String, dynamic>) {
+        final repResponse = SupplierPendingInvoiceResponse.fromJson(response);
+        if (repResponse.status || repResponse.data.isNotEmpty) {
+          return repResponse.data;
+        } else {
+          _errorMessage = repResponse.message.isNotEmpty
+              ? repResponse.message
+              : 'Failed to fetch pending invoices.';
+          return [];
+        }
+      }
+      return [];
+    } on ApiException catch (e) {
+      _errorMessage = e.message;
+      rethrow;
+    } catch (e) {
+      _errorMessage = 'Error fetching pending invoices: $e';
+      throw ApiException(_errorMessage!);
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 

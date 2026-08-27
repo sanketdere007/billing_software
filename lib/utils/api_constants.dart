@@ -19,6 +19,10 @@ class ApiConstants {
   static const String getAllSuppliersEndpoint = '/api/Supplier/GetAllSuppliers';
   static const String insertOrUpdateSupplierEndpoint =
       '/api/Supplier/InsertorUpdateSupplier';
+  static const String getSupplierOutstandingReportEndpoint =
+      '/api/Supplier/GetSupplierOutstandingReport';
+  static const String getSupplierPendingInvoiceEndpoint =
+      '/api/Supplier/GetSupplierPendingInvoice';
 
   // Category Endpoints
   static const String getAllCategoriesEndpoint =

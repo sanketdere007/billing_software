@@ -49,6 +49,7 @@ import '../utils/platform_helper.dart';
 import '../screens/about_screen.dart';
 import '../screens/help_support_screen.dart';
 import '../widgets/support_info_footer.dart';
+import '../screens/reports/supplier_outstanding_report_screen.dart';
 
 class AppDrawer extends StatefulWidget {
   final bool isPermanent;
@@ -68,6 +69,7 @@ class _AppDrawerState extends State<AppDrawer> {
   static bool _isSalesMenuExpanded = false;
   static bool _isPurchaseMenuExpanded = false;
   static bool _isAccountMenuExpanded = false;
+  static bool _isReportsMenuExpanded = false;
 
   @override
   void initState() {
@@ -1176,6 +1178,41 @@ class _AppDrawerState extends State<AppDrawer> {
                               name: AppRoutes.receiptEntryScreen,
                             ),
                             builder: (context) => const ReceiptListScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+
+                ExpansionTile(
+                  initiallyExpanded: _isReportsMenuExpanded,
+                  onExpansionChanged: (expanded) {
+                    _isReportsMenuExpanded = expanded;
+                  },
+                  leading: Icon(
+                    Icons.bar_chart_rounded,
+                    color: _getIconColor(context, Colors.indigo),
+                  ),
+                  title: Text(
+                    'Reports',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                  children: [
+                    _buildDrawerItem(
+                      context: context,
+                      icon: Icons.pie_chart_rounded,
+                      iconColor: _getIconColor(context, Colors.indigo),
+                      title: 'Supplier Outstanding',
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const SupplierOutstandingReportScreen(),
                           ),
                         );
                       },
