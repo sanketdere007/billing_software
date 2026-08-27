@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../../models/payment_mode.dart';
 import '../../services/payment_mode_service.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/app_message_dialog.dart';
 
 class AddPaymentModeScreen extends StatefulWidget {
   const AddPaymentModeScreen({super.key});
@@ -49,12 +50,8 @@ class _AddPaymentModeScreenState extends State<AddPaymentModeScreen> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Payment mode saved successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      await showSuccessDialog(context, 'Payment mode saved successfully!');
+      if (!mounted) return;
 
       if (saveAndNew) {
         _formKey.currentState!.reset();
@@ -70,12 +67,7 @@ class _AddPaymentModeScreenState extends State<AddPaymentModeScreen> {
       setState(() {
         _isLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error saving payment mode: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      await showErrorDialog(context, 'Error saving payment mode: $e');
     }
   }
 

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../../models/gst.dart';
 import '../../services/gst_service.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/app_message_dialog.dart';
 
 class AddGstScreen extends StatefulWidget {
   final GstTaxListItem? gstToEdit;
@@ -81,7 +82,8 @@ class _AddGstScreenState extends State<AddGstScreen> {
       await _gstService.insertOrUpdateGst(request);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('GST saved successfully!'), backgroundColor: Colors.green));
+      await showSuccessDialog(context, 'GST saved successfully!');
+      if (!mounted) return;
 
       if (saveAndNew) {
         _formKey.currentState!.reset();
@@ -101,7 +103,7 @@ class _AddGstScreenState extends State<AddGstScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceAll('ApiException: ', '')), backgroundColor: Colors.red));
+      await showErrorDialog(context, e.toString().replaceAll('ApiException: ', ''));
     }
   }
 

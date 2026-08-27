@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../../models/salesperson.dart';
 import '../../services/salesperson_service.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/app_message_dialog.dart';
 
 class AddSalespersonScreen extends StatefulWidget {
   const AddSalespersonScreen({super.key});
@@ -53,12 +54,8 @@ class _AddSalespersonScreenState extends State<AddSalespersonScreen> {
 
       if (!mounted) return;
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Salesperson saved successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      await showSuccessDialog(context, 'Salesperson saved successfully!');
+      if (!mounted) return;
 
       if (saveAndNew) {
         _formKey.currentState!.reset();
@@ -73,12 +70,7 @@ class _AddSalespersonScreenState extends State<AddSalespersonScreen> {
       setState(() {
         _isLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error saving salesperson: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      await showErrorDialog(context, 'Error saving salesperson: $e');
     }
   }
 

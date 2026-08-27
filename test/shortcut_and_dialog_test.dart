@@ -6,6 +6,7 @@ import 'package:billing_software/services/shortcut_service.dart';
 import 'package:billing_software/widgets/close_confirmation_dialog.dart';
 import 'package:billing_software/widgets/screen_already_open_dialog.dart';
 import 'package:billing_software/widgets/database_backup_dialog.dart';
+import 'package:billing_software/widgets/app_message_dialog.dart';
 import 'package:billing_software/screens/login_screen.dart';
 import 'package:billing_software/services/purchase_order_service.dart';
 import 'package:billing_software/services/purchase_entry_service.dart';
@@ -236,6 +237,196 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(ScreenAlreadyOpenDialog), findsNothing);
+    });
+  });
+
+  group('AppMessageDialog Tests', () {
+    tearDown(() {
+      PlatformHelper.setOverrideForTesting(null);
+      AppMessageDialog.markShowing(false);
+    });
+
+    testWidgets('Renders success title, message, icon, and OK button', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              return ElevatedButton(
+                onPressed: () {
+                  showSuccessDialog(context, 'Brand created successfully!');
+                },
+                child: const Text('Open Dialog'),
+              );
+            },
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open Dialog'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AppMessageDialog), findsOneWidget);
+      expect(find.text('Success'), findsOneWidget);
+      expect(find.text('Brand created successfully!'), findsOneWidget);
+      expect(find.text('OK'), findsOneWidget);
+      expect(find.byIcon(Icons.check_circle_rounded), findsOneWidget);
+
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AppMessageDialog), findsNothing);
+    });
+
+    testWidgets('Error and warning dialogs use matching titles and icons', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              return Column(
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      showErrorDialog(context, 'Save failed');
+                    },
+                    child: const Text('Open Error'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      showWarningDialog(context, 'Please select a supplier');
+                    },
+                    child: const Text('Open Warning'),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open Error'));
+      await tester.pumpAndSettle();
+      expect(find.text('Error'), findsOneWidget);
+      expect(find.text('Save failed'), findsOneWidget);
+      expect(find.byIcon(Icons.error_outline_rounded), findsOneWidget);
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Open Warning'));
+      await tester.pumpAndSettle();
+      expect(find.text('Warning'), findsOneWidget);
+      expect(find.text('Please select a supplier'), findsOneWidget);
+      expect(find.byIcon(Icons.warning_amber_rounded), findsOneWidget);
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('Windows desktop Enter and Esc close the dialog', (
+      tester,
+    ) async {
+      PlatformHelper.setOverrideForTesting(true);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              return ElevatedButton(
+                onPressed: () {
+                  showSuccessDialog(context, 'Saved');
+                },
+                child: const Text('Open Dialog'),
+              );
+            },
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open Dialog'));
+      await tester.pumpAndSettle();
+      expect(find.byType(AppMessageDialog), findsOneWidget);
+      expect(find.text('Press Enter or Esc to close'), findsOneWidget);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+      expect(find.byType(AppMessageDialog), findsNothing);
+
+      await tester.tap(find.text('Open Dialog'));
+      await tester.pumpAndSettle();
+      expect(find.byType(AppMessageDialog), findsOneWidget);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+      expect(find.byType(AppMessageDialog), findsNothing);
+    });
+
+    testWidgets('Non-Windows platforms ignore Enter and Esc shortcuts', (
+      tester,
+    ) async {
+      PlatformHelper.setOverrideForTesting(false);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              return ElevatedButton(
+                onPressed: () {
+                  showErrorDialog(context, 'Failed');
+                },
+                child: const Text('Open Dialog'),
+              );
+            },
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open Dialog'));
+      await tester.pumpAndSettle();
+      expect(find.byType(AppMessageDialog), findsOneWidget);
+      expect(find.text('Press Enter or Esc to close'), findsNothing);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+      expect(find.byType(AppMessageDialog), findsOneWidget);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+      expect(find.byType(AppMessageDialog), findsOneWidget);
+
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+      expect(find.byType(AppMessageDialog), findsNothing);
+    });
+
+    testWidgets('Does not stack duplicate message dialogs', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              return ElevatedButton(
+                onPressed: () {
+                  showSuccessDialog(context, 'First message');
+                  showErrorDialog(context, 'Second message');
+                },
+                child: const Text('Open Dialogs'),
+              );
+            },
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open Dialogs'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AppMessageDialog), findsOneWidget);
+      expect(find.text('First message'), findsOneWidget);
+      expect(find.text('Second message'), findsNothing);
+
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+      expect(find.byType(AppMessageDialog), findsNothing);
     });
   });
 

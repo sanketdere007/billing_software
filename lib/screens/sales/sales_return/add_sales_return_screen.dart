@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../widgets/app_drawer.dart';
+import '../../../widgets/app_message_dialog.dart';
 import 'sales_return_list_screen.dart';
 
 class AddSalesReturnScreen extends StatefulWidget {
@@ -176,11 +177,9 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
           tooltip: 'View Returns',
         ),
         IconButton(
-          onPressed: () {
+          onPressed: () async {
             if (_formKey.currentState!.validate()) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Sales Return Saved successfully')),
-              );
+              await showSuccessDialog(context, 'Sales Return Saved successfully');
             }
           },
           icon: const Icon(Icons.save),
@@ -196,11 +195,9 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
       ),
       const SizedBox(width: 8),
       FilledButton.icon(
-        onPressed: () {
+        onPressed: () async {
           if (_formKey.currentState!.validate()) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Sales Return Saved successfully')),
-            );
+            await showSuccessDialog(context, 'Sales Return Saved successfully');
           }
         },
         icon: const Icon(Icons.save),

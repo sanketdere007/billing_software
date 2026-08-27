@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/terms_conditions.dart';
 import '../../services/terms_conditions_service.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/app_message_dialog.dart';
 
 class AddTermsConditionsScreen extends StatefulWidget {
   const AddTermsConditionsScreen({super.key});
@@ -44,12 +45,8 @@ class _AddTermsConditionsScreenState extends State<AddTermsConditionsScreen> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Terms saved successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      await showSuccessDialog(context, 'Terms saved successfully!');
+      if (!mounted) return;
 
       if (saveAndNew) {
         _formKey.currentState!.reset();
@@ -65,12 +62,7 @@ class _AddTermsConditionsScreenState extends State<AddTermsConditionsScreen> {
       setState(() {
         _isLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error saving terms: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      await showErrorDialog(context, 'Error saving terms: $e');
     }
   }
 

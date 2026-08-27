@@ -6,6 +6,7 @@ import '../../models/city.dart';
 import '../../models/area.dart';
 import '../../services/supplier_service.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/app_message_dialog.dart';
 import '../../widgets/state_dropdown.dart';
 import '../../widgets/city_dropdown.dart';
 import '../../widgets/area_dropdown.dart';
@@ -113,7 +114,8 @@ class _AddSupplierScreenState extends State<AddSupplierScreen> {
       await _supplierService.insertOrUpdateSupplier(request);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Supplier saved successfully!'), backgroundColor: Colors.green));
+      await showSuccessDialog(context, 'Supplier saved successfully!');
+      if (!mounted) return;
 
       if (saveAndNew) {
         _formKey.currentState!.reset();
@@ -143,7 +145,7 @@ class _AddSupplierScreenState extends State<AddSupplierScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceAll('ApiException: ', '')), backgroundColor: Colors.red));
+      await showErrorDialog(context, e.toString().replaceAll('ApiException: ', ''));
     }
   }
 

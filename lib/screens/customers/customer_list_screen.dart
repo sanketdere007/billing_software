@@ -10,6 +10,7 @@ import '../../services/customer_service.dart';
 import '../../services/customer_excel_export_service.dart';
 import '../../services/session_service.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/app_message_dialog.dart';
 import '../../widgets/city_dropdown.dart';
 import '../../widgets/area_dropdown.dart';
 import '../../widgets/direct_back_scope.dart';
@@ -387,19 +388,9 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
 
   Future<void> _exportToExcel() async {
     if (_customers.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Row(
-            children: [
-              Icon(Icons.info_outline_rounded, color: Colors.white, size: 20),
-              SizedBox(width: 8),
-              Text('No customer records available to export.'),
-            ],
-          ),
-          backgroundColor: Colors.orange.shade800,
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 3),
-        ),
+      await showWarningDialog(
+        context,
+        'No customer records available to export.',
       );
       return;
     }
@@ -420,57 +411,13 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
             ? 'Exported ${result.recordCount} filtered customer ${_customers.length == 1 ? 'record' : 'records'} to Excel.'
             : 'Exported all ${result.recordCount} customer ${_customers.length == 1 ? 'record' : 'records'} to Excel.';
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(
-                  Icons.check_circle_rounded,
-                  color: Colors.white,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    message,
-                    style: const TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                ),
-              ],
-            ),
-            backgroundColor: const Color(0xFF166534), // Forest Green
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 3),
-          ),
-        );
+        await showSuccessDialog(context, message);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(
-                  Icons.error_outline_rounded,
-                  color: Colors.white,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Expanded(child: Text(result.message)),
-              ],
-            ),
-            backgroundColor: Theme.of(context).colorScheme.error,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        await showErrorDialog(context, result.message);
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to export customers: $e'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      await showErrorDialog(context, 'Failed to export customers: $e');
     } finally {
       if (mounted) {
         setState(() {
@@ -1605,16 +1552,10 @@ class _CustomerDetailsDialogState extends State<_CustomerDetailsDialog> {
     }
   }
 
-  void _copyToClipboard(String label, String text) {
+  Future<void> _copyToClipboard(String label, String text) async {
     if (text.isEmpty) return;
     Clipboard.setData(ClipboardData(text: text));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$label copied to clipboard!'),
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    await showSuccessDialog(context, '$label copied to clipboard!');
   }
 
   @override

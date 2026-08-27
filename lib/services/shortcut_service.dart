@@ -4,6 +4,7 @@ import '../utils/platform_helper.dart';
 import '../widgets/close_confirmation_dialog.dart';
 import '../widgets/screen_already_open_dialog.dart';
 import '../widgets/database_backup_dialog.dart';
+import '../widgets/app_message_dialog.dart';
 import '../services/database_backup_service.dart';
 import '../services/auth_service.dart';
 import '../screens/login_screen.dart';
@@ -692,8 +693,10 @@ class ShortcutService {
       return false;
     }
 
-    // If confirmation or screen already open dialog is already displayed, allow dialog's own handler to close itself
-    if (_isConfirmationDialogOpen || _isScreenAlreadyOpenDialogOpen) {
+    // If a dialog is already displayed, allow that dialog's own handler to close itself
+    if (_isConfirmationDialogOpen ||
+        _isScreenAlreadyOpenDialogOpen ||
+        AppMessageDialog.isShowing) {
       return false;
     }
 

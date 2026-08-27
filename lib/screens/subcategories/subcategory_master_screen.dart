@@ -5,6 +5,7 @@ import '../../services/subcategory_service.dart';
 import '../../services/category_service.dart';
 import '../../services/session_service.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/app_message_dialog.dart';
 import '../../widgets/direct_back_scope.dart';
 
 /// Screen to Insert or Update SubCategory details
@@ -118,12 +119,7 @@ class _SubCategoryMasterScreenState extends State<SubCategoryMasterScreen> {
     }
 
     if (_selectedCategoryId == null || _selectedCategoryId! <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a valid category.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      await showWarningDialog(context, 'Please select a valid category.');
       _categoryFocusNode.requestFocus();
       return;
     }
@@ -151,19 +147,8 @@ class _SubCategoryMasterScreenState extends State<SubCategoryMasterScreen> {
           ? response.message
           : (isEditing ? 'SubCategory updated successfully!' : 'SubCategory created successfully!');
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
-              const SizedBox(width: 10),
-              Expanded(child: Text(successMsg)),
-            ],
-          ),
-          backgroundColor: Colors.green.shade700,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      await showSuccessDialog(context, successMsg);
+      if (!mounted) return;
 
       if (saveAndNew && !isEditing) {
         _formKey.currentState?.reset();
@@ -179,19 +164,9 @@ class _SubCategoryMasterScreenState extends State<SubCategoryMasterScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.error_outline_rounded, color: Colors.white, size: 20),
-              const SizedBox(width: 10),
-              Expanded(child: Text(e.toString().replaceAll('ApiException: ', ''))),
-            ],
-          ),
-          backgroundColor: Colors.red.shade700,
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 4),
-        ),
+      await showErrorDialog(
+        context,
+        e.toString().replaceAll('ApiException: ', ''),
       );
     } finally {
       if (mounted) {

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../../models/bank_account.dart';
 import '../../services/bank_account_service.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/app_message_dialog.dart';
 
 class AddBankAccountScreen extends StatefulWidget {
   const AddBankAccountScreen({super.key});
@@ -53,12 +54,8 @@ class _AddBankAccountScreenState extends State<AddBankAccountScreen> {
 
       if (!mounted) return;
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Bank account saved successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      await showSuccessDialog(context, 'Bank account saved successfully!');
+      if (!mounted) return;
 
       if (saveAndNew) {
         _formKey.currentState!.reset();
@@ -73,12 +70,7 @@ class _AddBankAccountScreenState extends State<AddBankAccountScreen> {
       setState(() {
         _isLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error saving bank account: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      await showErrorDialog(context, 'Error saving bank account: $e');
     }
   }
 

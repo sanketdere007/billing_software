@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/income_category.dart';
 import '../../services/income_category_service.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/app_message_dialog.dart';
 
 class AddIncomeCategoryScreen extends StatefulWidget {
   const AddIncomeCategoryScreen({super.key});
@@ -42,12 +43,8 @@ class _AddIncomeCategoryScreenState extends State<AddIncomeCategoryScreen> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Income category saved successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      await showSuccessDialog(context, 'Income category saved successfully!');
+      if (!mounted) return;
 
       if (saveAndNew) {
         _formKey.currentState!.reset();
@@ -62,12 +59,7 @@ class _AddIncomeCategoryScreenState extends State<AddIncomeCategoryScreen> {
       setState(() {
         _isLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error saving income category: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      await showErrorDialog(context, 'Error saving income category: $e');
     }
   }
 

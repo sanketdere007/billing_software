@@ -124,11 +124,7 @@ class _BankAccountListScreenState extends State<BankAccountListScreen> {
                       actions: [
                         IconButton(
                           icon: const Icon(Icons.refresh),
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Refreshing list...')),
-                            );
-                          },
+                          onPressed: () {},
                         ),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -153,11 +149,7 @@ class _BankAccountListScreenState extends State<BankAccountListScreen> {
               actions: [
                 IconButton(
                   icon: const Icon(Icons.refresh),
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Refreshing list...')),
-                    );
-                  },
+                  onPressed: () {},
                 ),
                 if (constraints.maxWidth >= 600)
                   Padding(

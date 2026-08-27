@@ -5,6 +5,7 @@ import '../../services/product_service.dart';
 import '../../services/session_service.dart';
 import '../../utils/text_formatters.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/app_message_dialog.dart';
 import '../../widgets/direct_back_scope.dart';
 import '../../widgets/category_dropdown.dart';
 import '../../widgets/subcategory_dropdown.dart';
@@ -121,12 +122,7 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to load product details: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        await showErrorDialog(context, 'Failed to load product details: $e');
       }
     } finally {
       if (mounted) {
@@ -190,18 +186,11 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
 
       if (!response.status) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.error_outline_rounded, color: Colors.white, size: 20),
-                const SizedBox(width: 10),
-                Expanded(child: Text(response.message.isNotEmpty ? response.message : 'Failed to save product.')),
-              ],
-            ),
-            backgroundColor: Theme.of(context).colorScheme.error,
-            behavior: SnackBarBehavior.floating,
-          ),
+        await showErrorDialog(
+          context,
+          response.message.isNotEmpty
+              ? response.message
+              : 'Failed to save product.',
         );
         return;
       }
@@ -210,21 +199,10 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
           ? response.message
           : (isEditing ? 'Product updated successfully!' : 'Product created successfully!');
 
-      if (saveAndNew && !isEditing) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
-                const SizedBox(width: 10),
-                Expanded(child: Text(successMsg)),
-              ],
-            ),
-            backgroundColor: Colors.green.shade700,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+      await showSuccessDialog(context, successMsg);
+      if (!mounted) return;
 
+      if (saveAndNew && !isEditing) {
         _formKey.currentState?.reset();
         _nameController.clear();
         _codeController.clear();
@@ -242,38 +220,13 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
         });
         _nameFocusNode.requestFocus();
       } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
-                  const SizedBox(width: 10),
-                  Expanded(child: Text(successMsg)),
-                ],
-              ),
-              backgroundColor: Colors.green.shade700,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
         Navigator.of(context).pop(true);
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.error_outline_rounded, color: Colors.white, size: 20),
-              const SizedBox(width: 10),
-              Expanded(child: Text(e.toString().replaceAll('ApiException: ', ''))),
-            ],
-          ),
-          backgroundColor: Colors.red.shade700,
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 4),
-        ),
+      await showErrorDialog(
+        context,
+        e.toString().replaceAll('ApiException: ', ''),
       );
     } finally {
       if (mounted) {

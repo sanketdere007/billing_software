@@ -4,6 +4,7 @@ import '../../models/company.dart';
 import '../../services/company_service.dart';
 import '../../services/session_service.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/app_message_dialog.dart';
 import '../../widgets/direct_back_scope.dart';
 
 class CompanyMasterScreen extends StatefulWidget {
@@ -133,19 +134,8 @@ class _CompanyMasterScreenState extends State<CompanyMasterScreen> {
 
       final successMsg = isEditing ? 'Company updated successfully!' : 'Company created successfully!';
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
-              const SizedBox(width: 10),
-              Expanded(child: Text(successMsg)),
-            ],
-          ),
-          backgroundColor: Colors.green.shade700,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      await showSuccessDialog(context, successMsg);
+      if (!mounted) return;
 
       if (saveAndNew && !isEditing) {
         _formKey.currentState?.reset();
@@ -172,19 +162,9 @@ class _CompanyMasterScreenState extends State<CompanyMasterScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.error_outline_rounded, color: Colors.white, size: 20),
-              const SizedBox(width: 10),
-              Expanded(child: Text(e.toString().replaceAll('ApiException: ', ''))),
-            ],
-          ),
-          backgroundColor: Colors.red.shade700,
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 4),
-        ),
+      await showErrorDialog(
+        context,
+        e.toString().replaceAll('ApiException: ', ''),
       );
     } finally {
       if (mounted) {

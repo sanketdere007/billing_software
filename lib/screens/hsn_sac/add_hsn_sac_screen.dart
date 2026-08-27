@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/hsn_sac.dart';
 import '../../services/hsn_sac_service.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/app_message_dialog.dart';
 
 class AddHsnSacScreen extends StatefulWidget {
   const AddHsnSacScreen({super.key});
@@ -37,7 +38,8 @@ class _AddHsnSacScreenState extends State<AddHsnSacScreen> {
       await _hsnSacService.addHsnSac(newHsnSac);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('HSN/SAC saved successfully!'), backgroundColor: Colors.green));
+      await showSuccessDialog(context, 'HSN/SAC saved successfully!');
+      if (!mounted) return;
 
       if (saveAndNew) {
         _formKey.currentState!.reset();
@@ -50,7 +52,7 @@ class _AddHsnSacScreenState extends State<AddHsnSacScreen> {
       }
     } catch (e) {
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error saving HSN/SAC: $e'), backgroundColor: Colors.red));
+      await showErrorDialog(context, 'Error saving HSN/SAC: $e');
     }
   }
 

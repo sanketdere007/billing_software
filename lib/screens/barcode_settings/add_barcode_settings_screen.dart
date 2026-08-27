@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../../models/barcode_settings.dart';
 import '../../services/barcode_settings_service.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/app_message_dialog.dart';
 
 class AddBarcodeSettingsScreen extends StatefulWidget {
   const AddBarcodeSettingsScreen({super.key});
@@ -57,12 +58,8 @@ class _AddBarcodeSettingsScreenState extends State<AddBarcodeSettingsScreen> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Barcode settings saved successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      await showSuccessDialog(context, 'Barcode settings saved successfully!');
+      if (!mounted) return;
 
       if (saveAndNew) {
         _formKey.currentState!.reset();
@@ -79,12 +76,7 @@ class _AddBarcodeSettingsScreenState extends State<AddBarcodeSettingsScreen> {
       setState(() {
         _isLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error saving barcode settings: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      await showErrorDialog(context, 'Error saving barcode settings: $e');
     }
   }
 

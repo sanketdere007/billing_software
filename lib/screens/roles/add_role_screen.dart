@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/role.dart';
 import '../../services/role_service.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/app_message_dialog.dart';
 
 class AddRoleScreen extends StatefulWidget {
   const AddRoleScreen({super.key});
@@ -50,12 +51,8 @@ class _AddRoleScreenState extends State<AddRoleScreen> {
 
       if (!mounted) return;
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Role saved successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      await showSuccessDialog(context, 'Role saved successfully!');
+      if (!mounted) return;
 
       if (saveAndNew) {
         _formKey.currentState!.reset();
@@ -70,12 +67,7 @@ class _AddRoleScreenState extends State<AddRoleScreen> {
       setState(() {
         _isLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error saving role: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      await showErrorDialog(context, 'Error saving role: $e');
     }
   }
 

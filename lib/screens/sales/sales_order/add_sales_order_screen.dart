@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../widgets/app_drawer.dart';
+import '../../../widgets/app_message_dialog.dart';
 import 'sales_order_list_screen.dart';
 
 class AddSalesOrderScreen extends StatefulWidget {
@@ -161,11 +162,9 @@ class _AddSalesOrderScreenState extends State<AddSalesOrderScreen> {
           tooltip: 'View Orders',
         ),
         IconButton(
-          onPressed: () {
+          onPressed: () async {
             if (_formKey.currentState!.validate()) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Order Saved successfully')),
-              );
+              await showSuccessDialog(context, 'Order Saved successfully');
             }
           },
           icon: const Icon(Icons.save),
@@ -181,11 +180,9 @@ class _AddSalesOrderScreenState extends State<AddSalesOrderScreen> {
       ),
       const SizedBox(width: 8),
       FilledButton.icon(
-        onPressed: () {
+        onPressed: () async {
           if (_formKey.currentState!.validate()) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Order Saved successfully')),
-            );
+            await showSuccessDialog(context, 'Order Saved successfully');
           }
         },
         icon: const Icon(Icons.save),

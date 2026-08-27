@@ -10,6 +10,7 @@ import '../../services/product_service.dart';
 
 import '../../services/session_service.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/app_message_dialog.dart';
 import '../../widgets/category_dropdown.dart';
 import '../../widgets/subcategory_dropdown.dart';
 import '../../widgets/brand_dropdown.dart';
@@ -352,19 +353,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
     if (result == true || (result != null && result is String)) {
       if (result is String) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
-                const SizedBox(width: 10),
-                Expanded(child: Text(result)),
-              ],
-            ),
-            backgroundColor: Colors.green.shade700,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        await showSuccessDialog(context, result);
       }
       _fetchProducts();
     }
@@ -1438,16 +1427,10 @@ class _ProductDetailsDialogState extends State<_ProductDetailsDialog> {
     }
   }
 
-  void _copyToClipboard(String label, String text) {
+  Future<void> _copyToClipboard(String label, String text) async {
     if (text.isEmpty) return;
     Clipboard.setData(ClipboardData(text: text));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$label copied to clipboard!'),
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    await showSuccessDialog(context, '$label copied to clipboard!');
   }
 
   @override

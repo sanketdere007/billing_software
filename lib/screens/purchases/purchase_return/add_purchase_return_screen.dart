@@ -5,6 +5,7 @@ import '../../../services/purchase_return_service.dart';
 import '../../../services/supplier_service.dart';
 import '../../../services/product_service.dart';
 import '../../../widgets/app_drawer.dart';
+import '../../../widgets/app_message_dialog.dart';
 import 'purchase_return_list_screen.dart';
 
 class AddPurchaseReturnScreen extends StatefulWidget {
@@ -56,12 +57,10 @@ class _AddPurchaseReturnScreenState extends State<AddPurchaseReturnScreen> {
     });
   }
 
-  void _addProductRow() {
+  Future<void> _addProductRow() async {
     final availableProducts = _productService.products;
     if (availableProducts.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No products available')),
-      );
+      await showWarningDialog(context, 'No products available');
       return;
     }
     final first = availableProducts.first;
@@ -108,15 +107,11 @@ class _AddPurchaseReturnScreenState extends State<AddPurchaseReturnScreen> {
   Future<void> _saveReturn() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedSupplier == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a supplier')),
-      );
+      await showWarningDialog(context, 'Please select a supplier');
       return;
     }
     if (_products.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please add at least one item to return')),
-      );
+      await showWarningDialog(context, 'Please add at least one item to return');
       return;
     }
 
@@ -160,9 +155,8 @@ class _AddPurchaseReturnScreenState extends State<AddPurchaseReturnScreen> {
 
     await PurchaseReturnService().addReturn(returnObj);
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Purchase Return recorded successfully!')),
-      );
+      await showSuccessDialog(context, 'Purchase Return recorded successfully!');
+      if (!mounted) return;
       Navigator.of(context).pop();
     }
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../widgets/app_drawer.dart';
+import '../../../widgets/app_message_dialog.dart';
 import 'sales_entry_list_screen.dart';
 
 class AddSalesEntryScreen extends StatefulWidget {
@@ -179,20 +180,16 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
           tooltip: 'View Sales',
         ),
         IconButton(
-          onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Invoice placed on hold')),
-            );
+          onPressed: () async {
+            await showWarningDialog(context, 'Invoice placed on hold');
           },
           icon: const Icon(Icons.pause, color: Colors.orange),
           tooltip: 'Hold',
         ),
         IconButton(
-          onPressed: () {
+          onPressed: () async {
             if (_formKey.currentState!.validate()) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Invoice Saved successfully')),
-              );
+              await showSuccessDialog(context, 'Invoice Saved successfully');
             }
           },
           icon: const Icon(Icons.save),
@@ -208,20 +205,16 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
       ),
       const SizedBox(width: 8),
       TextButton.icon(
-        onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Invoice placed on hold')),
-          );
+        onPressed: () async {
+          await showWarningDialog(context, 'Invoice placed on hold');
         },
         icon: const Icon(Icons.pause, color: Colors.orange),
         label: const Text('Hold', style: TextStyle(color: Colors.orange)),
       ),
       FilledButton.icon(
-        onPressed: () {
+        onPressed: () async {
           if (_formKey.currentState!.validate()) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Invoice Saved successfully')),
-            );
+            await showSuccessDialog(context, 'Invoice Saved successfully');
           }
         },
         icon: const Icon(Icons.save),

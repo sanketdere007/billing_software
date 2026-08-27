@@ -8,6 +8,7 @@ import '../../../services/supplier_service.dart';
 import '../../../services/product_service.dart';
 import '../../../services/session_service.dart';
 import '../../../widgets/app_drawer.dart';
+import '../../../widgets/app_message_dialog.dart';
 import '../../../widgets/supplier_dropdown.dart';
 import 'purchase_entry_list_screen.dart';
 import 'product_selection_dialog.dart';
@@ -172,9 +173,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
 
       if (exists) {
         if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Product already added!')));
+        await showWarningDialog(context, 'Product already added!');
         return;
       }
 
@@ -252,36 +251,28 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
   Future<void> _saveEntry() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedSupplier == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please select a supplier')));
+      await showWarningDialog(context, 'Please select a supplier');
       return;
     }
 
     final validProducts = _products.where((p) => p['product'] != null).toList();
     if (validProducts.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please add at least one product')),
-      );
+      await showWarningDialog(context, 'Please add at least one product');
       return;
     }
 
     final enteredAmount = double.tryParse(_invoiceAmountController.text) ?? 0.0;
     if (enteredAmount.toStringAsFixed(2) != _finalPayable.toStringAsFixed(2)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('invoice amount final amount are not same'),
-          backgroundColor: Colors.red,
-        ),
+      await showErrorDialog(
+        context,
+        'invoice amount final amount are not same',
       );
       return;
     }
 
     final hasZeroRate = validProducts.any((p) => (p['rate'] ?? 0.0) <= 0.0);
     if (hasZeroRate) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Product rate cannot be 0')));
+      await showWarningDialog(context, 'Product rate cannot be 0');
       return;
     }
 
@@ -354,19 +345,13 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(response.message),
-            backgroundColor: Colors.green,
-          ),
-        );
+        await showSuccessDialog(context, response.message);
+        if (!mounted) return;
         _resetForm();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
-        );
+        await showErrorDialog(context, e.toString());
       }
     } finally {
       if (mounted) {

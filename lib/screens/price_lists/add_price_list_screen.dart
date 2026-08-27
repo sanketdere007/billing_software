@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../models/price_list.dart';
 import '../../services/price_list_service.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/app_message_dialog.dart';
 
 class AddPriceListScreen extends StatefulWidget {
   const AddPriceListScreen({super.key});
@@ -76,12 +77,8 @@ class _AddPriceListScreenState extends State<AddPriceListScreen> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Price list saved successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      await showSuccessDialog(context, 'Price list saved successfully!');
+      if (!mounted) return;
 
       if (saveAndNew) {
         _formKey.currentState!.reset();
@@ -99,12 +96,7 @@ class _AddPriceListScreenState extends State<AddPriceListScreen> {
       setState(() {
         _isLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error saving price list: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      await showErrorDialog(context, 'Error saving price list: $e');
     }
   }
 

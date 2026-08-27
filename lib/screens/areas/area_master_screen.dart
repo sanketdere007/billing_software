@@ -8,6 +8,7 @@ import '../../services/city_service.dart';
 import '../../services/state_service.dart';
 import '../../services/session_service.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/app_message_dialog.dart';
 import '../../widgets/city_dropdown.dart';
 import '../../widgets/direct_back_scope.dart';
 import '../../widgets/state_dropdown.dart';
@@ -126,23 +127,13 @@ class _AreaMasterScreenState extends State<AreaMasterScreen> {
     }
 
     if (_selectedStateId == null || _selectedStateId! <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a valid state.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      await showWarningDialog(context, 'Please select a valid state.');
       _stateFocusNode.requestFocus();
       return;
     }
 
     if (_selectedCityId == null || _selectedCityId! <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a valid city.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      await showWarningDialog(context, 'Please select a valid city.');
       _cityFocusNode.requestFocus();
       return;
     }
@@ -173,20 +164,8 @@ class _AreaMasterScreenState extends State<AreaMasterScreen> {
               ? 'Area updated successfully!'
               : 'Area created successfully!');
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.check_circle_rounded,
-                  color: Colors.white, size: 20),
-              const SizedBox(width: 10),
-              Expanded(child: Text(successMsg)),
-            ],
-          ),
-          backgroundColor: Colors.green.shade700,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      await showSuccessDialog(context, successMsg);
+      if (!mounted) return;
 
       if (saveAndNew && !isEditing) {
         _formKey.currentState?.reset();
@@ -202,21 +181,9 @@ class _AreaMasterScreenState extends State<AreaMasterScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.error_outline_rounded,
-                  color: Colors.white, size: 20),
-              const SizedBox(width: 10),
-              Expanded(
-                  child: Text(e.toString().replaceAll('ApiException: ', ''))),
-            ],
-          ),
-          backgroundColor: Colors.red.shade700,
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 4),
-        ),
+      await showErrorDialog(
+        context,
+        e.toString().replaceAll('ApiException: ', ''),
       );
     } finally {
       if (mounted) {

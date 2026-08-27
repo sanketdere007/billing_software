@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../../models/printer_settings.dart';
 import '../../services/printer_settings_service.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/app_message_dialog.dart';
 
 class AddPrinterSettingsScreen extends StatefulWidget {
   const AddPrinterSettingsScreen({super.key});
@@ -57,12 +58,8 @@ class _AddPrinterSettingsScreenState extends State<AddPrinterSettingsScreen> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Printer saved successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      await showSuccessDialog(context, 'Printer saved successfully!');
+      if (!mounted) return;
 
       if (saveAndNew) {
         _formKey.currentState!.reset();
@@ -81,12 +78,7 @@ class _AddPrinterSettingsScreenState extends State<AddPrinterSettingsScreen> {
       setState(() {
         _isLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error saving printer: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      await showErrorDialog(context, 'Error saving printer: $e');
     }
   }
 

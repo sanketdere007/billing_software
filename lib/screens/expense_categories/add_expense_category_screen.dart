@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/expense_category.dart';
 import '../../services/expense_category_service.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/app_message_dialog.dart';
 
 class AddExpenseCategoryScreen extends StatefulWidget {
   const AddExpenseCategoryScreen({super.key});
@@ -42,12 +43,8 @@ class _AddExpenseCategoryScreenState extends State<AddExpenseCategoryScreen> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Expense category saved successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      await showSuccessDialog(context, 'Expense category saved successfully!');
+      if (!mounted) return;
 
       if (saveAndNew) {
         _formKey.currentState!.reset();
@@ -62,12 +59,7 @@ class _AddExpenseCategoryScreenState extends State<AddExpenseCategoryScreen> {
       setState(() {
         _isLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error saving expense category: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      await showErrorDialog(context, 'Error saving expense category: $e');
     }
   }
 

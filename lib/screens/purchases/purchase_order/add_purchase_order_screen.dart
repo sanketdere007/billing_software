@@ -5,6 +5,7 @@ import '../../../services/purchase_order_service.dart';
 import '../../../services/supplier_service.dart';
 import '../../../services/product_service.dart';
 import '../../../widgets/app_drawer.dart';
+import '../../../widgets/app_message_dialog.dart';
 import 'purchase_order_list_screen.dart';
 
 class AddPurchaseOrderScreen extends StatefulWidget {
@@ -54,12 +55,10 @@ class _AddPurchaseOrderScreenState extends State<AddPurchaseOrderScreen> {
     });
   }
 
-  void _addProductRow() {
+  Future<void> _addProductRow() async {
     final availableProducts = _productService.products;
     if (availableProducts.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No products available to add')),
-      );
+      await showWarningDialog(context, 'No products available to add');
       return;
     }
     final first = availableProducts.first;
@@ -105,15 +104,11 @@ class _AddPurchaseOrderScreenState extends State<AddPurchaseOrderScreen> {
   Future<void> _saveOrder() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedSupplier == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a supplier')),
-      );
+      await showWarningDialog(context, 'Please select a supplier');
       return;
     }
     if (_products.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please add at least one product')),
-      );
+      await showWarningDialog(context, 'Please add at least one product');
       return;
     }
 
@@ -150,9 +145,8 @@ class _AddPurchaseOrderScreenState extends State<AddPurchaseOrderScreen> {
 
     await PurchaseOrderService().addOrder(order);
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Purchase Order saved successfully!')),
-      );
+      await showSuccessDialog(context, 'Purchase Order saved successfully!');
+      if (!mounted) return;
       Navigator.of(context).pop();
     }
   }

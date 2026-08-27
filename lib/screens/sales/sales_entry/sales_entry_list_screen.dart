@@ -241,11 +241,7 @@ class _SalesEntryListScreenState extends State<SalesEntryListScreen> {
                     IconButton(
                       icon: const Icon(Icons.refresh),
                       tooltip: 'Refresh',
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Refreshing list...')),
-                        );
-                      },
+                      onPressed: () {},
                     ),
                     const SizedBox(width: 16),
                   ],
@@ -264,11 +260,7 @@ class _SalesEntryListScreenState extends State<SalesEntryListScreen> {
             IconButton(
               icon: const Icon(Icons.refresh),
               tooltip: 'Refresh',
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Refreshing list...')),
-                );
-              },
+              onPressed: () {},
             ),
           ],
         ),

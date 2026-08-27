@@ -5,6 +5,7 @@ import '../../models/company.dart';
 import '../../services/branch_service.dart';
 import '../../services/session_service.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/app_message_dialog.dart';
 import '../../widgets/company_dropdown.dart';
 
 class AddBranchScreen extends StatefulWidget {
@@ -74,12 +75,8 @@ class _AddBranchScreenState extends State<AddBranchScreen> {
 
       if (!mounted) return;
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Branch saved successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      await showSuccessDialog(context, 'Branch saved successfully!');
+      if (!mounted) return;
 
       if (saveAndNew) {
         _formKey.currentState!.reset();
@@ -94,12 +91,7 @@ class _AddBranchScreenState extends State<AddBranchScreen> {
       setState(() {
         _isLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error saving branch: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      await showErrorDialog(context, 'Error saving branch: $e');
     }
   }
 

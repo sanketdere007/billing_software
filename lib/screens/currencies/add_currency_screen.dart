@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../../models/currency.dart';
 import '../../services/currency_service.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/app_message_dialog.dart';
 
 class AddCurrencyScreen extends StatefulWidget {
   const AddCurrencyScreen({super.key});
@@ -51,12 +52,8 @@ class _AddCurrencyScreenState extends State<AddCurrencyScreen> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Currency saved successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      await showSuccessDialog(context, 'Currency saved successfully!');
+      if (!mounted) return;
 
       if (saveAndNew) {
         _formKey.currentState!.reset();
@@ -74,12 +71,7 @@ class _AddCurrencyScreenState extends State<AddCurrencyScreen> {
       setState(() {
         _isLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error saving currency: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      await showErrorDialog(context, 'Error saving currency: $e');
     }
   }
 
