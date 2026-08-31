@@ -3,8 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../../../models/product.dart';
 import '../../../models/sales_entry.dart';
+import '../../../models/customer.dart';
+import '../../../models/company.dart';
 import '../../../services/sales_entry_service.dart';
 import '../../../services/customer_service.dart';
+import '../../../services/company_service.dart';
 import '../../../services/product_service.dart';
 import '../../../services/session_service.dart';
 import '../../../widgets/app_drawer.dart';
@@ -260,6 +263,26 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
     });
   }
 
+  bool _isInterstateSale(CompanyListItem? company, CustomerListItem? customer) {
+    final companyGst = (company?.compGSTNo ?? '').trim().toUpperCase();
+    final customerGst = (customer?.custGSTNo ?? '').trim().toUpperCase();
+    if (companyGst.length >= 2 && customerGst.length >= 2) {
+      return companyGst.substring(0, 2) != customerGst.substring(0, 2);
+    }
+
+    final companyState = (company?.compState ?? '').trim().toLowerCase();
+    final customerState = (customer?.custStateName.isNotEmpty == true
+            ? customer!.custStateName
+            : (customer?.custState ?? ''))
+        .trim()
+        .toLowerCase();
+    if (companyState.isNotEmpty && customerState.isNotEmpty) {
+      return companyState != customerState;
+    }
+
+    return false;
+  }
+
   Future<void> _saveEntry() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedCustomer == null) {
@@ -289,54 +312,124 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
       int branchId = sessionService.selectedBranchId ?? 1;
       int empId = user?.empId ?? 1;
 
-      int ledgerId = 0;
+      CustomerListItem? customer;
       try {
-        final customer = _customerService.customers.firstWhere(
+        customer = _customerService.customers.firstWhere(
           (c) => c.custId == _selectedCustomer,
         );
-        ledgerId = customer.custLedgerId;
-      } catch (e) {
-        // ignore
+      } catch (_) {
+        customer = null;
       }
 
-      final masterData = SalesEntryMasterData(
-        compId: compId,
-        branchId: branchId,
-        customerId: _selectedCustomer!,
-        invoiceNo: 'AUTO', // Or empty string, depends on backend
-        invoiceDate: _selectedDate.toIso8601String(),
-        subTotal: _grossTotal,
-        discountAmount: _totalProductDiscount + _billDiscount,
-        gstAmount: _totalGST,
-        otherCharges: 0,
-        netAmount: _finalPayable,
-        paidAmount: 0,
-        balanceAmount: _finalPayable,
-        status: 'Completed',
-        remark: '',
-        createdBy: empId,
-        modifiedBy: empId,
-        ledgerId: ledgerId,
-      );
+      final company = companyService.getCompanyById(compId);
+      final isInterstate = _isInterstateSale(company, customer);
 
       final detailData = validProducts.map((p) {
         final ProductListItem prod = p['product'];
+        final double qty = (p['qty'] as num?)?.toDouble() ?? 0;
+        final double rate = (p['rate'] as num?)?.toDouble() ?? 0;
+        final double discAmt = (p['discAmt'] as num?)?.toDouble() ?? 0;
+        final double gstPct = (p['gstPct'] as num?)?.toDouble() ?? 0;
+        final double gstAmt = (p['gstAmt'] as num?)?.toDouble() ?? 0;
+        final double taxable = (p['discounted'] as num?)?.toDouble() ?? 0;
+        final double net = (p['net'] as num?)?.toDouble() ?? 0;
+        final double gross = qty * rate;
+        final double discPct = gross > 0 ? (discAmt / gross) * 100 : 0;
+
+        final double cgstPct = isInterstate ? 0 : gstPct / 2;
+        final double sgstPct = isInterstate ? 0 : gstPct / 2;
+        final double igstPct = isInterstate ? gstPct : 0;
+        final double cgstAmt = isInterstate ? 0 : gstAmt / 2;
+        final double sgstAmt = isInterstate ? 0 : gstAmt / 2;
+        final double igstAmt = isInterstate ? gstAmt : 0;
+
         return SalesEntryDetailData(
           compId: compId,
           branchId: branchId,
           productId: prod.prodId,
-          barcode: '',
-          eanCode: '',
-          qty: p['qty'],
-          mrp: p['rate'],
-          sellingPrice: p['rate'],
-          discountPercent: 0,
-          discountAmount: p['discAmt'],
-          gstPercent: p['gstPct'],
-          gstAmount: p['gstAmt'],
-          totalAmount: p['net'],
+          productName: prod.prodName,
+          hsnCode: prod.prodHSNCode,
+          unitId: prod.prodUnitId,
+          qty: qty,
+          freeQty: 0,
+          totalQty: qty,
+          mrp: rate,
+          sellingPrice: rate,
+          rate: rate,
+          discountPercentage: discPct,
+          discountAmount: discAmt,
+          taxableAmount: taxable,
+          gstPercentage: gstPct,
+          cgstPercentage: cgstPct,
+          sgstPercentage: sgstPct,
+          igstPercentage: igstPct,
+          cessPercentage: 0,
+          cgstAmount: cgstAmt,
+          sgstAmount: sgstAmt,
+          igstAmount: igstAmt,
+          cessAmount: 0,
+          totalTaxAmount: gstAmt,
+          totalAmount: net,
+          createdBy: empId,
+          modifiedBy: empId,
         );
       }).toList();
+
+      final totalCGST = detailData.fold<double>(0, (s, d) => s + d.cgstAmount);
+      final totalSGST = detailData.fold<double>(0, (s, d) => s + d.sgstAmount);
+      final totalIGST = detailData.fold<double>(0, (s, d) => s + d.igstAmount);
+      final totalTaxable = detailData.fold<double>(
+        0,
+        (s, d) => s + d.taxableAmount,
+      );
+      final totalQty = detailData.fold<double>(0, (s, d) => s + d.totalQty);
+
+      final billingName = customer?.custName ?? '';
+      final billingAddress = customer?.fullAddress ?? '';
+      final billingMobile = customer?.custMobileNo ?? '';
+      final billingGst = customer?.custGSTNo ?? '';
+      final billingStateId = customer?.custStateId ?? 0;
+      final billingCityId = customer?.custCityId ?? 0;
+      final billingAreaId = customer?.custAreaId ?? 0;
+
+      final masterData = SalesEntryMasterData(
+        salesMasterId: 0,
+        compId: compId,
+        branchId: branchId,
+        customerId: _selectedCustomer!,
+        ledgerId: customer?.custLedgerId ?? 0,
+        invoiceDate: _selectedDate.toIso8601String(),
+        totalQty: totalQty,
+        subTotal: _grossTotal,
+        totalDiscount: _totalProductDiscount + _billDiscount,
+        totalTaxableAmount: totalTaxable,
+        totalCGST: totalCGST,
+        totalSGST: totalSGST,
+        totalIGST: totalIGST,
+        totalCESS: 0,
+        roundOff: 0,
+        grandTotal: _finalPayable,
+        paidAmount: 0,
+        balanceAmount: _finalPayable,
+        billingName: billingName,
+        billingAddress: billingAddress,
+        billingMobileNo: billingMobile,
+        billingGSTNo: billingGst,
+        billingStateId: billingStateId,
+        billingCityId: billingCityId,
+        billingAreaId: billingAreaId,
+        shippingName: billingName,
+        shippingAddress: billingAddress,
+        shippingMobileNo: billingMobile,
+        shippingGSTNo: billingGst,
+        shippingStateId: billingStateId,
+        shippingCityId: billingCityId,
+        shippingAreaId: billingAreaId,
+        status: 'Completed',
+        isActive: true,
+        createdBy: empId,
+        modifiedBy: empId,
+      );
 
       final request = SalesEntryUpsertRequest(
         masterData: masterData,
@@ -348,7 +441,18 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
       );
 
       if (mounted) {
-        await showSuccessDialog(context, response.message);
+        final invoiceNo = response.data?.salesMasterInvoiceNo ?? '';
+        final apiMessage = (response.data?.message.isNotEmpty ?? false)
+            ? response.data!.message
+            : response.message;
+        final successMessage = invoiceNo.isNotEmpty
+            ? (apiMessage.isNotEmpty
+                  ? '$apiMessage\nInvoice: $invoiceNo'
+                  : 'Sales entry saved. Invoice: $invoiceNo')
+            : (apiMessage.isNotEmpty
+                  ? apiMessage
+                  : 'Sales entry saved successfully');
+        await showSuccessDialog(context, successMessage);
         if (!mounted) return;
         _resetForm();
       }
