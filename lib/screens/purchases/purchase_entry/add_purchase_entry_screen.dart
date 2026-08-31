@@ -622,273 +622,368 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
               : 0.0;
           final double effectiveProductNameWidth = colProductName + extraWidth;
 
-        return Container(
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: SizedBox(
-              width: tableWidth,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Container(
-                    color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
-                    child: IntrinsicHeight(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          buildHeaderCell(
-                            'Product Name',
-                            effectiveProductNameWidth,
-                          ),
-                          buildHeaderCell('Qty', colQty, isNumeric: true),
-                          buildHeaderCell('Rate', colRate, isNumeric: true),
-                          buildHeaderCell('Gross', colGross, isNumeric: true),
-                          buildHeaderCell(
-                            'Discount',
-                            colDiscount,
-                            isNumeric: true,
-                          ),
-                          buildHeaderCell('GST %', colGstPct, isNumeric: true),
-                          buildHeaderCell(
-                            'GST Amt',
-                            colGstAmt,
-                            isNumeric: true,
-                          ),
-                          buildHeaderCell('Net Amt', colNet, isNumeric: true),
-                          buildHeaderCell(
-                            'Act',
-                            colAction,
-                            isNumeric: true,
-                            isLast: true,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const Divider(height: 1),
-                  // Scrollable Data Rows
-                  Expanded(
-                    child: ListView.separated(
-                      itemCount: _products.length,
-                      separatorBuilder: (context, index) => Divider(
-                        height: 1,
-                        color: theme.colorScheme.outlineVariant.withOpacity(
-                          0.5,
+          return Container(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SizedBox(
+                width: tableWidth,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(
+                      color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+                      child: IntrinsicHeight(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            buildHeaderCell(
+                              'Product Name',
+                              effectiveProductNameWidth,
+                            ),
+                            buildHeaderCell('Qty', colQty, isNumeric: true),
+                            buildHeaderCell('Rate', colRate, isNumeric: true),
+                            buildHeaderCell('Gross', colGross, isNumeric: true),
+                            buildHeaderCell(
+                              'Discount',
+                              colDiscount,
+                              isNumeric: true,
+                            ),
+                            buildHeaderCell(
+                              'GST %',
+                              colGstPct,
+                              isNumeric: true,
+                            ),
+                            buildHeaderCell(
+                              'GST Amt',
+                              colGstAmt,
+                              isNumeric: true,
+                            ),
+                            buildHeaderCell('Net Amt', colNet, isNumeric: true),
+                            buildHeaderCell(
+                              'Act',
+                              colAction,
+                              isNumeric: true,
+                              isLast: true,
+                            ),
+                          ],
                         ),
                       ),
-                      itemBuilder: (context, index) {
-                        final p = _products[index];
-                        final ProductListItem? prod = p['product'];
-                        final isEven = index.isEven;
+                    ),
+                    const Divider(height: 1),
+                    // Scrollable Data Rows
+                    Expanded(
+                      child: ListView.separated(
+                        itemCount: _products.length,
+                        separatorBuilder: (context, index) => Divider(
+                          height: 1,
+                          color: theme.colorScheme.outlineVariant.withOpacity(
+                            0.5,
+                          ),
+                        ),
+                        itemBuilder: (context, index) {
+                          final p = _products[index];
+                          final ProductListItem? prod = p['product'];
+                          final isEven = index.isEven;
 
-                        final bool isEmptyRow = prod == null;
+                          final bool isEmptyRow = prod == null;
 
-                        (p['productNode'] as FocusNode).onKeyEvent =
-                            (node, event) => _handleGridKeyEvent(
-                              node,
-                              event,
-                              index,
-                              'product',
-                            );
-                        (p['qtyNode'] as FocusNode).onKeyEvent =
-                            (node, event) =>
-                                _handleGridKeyEvent(node, event, index, 'qty');
-                        (p['rateNode'] as FocusNode).onKeyEvent =
-                            (node, event) =>
-                                _handleGridKeyEvent(node, event, index, 'rate');
-                        (p['discNode'] as FocusNode).onKeyEvent =
-                            (node, event) =>
-                                _handleGridKeyEvent(node, event, index, 'disc');
+                          (p['productNode'] as FocusNode).onKeyEvent =
+                              (node, event) => _handleGridKeyEvent(
+                                node,
+                                event,
+                                index,
+                                'product',
+                              );
+                          (p['qtyNode'] as FocusNode).onKeyEvent =
+                              (node, event) => _handleGridKeyEvent(
+                                node,
+                                event,
+                                index,
+                                'qty',
+                              );
+                          (p['rateNode'] as FocusNode).onKeyEvent =
+                              (node, event) => _handleGridKeyEvent(
+                                node,
+                                event,
+                                index,
+                                'rate',
+                              );
+                          (p['discNode'] as FocusNode).onKeyEvent =
+                              (node, event) => _handleGridKeyEvent(
+                                node,
+                                event,
+                                index,
+                                'disc',
+                              );
 
-                        return AnimatedBuilder(
-                          animation: Listenable.merge([
-                            p['productNode'] as FocusNode,
-                            p['qtyNode'] as FocusNode,
-                            p['rateNode'] as FocusNode,
-                            p['discNode'] as FocusNode,
-                          ]),
-                          builder: (context, child) {
-                            final isRowFocused =
-                                (p['productNode'] as FocusNode).hasFocus ||
-                                (p['qtyNode'] as FocusNode).hasFocus ||
-                                (p['rateNode'] as FocusNode).hasFocus ||
-                                (p['discNode'] as FocusNode).hasFocus;
-                            return Container(
-                              key: ValueKey(prod?.prodId ?? 'empty_$index'),
-                              color: isRowFocused
-                                  ? theme.colorScheme.primaryContainer
-                                        .withOpacity(0.4)
-                                  : (isEven
-                                        ? theme.colorScheme.surfaceVariant
-                                              .withOpacity(0.1)
-                                        : null),
-                              child: child,
-                            );
-                          },
-                          child: IntrinsicHeight(
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                buildDataCell(
-                                  Focus(
-                                    focusNode: p['productNode'],
-                                    child: Builder(
-                                      builder: (context) {
-                                        final isFocused = Focus.of(
-                                          context,
-                                        ).hasFocus;
-                                        return InkWell(
-                                          onTap: () =>
-                                              _selectProductForEmptyRow(index),
-                                          borderRadius: BorderRadius.circular(
-                                            6,
-                                          ),
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 10,
-                                              vertical: 8,
+                          return AnimatedBuilder(
+                            animation: Listenable.merge([
+                              p['productNode'] as FocusNode,
+                              p['qtyNode'] as FocusNode,
+                              p['rateNode'] as FocusNode,
+                              p['discNode'] as FocusNode,
+                            ]),
+                            builder: (context, child) {
+                              final isRowFocused =
+                                  (p['productNode'] as FocusNode).hasFocus ||
+                                  (p['qtyNode'] as FocusNode).hasFocus ||
+                                  (p['rateNode'] as FocusNode).hasFocus ||
+                                  (p['discNode'] as FocusNode).hasFocus;
+                              return Container(
+                                key: ValueKey(prod?.prodId ?? 'empty_$index'),
+                                color: isRowFocused
+                                    ? theme.colorScheme.primaryContainer
+                                          .withOpacity(0.4)
+                                    : (isEven
+                                          ? theme.colorScheme.surfaceVariant
+                                                .withOpacity(0.1)
+                                          : null),
+                                child: child,
+                              );
+                            },
+                            child: IntrinsicHeight(
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  buildDataCell(
+                                    Focus(
+                                      focusNode: p['productNode'],
+                                      child: Builder(
+                                        builder: (context) {
+                                          final isFocused = Focus.of(
+                                            context,
+                                          ).hasFocus;
+                                          return InkWell(
+                                            onTap: () =>
+                                                _selectProductForEmptyRow(
+                                                  index,
+                                                ),
+                                            borderRadius: BorderRadius.circular(
+                                              6,
                                             ),
-                                            decoration: BoxDecoration(
-                                              border: Border.all(
+                                            child: Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 10,
+                                                    vertical: 8,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                border: Border.all(
+                                                  color: isFocused
+                                                      ? theme
+                                                            .colorScheme
+                                                            .primary
+                                                      : Colors.transparent,
+                                                  width: 1.5,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
                                                 color: isFocused
-                                                    ? theme.colorScheme.primary
+                                                    ? theme
+                                                          .colorScheme
+                                                          .primaryContainer
+                                                          .withOpacity(0.2)
                                                     : Colors.transparent,
-                                                width: 1.5,
                                               ),
-                                              borderRadius:
-                                                  BorderRadius.circular(6),
-                                              color: isFocused
-                                                  ? theme
-                                                        .colorScheme
-                                                        .primaryContainer
-                                                        .withOpacity(0.2)
-                                                  : Colors.transparent,
-                                            ),
-                                            child: isEmptyRow
-                                                ? Row(
-                                                    children: [
-                                                      Icon(
-                                                        Icons.search,
-                                                        size: 16,
-                                                        color: theme.hintColor,
-                                                      ),
-                                                      const SizedBox(width: 8),
-                                                      Text(
-                                                        'Select Product (Enter)',
-                                                        style: TextStyle(
+                                              child: isEmptyRow
+                                                  ? Row(
+                                                      children: [
+                                                        Icon(
+                                                          Icons.search,
+                                                          size: 16,
                                                           color:
                                                               theme.hintColor,
-                                                          fontStyle:
-                                                              FontStyle.italic,
                                                         ),
-                                                      ),
-                                                    ],
-                                                  )
-                                                : Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .center,
-                                                    children: [
-                                                      Text(
-                                                        prod.prodName,
-                                                        style: const TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.w500,
+                                                        const SizedBox(
+                                                          width: 8,
                                                         ),
-                                                        maxLines: 1,
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
-                                                      ),
-                                                      const SizedBox(height: 2),
-                                                      Text(
-                                                        prod.prodCode,
-                                                        style: TextStyle(
-                                                          color: theme
-                                                              .colorScheme
-                                                              .onSurfaceVariant,
-                                                          fontSize: 11,
+                                                        Text(
+                                                          'Select Product (Enter)',
+                                                          style: TextStyle(
+                                                            color:
+                                                                theme.hintColor,
+                                                            fontStyle: FontStyle
+                                                                .italic,
+                                                          ),
                                                         ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                          ),
-                                        );
-                                      },
+                                                      ],
+                                                    )
+                                                  : Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      children: [
+                                                        Text(
+                                                          prod.prodName,
+                                                          style:
+                                                              const TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w500,
+                                                              ),
+                                                          maxLines: 1,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                        ),
+                                                        const SizedBox(
+                                                          height: 2,
+                                                        ),
+                                                        Text(
+                                                          prod.prodCode,
+                                                          style: TextStyle(
+                                                            color: theme
+                                                                .colorScheme
+                                                                .onSurfaceVariant,
+                                                            fontSize: 11,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                    effectiveProductNameWidth,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 4,
+                                      vertical: 4,
                                     ),
                                   ),
-                                  effectiveProductNameWidth,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 4,
-                                    vertical: 4,
+                                  buildDataCell(
+                                    TextFormField(
+                                      controller: p['qtyController'],
+                                      focusNode: p['qtyNode'],
+                                      enabled: !isEmptyRow,
+                                      keyboardType: TextInputType.number,
+                                      textAlign: TextAlign.right,
+                                      textInputAction: TextInputAction.next,
+                                      inputFormatters: [
+                                        FilteringTextInputFormatter.allow(
+                                          RegExp(r'^\d+\.?\d*'),
+                                        ),
+                                      ],
+                                      decoration: _gridInputDecoration(theme),
+                                      onChanged: (val) {
+                                        p['qty'] = double.tryParse(val) ?? 0.0;
+                                        _calculateTotals();
+                                      },
+                                      onFieldSubmitted: (_) =>
+                                          (p['rateNode'] as FocusNode)
+                                              .requestFocus(),
+                                    ),
+                                    colQty,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 4,
+                                    ),
                                   ),
-                                ),
-                                buildDataCell(
-                                  TextFormField(
-                                    controller: p['qtyController'],
-                                    focusNode: p['qtyNode'],
-                                    enabled: !isEmptyRow,
-                                    keyboardType: TextInputType.number,
-                                    textAlign: TextAlign.right,
-                                    textInputAction: TextInputAction.next,
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.allow(
-                                        RegExp(r'^\d+\.?\d*'),
+                                  buildDataCell(
+                                    TextFormField(
+                                      controller: p['rateController'],
+                                      focusNode: p['rateNode'],
+                                      enabled: !isEmptyRow,
+                                      keyboardType: TextInputType.number,
+                                      textAlign: TextAlign.right,
+                                      textInputAction: TextInputAction.next,
+                                      inputFormatters: [
+                                        FilteringTextInputFormatter.allow(
+                                          RegExp(r'^\d+\.?\d*'),
+                                        ),
+                                      ],
+                                      decoration: _gridInputDecoration(theme),
+                                      onChanged: (val) {
+                                        final newRate =
+                                            double.tryParse(val) ?? 0.0;
+                                        p['rate'] = newRate;
+                                        if (newRate <= 0.0) {
+                                          p['discAmt'] = 0.0;
+                                          (p['discAmtController']
+                                                      as TextEditingController)
+                                                  .text =
+                                              '0.0';
+                                        }
+                                        _calculateTotals();
+                                      },
+                                      onFieldSubmitted: (_) {
+                                        if ((p['rate'] ?? 0.0) > 0.0) {
+                                          (p['discNode'] as FocusNode)
+                                              .requestFocus();
+                                        } else {
+                                          if (index == _products.length - 1) {
+                                            setState(() {
+                                              _addNewEmptyRow();
+                                            });
+                                            WidgetsBinding.instance
+                                                .addPostFrameCallback((_) {
+                                                  if (mounted) {
+                                                    final newNode =
+                                                        _products
+                                                                .last['productNode']
+                                                            as FocusNode;
+                                                    newNode.requestFocus();
+                                                  }
+                                                });
+                                          } else {
+                                            (_products[index + 1]['productNode']
+                                                    as FocusNode)
+                                                .requestFocus();
+                                          }
+                                        }
+                                      },
+                                    ),
+                                    colRate,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 4,
+                                    ),
+                                  ),
+                                  buildDataCell(
+                                    Text(
+                                      isEmptyRow
+                                          ? '-'
+                                          : (p['gross'] as double)
+                                                .toStringAsFixed(2),
+                                      style: TextStyle(
+                                        color: isEmptyRow
+                                            ? theme.hintColor
+                                            : null,
                                       ),
-                                    ],
-                                    decoration: _gridInputDecoration(theme),
-                                    onChanged: (val) {
-                                      p['qty'] = double.tryParse(val) ?? 0.0;
-                                      _calculateTotals();
-                                    },
-                                    onFieldSubmitted: (_) =>
-                                        (p['rateNode'] as FocusNode)
-                                            .requestFocus(),
+                                    ),
+                                    colGross,
+                                    isNumeric: true,
                                   ),
-                                  colQty,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 4,
-                                  ),
-                                ),
-                                buildDataCell(
-                                  TextFormField(
-                                    controller: p['rateController'],
-                                    focusNode: p['rateNode'],
-                                    enabled: !isEmptyRow,
-                                    keyboardType: TextInputType.number,
-                                    textAlign: TextAlign.right,
-                                    textInputAction: TextInputAction.next,
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.allow(
-                                        RegExp(r'^\d+\.?\d*'),
-                                      ),
-                                    ],
-                                    decoration: _gridInputDecoration(theme),
-                                    onChanged: (val) {
-                                      final newRate =
-                                          double.tryParse(val) ?? 0.0;
-                                      p['rate'] = newRate;
-                                      if (newRate <= 0.0) {
-                                        p['discAmt'] = 0.0;
-                                        (p['discAmtController']
-                                                    as TextEditingController)
-                                                .text =
-                                            '0.0';
-                                      }
-                                      _calculateTotals();
-                                    },
-                                    onFieldSubmitted: (_) {
-                                      if ((p['rate'] ?? 0.0) > 0.0) {
-                                        (p['discNode'] as FocusNode)
-                                            .requestFocus();
-                                      } else {
+                                  buildDataCell(
+                                    TextFormField(
+                                      controller: p['discAmtController'],
+                                      focusNode: p['discNode'],
+                                      enabled:
+                                          !isEmptyRow &&
+                                          (p['rate'] ?? 0.0) > 0.0,
+                                      keyboardType: TextInputType.number,
+                                      textAlign: TextAlign.right,
+                                      textInputAction: TextInputAction.next,
+                                      inputFormatters: [
+                                        FilteringTextInputFormatter.allow(
+                                          RegExp(r'^\d+\.?\d*'),
+                                        ),
+                                      ],
+                                      decoration: _gridInputDecoration(theme),
+                                      onChanged: (val) {
+                                        p['discAmt'] =
+                                            double.tryParse(val) ?? 0.0;
+                                        _calculateTotals();
+                                      },
+                                      onFieldSubmitted: (_) {
+                                        // If this is the last row, add a new empty row
                                         if (index == _products.length - 1) {
                                           setState(() {
                                             _addNewEmptyRow();
                                           });
+                                          // Wait for UI to build new row, then focus it
                                           WidgetsBinding.instance
                                               .addPostFrameCallback((_) {
                                                 if (mounted) {
@@ -900,169 +995,103 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                                                 }
                                               });
                                         } else {
+                                          // Otherwise focus next row's product node
                                           (_products[index + 1]['productNode']
                                                   as FocusNode)
                                               .requestFocus();
                                         }
-                                      }
-                                    },
-                                  ),
-                                  colRate,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 4,
-                                  ),
-                                ),
-                                buildDataCell(
-                                  Text(
-                                    isEmptyRow
-                                        ? '-'
-                                        : (p['gross'] as double)
-                                              .toStringAsFixed(2),
-                                    style: TextStyle(
-                                      color: isEmptyRow
-                                          ? theme.hintColor
-                                          : null,
+                                      },
+                                    ),
+                                    colDiscount,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 4,
                                     ),
                                   ),
-                                  colGross,
-                                  isNumeric: true,
-                                ),
-                                buildDataCell(
-                                  TextFormField(
-                                    controller: p['discAmtController'],
-                                    focusNode: p['discNode'],
-                                    enabled:
-                                        !isEmptyRow && (p['rate'] ?? 0.0) > 0.0,
-                                    keyboardType: TextInputType.number,
-                                    textAlign: TextAlign.right,
-                                    textInputAction: TextInputAction.next,
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.allow(
-                                        RegExp(r'^\d+\.?\d*'),
+                                  buildDataCell(
+                                    Text(
+                                      isEmptyRow
+                                          ? '-'
+                                          : (p['gstPct'] as double)
+                                                .toStringAsFixed(2),
+                                      style: TextStyle(
+                                        color: isEmptyRow
+                                            ? theme.hintColor
+                                            : null,
                                       ),
-                                    ],
-                                    decoration: _gridInputDecoration(theme),
-                                    onChanged: (val) {
-                                      p['discAmt'] =
-                                          double.tryParse(val) ?? 0.0;
-                                      _calculateTotals();
-                                    },
-                                    onFieldSubmitted: (_) {
-                                      // If this is the last row, add a new empty row
-                                      if (index == _products.length - 1) {
-                                        setState(() {
-                                          _addNewEmptyRow();
-                                        });
-                                        // Wait for UI to build new row, then focus it
-                                        WidgetsBinding.instance
-                                            .addPostFrameCallback((_) {
-                                              if (mounted) {
-                                                final newNode =
-                                                    _products
-                                                            .last['productNode']
-                                                        as FocusNode;
-                                                newNode.requestFocus();
-                                              }
-                                            });
-                                      } else {
-                                        // Otherwise focus next row's product node
-                                        (_products[index + 1]['productNode']
-                                                as FocusNode)
-                                            .requestFocus();
-                                      }
-                                    },
-                                  ),
-                                  colDiscount,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 4,
-                                  ),
-                                ),
-                                buildDataCell(
-                                  Text(
-                                    isEmptyRow
-                                        ? '-'
-                                        : (p['gstPct'] as double)
-                                              .toStringAsFixed(2),
-                                    style: TextStyle(
-                                      color: isEmptyRow
-                                          ? theme.hintColor
-                                          : null,
                                     ),
+                                    colGstPct,
+                                    isNumeric: true,
                                   ),
-                                  colGstPct,
-                                  isNumeric: true,
-                                ),
-                                buildDataCell(
-                                  Text(
-                                    isEmptyRow
-                                        ? '-'
-                                        : (p['gstAmt'] as double)
-                                              .toStringAsFixed(2),
-                                    style: TextStyle(
-                                      color: isEmptyRow
-                                          ? theme.hintColor
-                                          : null,
+                                  buildDataCell(
+                                    Text(
+                                      isEmptyRow
+                                          ? '-'
+                                          : (p['gstAmt'] as double)
+                                                .toStringAsFixed(2),
+                                      style: TextStyle(
+                                        color: isEmptyRow
+                                            ? theme.hintColor
+                                            : null,
+                                      ),
                                     ),
+                                    colGstAmt,
+                                    isNumeric: true,
                                   ),
-                                  colGstAmt,
-                                  isNumeric: true,
-                                ),
-                                buildDataCell(
-                                  Text(
+                                  buildDataCell(
+                                    Text(
+                                      isEmptyRow
+                                          ? '-'
+                                          : (p['net'] as double)
+                                                .toStringAsFixed(2),
+                                      style: TextStyle(
+                                        fontWeight: isEmptyRow
+                                            ? FontWeight.normal
+                                            : FontWeight.bold,
+                                        fontSize: isEmptyRow ? 14 : 15,
+                                        color: isEmptyRow
+                                            ? theme.hintColor
+                                            : null,
+                                      ),
+                                    ),
+                                    colNet,
+                                    isNumeric: true,
+                                  ),
+                                  buildDataCell(
                                     isEmptyRow
-                                        ? '-'
-                                        : (p['net'] as double).toStringAsFixed(
-                                            2,
+                                        ? const SizedBox.shrink()
+                                        : IconButton(
+                                            icon: const Icon(
+                                              Icons.delete_outline,
+                                              color: Colors.red,
+                                              size: 20,
+                                            ),
+                                            padding: EdgeInsets.zero,
+                                            constraints: const BoxConstraints(),
+                                            tooltip: 'Remove',
+                                            splashRadius: 20,
+                                            onPressed: () =>
+                                                _removeProduct(index),
                                           ),
-                                    style: TextStyle(
-                                      fontWeight: isEmptyRow
-                                          ? FontWeight.normal
-                                          : FontWeight.bold,
-                                      fontSize: isEmptyRow ? 14 : 15,
-                                      color: isEmptyRow
-                                          ? theme.hintColor
-                                          : null,
-                                    ),
+                                    colAction,
+                                    isNumeric: true,
+                                    isLast: true,
                                   ),
-                                  colNet,
-                                  isNumeric: true,
-                                ),
-                                buildDataCell(
-                                  isEmptyRow
-                                      ? const SizedBox.shrink()
-                                      : IconButton(
-                                          icon: const Icon(
-                                            Icons.delete_outline,
-                                            color: Colors.red,
-                                            size: 20,
-                                          ),
-                                          padding: EdgeInsets.zero,
-                                          constraints: const BoxConstraints(),
-                                          tooltip: 'Remove',
-                                          splashRadius: 20,
-                                          onPressed: () =>
-                                              _removeProduct(index),
-                                        ),
-                                  colAction,
-                                  isNumeric: true,
-                                  isLast: true,
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        );
-      },
-    ));
+          );
+        },
+      ),
+    );
   }
 
   InputDecoration _gridInputDecoration(ThemeData theme) {

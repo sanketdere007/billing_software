@@ -79,6 +79,10 @@ class ApiConstants {
   static const String insertOrUpdatePurchaseEntryEndpoint =
       '/api/PurchaseEntry/InsertOrUpdatePurchaseEntry';
 
+  // Sales Entry Endpoints
+  static const String insertOrUpdateSalesEntryEndpoint =
+      '/api/SalesEntry/InsertOrUpdateSalesEntry';
+
   // Payment Endpoints
   static const String insertOrUpdatePaymentEndpoint =
       '/api/Payment/InsertOrUpdatePayment';

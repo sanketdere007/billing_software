@@ -3,6 +3,8 @@ import 'package:intl/intl.dart';
 import '../../../models/sales_entry.dart';
 import '../../../services/sales_entry_service.dart';
 import '../../../widgets/app_drawer.dart';
+import '../../../services/shortcut_service.dart';
+import 'add_sales_entry_screen.dart';
 
 enum ViewMode { table, grid, list }
 
@@ -78,6 +80,23 @@ class _SalesEntryListScreenState extends State<SalesEntryListScreen> {
                       _searchQuery = value;
                     });
                   },
+                ),
+              ),
+              const SizedBox(width: 16),
+              ElevatedButton.icon(
+                onPressed: () {
+                  shortcutService.navigateToNamedScreen(
+                    AppRoutes.salesEntryAdd, // Ensure AppRoutes.salesEntryAdd exists
+                    () => const AddSalesEntryScreen(),
+                  );
+                },
+                icon: const Icon(Icons.add),
+                label: const Text('New Entry (F7)'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
                 ),
               ),
               if (!isMobile) ...[
