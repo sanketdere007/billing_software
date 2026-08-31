@@ -16,7 +16,8 @@ class SubCategoryMasterScreen extends StatefulWidget {
   const SubCategoryMasterScreen({super.key, this.subcategoryToEdit});
 
   @override
-  State<SubCategoryMasterScreen> createState() => _SubCategoryMasterScreenState();
+  State<SubCategoryMasterScreen> createState() =>
+      _SubCategoryMasterScreenState();
 }
 
 class _SubCategoryMasterScreenState extends State<SubCategoryMasterScreen> {
@@ -25,7 +26,8 @@ class _SubCategoryMasterScreenState extends State<SubCategoryMasterScreen> {
   final CategoryService _categoryService = categoryService;
   final SessionService _sessionService = sessionService;
 
-  final TextEditingController _subCategoryNameController = TextEditingController();
+  final TextEditingController _subCategoryNameController =
+      TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final FocusNode _categoryFocusNode = FocusNode();
   final FocusNode _nameFocusNode = FocusNode();
@@ -75,7 +77,9 @@ class _SubCategoryMasterScreenState extends State<SubCategoryMasterScreen> {
 
   Future<void> _fetchCategories() async {
     try {
-      final categories = await _categoryService.getAllCategories(isActive: true);
+      final categories = await _categoryService.getAllCategories(
+        isActive: true,
+      );
       if (mounted) {
         setState(() {
           _categories = categories;
@@ -102,7 +106,9 @@ class _SubCategoryMasterScreenState extends State<SubCategoryMasterScreen> {
       } else {
         // Try matching category by name if ID is somehow missing
         try {
-          final matchedCategory = _categories.firstWhere((c) => c.catName == subcategory.catName);
+          final matchedCategory = _categories.firstWhere(
+            (c) => c.catName == subcategory.catName,
+          );
           _selectedCategoryId = matchedCategory.catId;
         } catch (_) {}
       }
@@ -140,13 +146,17 @@ class _SubCategoryMasterScreenState extends State<SubCategoryMasterScreen> {
         subCatModifiedBy: _currentEmpId,
       );
 
-      final response = await _subcategoryService.insertOrUpdateSubCategory(request);
+      final response = await _subcategoryService.insertOrUpdateSubCategory(
+        request,
+      );
 
       if (!mounted) return;
 
       final successMsg = response.message.isNotEmpty
           ? response.message
-          : (isEditing ? 'SubCategory updated successfully!' : 'SubCategory created successfully!');
+          : (isEditing
+                ? 'SubCategory updated successfully!'
+                : 'SubCategory created successfully!');
 
       await showSuccessDialog(context, successMsg);
       if (!mounted) return;
@@ -201,62 +211,76 @@ class _SubCategoryMasterScreenState extends State<SubCategoryMasterScreen> {
       },
       child: DirectBackScope(
         child: LayoutBuilder(
-        builder: (context, constraints) {
-          final isDesktop = constraints.maxWidth >= 800;
+          builder: (context, constraints) {
+            final isDesktop = constraints.maxWidth >= 800;
 
-          final formCard = _buildFormCard(context, isDesktop);
+            final formCard = _buildFormCard(context, isDesktop);
 
-          if (isDesktop) {
-            return Scaffold(
-              body: Row(
-                children: [
-                  const SizedBox(
-                    width: 250,
-                    child: AppDrawer(isPermanent: true),
-                  ),
-                  const VerticalDivider(width: 1, thickness: 1),
-                  Expanded(
-                    child: Scaffold(
-                      appBar: AppBar(
-                        title: Text(isEditing ? 'Edit SubCategory' : 'Add New SubCategory'),
-                        leading: IconButton(
-                          icon: const Icon(Icons.arrow_back),
-                          tooltip: 'Back to SubCategory List',
-                          onPressed: () => Navigator.of(context).pop(),
+            if (isDesktop) {
+              return Scaffold(
+                body: Row(
+                  children: [
+                    const SizedBox(
+                      width: 250,
+                      child: AppDrawer(isPermanent: true),
+                    ),
+                    const VerticalDivider(width: 1, thickness: 1),
+                    Expanded(
+                      child: Scaffold(
+                        appBar: AppBar(
+                          title: Text(
+                            isEditing
+                                ? 'Edit SubCategory'
+                                : 'Add New SubCategory',
+                          ),
+                          leading: IconButton(
+                            icon: const Icon(Icons.arrow_back),
+                            tooltip: 'Back to SubCategory List',
+                            onPressed: () => Navigator.of(context).pop(),
+                          ),
                         ),
-                      ),
-                      body: Container(
-                        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.15),
-                        child: Center(
-                          child: SingleChildScrollView(
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 680),
-                              child: formCard,
+                        body: Container(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surfaceVariant.withOpacity(0.15),
+                          child: Center(
+                            child: SingleChildScrollView(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 32,
+                              ),
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 680,
+                                ),
+                                child: formCard,
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+              );
+            }
+
+            // Mobile / Tablet layout
+            return Scaffold(
+              appBar: AppBar(
+                title: Text(
+                  isEditing ? 'Edit SubCategory' : 'Add New SubCategory',
+                ),
+              ),
+              body: SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: formCard,
               ),
             );
-          }
-
-          // Mobile / Tablet layout
-          return Scaffold(
-            appBar: AppBar(
-              title: Text(isEditing ? 'Edit SubCategory' : 'Add New SubCategory'),
-            ),
-            body: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: formCard,
-            ),
-          );
-        },
+          },
+        ),
       ),
-    ));
+    );
   }
 
   Widget _buildFormCard(BuildContext context, bool isDesktop) {
@@ -299,7 +323,9 @@ class _SubCategoryMasterScreenState extends State<SubCategoryMasterScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          isEditing ? 'Update SubCategory Details' : 'Create SubCategory Master',
+                          isEditing
+                              ? 'Update SubCategory Details'
+                              : 'Create SubCategory Master',
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
@@ -318,7 +344,10 @@ class _SubCategoryMasterScreenState extends State<SubCategoryMasterScreen> {
                   ),
                   if (isEditing)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.secondaryContainer,
                         borderRadius: BorderRadius.circular(8),
@@ -346,7 +375,11 @@ class _SubCategoryMasterScreenState extends State<SubCategoryMasterScreen> {
                 decoration: InputDecoration(
                   labelText: 'Select Category *',
                   hintText: _selectedCategoryName ?? 'Choose a category',
-                  prefixIcon: const Icon(Icons.folder_open_rounded, size: 20, color: Colors.blueAccent),
+                  prefixIcon: const Icon(
+                    Icons.folder_open_rounded,
+                    size: 20,
+                    color: Colors.blueAccent,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -363,7 +396,9 @@ class _SubCategoryMasterScreenState extends State<SubCategoryMasterScreen> {
                   setState(() {
                     _selectedCategoryId = value;
                     if (value != null) {
-                      _selectedCategoryName = _categories.firstWhere((c) => c.catId == value).catName;
+                      _selectedCategoryName = _categories
+                          .firstWhere((c) => c.catId == value)
+                          .catName;
                     }
                   });
                   _nameFocusNode.requestFocus();
@@ -387,7 +422,11 @@ class _SubCategoryMasterScreenState extends State<SubCategoryMasterScreen> {
                 decoration: InputDecoration(
                   labelText: 'SubCategory Name *',
                   hintText: 'Enter subcategory name',
-                  prefixIcon: const Icon(Icons.edit_note_rounded, size: 20, color: Colors.blueAccent),
+                  prefixIcon: const Icon(
+                    Icons.edit_note_rounded,
+                    size: 20,
+                    color: Colors.blueAccent,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -420,7 +459,11 @@ class _SubCategoryMasterScreenState extends State<SubCategoryMasterScreen> {
                 decoration: InputDecoration(
                   labelText: 'Description',
                   hintText: 'Enter optional description',
-                  prefixIcon: const Icon(Icons.description_rounded, size: 20, color: Colors.grey),
+                  prefixIcon: const Icon(
+                    Icons.description_rounded,
+                    size: 20,
+                    color: Colors.grey,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -460,10 +503,14 @@ class _SubCategoryMasterScreenState extends State<SubCategoryMasterScreen> {
                     ),
                   ),
                   secondary: Icon(
-                    _isActive ? Icons.check_circle_outline_rounded : Icons.block_rounded,
+                    _isActive
+                        ? Icons.check_circle_outline_rounded
+                        : Icons.block_rounded,
                     color: _isActive ? Colors.green : Colors.grey,
                   ),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
               const SizedBox(height: 28),
@@ -474,38 +521,66 @@ class _SubCategoryMasterScreenState extends State<SubCategoryMasterScreen> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     OutlinedButton(
-                      onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+                      onPressed: _isLoading
+                          ? null
+                          : () => Navigator.of(context).pop(),
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 14,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                       child: const Text('Cancel'),
                     ),
                     if (!isEditing) ...[
                       const SizedBox(width: 12),
                       FilledButton.tonal(
-                        onPressed: _isLoading ? null : () => _saveSubCategory(saveAndNew: true),
+                        onPressed: _isLoading
+                            ? null
+                            : () => _saveSubCategory(saveAndNew: true),
                         style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 14,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
                         child: const Text('Save & Add Another'),
                       ),
                     ],
                     const SizedBox(width: 12),
                     FilledButton(
-                      onPressed: _isLoading ? null : () => _saveSubCategory(saveAndNew: false),
+                      onPressed: _isLoading
+                          ? null
+                          : () => _saveSubCategory(saveAndNew: false),
                       style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 28,
+                          vertical: 14,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                       child: _isLoading
                           ? const SizedBox(
                               width: 18,
                               height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             )
-                          : Text(isEditing ? 'Update SubCategory' : 'Save SubCategory'),
+                          : Text(
+                              isEditing
+                                  ? 'Update SubCategory'
+                                  : 'Save SubCategory',
+                            ),
                     ),
                   ],
                 )
@@ -514,36 +589,55 @@ class _SubCategoryMasterScreenState extends State<SubCategoryMasterScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     FilledButton(
-                      onPressed: _isLoading ? null : () => _saveSubCategory(saveAndNew: false),
+                      onPressed: _isLoading
+                          ? null
+                          : () => _saveSubCategory(saveAndNew: false),
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                       child: _isLoading
                           ? const SizedBox(
                               width: 18,
                               height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             )
-                          : Text(isEditing ? 'Update SubCategory' : 'Save SubCategory'),
+                          : Text(
+                              isEditing
+                                  ? 'Update SubCategory'
+                                  : 'Save SubCategory',
+                            ),
                     ),
                     if (!isEditing) ...[
                       const SizedBox(height: 10),
                       FilledButton.tonal(
-                        onPressed: _isLoading ? null : () => _saveSubCategory(saveAndNew: true),
+                        onPressed: _isLoading
+                            ? null
+                            : () => _saveSubCategory(saveAndNew: true),
                         style: FilledButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
                         child: const Text('Save & Add Another'),
                       ),
                     ],
                     const SizedBox(height: 10),
                     OutlinedButton(
-                      onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+                      onPressed: _isLoading
+                          ? null
+                          : () => Navigator.of(context).pop(),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                       child: const Text('Cancel'),
                     ),

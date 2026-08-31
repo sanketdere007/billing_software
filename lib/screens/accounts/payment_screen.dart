@@ -3,13 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../../models/payment.dart';
+import '../../models/supplier_reports.dart';
 import '../../services/api_service.dart';
 import '../../services/payment_service.dart';
 import '../../services/session_service.dart';
+import '../../services/supplier_service.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/direct_back_scope.dart';
 import '../../widgets/save_clear_shortcuts.dart';
 import '../../widgets/supplier_dropdown.dart';
+import '../../widgets/invoice_dropdown.dart';
 
 class PaymentMasterScreen extends StatefulWidget {
   const PaymentMasterScreen({super.key});
@@ -98,6 +101,10 @@ class _PaymentMasterScreenState extends State<PaymentMasterScreen> {
   String? _selectedBankTransferType;
   int? _selectedAccountId;
   bool _isLoading = false;
+
+  List<SupplierPendingInvoiceItem> _pendingInvoices = [];
+  SupplierPendingInvoiceItem? _selectedInvoice;
+  bool _isLoadingInvoices = false;
 
   static const List<String> _bankTransferTypes = [
     'NEFT',
@@ -327,8 +334,44 @@ class _PaymentMasterScreenState extends State<PaymentMasterScreen> {
       _otherDate = null;
       _selectedBankTransferType = null;
       _selectedAccountId = null;
+      _selectedInvoice = null;
+      _pendingInvoices = [];
     });
     WidgetsBinding.instance.addPostFrameCallback((_) => _focusSupplier());
+  }
+
+  Future<void> _fetchPendingInvoices(int supplierId) async {
+    setState(() => _isLoadingInvoices = true);
+    try {
+      final invoices = await supplierService.getSupplierPendingInvoice(
+        supplierId: supplierId,
+        compId: sessionService.selectedCompId ?? 0,
+        branchId: sessionService.selectedBranchId ?? 0,
+      );
+      if (mounted) {
+        setState(() {
+          _pendingInvoices = invoices.where((inv) => inv.balanceAmount > 0).toList();
+          if (_pendingInvoices.isEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('No pending invoices found for this supplier')),
+            );
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to fetch pending invoices: $e'),
+            backgroundColor: Colors.red.shade700,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingInvoices = false);
+      }
+    }
   }
 
   Future<void> _savePayment() async {
@@ -361,6 +404,13 @@ class _PaymentMasterScreenState extends State<PaymentMasterScreen> {
       return;
     }
 
+    if (_selectedInvoice != null && _totalAmount > _selectedInvoice!.balanceAmount) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Payment amount cannot exceed pending amount (₹${_selectedInvoice!.balanceAmount.toStringAsFixed(2)})')),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
@@ -375,7 +425,7 @@ class _PaymentMasterScreenState extends State<PaymentMasterScreen> {
         paymentDate: _paymentDate.toIso8601String(),
         type: _paymentType,
         totalAmount: _totalAmount,
-        invoiceId: 0,
+        invoiceId: _selectedInvoice?.purchaseMasterId ?? 0,
         invoiceNo: _invoiceNoController.text.trim(),
         invoiceDate: _invoiceDate.toIso8601String(),
         accountId: _selectedAccountId!,
@@ -593,7 +643,15 @@ class _PaymentMasterScreenState extends State<PaymentMasterScreen> {
                   color: theme.colorScheme.primary,
                 ),
                 onChanged: (supplier) {
-                  setState(() => _selectedAccountId = supplier?.suppId);
+                  setState(() {
+                    _selectedAccountId = supplier?.suppId;
+                    _selectedInvoice = null;
+                    _invoiceNoController.clear();
+                    _pendingInvoices = [];
+                  });
+                  if (supplier != null && supplier.suppId > 0) {
+                    _fetchPendingInvoices(supplier.suppId);
+                  }
                 },
               ),
               const SizedBox(height: 16),
@@ -605,14 +663,9 @@ class _PaymentMasterScreenState extends State<PaymentMasterScreen> {
                   node: _paymentDateNode,
                   onPicked: (date) => setState(() => _paymentDate = date),
                 ),
-                _buildTextField(
-                  controller: _invoiceNoController,
-                  label: 'Invoice No *',
-                  theme: theme,
-                  focusNode: _invoiceNoNode,
-                  prefixIcon: const Icon(Icons.receipt_outlined, size: 20),
-                ),
+                _buildInvoiceDropdown(theme),
               ]),
+              if (_selectedInvoice != null) _buildInvoiceDetailsCard(theme),
               const SizedBox(height: 16),
               _buildDateField(
                 theme: theme,
@@ -1175,6 +1228,81 @@ class _PaymentMasterScreenState extends State<PaymentMasterScreen> {
       filled: true,
       fillColor: theme.colorScheme.surface,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    );
+  }
+
+  Widget _buildInvoiceDropdown(ThemeData theme) {
+    return Stack(
+      alignment: Alignment.centerRight,
+      children: [
+        InvoiceDropdown(
+          invoices: _pendingInvoices,
+          selectedInvoice: _selectedInvoice,
+          focusNode: _invoiceNoNode,
+          enabled: !_isLoadingInvoices,
+          onChanged: (invoice) {
+            setState(() {
+              _selectedInvoice = invoice;
+              if (invoice != null) {
+                _invoiceNoController.text = invoice.purchaseMasterInvoiceNo;
+                if (invoice.purchaseMasterInvoiceDate != null) {
+                  _invoiceDate = invoice.purchaseMasterInvoiceDate!;
+                }
+                _cashAmountController.text = invoice.balanceAmount.toStringAsFixed(2);
+                _upiAmountController.clear();
+                _chequeAmountController.clear();
+                _bankAmountController.clear();
+                _cardAmountController.clear();
+                _otherAmountController.clear();
+              }
+            });
+            _focusNext(_invoiceNoNode);
+          },
+        ),
+        if (_isLoadingInvoices)
+          const Padding(
+            padding: EdgeInsets.only(right: 30.0),
+            child: SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildInvoiceDetailsCard(ThemeData theme) {
+    return Container(
+      margin: const EdgeInsets.only(top: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.secondaryContainer.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: theme.colorScheme.secondaryContainer),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Invoice Details', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Invoice Date: ${_selectedInvoice!.purchaseMasterInvoiceDate != null ? _dateFormat.format(_selectedInvoice!.purchaseMasterInvoiceDate!) : 'N/A'}'),
+              Text('Total Amount: ₹${_selectedInvoice!.netAmount.toStringAsFixed(2)}'),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Paid Amount: ₹${_selectedInvoice!.paidAmount.toStringAsFixed(2)}'),
+              Text('Pending Amount: ₹${_selectedInvoice!.balanceAmount.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red)),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
