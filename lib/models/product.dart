@@ -13,6 +13,7 @@ class ProductListItem {
   final int prodUnitId;
   final String prodHSNCode;
   final double prodGSTPercent;
+  final double prodUnitValue;
   final bool prodIsActive;
   final int prodCreatedBy;
   final int prodModifiedBy;
@@ -25,6 +26,13 @@ class ProductListItem {
   final String prodUnitShortName;
   final String? prodCreatedDate;
   final String? prodModifiedDate;
+  final String batchBarcode;
+  final String batchEANCode;
+  final double batchStock;
+  final double batchLandingPrice;
+  final double batchPurchasePrice;
+  final double batchMRP;
+  final double batchSellingPrice;
 
   ProductListItem({
     required this.prodId,
@@ -38,6 +46,7 @@ class ProductListItem {
     this.prodUnitId = 0,
     this.prodHSNCode = '',
     this.prodGSTPercent = 0.0,
+    this.prodUnitValue = 0.0,
     this.prodIsActive = true,
     this.prodCreatedBy = 0,
     this.prodModifiedBy = 0,
@@ -50,6 +59,13 @@ class ProductListItem {
     this.prodUnitShortName = '',
     this.prodCreatedDate,
     this.prodModifiedDate,
+    this.batchBarcode = '',
+    this.batchEANCode = '',
+    this.batchStock = 0.0,
+    this.batchLandingPrice = 0.0,
+    this.batchPurchasePrice = 0.0,
+    this.batchMRP = 0.0,
+    this.batchSellingPrice = 0.0,
   });
 
   // Backwards compatibility getters if needed, otherwise clean properties
@@ -71,6 +87,7 @@ class ProductListItem {
       prodUnitId: int.tryParse(json['prod_UnitId']?.toString() ?? '0') ?? 0,
       prodHSNCode: json['prod_HSNCode']?.toString() ?? '',
       prodGSTPercent: double.tryParse(json['prod_GSTPercent']?.toString() ?? '0') ?? 0.0,
+      prodUnitValue: double.tryParse(json['prod_UnitValue']?.toString() ?? '0') ?? 0.0,
       prodIsActive: json['prod_IsActive'] == true ||
           json['prod_IsActive'] == 'true' ||
           json['prod_IsActive'] == 1 ||
@@ -86,6 +103,13 @@ class ProductListItem {
       prodUnitShortName: json['prod_UnitShortName']?.toString() ?? '',
       prodCreatedDate: json['prod_CreatedDate']?.toString(),
       prodModifiedDate: json['prod_ModifiedDate']?.toString(),
+      batchBarcode: json['batch_Barcode']?.toString() ?? '',
+      batchEANCode: json['batch_EANCode']?.toString() ?? '',
+      batchStock: double.tryParse(json['batch_Stock']?.toString() ?? '0') ?? 0.0,
+      batchLandingPrice: double.tryParse(json['batch_LandingPrice']?.toString() ?? '0') ?? 0.0,
+      batchPurchasePrice: double.tryParse(json['batch_PurchasePrice']?.toString() ?? '0') ?? 0.0,
+      batchMRP: double.tryParse(json['batch_MRP']?.toString() ?? '0') ?? 0.0,
+      batchSellingPrice: double.tryParse(json['batch_SellingPrice']?.toString() ?? '0') ?? 0.0,
     );
   }
 
@@ -102,6 +126,7 @@ class ProductListItem {
       'prod_UnitId': prodUnitId,
       'prod_HSNCode': prodHSNCode,
       'prod_GSTPercent': prodGSTPercent,
+      'prod_UnitValue': prodUnitValue,
       'prod_IsActive': prodIsActive,
       'prod_CreatedBy': prodCreatedBy,
       'prod_ModifiedBy': prodModifiedBy,
@@ -114,6 +139,13 @@ class ProductListItem {
       'prod_UnitShortName': prodUnitShortName,
       if (prodCreatedDate != null) 'prod_CreatedDate': prodCreatedDate,
       if (prodModifiedDate != null) 'prod_ModifiedDate': prodModifiedDate,
+      'batch_Barcode': batchBarcode,
+      'batch_EANCode': batchEANCode,
+      'batch_Stock': batchStock,
+      'batch_LandingPrice': batchLandingPrice,
+      'batch_PurchasePrice': batchPurchasePrice,
+      'batch_MRP': batchMRP,
+      'batch_SellingPrice': batchSellingPrice,
     };
   }
 
@@ -129,6 +161,7 @@ class ProductListItem {
     int? prodUnitId,
     String? prodHSNCode,
     double? prodGSTPercent,
+    double? prodUnitValue,
     bool? prodIsActive,
     int? prodCreatedBy,
     int? prodModifiedBy,
@@ -230,9 +263,17 @@ class ProductUpsertRequest {
   final int prodUnitId;
   final String prodHSNCode;
   final double prodGSTPercent;
+  final double prodUnitValue;
   final bool prodIsActive;
   final int prodCreatedBy;
   final int prodModifiedBy;
+  final String batchBarcode;
+  final String batchEANCode;
+  final double batchStock;
+  final double batchLandingPrice;
+  final double batchPurchasePrice;
+  final double batchMRP;
+  final double batchSellingPrice;
 
   ProductUpsertRequest({
     this.prodId = 0,
@@ -246,9 +287,17 @@ class ProductUpsertRequest {
     this.prodUnitId = 0,
     this.prodHSNCode = '',
     this.prodGSTPercent = 0.0,
+    this.prodUnitValue = 0.0,
     this.prodIsActive = true,
     this.prodCreatedBy = 0,
     this.prodModifiedBy = 0,
+    this.batchBarcode = '',
+    this.batchEANCode = '',
+    this.batchStock = 0.0,
+    this.batchLandingPrice = 0.0,
+    this.batchPurchasePrice = 0.0,
+    this.batchMRP = 0.0,
+    this.batchSellingPrice = 0.0,
   });
 
   Map<String, dynamic> toJson() {
@@ -264,9 +313,17 @@ class ProductUpsertRequest {
       'prod_UnitId': prodUnitId,
       'prod_HSNCode': prodHSNCode.trim(),
       'prod_GSTPercent': prodGSTPercent,
+      'prod_UnitValue': prodUnitValue,
       'prod_IsActive': prodIsActive,
       'prod_CreatedBy': prodCreatedBy,
       'prod_ModifiedBy': prodModifiedBy,
+      'batch_Barcode': batchBarcode.trim(),
+      'batch_EANCode': batchEANCode.trim(),
+      'batch_Stock': batchStock,
+      'batch_LandingPrice': batchLandingPrice,
+      'batch_PurchasePrice': batchPurchasePrice,
+      'batch_MRP': batchMRP,
+      'batch_SellingPrice': batchSellingPrice,
     };
   }
 }

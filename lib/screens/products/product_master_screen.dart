@@ -33,6 +33,24 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _codeController = TextEditingController();
   final TextEditingController _hsnController = TextEditingController();
+  final TextEditingController _unitValueController = TextEditingController(
+    text: '0',
+  );
+
+  final TextEditingController _batchBarcodeController = TextEditingController();
+  final TextEditingController _batchEANCodeController = TextEditingController();
+  final TextEditingController _batchStockController = TextEditingController(
+    text: '0',
+  );
+  final TextEditingController _batchLandingPriceController =
+      TextEditingController(text: '0');
+  final TextEditingController _batchPurchasePriceController =
+      TextEditingController(text: '0');
+  final TextEditingController _batchMRPController = TextEditingController(
+    text: '0',
+  );
+  final TextEditingController _batchSellingPriceController =
+      TextEditingController(text: '0');
 
   // Focus Nodes
   final FocusNode _nameFocusNode = FocusNode();
@@ -41,9 +59,18 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
   final FocusNode _subcategoryFocusNode = FocusNode();
   final FocusNode _brandFocusNode = FocusNode();
   final FocusNode _unitFocusNode = FocusNode();
+  final FocusNode _unitValueFocusNode = FocusNode();
   final FocusNode _hsnFocusNode = FocusNode();
   final FocusNode _gstFocusNode = FocusNode();
   final FocusNode _saveButtonFocusNode = FocusNode();
+
+  final FocusNode _batchBarcodeFocusNode = FocusNode();
+  final FocusNode _batchEANCodeFocusNode = FocusNode();
+  final FocusNode _batchStockFocusNode = FocusNode();
+  final FocusNode _batchLandingPriceFocusNode = FocusNode();
+  final FocusNode _batchPurchasePriceFocusNode = FocusNode();
+  final FocusNode _batchMRPFocusNode = FocusNode();
+  final FocusNode _batchSellingPriceFocusNode = FocusNode();
 
   int? _selectedCategoryId;
   int? _selectedSubcategoryId;
@@ -78,6 +105,7 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
     _nameController.dispose();
     _codeController.dispose();
     _hsnController.dispose();
+    _unitValueController.dispose();
 
     _nameFocusNode.dispose();
     _codeFocusNode.dispose();
@@ -85,9 +113,26 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
     _subcategoryFocusNode.dispose();
     _brandFocusNode.dispose();
     _unitFocusNode.dispose();
+    _unitValueFocusNode.dispose();
     _hsnFocusNode.dispose();
     _gstFocusNode.dispose();
     _saveButtonFocusNode.dispose();
+
+    _batchBarcodeController.dispose();
+    _batchEANCodeController.dispose();
+    _batchStockController.dispose();
+    _batchLandingPriceController.dispose();
+    _batchPurchasePriceController.dispose();
+    _batchMRPController.dispose();
+    _batchSellingPriceController.dispose();
+
+    _batchBarcodeFocusNode.dispose();
+    _batchEANCodeFocusNode.dispose();
+    _batchStockFocusNode.dispose();
+    _batchLandingPriceFocusNode.dispose();
+    _batchPurchasePriceFocusNode.dispose();
+    _batchMRPFocusNode.dispose();
+    _batchSellingPriceFocusNode.dispose();
 
     super.dispose();
   }
@@ -139,10 +184,23 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
     _nameController.text = product.prodName;
     _codeController.text = product.prodCode;
     _hsnController.text = product.prodHSNCode;
+    _unitValueController.text = product.prodUnitValue.toString();
+
+    _batchBarcodeController.text = product.batchBarcode;
+    _batchEANCodeController.text = product.batchEANCode;
+    _batchStockController.text = product.batchStock.toString();
+    _batchLandingPriceController.text = product.batchLandingPrice.toString();
+    _batchPurchasePriceController.text = product.batchPurchasePrice.toString();
+    _batchMRPController.text = product.batchMRP.toString();
+    _batchSellingPriceController.text = product.batchSellingPrice.toString();
 
     _selectedGstPercent = product.prodGSTPercent;
-    _selectedCategoryId = product.prodCategoryId > 0 ? product.prodCategoryId : null;
-    _selectedSubcategoryId = product.prodSubCategoryId > 0 ? product.prodSubCategoryId : null;
+    _selectedCategoryId = product.prodCategoryId > 0
+        ? product.prodCategoryId
+        : null;
+    _selectedSubcategoryId = product.prodSubCategoryId > 0
+        ? product.prodSubCategoryId
+        : null;
     _selectedBrandId = product.prodBrandId > 0 ? product.prodBrandId : null;
     _selectedUnitId = product.prodUnitId > 0 ? product.prodUnitId : null;
     _isActive = product.prodIsActive;
@@ -170,15 +228,40 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
         prodUnitId: _selectedUnitId ?? 0,
         prodHSNCode: _hsnController.text.trim(),
         prodGSTPercent: _selectedGstPercent,
+        prodUnitValue: double.tryParse(_unitValueController.text.trim()) ?? 0.0,
         prodIsActive: _isActive,
-        prodBranchId: (isEditing && widget.productToEdit != null && widget.productToEdit!.prodBranchId > 0)
+        prodBranchId:
+            (isEditing &&
+                widget.productToEdit != null &&
+                widget.productToEdit!.prodBranchId > 0)
             ? widget.productToEdit!.prodBranchId
-            : ((sessionService.selectedBranchId != null && sessionService.selectedBranchId! > 0) ? sessionService.selectedBranchId! : 1),
-        prodCompId: (isEditing && widget.productToEdit != null && widget.productToEdit!.prodCompId > 0)
+            : ((sessionService.selectedBranchId != null &&
+                      sessionService.selectedBranchId! > 0)
+                  ? sessionService.selectedBranchId!
+                  : 1),
+        prodCompId:
+            (isEditing &&
+                widget.productToEdit != null &&
+                widget.productToEdit!.prodCompId > 0)
             ? widget.productToEdit!.prodCompId
-            : ((sessionService.selectedCompId != null && sessionService.selectedCompId! > 0) ? sessionService.selectedCompId! : 1),
-        prodCreatedBy: widget.productToEdit == null ? _currentEmpId : (widget.productToEdit?.prodCreatedBy ?? _currentEmpId),
+            : ((sessionService.selectedCompId != null &&
+                      sessionService.selectedCompId! > 0)
+                  ? sessionService.selectedCompId!
+                  : 1),
+        prodCreatedBy: widget.productToEdit == null
+            ? _currentEmpId
+            : (widget.productToEdit?.prodCreatedBy ?? _currentEmpId),
         prodModifiedBy: widget.productToEdit != null ? _currentEmpId : 0,
+        batchBarcode: _batchBarcodeController.text.trim(),
+        batchEANCode: _batchEANCodeController.text.trim(),
+        batchStock: double.tryParse(_batchStockController.text.trim()) ?? 0.0,
+        batchLandingPrice:
+            double.tryParse(_batchLandingPriceController.text.trim()) ?? 0.0,
+        batchPurchasePrice:
+            double.tryParse(_batchPurchasePriceController.text.trim()) ?? 0.0,
+        batchMRP: double.tryParse(_batchMRPController.text.trim()) ?? 0.0,
+        batchSellingPrice:
+            double.tryParse(_batchSellingPriceController.text.trim()) ?? 0.0,
       );
 
       final response = await _productService.insertOrUpdateProduct(request);
@@ -198,7 +281,9 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
 
       final successMsg = response.message.isNotEmpty
           ? response.message
-          : (isEditing ? 'Product updated successfully!' : 'Product created successfully!');
+          : (isEditing
+                ? 'Product updated successfully!'
+                : 'Product created successfully!');
 
       await showSuccessDialog(context, successMsg);
       if (!mounted) return;
@@ -208,6 +293,15 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
         _nameController.clear();
         _codeController.clear();
         _hsnController.clear();
+        _unitValueController.clear();
+        _unitValueController.text = '0';
+        _batchBarcodeController.clear();
+        _batchEANCodeController.clear();
+        _batchStockController.text = '0';
+        _batchLandingPriceController.text = '0';
+        _batchPurchasePriceController.text = '0';
+        _batchMRPController.text = '0';
+        _batchSellingPriceController.text = '0';
 
         setState(() {
           _selectedCategoryId = null;
@@ -250,6 +344,15 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
           _nameController.clear();
           _codeController.clear();
           _hsnController.clear();
+          _unitValueController.clear();
+          _unitValueController.text = '0';
+          _batchBarcodeController.clear();
+          _batchEANCodeController.clear();
+          _batchStockController.text = '0';
+          _batchLandingPriceController.text = '0';
+          _batchPurchasePriceController.text = '0';
+          _batchMRPController.text = '0';
+          _batchSellingPriceController.text = '0';
           setState(() {
             _selectedCategoryId = null;
             _selectedSubcategoryId = null;
@@ -267,88 +370,98 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
           builder: (context, constraints) {
             final isDesktop = constraints.maxWidth >= 800;
 
-          if (_isFetchingDetails) {
-            return const Scaffold(
-              body: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text('Loading product details...'),
-                  ],
-                ),
-              ),
-            );
-          }
-
-          final formContent = _buildFormCard(context, isDesktop);
-
-          if (isDesktop) {
-            return Scaffold(
-              body: Row(
-                children: [
-                  const SizedBox(
-                    width: 250,
-                    child: AppDrawer(isPermanent: true),
+            if (_isFetchingDetails) {
+              return const Scaffold(
+                body: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text('Loading product details...'),
+                    ],
                   ),
-                  const VerticalDivider(width: 1, thickness: 1),
-                  Expanded(
-                    child: Scaffold(
-                      appBar: AppBar(
-                        title: Text(isEditing ? 'Edit Product' : 'Add New Product'),
-                        leading: IconButton(
-                          icon: const Icon(Icons.arrow_back),
-                          tooltip: 'Back to Product List',
-                          onPressed: () => Navigator.of(context).pop(),
+                ),
+              );
+            }
+
+            final formContent = _buildFormCard(context, isDesktop);
+
+            if (isDesktop) {
+              return Scaffold(
+                body: Row(
+                  children: [
+                    const SizedBox(
+                      width: 250,
+                      child: AppDrawer(isPermanent: true),
+                    ),
+                    const VerticalDivider(width: 1, thickness: 1),
+                    Expanded(
+                      child: Scaffold(
+                        appBar: AppBar(
+                          title: Text(
+                            isEditing ? 'Edit Product' : 'Add New Product',
+                          ),
+                          leading: IconButton(
+                            icon: const Icon(Icons.arrow_back),
+                            tooltip: 'Back to Product List',
+                            onPressed: () => Navigator.of(context).pop(),
+                          ),
                         ),
-                      ),
-                      body: Container(
-                        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.12),
-                        child: Column(
-                          children: [
-                            Expanded(
-                              child: Center(
-                                child: SingleChildScrollView(
-                                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-                                  child: ConstrainedBox(
-                                    constraints: const BoxConstraints(maxWidth: 860),
-                                    child: formContent,
+                        body: Container(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surfaceVariant.withOpacity(0.12),
+                          child: Column(
+                            children: [
+                              Expanded(
+                                child: Center(
+                                  child: SingleChildScrollView(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 24,
+                                      vertical: 24,
+                                    ),
+                                    child: ConstrainedBox(
+                                      constraints: const BoxConstraints(
+                                        maxWidth: 860,
+                                      ),
+                                      child: formContent,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                            _buildStickyActionBar(context, isDesktop),
-                          ],
+                              _buildStickyActionBar(context, isDesktop),
+                            ],
+                          ),
                         ),
                       ),
                     ),
+                  ],
+                ),
+              );
+            }
+
+            // Mobile / Tablet View
+            return Scaffold(
+              appBar: AppBar(
+                title: Text(isEditing ? 'Edit Product' : 'Add New Product'),
+              ),
+              body: Column(
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(16.0),
+                      child: formContent,
+                    ),
                   ),
+                  _buildStickyActionBar(context, isDesktop),
                 ],
               ),
             );
-          }
-
-          // Mobile / Tablet View
-          return Scaffold(
-            appBar: AppBar(
-              title: Text(isEditing ? 'Edit Product' : 'Add New Product'),
-            ),
-            body: Column(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16.0),
-                    child: formContent,
-                  ),
-                ),
-                _buildStickyActionBar(context, isDesktop),
-              ],
-            ),
-          );
-        },
+          },
+        ),
       ),
-    ));
+    );
   }
 
   Widget _buildFormCard(BuildContext context, bool isDesktop) {
@@ -414,6 +527,15 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
                       Expanded(child: _buildUnitDropdown()),
                     ],
                   ),
+                  const SizedBox(height: 16),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: _buildUnitValueField()),
+                      const SizedBox(width: 16),
+                      const Spacer(),
+                    ],
+                  ),
                 ] else ...[
                   _buildCategoryDropdown(),
                   const SizedBox(height: 14),
@@ -422,6 +544,8 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
                   _buildBrandDropdown(),
                   const SizedBox(height: 14),
                   _buildUnitDropdown(),
+                  const SizedBox(height: 14),
+                  _buildUnitValueField(),
                 ],
               ],
             ),
@@ -445,27 +569,86 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
           ),
           const SizedBox(height: 8),
 
-          // Section 4: Status Switch
+          // Section 4: Batch & Pricing Details
+          _buildCardSection(
+            context,
+            title: 'Batch & Pricing Details',
+            icon: Icons.price_change_outlined,
+            color: Colors.orange,
+            child: Column(
+              children: [
+                if (isDesktop) ...[
+                  Row(
+                    children: [
+                      Expanded(child: _buildBatchBarcodeField()),
+                      const SizedBox(width: 16),
+                      Expanded(child: _buildBatchEANCodeField()),
+                      const SizedBox(width: 16),
+                      Expanded(child: _buildBatchStockField()),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(child: _buildBatchLandingPriceField()),
+                      const SizedBox(width: 16),
+                      Expanded(child: _buildBatchPurchasePriceField()),
+                      const SizedBox(width: 16),
+                      Expanded(child: _buildBatchMRPField()),
+                      const SizedBox(width: 16),
+                      Expanded(child: _buildBatchSellingPriceField()),
+                    ],
+                  ),
+                ] else ...[
+                  _buildBatchBarcodeField(),
+                  const SizedBox(height: 14),
+                  _buildBatchEANCodeField(),
+                  const SizedBox(height: 14),
+                  _buildBatchStockField(),
+                  const SizedBox(height: 14),
+                  _buildBatchLandingPriceField(),
+                  const SizedBox(height: 14),
+                  _buildBatchPurchasePriceField(),
+                  const SizedBox(height: 14),
+                  _buildBatchMRPField(),
+                  const SizedBox(height: 14),
+                  _buildBatchSellingPriceField(),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          // Section 5: Status Switch
           Card(
             elevation: isDesktop ? 2 : 1,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: isDark ? Colors.white10 : Colors.black12),
+                border: Border.all(
+                  color: isDark ? Colors.white10 : Colors.black12,
+                ),
               ),
               child: Row(
                 children: [
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: (_isActive ? Colors.green : Colors.grey).withOpacity(0.12),
+                      color: (_isActive ? Colors.green : Colors.grey)
+                          .withOpacity(0.12),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
-                      _isActive ? Icons.check_circle_outline_rounded : Icons.pause_circle_outline_rounded,
-                      color: _isActive ? Colors.green.shade700 : Colors.grey.shade600,
+                      _isActive
+                          ? Icons.check_circle_outline_rounded
+                          : Icons.pause_circle_outline_rounded,
+                      color: _isActive
+                          ? Colors.green.shade700
+                          : Colors.grey.shade600,
                       size: 22,
                     ),
                   ),
@@ -476,11 +659,17 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
                       children: [
                         Text(
                           'Product Status',
-                          style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         Text(
-                          _isActive ? 'Active - Available for transactions' : 'Inactive - Hidden from billing',
-                          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                          _isActive
+                              ? 'Active - Available for transactions'
+                              : 'Inactive - Hidden from billing',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
                         ),
                       ],
                     ),
@@ -690,9 +879,7 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
       focusNode: _nameFocusNode,
       textInputAction: TextInputAction.next,
       textCapitalization: TextCapitalization.words,
-      inputFormatters: const [
-        CapitalizeWordsInputFormatter(),
-      ],
+      inputFormatters: const [CapitalizeWordsInputFormatter()],
       onFieldSubmitted: (_) => _codeFocusNode.requestFocus(),
       decoration: InputDecoration(
         labelText: 'Product Name *',
@@ -777,13 +964,41 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
     return UnitDropdown(
       selectedUnitId: _selectedUnitId,
       focusNode: _unitFocusNode,
-      nextFocusNode: _hsnFocusNode,
+      nextFocusNode: _unitValueFocusNode,
       labelText: 'Unit',
       hintText: 'Select Unit',
       onChanged: (val) {
         setState(() {
           _selectedUnitId = val?.unitId;
         });
+      },
+    );
+  }
+
+  Widget _buildUnitValueField() {
+    return TextFormField(
+      controller: _unitValueController,
+      focusNode: _unitValueFocusNode,
+      textInputAction: TextInputAction.next,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      inputFormatters: [
+        FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d*')),
+      ],
+      onFieldSubmitted: (_) => _hsnFocusNode.requestFocus(),
+      decoration: InputDecoration(
+        labelText: 'Unit Value',
+        hintText: 'Enter Unit Value',
+        prefixIcon: const Icon(Icons.straighten_outlined, size: 20),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      validator: (val) {
+        if (val == null || val.trim().isEmpty) {
+          return 'Please enter unit value';
+        }
+        if (double.tryParse(val) == null) {
+          return 'Please enter valid number';
+        }
+        return null;
       },
     );
   }
@@ -807,12 +1022,192 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
     return GstDropdown(
       selectedGstId: _selectedGstId,
       focusNode: _gstFocusNode,
-      onSelectionComplete: () => _saveButtonFocusNode.requestFocus(),
+      onSelectionComplete: () => _batchBarcodeFocusNode.requestFocus(),
       onChanged: (val) {
         setState(() {
           _selectedGstId = val?.gstTaxId;
           _selectedGstPercent = val?.gstTaxPercentage ?? 0.0;
         });
+      },
+    );
+  }
+
+  Widget _buildBatchBarcodeField() {
+    return TextFormField(
+      controller: _batchBarcodeController,
+      focusNode: _batchBarcodeFocusNode,
+      textInputAction: TextInputAction.next,
+      onFieldSubmitted: (_) => _batchEANCodeFocusNode.requestFocus(),
+      decoration: InputDecoration(
+        labelText: 'Barcode',
+        hintText: 'Enter barcode',
+        prefixIcon: const Icon(Icons.qr_code, size: 20),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
+
+  Widget _buildBatchEANCodeField() {
+    return TextFormField(
+      controller: _batchEANCodeController,
+      focusNode: _batchEANCodeFocusNode,
+      textInputAction: TextInputAction.next,
+      onFieldSubmitted: (_) => _batchStockFocusNode.requestFocus(),
+      decoration: InputDecoration(
+        labelText: 'EAN Code',
+        hintText: 'Enter EAN code',
+        prefixIcon: const Icon(Icons.qr_code_scanner, size: 20),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
+
+  Widget _buildBatchStockField() {
+    return TextFormField(
+      controller: _batchStockController,
+      focusNode: _batchStockFocusNode,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      textInputAction: TextInputAction.next,
+      onFieldSubmitted: (_) => _batchLandingPriceFocusNode.requestFocus(),
+      decoration: InputDecoration(
+        labelText: 'Stock *',
+        hintText: '0',
+        prefixIcon: const Icon(Icons.inventory_outlined, size: 20),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      validator: (val) {
+        if (isEditing) return null;
+        if (val == null || val.trim().isEmpty) {
+          return 'Please enter stock';
+        }
+        final numVal = double.tryParse(val);
+        if (numVal == null) {
+          return 'Please enter valid number';
+        }
+        if (numVal <= 0) {
+          return 'Must be > 0';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildBatchLandingPriceField() {
+    return TextFormField(
+      controller: _batchLandingPriceController,
+      focusNode: _batchLandingPriceFocusNode,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      textInputAction: TextInputAction.next,
+      onFieldSubmitted: (_) => _batchPurchasePriceFocusNode.requestFocus(),
+      decoration: InputDecoration(
+        labelText: 'Landing Price *',
+        hintText: '0',
+        prefixIcon: const Icon(Icons.currency_rupee, size: 20),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      validator: (val) {
+        if (isEditing) return null;
+        if (val == null || val.trim().isEmpty) {
+          return 'Please enter landing price';
+        }
+        final numVal = double.tryParse(val);
+        if (numVal == null) {
+          return 'Please enter valid number';
+        }
+        if (numVal <= 0) {
+          return 'Must be > 0';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildBatchPurchasePriceField() {
+    return TextFormField(
+      controller: _batchPurchasePriceController,
+      focusNode: _batchPurchasePriceFocusNode,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      textInputAction: TextInputAction.next,
+      onFieldSubmitted: (_) => _batchMRPFocusNode.requestFocus(),
+      decoration: InputDecoration(
+        labelText: 'Purchase Price *',
+        hintText: '0',
+        prefixIcon: const Icon(Icons.currency_rupee, size: 20),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      validator: (val) {
+        if (isEditing) return null;
+        if (val == null || val.trim().isEmpty) {
+          return 'Please enter purchase price';
+        }
+        final numVal = double.tryParse(val);
+        if (numVal == null) {
+          return 'Please enter valid number';
+        }
+        if (numVal <= 0) {
+          return 'Must be > 0';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildBatchMRPField() {
+    return TextFormField(
+      controller: _batchMRPController,
+      focusNode: _batchMRPFocusNode,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      textInputAction: TextInputAction.next,
+      onFieldSubmitted: (_) => _batchSellingPriceFocusNode.requestFocus(),
+      decoration: InputDecoration(
+        labelText: 'MRP *',
+        hintText: '0',
+        prefixIcon: const Icon(Icons.currency_rupee, size: 20),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      validator: (val) {
+        if (isEditing) return null;
+        if (val == null || val.trim().isEmpty) {
+          return 'Please enter MRP';
+        }
+        final numVal = double.tryParse(val);
+        if (numVal == null) {
+          return 'Please enter valid number';
+        }
+        if (numVal <= 0) {
+          return 'Must be > 0';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildBatchSellingPriceField() {
+    return TextFormField(
+      controller: _batchSellingPriceController,
+      focusNode: _batchSellingPriceFocusNode,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      textInputAction: TextInputAction.done,
+      onFieldSubmitted: (_) => _saveButtonFocusNode.requestFocus(),
+      decoration: InputDecoration(
+        labelText: 'Selling Price *',
+        hintText: '0',
+        prefixIcon: const Icon(Icons.currency_rupee, size: 20),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      validator: (val) {
+        if (isEditing) return null;
+        if (val == null || val.trim().isEmpty) {
+          return 'Please enter selling price';
+        }
+        final numVal = double.tryParse(val);
+        if (numVal == null) {
+          return 'Please enter valid number';
+        }
+        if (numVal <= 0) {
+          return 'Must be > 0';
+        }
+        return null;
       },
     );
   }

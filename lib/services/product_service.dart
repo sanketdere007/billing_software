@@ -158,9 +158,17 @@ class ProductService extends ChangeNotifier {
       prodUnitId: request.prodUnitId,
       prodHSNCode: request.prodHSNCode,
       prodGSTPercent: request.prodGSTPercent,
+      prodUnitValue: request.prodUnitValue,
       prodIsActive: request.prodIsActive,
       prodCreatedBy: createdBy,
       prodModifiedBy: modifiedBy,
+      batchBarcode: request.batchBarcode,
+      batchEANCode: request.batchEANCode,
+      batchStock: request.batchStock,
+      batchLandingPrice: request.batchLandingPrice,
+      batchPurchasePrice: request.batchPurchasePrice,
+      batchMRP: request.batchMRP,
+      batchSellingPrice: request.batchSellingPrice,
     );
 
     debugPrint(
