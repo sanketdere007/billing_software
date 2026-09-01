@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import '../../../models/batch.dart';
 import '../../../models/product.dart';
 import '../../../models/sales_entry.dart';
 import '../../../models/customer.dart';
@@ -8,12 +9,12 @@ import '../../../models/company.dart';
 import '../../../services/sales_entry_service.dart';
 import '../../../services/customer_service.dart';
 import '../../../services/company_service.dart';
-import '../../../services/product_service.dart';
+import '../../../services/batch_service.dart';
 import '../../../services/session_service.dart';
 import '../../../widgets/app_drawer.dart';
 import '../../../widgets/app_message_dialog.dart';
 import '../../../widgets/customer_dropdown.dart';
-import '../../purchases/purchase_entry/product_selection_dialog.dart';
+import 'batch_selection_dialog.dart';
 import '../../../widgets/save_clear_shortcuts.dart';
 import 'payment_mode_dialog.dart';
 
@@ -52,13 +53,13 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
   bool _isLoading = false;
 
   final CustomerService _customerService = CustomerService();
-  final ProductService _productService = productService;
+  final BatchService _batchService = batchService;
 
   @override
   void initState() {
     super.initState();
     _customerService.getAllCustomers();
-    _productService.getAllProducts();
+    _batchService.getAllBatches();
     _billDiscountController.addListener(_calculateTotals);
 
     // Auto-add first empty row
@@ -158,9 +159,9 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
   }
 
   Future<void> _selectProductForEmptyRow(int index) async {
-    final selectedProduct = await showDialog<ProductListItem>(
+    final selectedProduct = await showDialog<BatchListItem>(
       context: context,
-      builder: (context) => const ProductSelectionDialog(),
+      builder: (context) => const BatchSelectionDialog(),
     );
 
     if (selectedProduct != null) {
@@ -168,7 +169,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
       final exists = _products.asMap().entries.any(
         (e) =>
             e.key != index &&
-            e.value['product']?.prodId == selectedProduct.prodId,
+            e.value['product']?.batchId == selectedProduct.batchId,
       );
 
       if (exists) {
@@ -373,7 +374,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
       final isInterstate = _isInterstateSale(company, customer);
 
       final detailData = validProducts.map((p) {
-        final ProductListItem prod = p['product'];
+        final BatchListItem prod = p['product'];
         final double qty = (p['qty'] as num?)?.toDouble() ?? 0;
         final double rate = (p['rate'] as num?)?.toDouble() ?? 0;
         final double discAmt = (p['discAmt'] as num?)?.toDouble() ?? 0;
@@ -394,10 +395,11 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
         return SalesEntryDetailData(
           compId: compId,
           branchId: branchId,
-          productId: prod.prodId,
+          productId: prod.batchProductId,
+          batchId: prod.batchId,
           productName: prod.prodName,
-          hsnCode: prod.prodHSNCode,
-          unitId: prod.prodUnitId,
+          hsnCode: '',
+          unitId: 0,
           qty: qty,
           freeQty: 0,
           totalQty: qty,
@@ -749,6 +751,8 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
         child: child,
       );
     }
+
+
 
     return SaveClearShortcuts(
       onSave: () {
