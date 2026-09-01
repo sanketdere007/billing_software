@@ -104,6 +104,7 @@ class SalesEntryMasterData {
   final double chequeAmount;
   final double bankAmount;
   final double otherAmount;
+  final double creditAmount;
   final String chequeNo;
   final String? chequeDate;
   final String bankName;
@@ -159,6 +160,7 @@ class SalesEntryMasterData {
     this.chequeAmount = 0,
     this.bankAmount = 0,
     this.otherAmount = 0,
+    this.creditAmount = 0,
     this.chequeNo = '',
     this.chequeDate,
     this.bankName = '',
@@ -216,6 +218,7 @@ class SalesEntryMasterData {
       'salesMaster_ChequeAmount': chequeAmount,
       'salesMaster_BankAmount': bankAmount,
       'salesMaster_OtherAmount': otherAmount,
+      'salesMaster_CreditAmt': creditAmount,
       'salesMaster_ChequeNo': chequeNo,
       'salesMaster_ChequeDate': chequeDate,
       'salesMaster_BankName': bankName,

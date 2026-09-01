@@ -182,7 +182,10 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
         final p = _products[index];
         p['product'] = selectedProduct;
         p['gstPct'] = selectedProduct.prodGSTPercent;
-        // Keep existing values or reset if needed, currently keeping default 1.0 qty, 0.0 rate
+        p['rate'] = selectedProduct.batchSellingPrice;
+        (p['rateController'] as TextEditingController).text = selectedProduct
+            .batchSellingPrice
+            .toString();
       });
       _calculateTotals();
 
@@ -470,6 +473,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
         bankAmount: payment.bankAmount,
         cardAmount: payment.cardAmount,
         otherAmount: payment.otherAmount,
+        creditAmount: payment.creditAmount,
         chequeNo: payment.chequeNo,
         chequeDate: payment.chequeDate?.toIso8601String(),
         bankName: payment.bankName,
@@ -752,8 +756,6 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
       );
     }
 
-
-
     return SaveClearShortcuts(
       onSave: () {
         if (!_isLoading) _saveEntry();
@@ -833,7 +835,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                         ),
                         itemBuilder: (context, index) {
                           final p = _products[index];
-                          final ProductListItem? prod = p['product'];
+                          final BatchListItem? prod = p['product'];
                           final isEven = index.isEven;
 
                           final bool isEmptyRow = prod == null;
@@ -881,7 +883,9 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                                   (p['rateNode'] as FocusNode).hasFocus ||
                                   (p['discNode'] as FocusNode).hasFocus;
                               return Container(
-                                key: ValueKey(prod?.prodId ?? 'empty_$index'),
+                                key: ValueKey(
+                                  prod?.batchProductId ?? 'empty_$index',
+                                ),
                                 color: isRowFocused
                                     ? theme.colorScheme.primaryContainer
                                           .withOpacity(0.4)
@@ -983,7 +987,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                                                           height: 2,
                                                         ),
                                                         Text(
-                                                          'Code: ${prod.prodCode} | Unit: ${prod.prodUnitShortName}',
+                                                          'Unit: ${prod.unitName} | Unit Value: ${prod.prodUnitValue}',
                                                           style: TextStyle(
                                                             color: theme
                                                                 .colorScheme
