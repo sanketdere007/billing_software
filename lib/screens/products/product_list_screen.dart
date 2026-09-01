@@ -932,6 +932,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                 _buildHeaderCell('Category', flex: 2),
                 _buildHeaderCell('Subcategory', flex: 2),
                 _buildHeaderCell('Brand', flex: 2),
+                _buildHeaderCell('Unit', flex: 1),
                 _buildHeaderCell(
                   'Status',
                   width: 100,
@@ -1114,6 +1115,23 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                 : '—',
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: product.prodBrandName.isNotEmpty
+                                  ? null
+                                  : theme.hintColor,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+
+                        // Unit
+                        Expanded(
+                          flex: 1,
+                          child: Text(
+                            product.prodUnitName.isNotEmpty
+                                ? product.prodUnitName
+                                : '—',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: product.prodUnitName.isNotEmpty
                                   ? null
                                   : theme.hintColor,
                             ),
@@ -1338,7 +1356,8 @@ class _ProductListScreenState extends State<ProductListScreen> {
                     const SizedBox(height: 6),
                   ],
                   if (product.prodCategoryName.isNotEmpty ||
-                      product.prodBrandName.isNotEmpty) ...[
+                      product.prodBrandName.isNotEmpty ||
+                      product.prodUnitName.isNotEmpty) ...[
                     Row(
                       children: [
                         const Icon(
@@ -1354,6 +1373,8 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                 product.prodCategoryName,
                               if (product.prodBrandName.isNotEmpty)
                                 product.prodBrandName,
+                              if (product.prodUnitName.isNotEmpty)
+                                product.prodUnitName,
                             ].join(' • '),
                             style: const TextStyle(fontSize: 13),
                             overflow: TextOverflow.ellipsis,

@@ -15,6 +15,7 @@ import '../../../widgets/app_message_dialog.dart';
 import '../../../widgets/customer_dropdown.dart';
 import '../../purchases/purchase_entry/product_selection_dialog.dart';
 import '../../../widgets/save_clear_shortcuts.dart';
+import 'payment_mode_dialog.dart';
 
 class AddSalesEntryScreen extends StatefulWidget {
   const AddSalesEntryScreen({super.key});
@@ -271,11 +272,12 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
     }
 
     final companyState = (company?.compState ?? '').trim().toLowerCase();
-    final customerState = (customer?.custStateName.isNotEmpty == true
-            ? customer!.custStateName
-            : (customer?.custState ?? ''))
-        .trim()
-        .toLowerCase();
+    final customerState =
+        (customer?.custStateName.isNotEmpty == true
+                ? customer!.custStateName
+                : (customer?.custState ?? ''))
+            .trim()
+            .toLowerCase();
     if (companyState.isNotEmpty && customerState.isNotEmpty) {
       return companyState != customerState;
     }
@@ -284,6 +286,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
   }
 
   Future<void> _saveEntry() async {
+    if (_isLoading) return;
     if (!_formKey.currentState!.validate()) return;
     if (_selectedCustomer == null) {
       await showWarningDialog(context, 'Please select a customer');
@@ -302,11 +305,56 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
       return;
     }
 
+    if (!mounted) return;
+
+    SalesEntryUpsertResponse? savedResponse;
+    final payment = await showPaymentModeDialog(
+      context,
+      payableAmount: _finalPayable,
+      onConfirm: (details) async {
+        try {
+          savedResponse = await _persistSalesEntry(details);
+          return true;
+        } catch (e) {
+          if (mounted) {
+            await showErrorDialog(context, e.toString());
+          }
+          return false;
+        }
+      },
+    );
+
+    // Cancelled (Esc / close) or save failed — nothing persisted on cancel.
+    final response = savedResponse;
+    if (payment == null || response == null || !mounted) return;
+
+    final invoiceNo = response.data?.salesMasterInvoiceNo ?? '';
+    final apiMessage = (response.data?.message.isNotEmpty ?? false)
+        ? response.data!.message
+        : response.message;
+    final successMessage = invoiceNo.isNotEmpty
+        ? (apiMessage.isNotEmpty
+              ? '$apiMessage\nInvoice: $invoiceNo'
+              : 'Sales entry saved. Invoice: $invoiceNo')
+        : (apiMessage.isNotEmpty
+              ? apiMessage
+              : 'Sales entry saved successfully');
+    await showSuccessDialog(context, successMessage);
+    if (!mounted) return;
+    _resetForm();
+  }
+
+  Future<SalesEntryUpsertResponse> _persistSalesEntry(
+    SalesPaymentDetails payment,
+  ) async {
     setState(() {
       _isLoading = true;
     });
 
     try {
+      final validProducts = _products
+          .where((p) => p['product'] != null)
+          .toList();
       final user = await sessionService.getUserData();
       int compId = sessionService.selectedCompId ?? 1;
       int branchId = sessionService.selectedBranchId ?? 1;
@@ -392,6 +440,9 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
       final billingCityId = customer?.custCityId ?? 0;
       final billingAreaId = customer?.custAreaId ?? 0;
 
+      final paidAmount = payment.paidAmountFor(_finalPayable);
+      final balanceAmount = payment.balanceAmountFor(_finalPayable);
+
       final masterData = SalesEntryMasterData(
         salesMasterId: 0,
         compId: compId,
@@ -409,8 +460,25 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
         totalCESS: 0,
         roundOff: 0,
         grandTotal: _finalPayable,
-        paidAmount: 0,
-        balanceAmount: _finalPayable,
+        paidAmount: paidAmount,
+        balanceAmount: balanceAmount,
+        cashAmount: payment.cashAmount,
+        upiAmount: payment.upiAmount,
+        chequeAmount: payment.chequeAmount,
+        bankAmount: payment.bankAmount,
+        cardAmount: payment.cardAmount,
+        otherAmount: payment.otherAmount,
+        chequeNo: payment.chequeNo,
+        chequeDate: payment.chequeDate?.toIso8601String(),
+        bankName: payment.bankName,
+        bankReferenceNo: payment.bankReferenceNo,
+        neftType: payment.neftType,
+        neftReferenceNo: payment.neftReferenceNo,
+        otherPaymentType: payment.otherPaymentType,
+        otherReferenceNo: payment.otherReferenceNo,
+        otherDate: payment.otherDate?.toIso8601String(),
+        otherRemark: payment.otherRemark,
+        remark: payment.remark,
         billingName: billingName,
         billingAddress: billingAddress,
         billingMobileNo: billingMobile,
@@ -436,30 +504,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
         detailData: detailData,
       );
 
-      final response = await SalesEntryService().insertOrUpdateSalesEntry(
-        request,
-      );
-
-      if (mounted) {
-        final invoiceNo = response.data?.salesMasterInvoiceNo ?? '';
-        final apiMessage = (response.data?.message.isNotEmpty ?? false)
-            ? response.data!.message
-            : response.message;
-        final successMessage = invoiceNo.isNotEmpty
-            ? (apiMessage.isNotEmpty
-                  ? '$apiMessage\nInvoice: $invoiceNo'
-                  : 'Sales entry saved. Invoice: $invoiceNo')
-            : (apiMessage.isNotEmpty
-                  ? apiMessage
-                  : 'Sales entry saved successfully');
-        await showSuccessDialog(context, successMessage);
-        if (!mounted) return;
-        _resetForm();
-      }
-    } catch (e) {
-      if (mounted) {
-        await showErrorDialog(context, e.toString());
-      }
+      return await SalesEntryService().insertOrUpdateSalesEntry(request);
     } finally {
       if (mounted) {
         setState(() {

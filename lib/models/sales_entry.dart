@@ -35,9 +35,9 @@ class SalesEntry {
   final String? salespersonId;
   final String? branchId;
   final String? warehouseId;
-  
+
   final List<SalesEntryProduct> products;
-  
+
   final double totalQuantity;
   final double grossAmount;
   final double discount;
@@ -45,12 +45,12 @@ class SalesEntry {
   final double otherCharges;
   final double roundOff;
   final double grandTotal;
-  
+
   final Map<String, double> payments;
   final double amountReceived;
   final double balance;
   final double changeReturn;
-  
+
   final String status;
 
   SalesEntry({
@@ -321,8 +321,8 @@ class SalesEntryDetailData {
     this.remark = '',
     this.createdBy = 0,
     this.modifiedBy = 0,
-  })  : totalQty = totalQty ?? (qty + freeQty),
-        rate = rate ?? sellingPrice;
+  }) : totalQty = totalQty ?? (qty + freeQty),
+       rate = rate ?? sellingPrice;
 
   Map<String, dynamic> toJson() {
     return {
@@ -368,10 +368,7 @@ class SalesEntryUpsertRequest {
   final SalesEntryMasterData masterData;
   final List<SalesEntryDetailData> detailData;
 
-  SalesEntryUpsertRequest({
-    required this.masterData,
-    required this.detailData,
-  });
+  SalesEntryUpsertRequest({required this.masterData, required this.detailData});
 
   Map<String, dynamic> toJson() {
     return {
@@ -396,7 +393,10 @@ class SalesEntryUpsertResponseData {
 
   factory SalesEntryUpsertResponseData.fromJson(Map<String, dynamic> json) {
     return SalesEntryUpsertResponseData(
-      status: json['status'] == true || json['status'] == 'true' || json['status'] == 1,
+      status:
+          json['status'] == true ||
+          json['status'] == 'true' ||
+          json['status'] == 1,
       message: json['message']?.toString() ?? '',
       salesMasterId: _asInt(json['salesMaster_Id']),
       salesMasterInvoiceNo: json['salesMaster_InvoiceNo']?.toString() ?? '',
@@ -425,7 +425,10 @@ class SalesEntryUpsertResponse {
     }
 
     return SalesEntryUpsertResponse(
-      status: json['status'] == true || json['status'] == 'true' || json['status'] == 1,
+      status:
+          json['status'] == true ||
+          json['status'] == 'true' ||
+          json['status'] == 1,
       message: json['message']?.toString() ?? '',
       data: data,
       error: json['error']?.toString(),
