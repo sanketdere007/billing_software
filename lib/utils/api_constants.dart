@@ -93,6 +93,10 @@ class ApiConstants {
   // Email Endpoints
   static const String sendEmailEndpoint = '/api/Email/send';
 
+  // Receipt Entry Endpoints
+  static const String insertOrUpdateReceiptEntryEndpoint =
+      '/api/ReceiptEntry/InsertOrUpdateReceiptEntry';
+
   // Default JSON Headers
   static const Map<String, String> defaultHeaders = {
     'Content-Type': 'application/json',

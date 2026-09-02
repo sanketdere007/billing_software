@@ -50,6 +50,8 @@ import '../screens/about_screen.dart';
 import '../screens/help_support_screen.dart';
 import '../widgets/support_info_footer.dart';
 import '../screens/reports/supplier_outstanding_report_screen.dart';
+import '../screens/reports/customer_outstanding_report_screen.dart';
+import '../screens/pdf/pdf_preview_screen.dart';
 
 class AppDrawer extends StatefulWidget {
   final bool isPermanent;
@@ -540,6 +542,22 @@ class _AppDrawerState extends State<AppDrawer> {
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) => const SendMailScreen(),
+                      ),
+                    );
+                  },
+                ),
+                _buildDrawerItem(
+                  context: context,
+                  icon: Icons.picture_as_pdf_rounded,
+                  iconColor: _getIconColor(context, Colors.deepOrange),
+                  title: 'Generate PDF',
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        settings: const RouteSettings(
+                          name: AppRoutes.pdfPreview,
+                        ),
+                        builder: (context) => const PdfPreviewScreen(),
                       ),
                     );
                   },
@@ -1213,6 +1231,20 @@ class _AppDrawerState extends State<AppDrawer> {
                           MaterialPageRoute(
                             builder: (context) =>
                                 const SupplierOutstandingReportScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _buildDrawerItem(
+                      context: context,
+                      icon: Icons.pie_chart_rounded,
+                      iconColor: _getIconColor(context, Colors.indigo),
+                      title: 'Customer Outstanding',
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const CustomerOutstandingReportScreen(),
                           ),
                         );
                       },

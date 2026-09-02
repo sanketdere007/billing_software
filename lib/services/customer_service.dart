@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../models/customer.dart';
+import '../models/customer_reports.dart';
 import '../utils/api_constants.dart';
 import 'api_service.dart';
 import 'session_service.dart';
@@ -207,6 +208,53 @@ class CustomerService extends ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  /// Fetch customer outstanding report from `/api/Customer/GetAllCustomerOutstanding`
+  Future<List<CustomerOutstandingReportItem>> getCustomerOutstandingReport({
+    int? compId,
+    int? branchId,
+    int? customerId,
+    String? search,
+    int? pageNumber,
+    int? pageSize,
+  }) async {
+    final effectiveCompId = compId ?? sessionService.selectedCompId ?? 1;
+    final effectiveBranchId = branchId ?? sessionService.selectedBranchId ?? 1;
+
+    final Map<String, String> queryParameters = {
+      'CompId': effectiveCompId.toString(),
+      'BranchId': effectiveBranchId.toString(),
+      if (customerId != null && customerId > 0) 'CustomerId': customerId.toString(),
+      if (search != null && search.trim().isNotEmpty) 'Search': search.trim(),
+      if (pageNumber != null) 'PageNumber': pageNumber.toString(),
+      if (pageSize != null) 'PageSize': pageSize.toString(),
+    };
+
+    debugPrint('👥 [CustomerService.getCustomerOutstandingReport] Requesting with: $queryParameters');
+
+    try {
+      final dynamic response = await apiService.get(
+        '/api/Customer/GetAllCustomerOutstanding',
+        queryParameters: queryParameters,
+        requiresAuth: true,
+      );
+
+      if (response is Map<String, dynamic>) {
+        final reportResponse = CustomerOutstandingReportResponse.fromJson(response);
+        if (reportResponse.status && reportResponse.data != null) {
+          return reportResponse.data!.items;
+        } else {
+          throw ApiException(reportResponse.message.isNotEmpty ? reportResponse.message : 'Failed to fetch customer outstanding report');
+        }
+      }
+      
+      return [];
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException('Error fetching customer outstanding report: $e');
     }
   }
 

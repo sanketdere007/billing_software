@@ -32,6 +32,7 @@ class AppRoutes {
   static const String settings = '/settings';
   static const String about = '/about';
   static const String helpSupport = '/help-support';
+  static const String pdfPreview = '/pdf-preview';
 }
 
 /// Navigator observer that tracks active routes in the navigation stack.
@@ -172,6 +173,8 @@ class ShortcutService {
     'help',
     '/support',
     'support',
+    AppRoutes.pdfPreview,
+    'pdf-preview',
   };
 
   final Set<Route<dynamic>> _directBackRouteInstances = <Route<dynamic>>{};
