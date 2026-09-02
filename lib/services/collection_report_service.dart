@@ -4,7 +4,9 @@ import 'api_service.dart';
 class CollectionReportService {
   final ApiService _apiService = ApiService();
 
-  Future<CollectionReportResponse> getCollectionReport(CollectionReportRequest request) async {
+  Future<CollectionReportResponse> getCollectionReport(
+    CollectionReportRequest request,
+  ) async {
     final response = await _apiService.post(
       '/api/ReceiptEntry/CollectionReport',
       body: request.toJson(),

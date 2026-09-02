@@ -16,6 +16,8 @@ import '../../../widgets/app_message_dialog.dart';
 import '../../../widgets/customer_dropdown.dart';
 import 'batch_selection_dialog.dart';
 import '../../../widgets/save_clear_shortcuts.dart';
+import '../../../services/api_service.dart';
+import '../../../utils/api_constants.dart';
 import 'payment_mode_dialog.dart';
 
 class AddSalesEntryScreen extends StatefulWidget {
@@ -510,7 +512,87 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
         detailData: detailData,
       );
 
-      return await SalesEntryService().insertOrUpdateSalesEntry(request);
+      final response = await SalesEntryService().insertOrUpdateSalesEntry(request);
+
+      if (response.status || (response.data != null && response.data!.status)) {
+        final salesMasterId = response.data?.salesMasterId ?? 0;
+        
+        if (paidAmount > 0) {
+          if (salesMasterId > 0) {
+            final receiptRequest = {
+              "masterData": {
+                "receiptMaster_Id": 0,
+                "receiptMaster_CompId": compId,
+                "receiptMaster_BranchId": branchId,
+                "receiptMaster_ReceiptDate": _selectedDate.toIso8601String(),
+                "receiptMaster_CustomerId": _selectedCustomer,
+                "receiptMaster_LedgerId": customer?.custLedgerId ?? 0,
+                "receiptMaster_TotalAmount": paidAmount,
+                "receiptMaster_CashAmount": payment.cashAmount,
+                "receiptMaster_UPIAmount": payment.upiAmount,
+                "receiptMaster_CardAmount": payment.cardAmount,
+                "receiptMaster_ChequeAmount": payment.chequeAmount,
+                "receiptMaster_BankAmount": payment.bankAmount,
+                "receiptMaster_OtherAmount": payment.otherAmount,
+                "receiptMaster_ChequeNo": payment.chequeNo,
+                "receiptMaster_ChequeDate": payment.chequeAmount > 0 ? (payment.chequeDate ?? _selectedDate).toIso8601String() : _selectedDate.toIso8601String(),
+                "receiptMaster_BankName": payment.bankName,
+                "receiptMaster_BankReferenceNo": payment.bankReferenceNo,
+                "receiptMaster_NEFTType": payment.neftType,
+                "receiptMaster_NEFTReferenceNo": payment.neftReferenceNo,
+                "receiptMaster_OtherPaymentType": payment.otherPaymentType,
+                "receiptMaster_OtherReferenceNo": payment.otherReferenceNo,
+                "receiptMaster_OtherDate": payment.otherAmount > 0 ? (payment.otherDate ?? _selectedDate).toIso8601String() : _selectedDate.toIso8601String(),
+                "receiptMaster_OtherRemark": payment.otherRemark,
+                "receiptMaster_Remark": payment.remark,
+                "receiptMaster_Status": "Active",
+                "receiptMaster_IsActive": true,
+                "receiptMaster_CreatedBy": empId,
+                "receiptMaster_ModifiedBy": empId
+              },
+              "detailData": [
+                {
+                  "receiptDetail_CompId": compId,
+                  "receiptDetail_BranchId": branchId,
+                  "receiptDetail_CustomerId": _selectedCustomer,
+                  "receiptDetail_LedgerId": customer?.custLedgerId ?? 0,
+                  "receiptDetail_SalesMasterId": salesMasterId,
+                  "receiptDetail_InvoiceAmount": _finalPayable,
+                  "receiptDetail_PendingAmount": balanceAmount,
+                  "receiptDetail_ReceivedAmount": paidAmount,
+                  "receiptDetail_RemainingAmount": 0,
+                  "receiptDetail_Remark": payment.remark,
+                  "receiptDetail_CreatedBy": empId,
+                  "receiptDetail_ModifiedBy": empId
+                }
+              ]
+            };
+
+            try {
+              final receiptResponse = await apiService.post(
+                ApiConstants.insertOrUpdateReceiptEntryEndpoint,
+                body: receiptRequest,
+                requiresAuth: true,
+              );
+              if (receiptResponse == null || receiptResponse['status'] != true) {
+                if (mounted) {
+                  await showErrorDialog(context, 'Sales Entry saved, but Receipt Entry failed: ${receiptResponse?['message'] ?? receiptResponse?['error'] ?? 'Unknown error'}');
+                }
+              }
+            } catch (e) {
+              if (mounted) {
+                await showErrorDialog(context, 'Sales Entry saved, but Receipt Entry failed: $e');
+              }
+            }
+          } else {
+            if (mounted) {
+              await showErrorDialog(context, 'Sales Entry saved, but Receipt Entry failed: Invalid SalesMasterId received.');
+            }
+          }
+        }
+      }
+
+      return response;
     } finally {
       if (mounted) {
         setState(() {

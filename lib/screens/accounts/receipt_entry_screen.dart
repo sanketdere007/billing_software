@@ -431,6 +431,7 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
             "receiptDetail_BranchId": branchId,
             "receiptDetail_CustomerId": _selectedAccountId,
             "receiptDetail_LedgerId": _selectedLedgerId ?? 0,
+            "receiptDetail_SalesMasterId": _selectedInvoice?['salesMaster_Id'] ?? 0,
             "receiptDetail_InvoiceAmount": _totalAmount,
             "receiptDetail_PendingAmount": 0,
             "receiptDetail_ReceivedAmount": _totalAmount,

@@ -1180,7 +1180,7 @@ class _AppDrawerState extends State<AppDrawer> {
                             settings: const RouteSettings(
                               name: AppRoutes.paymentScreen,
                             ),
-                            builder: (context) => const PaymentListScreen(),
+                            builder: (context) => const PaymentMasterScreen(),
                           ),
                         );
                       },
@@ -1196,7 +1196,7 @@ class _AppDrawerState extends State<AppDrawer> {
                             settings: const RouteSettings(
                               name: AppRoutes.receiptEntryScreen,
                             ),
-                            builder: (context) => const ReceiptListScreen(),
+                            builder: (context) => const ReceiptMasterScreen(),
                           ),
                         );
                       },
