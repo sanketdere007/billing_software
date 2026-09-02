@@ -51,6 +51,7 @@ import '../screens/help_support_screen.dart';
 import '../widgets/support_info_footer.dart';
 import '../screens/reports/supplier_outstanding_report_screen.dart';
 import '../screens/reports/customer_outstanding_report_screen.dart';
+import '../screens/reports/collection_report_screen.dart';
 import '../screens/pdf/pdf_preview_screen.dart';
 
 class AppDrawer extends StatefulWidget {
@@ -1245,6 +1246,20 @@ class _AppDrawerState extends State<AppDrawer> {
                           MaterialPageRoute(
                             builder: (context) =>
                                 const CustomerOutstandingReportScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _buildDrawerItem(
+                      context: context,
+                      icon: Icons.receipt_long_rounded,
+                      iconColor: _getIconColor(context, Colors.indigo),
+                      title: 'Collection Report',
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const CollectionReportScreen(),
                           ),
                         );
                       },

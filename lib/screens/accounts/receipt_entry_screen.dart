@@ -8,6 +8,8 @@ import '../../widgets/customer_dropdown.dart';
 import '../../services/api_service.dart';
 import '../../utils/api_constants.dart';
 
+import '../../services/session_service.dart';
+
 class ReceiptMasterScreen extends StatefulWidget {
   const ReceiptMasterScreen({super.key});
 
@@ -83,7 +85,12 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
 
   String? _selectedBankTransferType;
   int? _selectedAccountId;
+  int? _selectedLedgerId;
   bool _isLoading = false;
+
+  List<dynamic> _pendingInvoices = [];
+  dynamic _selectedInvoice;
+  bool _isLoadingInvoices = false;
 
   static const List<String> _bankTransferTypes = [
     'NEFT',
@@ -91,6 +98,46 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
     'IMPS',
     'Fund Transfer',
   ];
+
+  Future<void> _fetchPendingInvoices(int customerId) async {
+    setState(() {
+      _isLoadingInvoices = true;
+      _pendingInvoices = [];
+      _selectedInvoice = null;
+      _invoiceNoController.clear();
+    });
+
+    try {
+      final compId = sessionService.selectedCompId ?? 1;
+      final branchId = sessionService.selectedBranchId ?? 1;
+
+      final response = await apiService.get(
+        ApiConstants.getAllPendingAmountEndpoint,
+        queryParameters: {
+          'CompId': compId.toString(),
+          'BranchId': branchId.toString(),
+          'CustomerId': customerId.toString(),
+          'PageNumber': '1',
+          'PageSize': '100',
+        },
+      );
+      if (response != null && response['status'] == true && response['data'] != null) {
+        if (response['data']['items'] != null) {
+          setState(() {
+            _pendingInvoices = response['data']['items'];
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching pending invoices: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingInvoices = false;
+        });
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -310,6 +357,9 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
       _otherDate = null;
       _selectedBankTransferType = null;
       _selectedAccountId = null;
+      _selectedLedgerId = null;
+      _selectedInvoice = null;
+      _pendingInvoices = [];
     });
     WidgetsBinding.instance.addPostFrameCallback((_) => _focusCustomer());
   }
@@ -339,14 +389,19 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
     setState(() => _isLoading = true);
 
     try {
+      final user = await sessionService.getUserData();
+      final empId = user?.empId ?? 0;
+      final compId = sessionService.selectedCompId ?? 0;
+      final branchId = sessionService.selectedBranchId ?? 0;
+      
       final requestData = {
         "masterData": {
           "receiptMaster_Id": 0,
-          "receiptMaster_CompId": 0,
-          "receiptMaster_BranchId": 0,
+          "receiptMaster_CompId": compId,
+          "receiptMaster_BranchId": branchId,
           "receiptMaster_ReceiptDate": _receiptDate.toIso8601String(),
           "receiptMaster_CustomerId": _selectedAccountId,
-          "receiptMaster_LedgerId": 0,
+          "receiptMaster_LedgerId": _selectedLedgerId ?? 0,
           "receiptMaster_TotalAmount": _totalAmount,
           "receiptMaster_CashAmount": _cashAmount,
           "receiptMaster_UPIAmount": _upiAmount,
@@ -367,22 +422,22 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
           "receiptMaster_Remark": _remarksController.text.trim(),
           "receiptMaster_Status": "Active",
           "receiptMaster_IsActive": true,
-          "receiptMaster_CreatedBy": 0,
-          "receiptMaster_ModifiedBy": 0
+          "receiptMaster_CreatedBy": empId,
+          "receiptMaster_ModifiedBy": empId
         },
         "detailData": [
           {
-            "receiptDetail_CompId": 0,
-            "receiptDetail_BranchId": 0,
+            "receiptDetail_CompId": compId,
+            "receiptDetail_BranchId": branchId,
             "receiptDetail_CustomerId": _selectedAccountId,
-            "receiptDetail_LedgerId": 0,
+            "receiptDetail_LedgerId": _selectedLedgerId ?? 0,
             "receiptDetail_InvoiceAmount": _totalAmount,
             "receiptDetail_PendingAmount": 0,
             "receiptDetail_ReceivedAmount": _totalAmount,
             "receiptDetail_RemainingAmount": 0,
             "receiptDetail_Remark": _remarksController.text.trim(),
-            "receiptDetail_CreatedBy": 0,
-            "receiptDetail_ModifiedBy": 0
+            "receiptDetail_CreatedBy": empId,
+            "receiptDetail_ModifiedBy": empId
           }
         ]
       };
@@ -390,6 +445,7 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
       final response = await apiService.post(
         ApiConstants.insertOrUpdateReceiptEntryEndpoint,
         body: requestData,
+        requiresAuth: true,
       );
 
       if (!mounted) return;
@@ -544,7 +600,17 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
                 onChanged: (customer) {
                   setState(() {
                     _selectedAccountId = customer?.custId;
+                    _selectedLedgerId = customer?.custLedgerId ?? 0;
                   });
+                  if (customer?.custId != null) {
+                    _fetchPendingInvoices(customer!.custId!);
+                  } else {
+                    setState(() {
+                      _pendingInvoices = [];
+                      _selectedInvoice = null;
+                      _invoiceNoController.clear();
+                    });
+                  }
                 },
               ),
               const SizedBox(height: 16),
@@ -556,12 +622,36 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
                   node: _receiptDateNode,
                   onPicked: (date) => setState(() => _receiptDate = date),
                 ),
-                _buildTextField(
-                  controller: _invoiceNoController,
-                  label: 'Invoice No',
-                  theme: theme,
-                  focusNode: _invoiceNoNode,
-                ),
+                _isLoadingInvoices
+                    ? const Center(
+                        child: CircularProgressIndicator(),
+                      )
+                    : DropdownButtonFormField<dynamic>(
+                        value: _selectedInvoice,
+                        focusNode: _invoiceNoNode,
+                        decoration: _inputDecoration('Select Invoice No', theme).copyWith(
+                          prefixIcon: const Icon(Icons.receipt_long, size: 20),
+                        ),
+                        items: _pendingInvoices.map((invoice) {
+                          return DropdownMenuItem<dynamic>(
+                            value: invoice,
+                            child: Text('${invoice['salesMaster_InvoiceNo']} - ₹${invoice['salesMaster_BalanceAmount']}'),
+                          );
+                        }).toList(),
+                        onChanged: (val) {
+                          setState(() {
+                            _selectedInvoice = val;
+                            if (val != null) {
+                              _invoiceNoController.text = val['salesMaster_InvoiceNo']?.toString() ?? '';
+                              _cashAmountController.text = val['salesMaster_BalanceAmount']?.toString() ?? '0';
+                            } else {
+                              _invoiceNoController.clear();
+                              _cashAmountController.clear();
+                            }
+                          });
+                          _focusNext(_invoiceNoNode);
+                        },
+                      ),
               ]),
               _sectionHeader(
                 theme,

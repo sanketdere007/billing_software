@@ -85,6 +85,8 @@ class ApiConstants {
   // Sales Entry Endpoints
   static const String insertOrUpdateSalesEntryEndpoint =
       '/api/SalesEntry/InsertOrUpdateSalesEntry';
+  static const String getAllPendingAmountEndpoint =
+      '/api/SalesEntry/GetAllPendingAmount';
 
   // Payment Endpoints
   static const String insertOrUpdatePaymentEndpoint =

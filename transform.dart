@@ -43,6 +43,14 @@ void main() {
   content = content.replaceAll("suppId", "custId");
   content = content.replaceAll("selectedSupplierId", "selectedCustomerId");
   
+  // Add _selectedLedgerId state logic
+  content = content.replaceAll("int? _selectedAccountId;", "int? _selectedAccountId;\n  int? _selectedLedgerId;");
+  content = content.replaceAll(
+    "_selectedAccountId = customer?.custId;", 
+    "_selectedAccountId = customer?.custId;\n                    _selectedLedgerId = customer?.custLedgerId ?? 0;"
+  );
+  content = content.replaceAll("_selectedAccountId = null;", "_selectedAccountId = null;\n      _selectedLedgerId = null;");
+  
   // Remove pending invoice logic lines
   content = content.replaceAll(RegExp(r'\s*List<SupplierPendingInvoiceItem> _pendingInvoices = \[\];'), '');
   content = content.replaceAll(RegExp(r'\s*SupplierPendingInvoiceItem\? _selectedInvoice;'), '');
@@ -117,7 +125,7 @@ void main() {
           "receiptMaster_BranchId": branchId,
           "receiptMaster_ReceiptDate": _receiptDate.toIso8601String(),
           "receiptMaster_CustomerId": _selectedAccountId,
-          "receiptMaster_LedgerId": 0,
+          "receiptMaster_LedgerId": _selectedLedgerId ?? 0,
           "receiptMaster_TotalAmount": _totalAmount,
           "receiptMaster_CashAmount": _cashAmount,
           "receiptMaster_UPIAmount": _upiAmount,
@@ -146,7 +154,7 @@ void main() {
             "receiptDetail_CompId": compId,
             "receiptDetail_BranchId": branchId,
             "receiptDetail_CustomerId": _selectedAccountId,
-            "receiptDetail_LedgerId": 0,
+            "receiptDetail_LedgerId": _selectedLedgerId ?? 0,
             "receiptDetail_InvoiceAmount": _totalAmount,
             "receiptDetail_PendingAmount": 0,
             "receiptDetail_ReceivedAmount": _totalAmount,
@@ -161,6 +169,7 @@ void main() {
       final response = await apiService.post(
         ApiConstants.insertOrUpdateReceiptEntryEndpoint,
         body: requestData,
+        requiresAuth: true,
       );
 
       if (!mounted) return;
