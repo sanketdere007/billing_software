@@ -16,20 +16,17 @@ class InvoicePdfGenerator {
   static const _tinySize = 6.5;
 
   static const _columns = <_InvoiceColumn>[
-    _InvoiceColumn('Com', 3.8, pw.Alignment.centerLeft),
-    _InvoiceColumn('Product Name', 16.2, pw.Alignment.centerLeft),
-    _InvoiceColumn('Pack', 6.2, pw.Alignment.center),
-    _InvoiceColumn('HSN', 8.0, pw.Alignment.center),
-    _InvoiceColumn('Qty', 4.6, pw.Alignment.centerRight),
+    _InvoiceColumn('Sr. No.', 4.0, pw.Alignment.center),
+    _InvoiceColumn('Product Name', 28.2, pw.Alignment.centerLeft),
+    _InvoiceColumn('Pack', 9.2, pw.Alignment.center),
+    _InvoiceColumn('Qty', 6.0, pw.Alignment.centerRight),
     _InvoiceColumn('Scm', 4.0, pw.Alignment.center),
-    _InvoiceColumn('Disc', 5.0, pw.Alignment.centerRight),
-    _InvoiceColumn('Batch', 10.2, pw.Alignment.centerLeft),
-    _InvoiceColumn('Exp', 5.4, pw.Alignment.center),
-    _InvoiceColumn('MRP', 7.6, pw.Alignment.centerRight),
-    _InvoiceColumn('Rate', 7.6, pw.Alignment.centerRight),
-    _InvoiceColumn('GST%', 5.0, pw.Alignment.centerRight),
-    _InvoiceColumn('GST AMT', 7.2, pw.Alignment.centerRight),
-    _InvoiceColumn('Amount', 9.2, pw.Alignment.centerRight),
+    _InvoiceColumn('Disc', 6.0, pw.Alignment.centerRight),
+    _InvoiceColumn('MRP', 8.6, pw.Alignment.centerRight),
+    _InvoiceColumn('Rate', 8.6, pw.Alignment.centerRight),
+    _InvoiceColumn('GST%', 6.0, pw.Alignment.centerRight),
+    _InvoiceColumn('GST AMT', 8.7, pw.Alignment.centerRight),
+    _InvoiceColumn('Amount', 10.7, pw.Alignment.centerRight),
   ];
 
   Future<Uint8List> generate(InvoicePdfData data) async {
@@ -59,7 +56,9 @@ class InvoicePdfGenerator {
         children: [
           _buildHeader(data),
           _buildItemsHeader(),
-          ...data.items.map(_buildItemRow),
+          ...data.items.asMap().entries.map(
+            (entry) => _buildItemRow(entry.value, entry.key + 1),
+          ),
           pw.Expanded(child: _buildEmptyTableBody()),
           _buildFooter(data),
           _buildBottomStrip(data),
@@ -148,8 +147,6 @@ class InvoicePdfGenerator {
           _kv('Date', invoice.date, size: _bodySize),
           pw.SizedBox(height: 2),
           _kv('Time', invoice.time, size: _bodySize),
-          pw.SizedBox(height: 2),
-          _kv('S.Man', invoice.salesman.isEmpty ? ' ' : invoice.salesman, size: _bodySize),
         ],
       ),
     );
@@ -236,17 +233,14 @@ class InvoicePdfGenerator {
     );
   }
 
-  pw.Widget _buildItemRow(InvoiceLineItem item) {
+  pw.Widget _buildItemRow(InvoiceLineItem item, int serialNo) {
     final values = <String>[
-      item.companyCode,
+      serialNo.toString(),
       item.productName,
       item.pack,
-      item.hsn,
       _qty(item.qty),
       item.scheme,
       _optionalAmount(item.discount),
-      item.batch,
-      item.expiry,
       _amount(item.mrp),
       _amount(item.rate),
       _optionalAmount(item.gstPercent),
@@ -323,13 +317,6 @@ class InvoicePdfGenerator {
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          _kv('Prev.Bal.', _amount(data.previousBalance), size: _bodySize),
-          pw.SizedBox(height: 3),
-          _kv('Bank', data.bank.name, size: _smallSize),
-          _kv('Branch', data.bank.branch, size: _smallSize),
-          _kv('IFSC', data.bank.ifsc, size: _smallSize),
-          _kv('Ac/No', data.bank.accountNo, size: _smallSize),
-          pw.SizedBox(height: 6),
           pw.Text(
             'In Words : ${data.resolvedAmountInWords}',
             style: pw.TextStyle(

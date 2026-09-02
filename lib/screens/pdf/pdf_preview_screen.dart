@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 
 import '../../controllers/invoice_pdf_controller.dart';
+import '../../models/invoice_pdf_data.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/app_message_dialog.dart';
 import '../../widgets/direct_back_scope.dart';
 
 class PdfPreviewScreen extends StatefulWidget {
-  const PdfPreviewScreen({super.key});
+  final InvoicePdfData? invoiceData;
+
+  const PdfPreviewScreen({super.key, this.invoiceData});
 
   @override
   State<PdfPreviewScreen> createState() => _PdfPreviewScreenState();
@@ -24,9 +27,14 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
   }
 
   Future<void> _generate() async {
+    final data = widget.invoiceData;
+    if (data == null) {
+      return;
+    }
+
     setState(() => _isBusy = true);
     try {
-      await _controller.generate();
+      await _controller.generateFromData(data);
     } catch (e) {
       if (!mounted) return;
       await showErrorDialog(context, _controller.errorMessage ?? e.toString());
@@ -104,6 +112,13 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
         Expanded(
           child: _isBusy
               ? const Center(child: CircularProgressIndicator())
+              : widget.invoiceData == null
+              ? const Center(
+                  child: Text(
+                    'No invoice data available. Save a Sales Entry to generate a receipt PDF.',
+                    textAlign: TextAlign.center,
+                  ),
+                )
               : bytes == null
               ? const Center(child: Text('PDF could not be generated.'))
               : PdfPreview(

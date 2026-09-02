@@ -1,24 +1,14 @@
 import '../models/invoice_pdf_data.dart';
 
-/// Data source for invoice PDFs.
-///
-/// Currently returns hardcoded JSON that matches the reference invoice.
-/// Later, replace [fetchInvoice] with an API call and map the response
-/// through [InvoicePdfData.fromJson] — the PDF generator does not change.
+/// Test-only sample invoice payload.
+/// Production PDFs are built from saved Sales Entry + Receipt Entry data
+/// via [InvoicePdfDataFactory] — this repository is not used at runtime.
 class InvoicePdfRepository {
-  /// Fetches invoice data used to build the PDF.
-  ///
-  /// Future API example:
-  /// ```dart
-  /// final response = await apiService.get(ApiConstants.getInvoicePdfEndpoint);
-  /// return InvoicePdfData.fromJson(response['data'] as Map<String, dynamic>);
-  /// ```
   Future<InvoicePdfData> fetchInvoice() async {
     return InvoicePdfData.fromJson(sampleInvoiceJson);
   }
 
-  /// Sample payload matching the reference tax invoice.
-  /// Keep this shape aligned with the future API response.
+  /// Sample payload used by unit tests to verify PDF layout generation.
   static const Map<String, dynamic> sampleInvoiceJson = {
     'company': {
       'name': 'PASHUSEVA AUSHADHALAYA',
@@ -31,7 +21,7 @@ class InvoicePdfRepository {
     'invoice': {
       'invoiceNo': '2627CCB10497',
       'date': '28/07/2026',
-      'time': '09:49:59',
+      'time': '09:49:59 AM',
       'salesman': '',
       'pageNo': 1,
       'pageCount': 1,

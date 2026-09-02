@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../../../models/batch.dart';
-import '../../../models/product.dart';
 import '../../../models/sales_entry.dart';
 import '../../../models/customer.dart';
 import '../../../models/company.dart';
+import '../../../models/login_response.dart';
 import '../../../services/sales_entry_service.dart';
 import '../../../services/customer_service.dart';
 import '../../../services/company_service.dart';
@@ -17,8 +17,41 @@ import '../../../widgets/customer_dropdown.dart';
 import 'batch_selection_dialog.dart';
 import '../../../widgets/save_clear_shortcuts.dart';
 import '../../../services/api_service.dart';
+import '../../../services/invoice_pdf_data_factory.dart';
+import '../../../services/shortcut_service.dart';
 import '../../../utils/api_constants.dart';
+import '../../pdf/pdf_preview_screen.dart';
 import 'payment_mode_dialog.dart';
+
+class SalePersistResult {
+  final SalesEntryUpsertResponse salesResponse;
+  final SalesEntryMasterData masterData;
+  final List<SalesEntryDetailData> detailData;
+  final List<Map<String, dynamic>> productRows;
+  final SalesPaymentDetails payment;
+  final CustomerListItem? customer;
+  final CompanyListItem? company;
+  final UserData? user;
+  final bool receiptAttempted;
+  final bool receiptSuccess;
+  final String? receiptError;
+  final Map<String, dynamic>? receiptResponse;
+
+  const SalePersistResult({
+    required this.salesResponse,
+    required this.masterData,
+    required this.detailData,
+    required this.productRows,
+    required this.payment,
+    this.customer,
+    this.company,
+    this.user,
+    required this.receiptAttempted,
+    required this.receiptSuccess,
+    this.receiptError,
+    this.receiptResponse,
+  });
+}
 
 class AddSalesEntryScreen extends StatefulWidget {
   const AddSalesEntryScreen({super.key});
@@ -313,13 +346,13 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
 
     if (!mounted) return;
 
-    SalesEntryUpsertResponse? savedResponse;
+    SalePersistResult? savedResult;
     final payment = await showPaymentModeDialog(
       context,
       payableAmount: _finalPayable,
       onConfirm: (details) async {
         try {
-          savedResponse = await _persistSalesEntry(details);
+          savedResult = await _persistSalesEntry(details);
           return true;
         } catch (e) {
           if (mounted) {
@@ -331,26 +364,60 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
     );
 
     // Cancelled (Esc / close) or save failed — nothing persisted on cancel.
-    final response = savedResponse;
-    if (payment == null || response == null || !mounted) return;
+    final result = savedResult;
+    if (payment == null || result == null || !mounted) return;
 
-    final invoiceNo = response.data?.salesMasterInvoiceNo ?? '';
-    final apiMessage = (response.data?.message.isNotEmpty ?? false)
-        ? response.data!.message
-        : response.message;
-    final successMessage = invoiceNo.isNotEmpty
-        ? (apiMessage.isNotEmpty
-              ? '$apiMessage\nInvoice: $invoiceNo'
-              : 'Sales entry saved. Invoice: $invoiceNo')
-        : (apiMessage.isNotEmpty
-              ? apiMessage
-              : 'Sales entry saved successfully');
-    await showSuccessDialog(context, successMessage);
-    if (!mounted) return;
-    _resetForm();
+    if (result.receiptAttempted && !result.receiptSuccess) {
+      await showErrorDialog(
+        context,
+        'Sales Entry saved, but Receipt Entry failed: ${result.receiptError ?? 'Unknown error'}',
+      );
+      return;
+    }
+
+    try {
+      if (mounted) {
+        setState(() {
+          _isLoading = true;
+        });
+      }
+
+      final pdfData = InvoicePdfDataFactory.fromSavedSale(
+        salesResponse: result.salesResponse,
+        master: result.masterData,
+        details: result.detailData,
+        productRows: result.productRows,
+        payment: result.payment,
+        invoiceDate: _selectedDate,
+        customer: result.customer,
+        company: result.company,
+        user: result.user,
+        receiptResponse: result.receiptResponse,
+        companyNameFallback: sessionService.selectedCompName,
+      );
+
+      if (!mounted) return;
+      _resetForm();
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          settings: const RouteSettings(name: AppRoutes.pdfPreview),
+          builder: (context) => PdfPreviewScreen(invoiceData: pdfData),
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        await showErrorDialog(context, 'Unable to generate receipt PDF: $e');
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
-  Future<SalesEntryUpsertResponse> _persistSalesEntry(
+  Future<SalePersistResult> _persistSalesEntry(
     SalesPaymentDetails payment,
   ) async {
     setState(() {
@@ -512,12 +579,23 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
         detailData: detailData,
       );
 
-      final response = await SalesEntryService().insertOrUpdateSalesEntry(request);
+      final response = await SalesEntryService().insertOrUpdateSalesEntry(
+        request,
+      );
+      final productRows = validProducts
+          .map((p) => Map<String, dynamic>.from(p))
+          .toList();
+
+      bool receiptAttempted = false;
+      bool receiptSuccess = false;
+      String? receiptError;
+      Map<String, dynamic>? receiptResponse;
 
       if (response.status || (response.data != null && response.data!.status)) {
         final salesMasterId = response.data?.salesMasterId ?? 0;
-        
+
         if (paidAmount > 0) {
+          receiptAttempted = true;
           if (salesMasterId > 0) {
             final receiptRequest = {
               "masterData": {
@@ -535,20 +613,24 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                 "receiptMaster_BankAmount": payment.bankAmount,
                 "receiptMaster_OtherAmount": payment.otherAmount,
                 "receiptMaster_ChequeNo": payment.chequeNo,
-                "receiptMaster_ChequeDate": payment.chequeAmount > 0 ? (payment.chequeDate ?? _selectedDate).toIso8601String() : _selectedDate.toIso8601String(),
+                "receiptMaster_ChequeDate": payment.chequeAmount > 0
+                    ? (payment.chequeDate ?? _selectedDate).toIso8601String()
+                    : _selectedDate.toIso8601String(),
                 "receiptMaster_BankName": payment.bankName,
                 "receiptMaster_BankReferenceNo": payment.bankReferenceNo,
                 "receiptMaster_NEFTType": payment.neftType,
                 "receiptMaster_NEFTReferenceNo": payment.neftReferenceNo,
                 "receiptMaster_OtherPaymentType": payment.otherPaymentType,
                 "receiptMaster_OtherReferenceNo": payment.otherReferenceNo,
-                "receiptMaster_OtherDate": payment.otherAmount > 0 ? (payment.otherDate ?? _selectedDate).toIso8601String() : _selectedDate.toIso8601String(),
+                "receiptMaster_OtherDate": payment.otherAmount > 0
+                    ? (payment.otherDate ?? _selectedDate).toIso8601String()
+                    : _selectedDate.toIso8601String(),
                 "receiptMaster_OtherRemark": payment.otherRemark,
                 "receiptMaster_Remark": payment.remark,
                 "receiptMaster_Status": "Active",
                 "receiptMaster_IsActive": true,
                 "receiptMaster_CreatedBy": empId,
-                "receiptMaster_ModifiedBy": empId
+                "receiptMaster_ModifiedBy": empId,
               },
               "detailData": [
                 {
@@ -563,36 +645,54 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                   "receiptDetail_RemainingAmount": 0,
                   "receiptDetail_Remark": payment.remark,
                   "receiptDetail_CreatedBy": empId,
-                  "receiptDetail_ModifiedBy": empId
-                }
-              ]
+                  "receiptDetail_ModifiedBy": empId,
+                },
+              ],
             };
 
             try {
-              final receiptResponse = await apiService.post(
+              final rawReceipt = await apiService.post(
                 ApiConstants.insertOrUpdateReceiptEntryEndpoint,
                 body: receiptRequest,
                 requiresAuth: true,
               );
-              if (receiptResponse == null || receiptResponse['status'] != true) {
-                if (mounted) {
-                  await showErrorDialog(context, 'Sales Entry saved, but Receipt Entry failed: ${receiptResponse?['message'] ?? receiptResponse?['error'] ?? 'Unknown error'}');
-                }
+              if (rawReceipt is Map<String, dynamic>) {
+                receiptResponse = rawReceipt;
+              } else if (rawReceipt is Map) {
+                receiptResponse = Map<String, dynamic>.from(rawReceipt);
+              }
+              if (receiptResponse != null &&
+                  receiptResponse['status'] == true) {
+                receiptSuccess = true;
+              } else {
+                receiptError =
+                    receiptResponse?['message'] ??
+                    receiptResponse?['error'] ??
+                    'Unknown error';
               }
             } catch (e) {
-              if (mounted) {
-                await showErrorDialog(context, 'Sales Entry saved, but Receipt Entry failed: $e');
-              }
+              receiptError = e.toString();
             }
           } else {
-            if (mounted) {
-              await showErrorDialog(context, 'Sales Entry saved, but Receipt Entry failed: Invalid SalesMasterId received.');
-            }
+            receiptError = 'Invalid SalesMasterId received.';
           }
         }
       }
 
-      return response;
+      return SalePersistResult(
+        salesResponse: response,
+        masterData: masterData,
+        detailData: detailData,
+        productRows: productRows,
+        payment: payment,
+        customer: customer,
+        company: company,
+        user: user,
+        receiptAttempted: receiptAttempted,
+        receiptSuccess: receiptSuccess,
+        receiptError: receiptError,
+        receiptResponse: receiptResponse,
+      );
     } finally {
       if (mounted) {
         setState(() {

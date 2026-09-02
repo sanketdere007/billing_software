@@ -3,19 +3,16 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:printing/printing.dart';
 
+import '../models/invoice_pdf_data.dart';
 import '../services/invoice_pdf_generator.dart';
-import '../services/invoice_pdf_repository.dart';
 
 /// Coordinates invoice PDF generation and platform actions.
 /// Not tied to a UI framework (GetX is not used in this project).
 class InvoicePdfController {
   InvoicePdfController({
-    InvoicePdfRepository? repository,
     InvoicePdfGenerator? generator,
-  })  : _repository = repository ?? InvoicePdfRepository(),
-        _generator = generator ?? InvoicePdfGenerator();
+  }) : _generator = generator ?? InvoicePdfGenerator();
 
-  final InvoicePdfRepository _repository;
   final InvoicePdfGenerator _generator;
 
   Uint8List? pdfBytes;
@@ -23,12 +20,16 @@ class InvoicePdfController {
   bool isLoading = false;
   String? errorMessage;
 
-  Future<Uint8List> generate() async {
+  /// Builds the PDF from already-mapped [InvoicePdfData].
+  /// The generator does not fetch APIs or contain hardcoded records.
+  Future<Uint8List> generateFromData(InvoicePdfData data) async {
     isLoading = true;
     errorMessage = null;
     try {
-      final data = await _repository.fetchInvoice();
-      final safeNo = data.invoice.invoiceNo.replaceAll(RegExp(r'[\\/:*?"<>|]'), '-');
+      final rawNo = data.invoice.invoiceNo.trim().isNotEmpty
+          ? data.invoice.invoiceNo.trim()
+          : 'invoice';
+      final safeNo = rawNo.replaceAll(RegExp(r'[\\/:*?"<>|]'), '-');
       fileName = 'Invoice_$safeNo.pdf';
       pdfBytes = await _generator.generate(data);
       return pdfBytes!;

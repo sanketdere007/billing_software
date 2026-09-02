@@ -4,8 +4,10 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../../models/collection_report.dart';
 import '../../services/collection_report_service.dart';
+import '../../services/report_excel_export_service.dart';
 import '../../services/session_service.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/app_message_dialog.dart';
 import '../../widgets/direct_back_scope.dart';
 
 class CollectionReportScreen extends StatefulWidget {
@@ -23,6 +25,7 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
 
   bool _isLoading = false;
   bool _isFetchingMore = false;
+  bool _isExporting = false;
   bool _hasMoreData = true;
   int _pageNumber = 1;
   static const int _pageSize = 20;
@@ -273,6 +276,109 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
     }
   }
 
+  Future<List<CollectionReportData>> _collectAllReportData() async {
+    final allRecords = List<CollectionReportData>.from(_reportData);
+    if (!_hasMoreData) return allRecords;
+
+    var page = _pageNumber + 1;
+    const exportPageSize = 200;
+    for (var safety = 0; safety < 200; safety++) {
+      final request = CollectionReportRequest(
+        compId: sessionService.selectedCompId ?? 0,
+        branchId: sessionService.selectedBranchId ?? 0,
+        customerId: 0,
+        fromDate: _fromDate != null ? _dateFormat.format(_fromDate!) : '',
+        toDate: _toDate != null ? _dateFormat.format(_toDate!) : '',
+        paymentMode: '',
+        search: _searchQuery,
+        pageNumber: page,
+        pageSize: exportPageSize,
+      );
+      final response = await collectionReportService.getCollectionReport(request);
+      if (response.data.isEmpty) break;
+      allRecords.addAll(response.data);
+      if (response.data.length < exportPageSize) break;
+      page++;
+    }
+    return allRecords;
+  }
+
+  Future<void> _exportToExcel() async {
+    if (_isExporting || _isLoading) return;
+
+    setState(() {
+      _isExporting = true;
+    });
+
+    try {
+      final records = await _collectAllReportData();
+      if (!mounted) return;
+
+      if (records.isEmpty) {
+        await showWarningDialog(
+          context,
+          'No collection records available to export.',
+        );
+        return;
+      }
+
+      final result = await ReportExcelExportService.exportCollectionReport(records);
+      if (!mounted) return;
+
+      if (result.success) {
+        await showSuccessDialog(context, result.message);
+      } else {
+        await showErrorDialog(context, result.message);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      await showErrorDialog(context, 'Failed to export collection report: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isExporting = false;
+        });
+      }
+    }
+  }
+
+  List<Widget> _exportActions({required bool isDesktop}) {
+    if (isDesktop) {
+      return [
+        OutlinedButton.icon(
+          onPressed: _isExporting || _isLoading ? null : _exportToExcel,
+          icon: _isExporting
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.table_view_outlined, size: 18),
+          label: Text(_isExporting ? 'Exporting...' : 'Export to Excel'),
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        ),
+        const SizedBox(width: 8),
+      ];
+    }
+
+    return [
+      IconButton(
+        icon: _isExporting
+            ? const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : const Icon(Icons.download_rounded),
+        tooltip: 'Export to Excel',
+        onPressed: _isExporting || _isLoading ? null : _exportToExcel,
+      ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     return Focus(
@@ -329,7 +435,9 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
                               tooltip: 'Refresh',
                               onPressed: _isLoading ? null : () => _fetchReport(refresh: true),
                             ),
-                            const SizedBox(width: 16),
+                            const SizedBox(width: 8),
+                            ..._exportActions(isDesktop: true),
+                            const SizedBox(width: 8),
                           ],
                         ),
                         body: _buildBodyContent(isDesktop: true),
@@ -349,6 +457,7 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
                     tooltip: 'Refresh',
                     onPressed: _isLoading ? null : () => _fetchReport(refresh: true),
                   ),
+                  ..._exportActions(isDesktop: false),
                 ],
               ),
               drawer: const AppDrawer(isPermanent: false),
