@@ -138,12 +138,13 @@ class InvoicePdfDataFactory {
       final hsn = detail.hsnCode.isNotEmpty
           ? detail.hsnCode
           : (product?.prodHSNCode ?? '');
-      final unitName = (batch?.unitName.isNotEmpty == true)
-          ? batch!.unitName
-          : (product?.prodUnitName ?? '');
+      final unitShortName = product?.prodUnitShortName ?? '';
       final unitValueText =
           product?.formattedUnitValue ?? batch?.formattedUnitValue ?? '0';
-      final pack = [if (unitName.isNotEmpty) unitName, unitValueText].join(' ');
+      final pack = [
+        unitValueText,
+        if (unitShortName.isNotEmpty) unitShortName
+      ].join(' ');
       final companyCode = batch?.prodCode ?? product?.prodCode ?? '';
       final mrp = (batch != null && batch.batchMRP > 0) ? batch.batchMRP : detail.mrp;
 
@@ -180,21 +181,18 @@ class InvoicePdfDataFactory {
   }
 
   static List<InvoiceGstSlab> _gstSlabs(List<SalesEntryDetailData> details) {
-    final sgst = <String, double>{
-      '2.5%': 0,
-      '6.0%': 0,
-      '9.0%': 0,
-      '14%': 0,
-    };
-    final cgst = Map<String, double>.from(sgst);
+    final sgst = <String, double>{};
+    final cgst = <String, double>{};
 
     for (final detail in details) {
+      if (detail.gstPercentage <= 0) continue;
       final label = _slabLabel(detail.gstPercentage / 2);
       sgst[label] = (sgst[label] ?? 0) + detail.sgstAmount;
       cgst[label] = (cgst[label] ?? 0) + detail.cgstAmount;
     }
 
-    return sgst.keys
+    final slabs = sgst.keys
+        .where((label) => (sgst[label] ?? 0) > 0 || (cgst[label] ?? 0) > 0)
         .map(
           (label) => InvoiceGstSlab(
             label: label,
@@ -203,14 +201,20 @@ class InvoicePdfDataFactory {
           ),
         )
         .toList();
+
+    slabs.sort((a, b) {
+      final aVal = double.tryParse(a.label.replaceAll('%', '')) ?? 0;
+      final bVal = double.tryParse(b.label.replaceAll('%', '')) ?? 0;
+      return aVal.compareTo(bVal);
+    });
+    return slabs;
   }
 
   static String _slabLabel(double halfRate) {
     if ((halfRate - 2.5).abs() < 0.2) return '2.5%';
     if ((halfRate - 6.0).abs() < 0.2) return '6.0%';
     if ((halfRate - 9.0).abs() < 0.2) return '9.0%';
-    if ((halfRate - 14.0).abs() < 0.6) return '14%';
-    if (halfRate <= 0) return '2.5%';
+    if ((halfRate - 14.0).abs() < 0.6) return '14.0%';
     return '${halfRate.toStringAsFixed(1)}%';
   }
 

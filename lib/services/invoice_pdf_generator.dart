@@ -17,10 +17,9 @@ class InvoicePdfGenerator {
 
   static const _columns = <_InvoiceColumn>[
     _InvoiceColumn('Sr. No.', 4.0, pw.Alignment.center),
-    _InvoiceColumn('Product Name', 28.2, pw.Alignment.centerLeft),
+    _InvoiceColumn('Product Name', 32.2, pw.Alignment.centerLeft),
     _InvoiceColumn('Pack', 9.2, pw.Alignment.center),
     _InvoiceColumn('Qty', 6.0, pw.Alignment.centerRight),
-    _InvoiceColumn('Scm', 4.0, pw.Alignment.center),
     _InvoiceColumn('Disc', 6.0, pw.Alignment.centerRight),
     _InvoiceColumn('MRP', 8.6, pw.Alignment.centerRight),
     _InvoiceColumn('Rate', 8.6, pw.Alignment.centerRight),
@@ -239,7 +238,6 @@ class InvoicePdfGenerator {
       item.productName,
       item.pack,
       _qty(item.qty),
-      item.scheme,
       _optionalAmount(item.discount),
       _amount(item.mrp),
       _amount(item.rate),
@@ -336,14 +334,7 @@ class InvoicePdfGenerator {
   }
 
   pw.Widget _buildGstSlabBlock(InvoicePdfData data) {
-    final slabs = data.gstSlabs.isEmpty
-        ? const [
-            InvoiceGstSlab(label: '2.5%'),
-            InvoiceGstSlab(label: '6.0%'),
-            InvoiceGstSlab(label: '9.0%'),
-            InvoiceGstSlab(label: '14%'),
-          ]
-        : data.gstSlabs;
+    final slabs = data.gstSlabs;
 
     return pw.Padding(
       padding: const pw.EdgeInsets.fromLTRB(4, 6, 4, 4),
