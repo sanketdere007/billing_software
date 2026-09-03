@@ -1127,11 +1127,10 @@ class _ProductListScreenState extends State<ProductListScreen> {
                         Expanded(
                           flex: 1,
                           child: Text(
-                            product.prodUnitName.isNotEmpty
-                                ? product.prodUnitName
-                                : '—',
+                            product.unitWithValue,
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: product.prodUnitName.isNotEmpty
+                              color: product.prodUnitName.isNotEmpty ||
+                                      product.prodUnitValue != 0
                                   ? null
                                   : theme.hintColor,
                             ),
@@ -1357,7 +1356,8 @@ class _ProductListScreenState extends State<ProductListScreen> {
                   ],
                   if (product.prodCategoryName.isNotEmpty ||
                       product.prodBrandName.isNotEmpty ||
-                      product.prodUnitName.isNotEmpty) ...[
+                      product.prodUnitName.isNotEmpty ||
+                      product.prodUnitValue != 0) ...[
                     Row(
                       children: [
                         const Icon(
@@ -1373,8 +1373,9 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                 product.prodCategoryName,
                               if (product.prodBrandName.isNotEmpty)
                                 product.prodBrandName,
-                              if (product.prodUnitName.isNotEmpty)
-                                product.prodUnitName,
+                              if (product.prodUnitName.isNotEmpty ||
+                                  product.prodUnitValue != 0)
+                                product.unitWithValue,
                             ].join(' • '),
                             style: const TextStyle(fontSize: 13),
                             overflow: TextOverflow.ellipsis,
@@ -1580,7 +1581,12 @@ class _ProductDetailsDialogState extends State<_ProductDetailsDialog> {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        const Spacer(),
+                        Expanded(
+                          child: _buildDetailTile(
+                            'Unit Value',
+                            _product.formattedUnitValue,
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 16),

@@ -74,20 +74,60 @@ class ProductListItem {
   String get code => prodCode;
   bool get isActive => prodIsActive;
 
+  String get formattedUnitValue {
+    if (prodUnitValue.truncateToDouble() == prodUnitValue) {
+      return prodUnitValue.toStringAsFixed(0);
+    }
+    return prodUnitValue.toStringAsFixed(2);
+  }
+
+  String get unitWithValue {
+    final unit = prodUnitName.isNotEmpty
+        ? prodUnitName
+        : prodUnitShortName;
+    if (unit.isEmpty) return formattedUnitValue;
+    return '$unit ($formattedUnitValue)';
+  }
+
   factory ProductListItem.fromJson(Map<String, dynamic> json) {
     return ProductListItem(
-      prodId: int.tryParse(json['prod_Id']?.toString() ?? '0') ?? 0,
-      prodCompId: int.tryParse(json['prod_CompId']?.toString() ?? '0') ?? 0,
-      prodBranchId: int.tryParse(json['prod_BranchId']?.toString() ?? '0') ?? 0,
+      prodId: _parseInt(json['prod_Id']),
+      prodCompId: _parseInt(json['prod_CompId']),
+      prodBranchId: _parseInt(json['prod_BranchId']),
       prodCode: json['prod_Code']?.toString() ?? '',
       prodName: json['prod_Name']?.toString() ?? '',
-      prodBrandId: int.tryParse(json['prod_BrandId']?.toString() ?? '0') ?? 0,
-      prodCategoryId: int.tryParse(json['prod_CategoryId']?.toString() ?? '0') ?? 0,
-      prodSubCategoryId: int.tryParse(json['prod_SubCategoryId']?.toString() ?? '0') ?? 0,
-      prodUnitId: int.tryParse(json['prod_UnitId']?.toString() ?? '0') ?? 0,
+      prodBrandId: _parseInt(json['prod_BrandId']),
+      prodCategoryId: _parseInt(json['prod_CategoryId']),
+      prodSubCategoryId: _parseInt(json['prod_SubCategoryId']),
+      prodUnitId: _parseInt(
+        _firstJsonValue(json, const [
+          'prod_UnitId',
+          'Prod_UnitId',
+          'prod_unitId',
+          'unit_Id',
+          'Unit_Id',
+        ]),
+      ),
       prodHSNCode: json['prod_HSNCode']?.toString() ?? '',
-      prodGSTPercent: double.tryParse(json['prod_GSTPercent']?.toString() ?? '0') ?? 0.0,
-      prodUnitValue: double.tryParse(json['prod_UnitValue']?.toString() ?? '0') ?? 0.0,
+      prodGSTPercent: _parseDouble(
+        _firstJsonValue(json, const [
+          'prod_GSTPercent',
+          'Prod_GSTPercent',
+          'prod_GstPercent',
+          'prod_GST',
+          'GSTPercent',
+        ]),
+      ),
+      prodUnitValue: _parseDouble(
+        _firstJsonValue(json, const [
+          'prod_UnitValue',
+          'Prod_UnitValue',
+          'prod_unitValue',
+          'prod_Unitvalue',
+          'unit_Value',
+          'UnitValue',
+        ]),
+      ),
       prodIsActive: json['prod_IsActive'] == true ||
           json['prod_IsActive'] == 'true' ||
           json['prod_IsActive'] == 1 ||
@@ -99,8 +139,21 @@ class ProductListItem {
       prodBrandName: json['prod_BrandName']?.toString() ?? '',
       prodCategoryName: json['prod_CategoryName']?.toString() ?? '',
       prodSubCategoryName: json['prod_SubCategoryName']?.toString() ?? '',
-      prodUnitName: json['prod_UnitName']?.toString() ?? '',
-      prodUnitShortName: json['prod_UnitShortName']?.toString() ?? '',
+      prodUnitName:
+          _firstJsonValue(json, const [
+            'prod_UnitName',
+            'Prod_UnitName',
+            'unit_Name',
+            'Unit_Name',
+          ])?.toString() ??
+          '',
+      prodUnitShortName:
+          _firstJsonValue(json, const [
+            'prod_UnitShortName',
+            'Prod_UnitShortName',
+            'unit_ShortName',
+          ])?.toString() ??
+          '',
       prodCreatedDate: json['prod_CreatedDate']?.toString(),
       prodModifiedDate: json['prod_ModifiedDate']?.toString(),
       batchBarcode: json['batch_Barcode']?.toString() ?? '',
@@ -187,6 +240,7 @@ class ProductListItem {
       prodUnitId: prodUnitId ?? this.prodUnitId,
       prodHSNCode: prodHSNCode ?? this.prodHSNCode,
       prodGSTPercent: prodGSTPercent ?? this.prodGSTPercent,
+      prodUnitValue: prodUnitValue ?? this.prodUnitValue,
       prodIsActive: prodIsActive ?? this.prodIsActive,
       prodCreatedBy: prodCreatedBy ?? this.prodCreatedBy,
       prodModifiedBy: prodModifiedBy ?? this.prodModifiedBy,
@@ -214,6 +268,31 @@ class ProductListItem {
 
   @override
   String toString() => '$prodName ($prodCode)';
+}
+
+int _parseInt(dynamic value) {
+  if (value == null) return 0;
+  if (value is int) return value;
+  if (value is double) return value.round();
+  return int.tryParse(value.toString().split('.').first) ?? 0;
+}
+
+double _parseDouble(dynamic value) {
+  if (value == null) return 0.0;
+  if (value is num) return value.toDouble();
+  return double.tryParse(value.toString()) ?? 0.0;
+}
+
+dynamic _firstJsonValue(Map<String, dynamic> json, List<String> keys) {
+  final lowerMap = <String, dynamic>{
+    for (final entry in json.entries) entry.key.toLowerCase(): entry.value,
+  };
+  for (final key in keys) {
+    if (json.containsKey(key)) return json[key];
+    final lower = key.toLowerCase();
+    if (lowerMap.containsKey(lower)) return lowerMap[lower];
+  }
+  return null;
 }
 
 /// Typedef for backwards compatibility

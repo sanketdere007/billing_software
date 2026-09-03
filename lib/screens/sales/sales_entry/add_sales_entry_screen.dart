@@ -10,6 +10,7 @@ import '../../../services/sales_entry_service.dart';
 import '../../../services/customer_service.dart';
 import '../../../services/company_service.dart';
 import '../../../services/batch_service.dart';
+import '../../../services/product_service.dart';
 import '../../../services/session_service.dart';
 import '../../../widgets/app_drawer.dart';
 import '../../../widgets/app_message_dialog.dart';
@@ -95,6 +96,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
     super.initState();
     _customerService.getAllCustomers();
     _batchService.getAllBatches();
+    productService.getAllProducts(isActive: true);
     _billDiscountController.addListener(_calculateTotals);
 
     // Auto-add first empty row
@@ -155,10 +157,10 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
     for (var p in _products) {
       if (p['product'] == null) continue; // Skip empty rows in calculation
 
-      double qty = p['qty'] ?? 0.0;
-      double rate = p['rate'] ?? 0.0;
-      double disc = p['discAmt'] ?? 0.0;
-      double gstPct = p['gstPct'] ?? 0.0;
+      double qty = (p['qty'] as num?)?.toDouble() ?? 0.0;
+      double rate = (p['rate'] as num?)?.toDouble() ?? 0.0;
+      double disc = (p['discAmt'] as num?)?.toDouble() ?? 0.0;
+      double gstPct = (p['gstPct'] as num?)?.toDouble() ?? 0.0;
 
       double gross = qty * rate;
       double discounted = gross - disc;
@@ -213,10 +215,13 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
         return;
       }
 
+      final gstPct = await _resolveGstPercent(selectedProduct);
+      if (!mounted) return;
+
       setState(() {
         final p = _products[index];
         p['product'] = selectedProduct;
-        p['gstPct'] = selectedProduct.prodGSTPercent;
+        p['gstPct'] = gstPct;
         p['rate'] = selectedProduct.batchSellingPrice;
         (p['rateController'] as TextEditingController).text = selectedProduct
             .batchSellingPrice
@@ -238,6 +243,23 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
         }
       });
     }
+  }
+
+  Future<double> _resolveGstPercent(BatchListItem batch) async {
+    final cached = productService.getProductByIdFromCache(batch.batchProductId);
+    if (cached != null) return cached.prodGSTPercent;
+    try {
+      await productService.getAllProducts(isActive: true);
+      final loaded = productService.getProductByIdFromCache(batch.batchProductId);
+      if (loaded != null) return loaded.prodGSTPercent;
+    } catch (_) {}
+    return batch.prodGSTPercent;
+  }
+
+  String _unitValueFor(BatchListItem batch) {
+    final cached = productService.getProductByIdFromCache(batch.batchProductId);
+    if (cached != null) return cached.formattedUnitValue;
+    return batch.formattedUnitValue;
   }
 
   void _addProductFromButton() {
@@ -471,7 +493,10 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
           batchId: prod.batchId,
           productName: prod.prodName,
           hsnCode: '',
-          unitId: 0,
+          unitId: productService
+                  .getProductByIdFromCache(prod.batchProductId)
+                  ?.prodUnitId ??
+              0,
           qty: qty,
           freeQty: 0,
           totalQty: qty,
@@ -1169,7 +1194,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                                                           height: 2,
                                                         ),
                                                         Text(
-                                                          'Unit: ${prod.unitName} | Unit Value: ${prod.prodUnitValue}',
+                                                          'Unit: ${prod.unitName} | Unit Value: ${_unitValueFor(prod)}',
                                                           style: TextStyle(
                                                             color: theme
                                                                 .colorScheme
@@ -1349,8 +1374,10 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                                     Text(
                                       isEmptyRow
                                           ? '-'
-                                          : (p['gstPct'] as double)
-                                                .toStringAsFixed(2),
+                                          : ((p['gstPct'] as num?)
+                                                      ?.toDouble() ??
+                                                  0)
+                                              .toStringAsFixed(2),
                                       style: TextStyle(
                                         color: isEmptyRow
                                             ? theme.hintColor
@@ -1364,8 +1391,10 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                                     Text(
                                       isEmptyRow
                                           ? '-'
-                                          : (p['gstAmt'] as double)
-                                                .toStringAsFixed(2),
+                                          : ((p['gstAmt'] as num?)
+                                                      ?.toDouble() ??
+                                                  0)
+                                              .toStringAsFixed(2),
                                       style: TextStyle(
                                         color: isEmptyRow
                                             ? theme.hintColor

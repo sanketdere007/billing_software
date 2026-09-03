@@ -204,6 +204,7 @@ class _PaymentModeDialogState extends State<PaymentModeDialog> {
 
   bool _isSubmitting = false;
   bool _hasClosed = false;
+  bool _enterHandled = false;
   String? _errorText;
 
   bool get _keyboardEnabled => PlatformHelper.isWindowsDesktopEffective;
@@ -344,8 +345,14 @@ class _PaymentModeDialogState extends State<PaymentModeDialog> {
 
   List<FocusNode> get _visibleFocusOrder {
     final nodes = <FocusNode>[];
+    
+    // First, add all amount fields in order
     for (var i = 0; i < _modes.length; i++) {
       nodes.add(_focusNodes[i]);
+    }
+    
+    // Then, add detail fields for any payment mode with an amount > 0
+    for (var i = 0; i < _modes.length; i++) {
       if (_parse(i) <= 0) continue;
       switch (_modes[i]) {
         case SalesPaymentMode.cash:
@@ -435,9 +442,11 @@ class _PaymentModeDialogState extends State<PaymentModeDialog> {
 
   Future<void> _confirm() async {
     if (_isSubmitting || _hasClosed) return;
+    _isSubmitting = true;
 
     final error = _validate();
     if (error != null) {
+      _isSubmitting = false;
       setState(() => _errorText = error);
       return;
     }
@@ -446,11 +455,11 @@ class _PaymentModeDialogState extends State<PaymentModeDialog> {
     final onConfirm = widget.onConfirm;
     if (onConfirm == null) {
       _hasClosed = true;
-      Navigator.of(context).pop(details);
+      if (mounted) Navigator.of(context).pop(details);
       return;
     }
 
-    setState(() => _isSubmitting = true);
+    if (mounted) setState(() {});
     final succeeded = await onConfirm(details);
     if (!mounted) return;
     if (succeeded) {
@@ -461,26 +470,41 @@ class _PaymentModeDialogState extends State<PaymentModeDialog> {
     }
   }
 
+  void _handleAmountEnter(int index) {
+    if (_enterHandled || _isSubmitting || _hasClosed) return;
+    _enterHandled = true;
+    _onEnter(index);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _enterHandled = false;
+    });
+  }
+
   Future<void> _onEnter(int index) async {
-    if (_isSubmitting) return;
+    if (_isSubmitting || _hasClosed) return;
     final error = _validate();
     if (error != null) {
       setState(() => _errorText = error);
       return;
     }
-    if (index < _modes.length - 1) {
-      _focusIndex(index + 1);
-      return;
-    }
-    await _confirm();
+    _focusNext(_focusNodes[index]);
+  }
+
+  bool _isEnterKey(LogicalKeyboardKey key) {
+    return key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.numpadEnter;
   }
 
   KeyEventResult _handleFieldKey(int index, KeyEvent event) {
     if (!_keyboardEnabled) return KeyEventResult.ignored;
-    if (event is! KeyDownEvent) return KeyEventResult.ignored;
     if (_isSubmitting) return KeyEventResult.handled;
 
     final key = event.logicalKey;
+
+    if (event is KeyRepeatEvent && _isEnterKey(key)) {
+      return KeyEventResult.handled;
+    }
+
+    if (event is! KeyDownEvent) return KeyEventResult.ignored;
 
     if (key == LogicalKeyboardKey.escape) {
       _cancel();
@@ -498,9 +522,8 @@ class _PaymentModeDialogState extends State<PaymentModeDialog> {
       return KeyEventResult.handled;
     }
 
-    if (key == LogicalKeyboardKey.enter ||
-        key == LogicalKeyboardKey.numpadEnter) {
-      _onEnter(index);
+    if (_isEnterKey(key)) {
+      _handleAmountEnter(index);
       return KeyEventResult.handled;
     }
 
@@ -509,16 +532,19 @@ class _PaymentModeDialogState extends State<PaymentModeDialog> {
 
   KeyEventResult _handleDetailKey(FocusNode node, KeyEvent event) {
     if (!_keyboardEnabled) return KeyEventResult.ignored;
-    if (event is! KeyDownEvent) return KeyEventResult.ignored;
     if (_isSubmitting) return KeyEventResult.handled;
 
     final key = event.logicalKey;
+    if (event is KeyRepeatEvent && _isEnterKey(key)) {
+      return KeyEventResult.handled;
+    }
+    if (event is! KeyDownEvent) return KeyEventResult.ignored;
+
     if (key == LogicalKeyboardKey.escape) {
       _cancel();
       return KeyEventResult.handled;
     }
-    if (key == LogicalKeyboardKey.enter ||
-        key == LogicalKeyboardKey.numpadEnter) {
+    if (_isEnterKey(key)) {
       if (node == _chequeDateNode) {
         _pickDate(isCheque: true);
         return KeyEventResult.handled;
@@ -860,6 +886,7 @@ class _PaymentModeDialogState extends State<PaymentModeDialog> {
       focusNode: node,
       enabled: !_isSubmitting,
       textInputAction: TextInputAction.next,
+      onEditingComplete: () {},
       decoration: _inputDecoration(label, theme),
       onFieldSubmitted: (_) {
         if (!_keyboardEnabled) _focusNext(node);
@@ -1034,6 +1061,7 @@ class _PaymentModeDialogState extends State<PaymentModeDialog> {
         enabled: !_isSubmitting,
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
         textInputAction: TextInputAction.next,
+        onEditingComplete: () {},
         inputFormatters: [
           FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
         ],
@@ -1049,7 +1077,7 @@ class _PaymentModeDialogState extends State<PaymentModeDialog> {
           prefixIcon: const Icon(Icons.currency_rupee, size: 18),
         ),
         onFieldSubmitted: (_) {
-          if (!_keyboardEnabled) _onEnter(index);
+          if (!_keyboardEnabled) _handleAmountEnter(index);
         },
       ),
     );
@@ -1087,7 +1115,10 @@ class _PaymentModeDialogState extends State<PaymentModeDialog> {
   }
 
   Widget _buildSaveButton(ThemeData theme, bool isDark) {
-    return SizedBox(
+    return Focus(
+      skipTraversal: true,
+      descendantsAreFocusable: true,
+      child: SizedBox(
       width: double.infinity,
       height: 46,
       child: ElevatedButton.icon(
@@ -1123,6 +1154,7 @@ class _PaymentModeDialogState extends State<PaymentModeDialog> {
             ),
           ),
         ),
+      ),
       ),
     );
   }

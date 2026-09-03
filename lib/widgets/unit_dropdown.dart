@@ -5,6 +5,7 @@ import '../services/unit_service.dart';
 
 class UnitDropdown extends StatefulWidget {
   final int? selectedUnitId;
+  final String? selectedUnitName;
   final ValueChanged<UnitListItem?>? onChanged;
   final String? Function(UnitListItem?)? validator;
   final String labelText;
@@ -17,6 +18,7 @@ class UnitDropdown extends StatefulWidget {
   const UnitDropdown({
     super.key,
     this.selectedUnitId,
+    this.selectedUnitName,
     this.onChanged,
     this.validator,
     this.labelText = 'Unit',
@@ -45,6 +47,7 @@ class _UnitDropdownState extends State<UnitDropdown> {
     super.initState();
     _focusNode = widget.focusNode ?? FocusNode();
     _focusNode.addListener(_onFocusChanged);
+    _syncSelected();
     _loadItems();
   }
 
@@ -61,8 +64,11 @@ class _UnitDropdownState extends State<UnitDropdown> {
       _focusNode = widget.focusNode ?? FocusNode();
       _focusNode.addListener(_onFocusChanged);
     }
-    if (oldWidget.selectedUnitId != widget.selectedUnitId) {
+    if (oldWidget.selectedUnitId != widget.selectedUnitId ||
+        oldWidget.selectedUnitName != widget.selectedUnitName) {
       _syncSelected();
+      if (mounted) setState(() {});
+      _notifyResolvedSelection();
     }
   }
 
@@ -77,22 +83,72 @@ class _UnitDropdownState extends State<UnitDropdown> {
     if (mounted) setState(() => _isFocused = _focusNode.hasFocus);
   }
 
-  void _syncSelected() {
-    if (widget.selectedUnitId == null || widget.selectedUnitId! <= 0) {
-      _selectedItem = null;
-      return;
+  UnitListItem? _matchByName(String name) {
+    final query = name.trim().toLowerCase();
+    if (query.isEmpty) return null;
+    for (final item in _items) {
+      if (item.unitName.trim().toLowerCase() == query ||
+          item.unitShortName.trim().toLowerCase() == query) {
+        return item;
+      }
     }
-    try {
-      _selectedItem = _items.firstWhere((e) => e.unitId == widget.selectedUnitId);
-    } catch (_) {
+    return null;
+  }
+
+  void _syncSelected() {
+    final selectedId = widget.selectedUnitId;
+    if (selectedId != null && selectedId > 0) {
+      try {
+        _selectedItem = _items.firstWhere((e) => e.unitId == selectedId);
+        return;
+      } catch (_) {
+        final byName = widget.selectedUnitName != null
+            ? _matchByName(widget.selectedUnitName!)
+            : null;
+        _selectedItem = byName ??
+            UnitListItem(
+              unitId: selectedId,
+              unitName: (widget.selectedUnitName != null &&
+                      widget.selectedUnitName!.trim().isNotEmpty)
+                  ? widget.selectedUnitName!.trim()
+                  : 'Unit #$selectedId',
+              unitShortName: '',
+              unitCreatedBy: 0,
+              unitModifiedBy: 0,
+            );
+        return;
+      }
+    }
+
+    final name = widget.selectedUnitName;
+    if (name != null && name.trim().isNotEmpty) {
+      final matched = _matchByName(name);
+      if (matched != null) {
+        _selectedItem = matched;
+        return;
+      }
       _selectedItem = UnitListItem(
-        unitId: widget.selectedUnitId!,
-        unitName: 'Unit #${widget.selectedUnitId}',
+        unitId: 0,
+        unitName: name.trim(),
         unitShortName: '',
         unitCreatedBy: 0,
         unitModifiedBy: 0,
       );
+      return;
     }
+
+    _selectedItem = null;
+  }
+
+  void _notifyResolvedSelection() {
+    final selected = _selectedItem;
+    if (selected == null || selected.unitId <= 0) return;
+    if (widget.selectedUnitId == selected.unitId) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (widget.selectedUnitId == selected.unitId) return;
+      widget.onChanged?.call(selected);
+    });
   }
 
   Future<void> _loadItems() async {
@@ -106,6 +162,7 @@ class _UnitDropdownState extends State<UnitDropdown> {
       if (mounted) {
         _items = items;
         _syncSelected();
+        _notifyResolvedSelection();
       }
     } catch (e) {
       if (mounted) setState(() => _error = e.toString());
@@ -115,7 +172,8 @@ class _UnitDropdownState extends State<UnitDropdown> {
   }
 
   void _openSearchDialog([FormFieldState<UnitListItem?>? fieldState]) async {
-    if (!widget.enabled || _isLoading) return;
+    if (!widget.enabled) return;
+    if (_isLoading && _items.isEmpty) return;
     if (_items.isEmpty) await _loadItems();
     if (!mounted) return;
 
@@ -156,7 +214,7 @@ class _UnitDropdownState extends State<UnitDropdown> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    if (_isLoading) {
+    if (_isLoading && _selectedItem == null) {
       return Container(
         height: 52, padding: const EdgeInsets.symmetric(horizontal: 14),
         decoration: BoxDecoration(border: Border.all(color: theme.colorScheme.outlineVariant), borderRadius: BorderRadius.circular(8)),
@@ -173,6 +231,9 @@ class _UnitDropdownState extends State<UnitDropdown> {
     }
 
     return FormField<UnitListItem?>(
+      key: ValueKey(
+        'unit-${widget.selectedUnitId ?? 0}-${widget.selectedUnitName ?? ''}-${_selectedItem?.unitId ?? 0}',
+      ),
       initialValue: _selectedItem,
       validator: (val) {
         if (widget.validator != null) return widget.validator!(_selectedItem);

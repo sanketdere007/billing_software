@@ -27,12 +27,12 @@ class GstTaxListItem {
 
   factory GstTaxListItem.fromJson(Map<String, dynamic> json) {
     return GstTaxListItem(
-      gstTaxId: json['gstTax_Id'] ?? 0,
-      gstTaxName: json['gstTax_Name'] ?? '',
-      gstTaxPercentage: (json['gstTax_Percentage'] ?? 0).toDouble(),
-      gstTaxCgst: (json['gstTax_CGST'] ?? 0).toDouble(),
-      gstTaxSgst: (json['gstTax_SGST'] ?? 0).toDouble(),
-      gstTaxIgst: (json['gstTax_IGST'] ?? 0).toDouble(),
+      gstTaxId: _parseGstInt(json['gstTax_Id']),
+      gstTaxName: json['gstTax_Name']?.toString() ?? '',
+      gstTaxPercentage: _parseGstDouble(json['gstTax_Percentage']),
+      gstTaxCgst: _parseGstDouble(json['gstTax_CGST']),
+      gstTaxSgst: _parseGstDouble(json['gstTax_SGST']),
+      gstTaxIgst: _parseGstDouble(json['gstTax_IGST']),
       gstTaxIsActive: json['gstTax_IsActive'] ?? true,
       gstTaxCreatedBy: json['gstTax_CreatedBy'] ?? 0,
       gstTaxModifiedBy: json['gstTax_ModifiedBy'] ?? 0,
@@ -60,6 +60,19 @@ class GstTaxListItem {
       'gstTax_ModifiedDate': gstTaxModifiedDate?.toIso8601String(),
     };
   }
+}
+
+int _parseGstInt(dynamic value) {
+  if (value == null) return 0;
+  if (value is int) return value;
+  if (value is double) return value.round();
+  return int.tryParse(value.toString().split('.').first) ?? 0;
+}
+
+double _parseGstDouble(dynamic value) {
+  if (value == null) return 0.0;
+  if (value is num) return value.toDouble();
+  return double.tryParse(value.toString()) ?? 0.0;
 }
 
 class GstTaxListResponse {

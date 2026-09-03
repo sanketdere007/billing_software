@@ -352,7 +352,7 @@ class _ProductSelectionDialogState extends State<ProductSelectionDialog> {
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                         Text(
-                                          'Code: ${product.prodCode}  |  Unit: ${product.prodUnitShortName}',
+                                          'Code: ${product.prodCode}  |  Unit: ${product.unitWithValue}',
                                           style: theme.textTheme.bodySmall?.copyWith(
                                             color: isSelected
                                                 ? theme.colorScheme.onPrimaryContainer

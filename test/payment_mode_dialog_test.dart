@@ -156,6 +156,86 @@ void main() {
     });
 
     testWidgets(
+      'Windows: Enter on Cash does not save and moves to UPI',
+      (tester) async {
+        PlatformHelper.setOverrideForTesting(true);
+        var confirmCount = 0;
+        await openDialog(
+          tester,
+          payableAmount: 1000,
+          onConfirm: (_) async {
+            confirmCount++;
+            return true;
+          },
+        );
+
+        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+        await tester.pump();
+
+        expect(find.byType(PaymentModeDialog), findsOneWidget);
+        expect(confirmCount, 0);
+        final upiEditable = tester.widget<EditableText>(
+          find.descendant(
+            of: find.byKey(const Key('payment-mode-UPI')),
+            matching: find.byType(EditableText),
+          ),
+        );
+        expect(upiEditable.focusNode.hasFocus, isTrue);
+      },
+    );
+
+    testWidgets(
+      'Windows: Enter on last field saves once and ignores extra Enter',
+      (tester) async {
+        PlatformHelper.setOverrideForTesting(true);
+        var confirmCount = 0;
+        SalesPaymentDetails? result;
+        await openDialog(
+          tester,
+          payableAmount: 500,
+          onConfirm: (_) async {
+            confirmCount++;
+            return true;
+          },
+          onResult: (value) => result = value,
+        );
+
+        const modes = [
+          'UPI',
+          'Cheque',
+          'Bank',
+          'Card',
+          'Other',
+          'Credit',
+        ];
+        for (final _ in modes) {
+          await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+          await tester.pump();
+          expect(find.byType(PaymentModeDialog), findsOneWidget);
+          expect(confirmCount, 0);
+        }
+
+        final creditEditable = tester.widget<EditableText>(
+          find.descendant(
+            of: find.byKey(const Key('payment-mode-Credit')),
+            matching: find.byType(EditableText),
+          ),
+        );
+        expect(creditEditable.focusNode.hasFocus, isTrue);
+
+        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+        await tester.pump();
+        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+        await tester.pumpAndSettle();
+
+        expect(find.byType(PaymentModeDialog), findsNothing);
+        expect(confirmCount, 1);
+        expect(result?.mode, SalesPaymentMode.cash);
+        expect(result?.amount, 500);
+      },
+    );
+
+    testWidgets(
       'Windows: Enter and arrows move Cash → UPI → Cheque → Bank → Card → Other → Credit',
       (tester) async {
         PlatformHelper.setOverrideForTesting(true);

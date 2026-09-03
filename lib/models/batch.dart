@@ -44,7 +44,15 @@ class BatchListItem {
       prodName: json['prod_Name']?.toString() ?? '',
       prodCode: json['prod_Code']?.toString() ?? '',
       unitName: json['unit_Name']?.toString() ?? '',
-      prodUnitValue: double.tryParse(json['prod_UnitValue']?.toString() ?? '0') ?? 0.0,
+      prodUnitValue: _parseBatchDouble(
+        _firstBatchJsonValue(json, const [
+          'prod_UnitValue',
+          'Prod_UnitValue',
+          'prod_unitValue',
+          'unit_Value',
+          'UnitValue',
+        ]),
+      ),
       batchCompId: int.tryParse(json['batch_CompId']?.toString() ?? '0') ?? 0,
       compName: json['comp_Name']?.toString() ?? '',
       batchBranchId: int.tryParse(json['batch_BranchId']?.toString() ?? '0') ?? 0,
@@ -55,9 +63,42 @@ class BatchListItem {
       batchPurchasePrice: double.tryParse(json['batch_PurchasePrice']?.toString() ?? '0') ?? 0.0,
       batchMRP: double.tryParse(json['batch_MRP']?.toString() ?? '0') ?? 0.0,
       batchSellingPrice: double.tryParse(json['batch_SellingPrice']?.toString() ?? '0') ?? 0.0,
-      prodGSTPercent: double.tryParse(json['prod_GSTPercent']?.toString() ?? '0') ?? 0.0,
+      prodGSTPercent: _parseBatchDouble(
+        _firstBatchJsonValue(json, const [
+          'prod_GSTPercent',
+          'Prod_GSTPercent',
+          'prod_GstPercent',
+          'GSTPercent',
+          'gstPercent',
+        ]),
+      ),
     );
   }
+
+  String get formattedUnitValue {
+    if (prodUnitValue.truncateToDouble() == prodUnitValue) {
+      return prodUnitValue.toStringAsFixed(0);
+    }
+    return prodUnitValue.toStringAsFixed(2);
+  }
+}
+
+double _parseBatchDouble(dynamic value) {
+  if (value == null) return 0.0;
+  if (value is num) return value.toDouble();
+  return double.tryParse(value.toString()) ?? 0.0;
+}
+
+dynamic _firstBatchJsonValue(Map<String, dynamic> json, List<String> keys) {
+  final lowerMap = <String, dynamic>{
+    for (final entry in json.entries) entry.key.toLowerCase(): entry.value,
+  };
+  for (final key in keys) {
+    if (json.containsKey(key)) return json[key];
+    final lower = key.toLowerCase();
+    if (lowerMap.containsKey(lower)) return lowerMap[lower];
+  }
+  return null;
 }
 
 class BatchListResponse {

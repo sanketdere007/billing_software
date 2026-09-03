@@ -138,7 +138,12 @@ class InvoicePdfDataFactory {
       final hsn = detail.hsnCode.isNotEmpty
           ? detail.hsnCode
           : (product?.prodHSNCode ?? '');
-      final pack = batch?.unitName ?? '';
+      final unitName = (batch?.unitName.isNotEmpty == true)
+          ? batch!.unitName
+          : (product?.prodUnitName ?? '');
+      final unitValueText =
+          product?.formattedUnitValue ?? batch?.formattedUnitValue ?? '0';
+      final pack = [if (unitName.isNotEmpty) unitName, unitValueText].join(' ');
       final companyCode = batch?.prodCode ?? product?.prodCode ?? '';
       final mrp = (batch != null && batch.batchMRP > 0) ? batch.batchMRP : detail.mrp;
 

@@ -352,7 +352,7 @@ class _BatchSelectionDialogState extends State<BatchSelectionDialog> {
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                         Text(
-                                          'Unit: ${batch.unitName}  |  Stock: ${batch.batchStock}  |  Unit Value: ${batch.prodUnitValue}',
+                                          'Unit: ${batch.unitName}  |  Stock: ${batch.batchStock}  |  Unit Value: ${batch.formattedUnitValue}',
                                           style: theme.textTheme.bodySmall?.copyWith(
                                             color: isSelected
                                                 ? theme.colorScheme.onPrimaryContainer

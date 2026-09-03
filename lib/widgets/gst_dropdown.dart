@@ -5,6 +5,7 @@ import '../services/gst_service.dart';
 
 class GstDropdown extends StatefulWidget {
   final int? selectedGstId;
+  final double? selectedGstPercent;
   final ValueChanged<GstTaxListItem?>? onChanged;
   final String? Function(GstTaxListItem?)? validator;
   final String labelText;
@@ -18,6 +19,7 @@ class GstDropdown extends StatefulWidget {
   const GstDropdown({
     super.key,
     this.selectedGstId,
+    this.selectedGstPercent,
     this.onChanged,
     this.validator,
     this.labelText = 'GST %',
@@ -47,6 +49,7 @@ class _GstDropdownState extends State<GstDropdown> {
     super.initState();
     _focusNode = widget.focusNode ?? FocusNode();
     _focusNode.addListener(_onFocusChanged);
+    _syncSelected();
     _loadItems();
   }
 
@@ -63,8 +66,11 @@ class _GstDropdownState extends State<GstDropdown> {
       _focusNode = widget.focusNode ?? FocusNode();
       _focusNode.addListener(_onFocusChanged);
     }
-    if (oldWidget.selectedGstId != widget.selectedGstId) {
+    if (oldWidget.selectedGstId != widget.selectedGstId ||
+        oldWidget.selectedGstPercent != widget.selectedGstPercent) {
       _syncSelected();
+      if (mounted) setState(() {});
+      _notifyResolvedSelection();
     }
   }
 
@@ -79,18 +85,54 @@ class _GstDropdownState extends State<GstDropdown> {
     if (mounted) setState(() => _isFocused = _focusNode.hasFocus);
   }
 
-  void _syncSelected() {
-    if (widget.selectedGstId == null || widget.selectedGstId! <= 0) {
-      _selectedItem = null;
-      return;
+  static bool _samePercent(double a, double b) => (a - b).abs() < 0.0001;
+
+  GstTaxListItem? _matchByPercent(double percent) {
+    for (final item in _items) {
+      if (_samePercent(item.gstTaxPercentage, percent)) return item;
     }
-    try {
-      _selectedItem = _items.firstWhere((e) => e.gstTaxId == widget.selectedGstId);
-    } catch (_) {
+    return null;
+  }
+
+  void _syncSelected() {
+    final selectedId = widget.selectedGstId;
+    if (selectedId != null && selectedId > 0) {
+      try {
+        _selectedItem = _items.firstWhere((e) => e.gstTaxId == selectedId);
+        return;
+      } catch (_) {
+        final byPercent = widget.selectedGstPercent != null
+            ? _matchByPercent(widget.selectedGstPercent!)
+            : null;
+        _selectedItem = byPercent ??
+            GstTaxListItem(
+              gstTaxId: selectedId,
+              gstTaxName: widget.selectedGstPercent != null
+                  ? '${widget.selectedGstPercent}%'
+                  : 'GST #$selectedId',
+              gstTaxPercentage: widget.selectedGstPercent ?? 0,
+              gstTaxCgst: 0,
+              gstTaxSgst: 0,
+              gstTaxIgst: 0,
+              gstTaxIsActive: true,
+              gstTaxCreatedBy: 0,
+              gstTaxModifiedBy: 0,
+            );
+        return;
+      }
+    }
+
+    final percent = widget.selectedGstPercent;
+      if (percent != null) {
+      final matched = _matchByPercent(percent);
+      if (matched != null) {
+        _selectedItem = matched;
+        return;
+      }
       _selectedItem = GstTaxListItem(
-        gstTaxId: widget.selectedGstId!,
-        gstTaxName: 'GST #${widget.selectedGstId}',
-        gstTaxPercentage: 0,
+        gstTaxId: 0,
+        gstTaxName: '${percent.toString().replaceAll(RegExp(r'\.0+$'), '')}%',
+        gstTaxPercentage: percent,
         gstTaxCgst: 0,
         gstTaxSgst: 0,
         gstTaxIgst: 0,
@@ -98,7 +140,23 @@ class _GstDropdownState extends State<GstDropdown> {
         gstTaxCreatedBy: 0,
         gstTaxModifiedBy: 0,
       );
+      return;
     }
+
+    _selectedItem = null;
+  }
+
+  void _notifyResolvedSelection() {
+    final selected = _selectedItem;
+    if (selected == null || selected.gstTaxId <= 0) return;
+    final sameId = widget.selectedGstId == selected.gstTaxId;
+    final samePct = widget.selectedGstPercent != null &&
+        _samePercent(widget.selectedGstPercent!, selected.gstTaxPercentage);
+    if (sameId && samePct) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      widget.onChanged?.call(selected);
+    });
   }
 
   Future<void> _loadItems() async {
@@ -112,6 +170,7 @@ class _GstDropdownState extends State<GstDropdown> {
       if (mounted) {
         _items = items;
         _syncSelected();
+        _notifyResolvedSelection();
       }
     } catch (e) {
       if (mounted) setState(() => _error = e.toString());
@@ -121,7 +180,8 @@ class _GstDropdownState extends State<GstDropdown> {
   }
 
   void _openSearchDialog([FormFieldState<GstTaxListItem?>? fieldState]) async {
-    if (!widget.enabled || _isLoading) return;
+    if (!widget.enabled) return;
+    if (_isLoading && _items.isEmpty) return;
     if (_items.isEmpty) await _loadItems();
     if (!mounted) return;
 
@@ -160,11 +220,23 @@ class _GstDropdownState extends State<GstDropdown> {
     return KeyEventResult.ignored;
   }
 
+  String _gstDisplayLabel(GstTaxListItem item) {
+    final pct = item.gstTaxPercentage;
+    final pctLabel = pct.truncateToDouble() == pct
+        ? pct.toStringAsFixed(0)
+        : pct.toStringAsFixed(2);
+    final name = item.gstTaxName.trim();
+    if (name.isEmpty || name == '$pctLabel%' || name == '$pct%') {
+      return '$pctLabel%';
+    }
+    return '$name ($pctLabel%)';
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    if (_isLoading) {
+    if (_isLoading && _selectedItem == null) {
       return Container(
         height: 52, padding: const EdgeInsets.symmetric(horizontal: 14),
         decoration: BoxDecoration(border: Border.all(color: theme.colorScheme.outlineVariant), borderRadius: BorderRadius.circular(8)),
@@ -216,7 +288,14 @@ class _GstDropdownState extends State<GstDropdown> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             if (_selectedItem != null) Text(widget.isRequired ? '${widget.labelText} *' : widget.labelText, style: TextStyle(fontSize: 11, color: _isFocused ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant, fontWeight: _isFocused ? FontWeight.bold : FontWeight.w500)),
-                            Text(_selectedItem?.gstTaxName ?? widget.hintText, style: TextStyle(color: _selectedItem == null ? theme.colorScheme.onSurfaceVariant : theme.colorScheme.onSurface), maxLines: 1, overflow: TextOverflow.ellipsis),
+                            Text(
+                              _selectedItem == null
+                                  ? widget.hintText
+                                  : _gstDisplayLabel(_selectedItem!),
+                              style: TextStyle(color: _selectedItem == null ? theme.colorScheme.onSurfaceVariant : theme.colorScheme.onSurface),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ],
                         ),
                       ),

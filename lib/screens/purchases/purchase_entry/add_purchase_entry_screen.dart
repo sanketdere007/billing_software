@@ -832,7 +832,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                                                           height: 2,
                                                         ),
                                                         Text(
-                                                          prod.prodCode,
+                                                          'Code: ${prod.prodCode}  |  Unit: ${prod.unitWithValue}',
                                                           style: TextStyle(
                                                             color: theme
                                                                 .colorScheme

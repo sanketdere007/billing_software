@@ -13,6 +13,10 @@ import '../../widgets/brand_dropdown.dart';
 import '../../widgets/unit_dropdown.dart';
 import '../../widgets/gst_dropdown.dart';
 import '../../widgets/save_clear_shortcuts.dart';
+import '../../services/unit_service.dart';
+import '../../services/gst_service.dart';
+import '../../models/unit.dart';
+import '../../models/gst.dart';
 
 class ProductMasterScreen extends StatefulWidget {
   final ProductListItem? productToEdit;
@@ -76,6 +80,7 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
   int? _selectedSubcategoryId;
   int? _selectedBrandId;
   int? _selectedUnitId;
+  String _selectedUnitName = '';
   int? _selectedGstId;
   double _selectedGstPercent = 0.0;
 
@@ -149,6 +154,7 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
   void _initFormData() {
     if (widget.productToEdit != null) {
       _populateProductFields(widget.productToEdit!);
+      _resolveUnitAndGstSelections();
     } else if (widget.productId != null && widget.productId! > 0) {
       _fetchProductDetails(widget.productId!);
     } else {
@@ -165,6 +171,7 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
       final prod = _productService.getProductByIdFromCache(prodId);
       if (prod != null && mounted) {
         _populateProductFields(prod);
+        await _resolveUnitAndGstSelections();
       }
     } catch (e) {
       if (mounted) {
@@ -184,7 +191,7 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
     _nameController.text = product.prodName;
     _codeController.text = product.prodCode;
     _hsnController.text = product.prodHSNCode;
-    _unitValueController.text = product.prodUnitValue.toString();
+    _unitValueController.text = _formatDecimal(product.prodUnitValue);
 
     _batchBarcodeController.text = product.batchBarcode;
     _batchEANCodeController.text = product.batchEANCode;
@@ -195,6 +202,7 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
     _batchSellingPriceController.text = product.batchSellingPrice.toString();
 
     _selectedGstPercent = product.prodGSTPercent;
+    _selectedGstId = null;
     _selectedCategoryId = product.prodCategoryId > 0
         ? product.prodCategoryId
         : null;
@@ -203,7 +211,77 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
         : null;
     _selectedBrandId = product.prodBrandId > 0 ? product.prodBrandId : null;
     _selectedUnitId = product.prodUnitId > 0 ? product.prodUnitId : null;
+    _selectedUnitName = product.prodUnitName;
     _isActive = product.prodIsActive;
+  }
+
+  String _formatDecimal(double value) {
+    if (value.truncateToDouble() == value) {
+      return value.toStringAsFixed(0);
+    }
+    return value.toString();
+  }
+
+  UnitListItem? _matchUnit(List<UnitListItem> units, String name) {
+    final query = name.trim().toLowerCase();
+    if (query.isEmpty) return null;
+    for (final unit in units) {
+      if (unit.unitName.trim().toLowerCase() == query ||
+          unit.unitShortName.trim().toLowerCase() == query) {
+        return unit;
+      }
+    }
+    return null;
+  }
+
+  GstTaxListItem? _matchGst(List<GstTaxListItem> gsts, double percent) {
+    for (final gst in gsts) {
+      if ((gst.gstTaxPercentage - percent).abs() < 0.0001) return gst;
+    }
+    return null;
+  }
+
+  Future<void> _resolveUnitAndGstSelections() async {
+    try {
+      final unitsFuture = UnitService().getAllUnits(isActive: true);
+      final gstsFuture = GstService().getAllGsts(isActive: true);
+      final units = await unitsFuture;
+      final gsts = await gstsFuture;
+      if (!mounted) return;
+
+      int? unitId = _selectedUnitId;
+      if (unitId != null && unitId > 0) {
+        final exists = units.any((u) => u.unitId == unitId);
+        if (!exists) {
+          final byName = _matchUnit(units, _selectedUnitName);
+          if (byName != null) unitId = byName.unitId;
+        }
+      } else {
+        final byName = _matchUnit(units, _selectedUnitName);
+        if (byName != null) unitId = byName.unitId;
+      }
+
+      GstTaxListItem? gstMatch;
+      if (_selectedGstId != null && _selectedGstId! > 0) {
+        for (final gst in gsts) {
+          if (gst.gstTaxId == _selectedGstId) {
+            gstMatch = gst;
+            break;
+          }
+        }
+      }
+      gstMatch ??= _matchGst(gsts, _selectedGstPercent);
+
+      setState(() {
+        _selectedUnitId = (unitId != null && unitId > 0) ? unitId : _selectedUnitId;
+        if (gstMatch != null) {
+          _selectedGstId = gstMatch.gstTaxId;
+          _selectedGstPercent = gstMatch.gstTaxPercentage;
+        }
+      });
+    } catch (_) {
+      if (mounted) setState(() {});
+    }
   }
 
   Future<void> _saveProduct({bool saveAndNew = false}) async {
@@ -308,6 +386,7 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
           _selectedSubcategoryId = null;
           _selectedBrandId = null;
           _selectedUnitId = null;
+          _selectedUnitName = '';
           _selectedGstId = null;
           _selectedGstPercent = 0.0;
           _isActive = true;
@@ -358,6 +437,7 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
             _selectedSubcategoryId = null;
             _selectedBrandId = null;
             _selectedUnitId = null;
+            _selectedUnitName = '';
             _selectedGstId = null;
             _selectedGstPercent = 0.0;
             _isActive = true;
@@ -963,6 +1043,7 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
   Widget _buildUnitDropdown() {
     return UnitDropdown(
       selectedUnitId: _selectedUnitId,
+      selectedUnitName: _selectedUnitName.isNotEmpty ? _selectedUnitName : null,
       focusNode: _unitFocusNode,
       nextFocusNode: _unitValueFocusNode,
       labelText: 'Unit',
@@ -970,6 +1051,7 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
       onChanged: (val) {
         setState(() {
           _selectedUnitId = val?.unitId;
+          _selectedUnitName = val?.unitName ?? '';
         });
       },
     );
@@ -1021,6 +1103,7 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
   Widget _buildGstField() {
     return GstDropdown(
       selectedGstId: _selectedGstId,
+      selectedGstPercent: isEditing ? _selectedGstPercent : null,
       focusNode: _gstFocusNode,
       onSelectionComplete: () => _batchBarcodeFocusNode.requestFocus(),
       onChanged: (val) {
