@@ -67,6 +67,7 @@ class ApiConstants {
 
   // Batch Endpoints
   static const String getAllBatchesEndpoint = '/api/Batch/GetAllBatches';
+  static const String getAllProductStockEndpoint = '/api/Batch/GetAllProductStock';
 
   // Database Backup Endpoints
   static const String createDatabaseBackupEndpoint =

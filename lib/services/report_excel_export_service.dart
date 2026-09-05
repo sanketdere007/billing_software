@@ -1,6 +1,7 @@
 import '../models/collection_report.dart';
 import '../models/customer_reports.dart';
 import '../models/supplier_reports.dart';
+import '../models/current_stock.dart';
 import 'excel_export_helper.dart';
 
 class ReportExcelExportService {
@@ -143,5 +144,38 @@ class ReportExcelExportService {
     if (item.otherAmount > 0) return 'Other';
     if (item.cashAmount > 0) return 'Cash';
     return 'Cash';
+  }
+
+  static Future<ExcelExportResult> exportCurrentStock(
+    List<CurrentStock> items,
+  ) {
+    return ExcelExportHelper.exportSheet(
+      filePrefix: 'Current_Stock_Report',
+      sheetName: 'Current Stock',
+      emptyMessage: 'No current stock records available to export.',
+      columns: const [
+        ExcelColumn('Sr. No.', align: ExcelCellAlign.center, type: ExcelCellType.number),
+        ExcelColumn('Product Name'),
+        ExcelColumn('Brand Name'),
+        ExcelColumn('Category Name'),
+        ExcelColumn('Unit'),
+        ExcelColumn('Unit Value', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn('Available Stock', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn('Selling Price', align: ExcelCellAlign.right, type: ExcelCellType.number),
+      ],
+      rows: [
+        for (int i = 0; i < items.length; i++)
+          [
+            '${i + 1}',
+            items[i].productName,
+            items[i].brandName,
+            items[i].categoryName,
+            items[i].unitShortName,
+            ExcelExportHelper.formatAmount(items[i].unitValue),
+            ExcelExportHelper.formatAmount(items[i].availableStock),
+            ExcelExportHelper.formatAmount(items[i].sellingPrice),
+          ],
+      ],
+    );
   }
 }

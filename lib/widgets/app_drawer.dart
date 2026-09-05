@@ -52,6 +52,7 @@ import '../widgets/support_info_footer.dart';
 import '../screens/reports/supplier_outstanding_report_screen.dart';
 import '../screens/reports/customer_outstanding_report_screen.dart';
 import '../screens/reports/collection_report_screen.dart';
+import '../screens/reports/current_stock_report_screen.dart';
 import '../screens/pdf/pdf_preview_screen.dart';
 
 class AppDrawer extends StatefulWidget {
@@ -1075,19 +1076,19 @@ class _AppDrawerState extends State<AppDrawer> {
                         );
                       },
                     ),
-                    _buildDrawerItem(
-                      context: context,
-                      icon: Icons.assignment_return_rounded,
-                      iconColor: _getIconColor(context, Colors.cyan),
-                      title: 'Sales Return',
-                      shortcutKey: 'Ctrl+F5',
-                      onTap: () {
-                        shortcutService.navigateToNamedScreen(
-                          AppRoutes.salesReturnAdd,
-                          () => const AddSalesReturnScreen(),
-                        );
-                      },
-                    ),
+                    // _buildDrawerItem(
+                    //   context: context,
+                    //   icon: Icons.assignment_return_rounded,
+                    //   iconColor: _getIconColor(context, Colors.cyan),
+                    //   title: 'Sales Return',
+                    //   shortcutKey: 'Ctrl+F5',
+                    //   onTap: () {
+                    //     shortcutService.navigateToNamedScreen(
+                    //       AppRoutes.salesReturnAdd,
+                    //       () => const AddSalesReturnScreen(),
+                    //     );
+                    //   },
+                    // ),
                   ],
                 ),
 
@@ -1260,6 +1261,20 @@ class _AppDrawerState extends State<AppDrawer> {
                           MaterialPageRoute(
                             builder: (context) =>
                                 const CollectionReportScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _buildDrawerItem(
+                      context: context,
+                      icon: Icons.inventory_2_rounded,
+                      iconColor: _getIconColor(context, Colors.indigo),
+                      title: 'Current Stock',
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const CurrentStockReportScreen(),
                           ),
                         );
                       },
