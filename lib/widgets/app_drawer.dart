@@ -21,6 +21,7 @@ import '../screens/gst/gst_list_screen.dart';
 import '../screens/companies/company_list_screen.dart';
 import '../screens/cities/city_list_screen.dart';
 import '../screens/areas/area_list_screen.dart';
+import '../screens/routes/route_list_screen.dart';
 import '../screens/branches/branch_list_screen.dart';
 import '../screens/warehouses/warehouse_list_screen.dart';
 import '../screens/users/user_list_screen.dart';
@@ -653,8 +654,7 @@ class _AppDrawerState extends State<AppDrawer> {
                             onTap: () {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (context) =>
-                                      const BatchListScreen(),
+                                  builder: (context) => const BatchListScreen(),
                                 ),
                               );
                             },
@@ -812,6 +812,19 @@ class _AppDrawerState extends State<AppDrawer> {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
                                   builder: (context) => const AreaListScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                          _buildDrawerItem(
+                            context: context,
+                            icon: Icons.map_rounded,
+                            iconColor: _getIconColor(context, Colors.teal),
+                            title: 'Route Master',
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const RouteListScreen(),
                                 ),
                               );
                             },
@@ -1082,7 +1095,7 @@ class _AppDrawerState extends State<AppDrawer> {
                       context: context,
                       icon: Icons.receipt_rounded,
                       iconColor: _getIconColor(context, Colors.cyan),
-                      title: 'Sales Entry (Invoice)',
+                      title: 'Sales Entry',
                       shortcutKey: 'F5',
                       onTap: () {
                         shortcutService.navigateToNamedScreen(

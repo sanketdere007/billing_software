@@ -65,6 +65,11 @@ class ApiConstants {
   static const String insertOrUpdateProductEndpoint =
       '/api/Product/InsertOrUpdateProduct';
 
+  // Route Endpoints
+  static const String getAllRoutesEndpoint = '/api/Route/GetAllRoutes';
+  static const String insertOrUpdateRouteEndpoint =
+      '/api/Route/InsertorUpdateRoute';
+
   // Batch Endpoints
   static const String getAllBatchesEndpoint = '/api/Batch/GetAllBatches';
   static const String insertOrUpdateBatchEndpoint =
