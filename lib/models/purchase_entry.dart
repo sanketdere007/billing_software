@@ -6,6 +6,10 @@ class PurchaseEntryProduct {
   final double quantity;
   final String unit;
   final double price;
+  final double landingPrice;
+  final double purchasePrice;
+  final double mrp;
+  final double sellingPrice;
   final double discountPercent;
   final double gstPercent;
   final double taxAmount;
@@ -19,6 +23,10 @@ class PurchaseEntryProduct {
     required this.quantity,
     required this.unit,
     required this.price,
+    this.landingPrice = 0.0,
+    this.purchasePrice = 0.0,
+    this.mrp = 0.0,
+    this.sellingPrice = 0.0,
     this.discountPercent = 0.0,
     this.gstPercent = 0.0,
     this.taxAmount = 0.0,
