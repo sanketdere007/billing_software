@@ -5,6 +5,8 @@ import '../widgets/dashboard/quick_actions.dart';
 import '../widgets/dashboard/summary_cards.dart';
 import '../widgets/dashboard/dashboard_charts.dart';
 import '../widgets/dashboard/dashboard_sections.dart';
+import '../services/api_service.dart';
+import '../services/session_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -14,9 +16,67 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  Map<String, dynamic>? _summaryData;
+  bool _isLoading = true;
+  DateTimeRange _selectedDateRange = DateTimeRange(
+    start: DateTime.now(),
+    end: DateTime.now(),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchDashboardSummary();
+  }
+
+  Future<void> _fetchDashboardSummary() async {
+    if (!mounted) return;
+    setState(() => _isLoading = true);
+    
+    try {
+      final compId = sessionService.selectedCompId ?? 0;
+      final branchId = sessionService.selectedBranchId ?? 0;
+      
+      // We set fromDate to the start of the day and toDate to the end of the day
+      DateTime fromDate = DateTime(
+        _selectedDateRange.start.year,
+        _selectedDateRange.start.month,
+        _selectedDateRange.start.day,
+      );
+      
+      DateTime toDate = DateTime(
+        _selectedDateRange.end.year,
+        _selectedDateRange.end.month,
+        _selectedDateRange.end.day,
+        23, 59, 59, 999
+      );
+      
+      final queryParameters = {
+        'CompId': compId.toString(),
+        'BranchId': branchId.toString(),
+        'FromDate': fromDate.toIso8601String(),
+        'ToDate': toDate.toIso8601String(),
+        'LowStockQty': '10',
+      };
+      
+      final response = await apiService.get('api/Dashboard/GetSummary', queryParameters: queryParameters);
+      
+      if (mounted && response != null && response['status'] == true) {
+        setState(() {
+          _summaryData = response['data'];
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching dashboard summary: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
   Future<void> _handleRefresh() async {
-    // Simulate a network request
-    await Future.delayed(const Duration(seconds: 1));
+    await _fetchDashboardSummary();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Dashboard refreshed successfully!')),
@@ -87,10 +147,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: DashboardFilters(
               onDateRangeChanged: (val) {
-                // Handle date range change
+                _selectedDateRange = val;
+                _fetchDashboardSummary();
               },
               onBranchChanged: (val) {
-                // Handle branch change
+                _fetchDashboardSummary();
               },
             ),
           ),
@@ -107,14 +168,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     // const QuickActions(),
                     // const SizedBox(height: 32),
                     
-                    const SummaryCards(),
+                    SummaryCards(
+                      summaryData: _summaryData,
+                      isLoading: _isLoading,
+                    ),
                     const SizedBox(height: 32),
                     
-                    const DashboardCharts(),
-                    const SizedBox(height: 32),
+                    // User requested to hide these sections for this session
+                    // const DashboardCharts(),
+                    // const SizedBox(height: 32),
                     
-                    const DashboardSections(),
-                    const SizedBox(height: 32),
+                    // const DashboardSections(),
+                    // const SizedBox(height: 32),
                   ],
                 ),
               ),

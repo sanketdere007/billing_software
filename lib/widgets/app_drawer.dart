@@ -11,6 +11,7 @@ import '../screens/send_mail_screen.dart';
 import '../screens/customers/customer_list_screen.dart';
 import '../screens/suppliers/supplier_list_screen.dart';
 import '../screens/products/product_list_screen.dart';
+import '../screens/batches/batch_list_screen.dart';
 import '../screens/categories/category_list_screen.dart';
 import '../screens/subcategories/subcategory_list_screen.dart';
 import '../screens/brands/brand_list_screen.dart';
@@ -640,6 +641,20 @@ class _AppDrawerState extends State<AppDrawer> {
                                 MaterialPageRoute(
                                   builder: (context) =>
                                       const ProductListScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                          _buildDrawerItem(
+                            context: context,
+                            icon: Icons.layers_rounded,
+                            iconColor: _getIconColor(context, Colors.purple),
+                            title: 'Product Batch',
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const BatchListScreen(),
                                 ),
                               );
                             },

@@ -2,10 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class SummaryCards extends StatelessWidget {
-  const SummaryCards({super.key});
+  final Map<String, dynamic>? summaryData;
+  final bool isLoading;
+
+  const SummaryCards({
+    super.key,
+    this.summaryData,
+    this.isLoading = false,
+  });
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     return LayoutBuilder(
       builder: (context, constraints) {
         int crossAxisCount = 2;
@@ -19,6 +30,16 @@ class SummaryCards extends StatelessWidget {
           crossAxisCount = 2;
         }
 
+        final double totalSales = (summaryData?['totalSales'] ?? 0).toDouble();
+        final double totalPurchase = (summaryData?['totalPurchase'] ?? 0).toDouble();
+        final double collection = (summaryData?['collection'] ?? 0).toDouble();
+        final double pendingAmount = (summaryData?['pendingAmount'] ?? 0).toDouble();
+        
+        final int totalProducts = (summaryData?['totalProducts'] ?? 0).toInt();
+        final int lowStockProducts = (summaryData?['lowStockProducts'] ?? 0).toInt();
+        final int outOfStockProducts = (summaryData?['outOfStockProducts'] ?? 0).toInt();
+        final int totalOrders = (summaryData?['totalSalesOrders'] ?? 0).toInt();
+
         return GridView.count(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -30,7 +51,7 @@ class SummaryCards extends StatelessWidget {
             _buildKpiCard(
               context,
               "Sales",
-              12450.50,
+              totalSales,
               Icons.trending_up,
               Colors.green,
               true,
@@ -38,7 +59,7 @@ class SummaryCards extends StatelessWidget {
             _buildKpiCard(
               context,
               "Purchase",
-              5430.00,
+              totalPurchase,
               Icons.shopping_bag,
               Colors.blue,
               false,
@@ -46,62 +67,45 @@ class SummaryCards extends StatelessWidget {
             _buildKpiCard(
               context,
               "Collection",
-              9800.00,
+              collection,
               Icons.account_balance_wallet,
               Colors.teal,
               true,
             ),
             _buildKpiCard(
               context,
-              "Profit",
-              2150.75,
-              Icons.monetization_on,
-              Colors.green,
-              true,
-            ),
-
-            _buildKpiCard(
-              context,
-              "Pending Receivables",
-              45600.00,
+              "Pending Amount",
+              pendingAmount,
               Icons.hourglass_empty,
               Colors.orange,
-              false,
-            ),
-            _buildKpiCard(
-              context,
-              "Pending Payables",
-              12400.00,
-              Icons.money_off,
-              Colors.red,
               false,
             ),
 
             _buildCountCard(
               context,
               "Total Products",
-              3450,
+              totalProducts,
               Icons.inventory_2,
               Colors.cyan,
             ),
             _buildCountCard(
               context,
               "Low Stock Items",
-              24,
+              lowStockProducts,
               Icons.warning_amber,
               Colors.orange,
             ),
             _buildCountCard(
               context,
               "Out of Stock",
-              5,
+              outOfStockProducts,
               Icons.error_outline,
               Colors.red,
             ),
             _buildCountCard(
               context,
               "Total Orders",
-              156,
+              totalOrders,
               Icons.receipt_long,
               Colors.blueGrey,
             ),

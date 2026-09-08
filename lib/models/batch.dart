@@ -15,7 +15,10 @@ class BatchListItem {
   final double batchPurchasePrice;
   final double batchMRP;
   final double batchSellingPrice;
-  final double prodGSTPercent; // Keep this in case API returns it or we need it
+  final double prodGSTPercent; 
+  final String batchBarcode;
+  final String batchEANCode;
+  final bool batchIsActive;
 
   BatchListItem({
     required this.batchId,
@@ -35,12 +38,16 @@ class BatchListItem {
     required this.batchMRP,
     required this.batchSellingPrice,
     this.prodGSTPercent = 0.0,
+    this.batchBarcode = '',
+    this.batchEANCode = '',
+    this.batchIsActive = true,
   });
 
   factory BatchListItem.fromJson(Map<String, dynamic> json) {
     return BatchListItem(
       batchId: int.tryParse(json['batch_Id']?.toString() ?? '0') ?? 0,
-      batchProductId: int.tryParse(json['batch_ProductId']?.toString() ?? '0') ?? 0,
+      batchProductId:
+          int.tryParse(json['batch_ProductId']?.toString() ?? '0') ?? 0,
       prodName: json['prod_Name']?.toString() ?? '',
       prodCode: json['prod_Code']?.toString() ?? '',
       unitName: json['unit_Name']?.toString() ?? '',
@@ -55,14 +62,22 @@ class BatchListItem {
       ),
       batchCompId: int.tryParse(json['batch_CompId']?.toString() ?? '0') ?? 0,
       compName: json['comp_Name']?.toString() ?? '',
-      batchBranchId: int.tryParse(json['batch_BranchId']?.toString() ?? '0') ?? 0,
+      batchBranchId:
+          int.tryParse(json['batch_BranchId']?.toString() ?? '0') ?? 0,
       branchName: json['branch_Name']?.toString() ?? '',
-      batchStock: double.tryParse(json['batch_Stock']?.toString() ?? '0') ?? 0.0,
-      batchAvailableStock: double.tryParse(json['batch_AvailableStock']?.toString() ?? '0') ?? 0.0,
-      batchLandingPrice: double.tryParse(json['batch_LandingPrice']?.toString() ?? '0') ?? 0.0,
-      batchPurchasePrice: double.tryParse(json['batch_PurchasePrice']?.toString() ?? '0') ?? 0.0,
+      batchStock:
+          double.tryParse(json['batch_Stock']?.toString() ?? '0') ?? 0.0,
+      batchAvailableStock:
+          double.tryParse(json['batch_AvailableStock']?.toString() ?? '0') ??
+          0.0,
+      batchLandingPrice:
+          double.tryParse(json['batch_LandingPrice']?.toString() ?? '0') ?? 0.0,
+      batchPurchasePrice:
+          double.tryParse(json['batch_PurchasePrice']?.toString() ?? '0') ??
+          0.0,
       batchMRP: double.tryParse(json['batch_MRP']?.toString() ?? '0') ?? 0.0,
-      batchSellingPrice: double.tryParse(json['batch_SellingPrice']?.toString() ?? '0') ?? 0.0,
+      batchSellingPrice:
+          double.tryParse(json['batch_SellingPrice']?.toString() ?? '0') ?? 0.0,
       prodGSTPercent: _parseBatchDouble(
         _firstBatchJsonValue(json, const [
           'prod_GSTPercent',
@@ -72,6 +87,9 @@ class BatchListItem {
           'gstPercent',
         ]),
       ),
+      batchBarcode: json['batch_Barcode']?.toString() ?? '',
+      batchEANCode: json['batch_EANCode']?.toString() ?? '',
+      batchIsActive: json['batch_IsActive'] == true || json['batch_IsActive'] == 'true',
     );
   }
 
@@ -127,6 +145,117 @@ class BatchListResponse {
       status: json['status'] == true || json['status'] == 'true',
       message: json['message']?.toString() ?? '',
       data: batchList,
+      error: json['error']?.toString(),
+    );
+  }
+}
+
+class BatchUpsertRequest {
+  final int batchId;
+  final int batchCompId;
+  final int batchBranchId;
+  final int batchProductId;
+  final String batchBarcode;
+  final String batchEANCode;
+  final double batchStock;
+  final double batchAvailableStock;
+  final double batchLandingPrice;
+  final double batchPurchasePrice;
+  final double batchMRP;
+  final double batchSellingPrice;
+  final bool batchIsActive;
+  final int batchCreatedBy;
+  final int batchModifiedBy;
+
+  BatchUpsertRequest({
+    this.batchId = 0,
+    required this.batchCompId,
+    required this.batchBranchId,
+    required this.batchProductId,
+    this.batchBarcode = '',
+    this.batchEANCode = '',
+    this.batchStock = 0.0,
+    this.batchAvailableStock = 0.0,
+    this.batchLandingPrice = 0.0,
+    this.batchPurchasePrice = 0.0,
+    this.batchMRP = 0.0,
+    this.batchSellingPrice = 0.0,
+    this.batchIsActive = true,
+    this.batchCreatedBy = 0,
+    this.batchModifiedBy = 0,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'batch_Id': batchId,
+      'batch_CompId': batchCompId,
+      'batch_BranchId': batchBranchId,
+      'batch_ProductId': batchProductId,
+      'batch_Barcode': batchBarcode,
+      'batch_EANCode': batchEANCode,
+      'batch_Stock': batchStock,
+      'batch_AvailableStock': batchAvailableStock,
+      'batch_LandingPrice': batchLandingPrice,
+      'batch_PurchasePrice': batchPurchasePrice,
+      'batch_MRP': batchMRP,
+      'batch_SellingPrice': batchSellingPrice,
+      'batch_IsActive': batchIsActive,
+      'batch_CreatedBy': batchCreatedBy,
+      'batch_ModifiedBy': batchModifiedBy,
+    };
+  }
+}
+
+class BatchUpsertResponseData {
+  final bool status;
+  final String message;
+  final int batchId;
+  final double oldStock;
+  final double oldAvailableStock;
+  final double newStock;
+  final double newAvailableStock;
+
+  BatchUpsertResponseData({
+    required this.status,
+    required this.message,
+    required this.batchId,
+    this.oldStock = 0.0,
+    this.oldAvailableStock = 0.0,
+    this.newStock = 0.0,
+    this.newAvailableStock = 0.0,
+  });
+
+  factory BatchUpsertResponseData.fromJson(Map<String, dynamic> json) {
+    return BatchUpsertResponseData(
+      status: json['status'] == true || json['status'] == 'true',
+      message: json['message']?.toString() ?? '',
+      batchId: int.tryParse(json['batch_Id']?.toString() ?? '0') ?? 0,
+      oldStock: double.tryParse(json['oldStock']?.toString() ?? '0') ?? 0.0,
+      oldAvailableStock: double.tryParse(json['oldAvailableStock']?.toString() ?? '0') ?? 0.0,
+      newStock: double.tryParse(json['newStock']?.toString() ?? '0') ?? 0.0,
+      newAvailableStock: double.tryParse(json['newAvailableStock']?.toString() ?? '0') ?? 0.0,
+    );
+  }
+}
+
+class BatchUpsertResponse {
+  final bool status;
+  final String message;
+  final BatchUpsertResponseData? data;
+  final String? error;
+
+  BatchUpsertResponse({
+    required this.status,
+    required this.message,
+    this.data,
+    this.error,
+  });
+
+  factory BatchUpsertResponse.fromJson(Map<String, dynamic> json) {
+    return BatchUpsertResponse(
+      status: json['status'] == true || json['status'] == 'true',
+      message: json['message']?.toString() ?? '',
+      data: json['data'] != null ? BatchUpsertResponseData.fromJson(json['data']) : null,
       error: json['error']?.toString(),
     );
   }

@@ -99,6 +99,77 @@ class BatchService extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
   }
+
+  Future<BatchUpsertResponse> insertOrUpdateBatch(
+    BatchUpsertRequest request,
+  ) async {
+    int createdBy = request.batchCreatedBy;
+    int modifiedBy = request.batchModifiedBy;
+
+    if (createdBy == 0 && request.batchId == 0) {
+      try {
+        final user = await sessionService.getUserData();
+        createdBy = user?.empId ?? 0;
+      } catch (_) {}
+    }
+
+    if (modifiedBy == 0 && request.batchId != 0) {
+      try {
+        final user = await sessionService.getUserData();
+        modifiedBy = user?.empId ?? 0;
+      } catch (_) {}
+    }
+
+    final finalRequest = BatchUpsertRequest(
+      batchId: request.batchId,
+      batchCompId: request.batchCompId,
+      batchBranchId: request.batchBranchId,
+      batchProductId: request.batchProductId,
+      batchBarcode: request.batchBarcode,
+      batchEANCode: request.batchEANCode,
+      batchStock: request.batchStock,
+      batchAvailableStock: request.batchAvailableStock,
+      batchLandingPrice: request.batchLandingPrice,
+      batchPurchasePrice: request.batchPurchasePrice,
+      batchMRP: request.batchMRP,
+      batchSellingPrice: request.batchSellingPrice,
+      batchIsActive: request.batchIsActive,
+      batchCreatedBy: createdBy,
+      batchModifiedBy: modifiedBy,
+    );
+
+    debugPrint(
+      '📦 [BatchService.insertOrUpdateBatch] Request payload: ${finalRequest.toJson()}',
+    );
+
+    try {
+      final dynamic response = await apiService.post(
+        ApiConstants.insertOrUpdateBatchEndpoint,
+        body: finalRequest.toJson(),
+        requiresAuth: true,
+      );
+
+      if (response is! Map<String, dynamic>) {
+        throw ApiException('Invalid response format from server.');
+      }
+
+      final upsertResponse = BatchUpsertResponse.fromJson(response);
+
+      if (upsertResponse.status ||
+          (upsertResponse.data != null && upsertResponse.data!.status)) {
+        return upsertResponse;
+      } else {
+        final msg = upsertResponse.message.isNotEmpty
+            ? upsertResponse.message
+            : (upsertResponse.data?.message ?? 'Failed to save batch.');
+        throw ApiException(msg);
+      }
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException('Error saving batch: $e');
+    }
+  }
 }
 
 // Global instance for convenience
