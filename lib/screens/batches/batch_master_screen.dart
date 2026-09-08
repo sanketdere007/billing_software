@@ -592,13 +592,17 @@ class _BatchMasterScreenState extends State<BatchMasterScreen> {
       controller: _productController,
       focusNode: _productFocusNode,
       readOnly: true,
-      onTap: _selectProduct,
+      onTap: isEditing ? null : _selectProduct,
       decoration: InputDecoration(
         labelText: 'Product *',
         hintText: 'Select Product',
         border: const OutlineInputBorder(),
-        suffixIcon: const Icon(Icons.arrow_drop_down),
+        suffixIcon: isEditing ? null : const Icon(Icons.arrow_drop_down),
         prefixIcon: const Icon(Icons.inventory_2_outlined, size: 18),
+        filled: isEditing,
+        fillColor: isEditing
+            ? Theme.of(context).disabledColor.withOpacity(0.1)
+            : null,
       ),
       validator: (value) =>
           _selectedProductId <= 0 ? 'Please select a product' : null,

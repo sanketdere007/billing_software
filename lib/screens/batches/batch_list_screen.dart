@@ -95,7 +95,8 @@ class _BatchListScreenState extends State<BatchListScreen> {
       return KeyEventResult.handled;
     }
 
-    if (key == LogicalKeyboardKey.enter || key == LogicalKeyboardKey.numpadEnter) {
+    if (key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.numpadEnter) {
       if (_highlightedIndex >= 0 && _highlightedIndex < _batches.length) {
         _navigateToEditBatch(_batches[_highlightedIndex]);
         return KeyEventResult.handled;
@@ -260,16 +261,16 @@ class _BatchListScreenState extends State<BatchListScreen> {
                               onPressed: _isLoading ? null : _fetchBatches,
                             ),
                             const SizedBox(width: 8),
-                            FilledButton.icon(
-                              onPressed: () => _navigateToEditBatch(),
-                              icon: const Icon(Icons.add_box_rounded, size: 18),
-                              label: const Text('Add Batch'),
-                              style: FilledButton.styleFrom(
-                                backgroundColor: Theme.of(context).colorScheme.primary,
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                              ),
-                            ),
-                            const SizedBox(width: 16),
+                            // FilledButton.icon(
+                            //   onPressed: () => _navigateToEditBatch(),
+                            //   icon: const Icon(Icons.add_box_rounded, size: 18),
+                            //   label: const Text('Add Batch'),
+                            //   style: FilledButton.styleFrom(
+                            //     backgroundColor: Theme.of(context).colorScheme.primary,
+                            //     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            //   ),
+                            // ),
+                            // const SizedBox(width: 16),
                           ],
                         ),
                         body: Column(
@@ -346,7 +347,8 @@ class _BatchListScreenState extends State<BatchListScreen> {
                     focusNode: _searchFocusNode,
                     onChanged: _onSearchChanged,
                     decoration: InputDecoration(
-                      hintText: 'Search by Batch No, Product Name, Code, Barcode...',
+                      hintText:
+                          'Search by Batch No, Product Name, Code, Barcode...',
                       prefixIcon: const Icon(Icons.search_rounded, size: 20),
                       suffixIcon: _searchController.text.isNotEmpty
                           ? IconButton(
@@ -354,8 +356,13 @@ class _BatchListScreenState extends State<BatchListScreen> {
                               onPressed: _clearFilters,
                             )
                           : null,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 0,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                       filled: true,
                       fillColor: isDark
                           ? theme.colorScheme.surfaceVariant.withOpacity(0.3)
@@ -415,8 +422,13 @@ class _BatchListScreenState extends State<BatchListScreen> {
                       onPressed: _clearFilters,
                     )
                   : null,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 8,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
               filled: true,
               fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
             ),
@@ -565,11 +577,31 @@ class _BatchListScreenState extends State<BatchListScreen> {
                 _buildHeaderCell('#', width: 50, alignment: Alignment.center),
                 _buildHeaderCell('Batch No', flex: 1),
                 _buildHeaderCell('Product Name', flex: 3),
-                _buildHeaderCell('Stock', flex: 1, alignment: Alignment.centerRight),
-                _buildHeaderCell('Landing Cost', flex: 1, alignment: Alignment.centerRight),
-                _buildHeaderCell('Purchase Rate', flex: 1, alignment: Alignment.centerRight),
-                _buildHeaderCell('MRP', flex: 1, alignment: Alignment.centerRight),
-                _buildHeaderCell('Sale Rate', flex: 1, alignment: Alignment.centerRight),
+                _buildHeaderCell(
+                  'Stock',
+                  flex: 1,
+                  alignment: Alignment.centerRight,
+                ),
+                _buildHeaderCell(
+                  'Landing Cost',
+                  flex: 1,
+                  alignment: Alignment.centerRight,
+                ),
+                _buildHeaderCell(
+                  'Purchase Rate',
+                  flex: 1,
+                  alignment: Alignment.centerRight,
+                ),
+                _buildHeaderCell(
+                  'MRP',
+                  flex: 1,
+                  alignment: Alignment.centerRight,
+                ),
+                _buildHeaderCell(
+                  'Sale Rate',
+                  flex: 1,
+                  alignment: Alignment.centerRight,
+                ),
                 _buildHeaderCell(
                   'Actions',
                   width: 120,
@@ -679,12 +711,12 @@ class _BatchListScreenState extends State<BatchListScreen> {
                           child: Align(
                             alignment: Alignment.centerLeft,
                             child: Text(
-                                batch.prodName,
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                              batch.prodName,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ),
@@ -769,8 +801,7 @@ class _BatchListScreenState extends State<BatchListScreen> {
                                 icon: const Icon(Icons.edit_outlined, size: 18),
                                 tooltip: 'Edit Batch',
                                 splashRadius: 18,
-                                onPressed: () =>
-                                    _navigateToEditBatch(batch),
+                                onPressed: () => _navigateToEditBatch(batch),
                               ),
                             ],
                           ),

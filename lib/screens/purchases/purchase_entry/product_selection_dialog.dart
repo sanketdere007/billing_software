@@ -25,6 +25,16 @@ class _ProductSelectionDialogState extends State<ProductSelectionDialog> {
     _searchFocusNode.onKeyEvent = _handleKeyEvent;
 
     productService.addListener(_onProductServiceChanged);
+    
+    if (_filteredProducts.isEmpty) {
+      productService.getAllProducts().then((_) {
+        if (mounted) {
+          setState(() {
+            _filteredProducts = productService.products;
+          });
+        }
+      });
+    }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
