@@ -367,17 +367,176 @@ class SalesEntryDetailData {
   }
 }
 
-class SalesEntryUpsertRequest {
-  final SalesEntryMasterData masterData;
-  final List<SalesEntryDetailData> detailData;
+class SalesEntryReceiptMasterData {
+  final int receiptMasterId;
+  final int compId;
+  final int branchId;
+  final String receiptDate;
+  final int customerId;
+  final int ledgerId;
+  final double totalAmount;
+  final double cashAmount;
+  final double upiAmount;
+  final double cardAmount;
+  final double chequeAmount;
+  final double bankAmount;
+  final double otherAmount;
+  final String chequeNo;
+  final String? chequeDate;
+  final String bankName;
+  final String bankReferenceNo;
+  final String neftType;
+  final String neftReferenceNo;
+  final String otherPaymentType;
+  final String otherReferenceNo;
+  final String? otherDate;
+  final String otherRemark;
+  final String remark;
+  final String status;
+  final bool isActive;
+  final int createdBy;
+  final int modifiedBy;
 
-  SalesEntryUpsertRequest({required this.masterData, required this.detailData});
+  SalesEntryReceiptMasterData({
+    this.receiptMasterId = 0,
+    this.compId = 0,
+    this.branchId = 0,
+    required this.receiptDate,
+    required this.customerId,
+    this.ledgerId = 0,
+    this.totalAmount = 0,
+    this.cashAmount = 0,
+    this.upiAmount = 0,
+    this.cardAmount = 0,
+    this.chequeAmount = 0,
+    this.bankAmount = 0,
+    this.otherAmount = 0,
+    this.chequeNo = '',
+    this.chequeDate,
+    this.bankName = '',
+    this.bankReferenceNo = '',
+    this.neftType = '',
+    this.neftReferenceNo = '',
+    this.otherPaymentType = '',
+    this.otherReferenceNo = '',
+    this.otherDate,
+    this.otherRemark = '',
+    this.remark = '',
+    this.status = '',
+    this.isActive = true,
+    this.createdBy = 0,
+    this.modifiedBy = 0,
+  });
 
   Map<String, dynamic> toJson() {
     return {
+      'receiptMaster_Id': receiptMasterId,
+      'receiptMaster_CompId': compId,
+      'receiptMaster_BranchId': branchId,
+      'receiptMaster_ReceiptDate': receiptDate,
+      'receiptMaster_CustomerId': customerId,
+      'receiptMaster_LedgerId': ledgerId,
+      'receiptMaster_TotalAmount': totalAmount,
+      'receiptMaster_CashAmount': cashAmount,
+      'receiptMaster_UPIAmount': upiAmount,
+      'receiptMaster_CardAmount': cardAmount,
+      'receiptMaster_ChequeAmount': chequeAmount,
+      'receiptMaster_BankAmount': bankAmount,
+      'receiptMaster_OtherAmount': otherAmount,
+      'receiptMaster_ChequeNo': chequeNo,
+      'receiptMaster_ChequeDate': chequeDate,
+      'receiptMaster_BankName': bankName,
+      'receiptMaster_BankReferenceNo': bankReferenceNo,
+      'receiptMaster_NEFTType': neftType,
+      'receiptMaster_NEFTReferenceNo': neftReferenceNo,
+      'receiptMaster_OtherPaymentType': otherPaymentType,
+      'receiptMaster_OtherReferenceNo': otherReferenceNo,
+      'receiptMaster_OtherDate': otherDate,
+      'receiptMaster_OtherRemark': otherRemark,
+      'receiptMaster_Remark': remark,
+      'receiptMaster_Status': status,
+      'receiptMaster_IsActive': isActive,
+      'receiptMaster_CreatedBy': createdBy,
+      'receiptMaster_ModifiedBy': modifiedBy,
+    };
+  }
+}
+
+class SalesEntryReceiptDetailData {
+  final int compId;
+  final int branchId;
+  final int customerId;
+  final int ledgerId;
+  final int salesMasterId;
+  final double invoiceAmount;
+  final double pendingAmount;
+  final double receivedAmount;
+  final double remainingAmount;
+  final String remark;
+  final int createdBy;
+  final int modifiedBy;
+
+  SalesEntryReceiptDetailData({
+    this.compId = 0,
+    this.branchId = 0,
+    required this.customerId,
+    this.ledgerId = 0,
+    this.salesMasterId = 0,
+    this.invoiceAmount = 0,
+    this.pendingAmount = 0,
+    this.receivedAmount = 0,
+    this.remainingAmount = 0,
+    this.remark = '',
+    this.createdBy = 0,
+    this.modifiedBy = 0,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'receiptDetail_CompId': compId,
+      'receiptDetail_BranchId': branchId,
+      'receiptDetail_CustomerId': customerId,
+      'receiptDetail_LedgerId': ledgerId,
+      'receiptDetail_SalesMasterId': salesMasterId,
+      'receiptDetail_InvoiceAmount': invoiceAmount,
+      'receiptDetail_PendingAmount': pendingAmount,
+      'receiptDetail_ReceivedAmount': receivedAmount,
+      'receiptDetail_RemainingAmount': remainingAmount,
+      'receiptDetail_Remark': remark,
+      'receiptDetail_CreatedBy': createdBy,
+      'receiptDetail_ModifiedBy': modifiedBy,
+    };
+  }
+}
+
+class SalesEntryUpsertRequest {
+  final SalesEntryMasterData masterData;
+  final List<SalesEntryDetailData> detailData;
+  final SalesEntryReceiptMasterData? receiptMasterData;
+  final List<SalesEntryReceiptDetailData>? receiptDetailData;
+
+  SalesEntryUpsertRequest({
+    required this.masterData,
+    required this.detailData,
+    this.receiptMasterData,
+    this.receiptDetailData,
+  });
+
+  Map<String, dynamic> toJson() {
+    final map = <String, dynamic>{
       "masterData": masterData.toJson(),
       "detailData": detailData.map((e) => e.toJson()).toList(),
     };
+    
+    if (receiptMasterData != null) {
+      map["receiptMasterData"] = receiptMasterData!.toJson();
+    }
+    
+    if (receiptDetailData != null) {
+      map["receiptDetailData"] = receiptDetailData!.map((e) => e.toJson()).toList();
+    }
+    
+    return map;
   }
 }
 
@@ -386,12 +545,16 @@ class SalesEntryUpsertResponseData {
   final String message;
   final int salesMasterId;
   final String salesMasterInvoiceNo;
+  final int receiptMasterId;
+  final String receiptMasterReceiptNo;
 
   SalesEntryUpsertResponseData({
     required this.status,
     required this.message,
     required this.salesMasterId,
     this.salesMasterInvoiceNo = '',
+    this.receiptMasterId = 0,
+    this.receiptMasterReceiptNo = '',
   });
 
   factory SalesEntryUpsertResponseData.fromJson(Map<String, dynamic> json) {
@@ -403,6 +566,8 @@ class SalesEntryUpsertResponseData {
       message: json['message']?.toString() ?? '',
       salesMasterId: _asInt(json['salesMaster_Id']),
       salesMasterInvoiceNo: json['salesMaster_InvoiceNo']?.toString() ?? '',
+      receiptMasterId: _asInt(json['receiptMaster_Id']),
+      receiptMasterReceiptNo: json['receiptMaster_ReceiptNo']?.toString() ?? '',
     );
   }
 }

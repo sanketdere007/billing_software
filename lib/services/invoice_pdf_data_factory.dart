@@ -25,21 +25,16 @@ class InvoicePdfDataFactory {
     CustomerListItem? customer,
     CompanyListItem? company,
     UserData? user,
-    Map<String, dynamic>? receiptResponse,
     String? companyNameFallback,
   }) {
     final invoiceNo = salesResponse.data?.salesMasterInvoiceNo.trim() ?? '';
     final salesMasterId = salesResponse.data?.salesMasterId ?? master.salesMasterId;
-    final receiptNo = _receiptNoFrom(receiptResponse);
-    final receiptDate = _receiptDateFrom(receiptResponse) ?? invoiceDate;
     final now = DateTime.now();
 
     return InvoicePdfData(
       company: _company(company, companyNameFallback),
       invoice: InvoiceMeta(
-        invoiceNo: invoiceNo.isNotEmpty
-            ? invoiceNo
-            : (receiptNo.isNotEmpty ? receiptNo : ''),
+        invoiceNo: invoiceNo,
         date: _dateFormat.format(invoiceDate),
         time: _timeFormat.format(now),
         salesman: '',
@@ -63,8 +58,6 @@ class InvoicePdfDataFactory {
         master: master,
         payment: payment,
         salesMasterId: salesMasterId,
-        receiptNo: receiptNo,
-        receiptDate: receiptDate,
       ),
       gstSlabs: _gstSlabs(details),
       gross: master.subTotal,
@@ -222,12 +215,8 @@ class InvoicePdfDataFactory {
     required SalesEntryMasterData master,
     required SalesPaymentDetails payment,
     required int salesMasterId,
-    required String receiptNo,
-    required DateTime receiptDate,
   }) {
     final parts = <String>[];
-    if (receiptNo.isNotEmpty) parts.add('Receipt No: $receiptNo');
-    parts.add('Receipt Date: ${_dateFormat.format(receiptDate)}');
     if (salesMasterId > 0) parts.add('Sales Ref: $salesMasterId');
 
     final mode = payment.mode.isNotEmpty ? payment.mode : _paymentModeFrom(master);
@@ -281,31 +270,6 @@ class InvoicePdfDataFactory {
     if (active.isEmpty) return '';
     if (active.length == 1) return active.first;
     return 'Split';
-  }
-
-  static String _receiptNoFrom(Map<String, dynamic>? response) {
-    if (response == null) return '';
-    final data = response['data'];
-    if (data is Map) {
-      final value = data['receiptMaster_ReceiptNo'] ??
-          data['receiptMasterReceiptNo'] ??
-          data['receiptNo'];
-      if (value != null && value.toString().trim().isNotEmpty) {
-        return value.toString().trim();
-      }
-    }
-    final fallback = response['receiptMaster_ReceiptNo'] ?? response['receiptNo'];
-    return fallback?.toString().trim() ?? '';
-  }
-
-  static DateTime? _receiptDateFrom(Map<String, dynamic>? response) {
-    if (response == null) return null;
-    final data = response['data'];
-    final raw = data is Map
-        ? (data['receiptMaster_ReceiptDate'] ?? data['receiptMasterReceiptDate'])
-        : response['receiptMaster_ReceiptDate'];
-    if (raw == null) return null;
-    return DateTime.tryParse(raw.toString());
   }
 
   static String _stateCode(String? gstNo) {

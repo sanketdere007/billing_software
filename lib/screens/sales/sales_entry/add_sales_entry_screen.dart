@@ -17,10 +17,8 @@ import '../../../widgets/app_message_dialog.dart';
 import '../../../widgets/customer_dropdown.dart';
 import 'batch_selection_dialog.dart';
 import '../../../widgets/save_clear_shortcuts.dart';
-import '../../../services/api_service.dart';
 import '../../../services/invoice_pdf_data_factory.dart';
 import '../../../services/shortcut_service.dart';
-import '../../../utils/api_constants.dart';
 import '../../pdf/pdf_preview_screen.dart';
 import 'payment_mode_dialog.dart';
 
@@ -33,10 +31,6 @@ class SalePersistResult {
   final CustomerListItem? customer;
   final CompanyListItem? company;
   final UserData? user;
-  final bool receiptAttempted;
-  final bool receiptSuccess;
-  final String? receiptError;
-  final Map<String, dynamic>? receiptResponse;
 
   const SalePersistResult({
     required this.salesResponse,
@@ -47,10 +41,6 @@ class SalePersistResult {
     this.customer,
     this.company,
     this.user,
-    required this.receiptAttempted,
-    required this.receiptSuccess,
-    this.receiptError,
-    this.receiptResponse,
   });
 }
 
@@ -389,14 +379,6 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
     final result = savedResult;
     if (payment == null || result == null || !mounted) return;
 
-    if (result.receiptAttempted && !result.receiptSuccess) {
-      await showErrorDialog(
-        context,
-        'Sales Entry saved, but Receipt Entry failed: ${result.receiptError ?? 'Unknown error'}',
-      );
-      return;
-    }
-
     try {
       if (mounted) {
         setState(() {
@@ -414,7 +396,6 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
         customer: result.customer,
         company: result.company,
         user: result.user,
-        receiptResponse: result.receiptResponse,
         companyNameFallback: sessionService.selectedCompName,
       );
 
@@ -428,7 +409,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
       );
     } catch (e) {
       if (mounted) {
-        await showErrorDialog(context, 'Unable to generate receipt PDF: $e');
+        await showErrorDialog(context, 'Unable to generate invoice PDF: $e');
       }
     } finally {
       if (mounted) {
@@ -599,9 +580,64 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
         modifiedBy: empId,
       );
 
+      final receiptMasterData = SalesEntryReceiptMasterData(
+        receiptMasterId: 0,
+        compId: compId,
+        branchId: branchId,
+        receiptDate: _selectedDate.toIso8601String(),
+        customerId: _selectedCustomer!,
+        ledgerId: customer?.custLedgerId ?? 0,
+        totalAmount: payment.cashAmount + 
+                     payment.upiAmount + 
+                     payment.cardAmount + 
+                     payment.chequeAmount + 
+                     payment.bankAmount + 
+                     payment.otherAmount,
+        cashAmount: payment.cashAmount,
+        upiAmount: payment.upiAmount,
+        cardAmount: payment.cardAmount,
+        chequeAmount: payment.chequeAmount,
+        bankAmount: payment.bankAmount,
+        otherAmount: payment.otherAmount,
+        chequeNo: payment.chequeNo,
+        chequeDate: payment.chequeDate?.toIso8601String(),
+        bankName: payment.bankName,
+        bankReferenceNo: payment.bankReferenceNo,
+        neftType: payment.neftType,
+        neftReferenceNo: payment.neftReferenceNo,
+        otherPaymentType: payment.otherPaymentType,
+        otherReferenceNo: payment.otherReferenceNo,
+        otherDate: payment.otherDate?.toIso8601String(),
+        otherRemark: payment.otherRemark,
+        remark: payment.remark,
+        status: 'Completed',
+        isActive: true,
+        createdBy: empId,
+        modifiedBy: empId,
+      );
+
+      final receiptDetailData = [
+        SalesEntryReceiptDetailData(
+          compId: compId,
+          branchId: branchId,
+          customerId: _selectedCustomer!,
+          ledgerId: customer?.custLedgerId ?? 0,
+          salesMasterId: 0,
+          invoiceAmount: _finalPayable,
+          pendingAmount: balanceAmount,
+          receivedAmount: paidAmount,
+          remainingAmount: balanceAmount,
+          remark: payment.remark,
+          createdBy: empId,
+          modifiedBy: empId,
+        )
+      ];
+
       final request = SalesEntryUpsertRequest(
         masterData: masterData,
         detailData: detailData,
+        receiptMasterData: receiptMasterData,
+        receiptDetailData: receiptDetailData,
       );
 
       final response = await SalesEntryService().insertOrUpdateSalesEntry(
@@ -610,99 +646,6 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
       final productRows = validProducts
           .map((p) => Map<String, dynamic>.from(p))
           .toList();
-
-      bool receiptAttempted = false;
-      bool receiptSuccess = false;
-      String? receiptError;
-      Map<String, dynamic>? receiptResponse;
-
-      if (response.status || (response.data != null && response.data!.status)) {
-        final salesMasterId = response.data?.salesMasterId ?? 0;
-
-        if (paidAmount > 0) {
-          receiptAttempted = true;
-          if (salesMasterId > 0) {
-            final receiptRequest = {
-              "masterData": {
-                "receiptMaster_Id": 0,
-                "receiptMaster_CompId": compId,
-                "receiptMaster_BranchId": branchId,
-                "receiptMaster_ReceiptDate": _selectedDate.toIso8601String(),
-                "receiptMaster_CustomerId": _selectedCustomer,
-                "receiptMaster_LedgerId": customer?.custLedgerId ?? 0,
-                "receiptMaster_TotalAmount": paidAmount,
-                "receiptMaster_CashAmount": payment.cashAmount,
-                "receiptMaster_UPIAmount": payment.upiAmount,
-                "receiptMaster_CardAmount": payment.cardAmount,
-                "receiptMaster_ChequeAmount": payment.chequeAmount,
-                "receiptMaster_BankAmount": payment.bankAmount,
-                "receiptMaster_OtherAmount": payment.otherAmount,
-                "receiptMaster_ChequeNo": payment.chequeNo,
-                "receiptMaster_ChequeDate": payment.chequeAmount > 0
-                    ? (payment.chequeDate ?? _selectedDate).toIso8601String()
-                    : _selectedDate.toIso8601String(),
-                "receiptMaster_BankName": payment.bankName,
-                "receiptMaster_BankReferenceNo": payment.bankReferenceNo,
-                "receiptMaster_NEFTType": payment.neftType,
-                "receiptMaster_NEFTReferenceNo": payment.neftReferenceNo,
-                "receiptMaster_OtherPaymentType": payment.otherPaymentType,
-                "receiptMaster_OtherReferenceNo": payment.otherReferenceNo,
-                "receiptMaster_OtherDate": payment.otherAmount > 0
-                    ? (payment.otherDate ?? _selectedDate).toIso8601String()
-                    : _selectedDate.toIso8601String(),
-                "receiptMaster_OtherRemark": payment.otherRemark,
-                "receiptMaster_Remark": payment.remark,
-                "receiptMaster_Status": "Active",
-                "receiptMaster_IsActive": true,
-                "receiptMaster_CreatedBy": empId,
-                "receiptMaster_ModifiedBy": empId,
-              },
-              "detailData": [
-                {
-                  "receiptDetail_CompId": compId,
-                  "receiptDetail_BranchId": branchId,
-                  "receiptDetail_CustomerId": _selectedCustomer,
-                  "receiptDetail_LedgerId": customer?.custLedgerId ?? 0,
-                  "receiptDetail_SalesMasterId": salesMasterId,
-                  "receiptDetail_InvoiceAmount": _finalPayable,
-                  "receiptDetail_PendingAmount": balanceAmount,
-                  "receiptDetail_ReceivedAmount": paidAmount,
-                  "receiptDetail_RemainingAmount": 0,
-                  "receiptDetail_Remark": payment.remark,
-                  "receiptDetail_CreatedBy": empId,
-                  "receiptDetail_ModifiedBy": empId,
-                },
-              ],
-            };
-
-            try {
-              final rawReceipt = await apiService.post(
-                ApiConstants.insertOrUpdateReceiptEntryEndpoint,
-                body: receiptRequest,
-                requiresAuth: true,
-              );
-              if (rawReceipt is Map<String, dynamic>) {
-                receiptResponse = rawReceipt;
-              } else if (rawReceipt is Map) {
-                receiptResponse = Map<String, dynamic>.from(rawReceipt);
-              }
-              if (receiptResponse != null &&
-                  receiptResponse['status'] == true) {
-                receiptSuccess = true;
-              } else {
-                receiptError =
-                    receiptResponse?['message'] ??
-                    receiptResponse?['error'] ??
-                    'Unknown error';
-              }
-            } catch (e) {
-              receiptError = e.toString();
-            }
-          } else {
-            receiptError = 'Invalid SalesMasterId received.';
-          }
-        }
-      }
 
       return SalePersistResult(
         salesResponse: response,
@@ -713,10 +656,6 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
         customer: customer,
         company: company,
         user: user,
-        receiptAttempted: receiptAttempted,
-        receiptSuccess: receiptSuccess,
-        receiptError: receiptError,
-        receiptResponse: receiptResponse,
       );
     } finally {
       if (mounted) {
