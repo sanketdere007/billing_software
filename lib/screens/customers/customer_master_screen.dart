@@ -9,11 +9,14 @@ import '../../services/city_service.dart';
 import '../../services/area_service.dart';
 import '../../services/state_service.dart';
 import '../../services/session_service.dart';
+import '../../services/route_service.dart';
+import '../../models/route_model.dart';
 import '../../utils/text_formatters.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/app_message_dialog.dart';
 import '../../widgets/city_dropdown.dart';
 import '../../widgets/area_dropdown.dart';
+import '../../widgets/route_dropdown.dart';
 import '../../widgets/direct_back_scope.dart';
 import '../../widgets/save_clear_shortcuts.dart';
 import '../../widgets/state_dropdown.dart';
@@ -53,6 +56,11 @@ class _CustomerMasterScreenState extends State<CustomerMasterScreen> {
     text: 'India',
   );
 
+  final TextEditingController _cowCountController = TextEditingController(text: '0');
+  final TextEditingController _buffaloCountController = TextEditingController(text: '0');
+  final TextEditingController _bullCountController = TextEditingController(text: '0');
+  final TextEditingController _goatCountController = TextEditingController(text: '0');
+
   // Focus Nodes for keyboard navigation
   final FocusNode _nameFocusNode = FocusNode();
   final FocusNode _companyFocusNode = FocusNode();
@@ -67,6 +75,11 @@ class _CustomerMasterScreenState extends State<CustomerMasterScreen> {
   final FocusNode _areaFocusNode = FocusNode();
   final FocusNode _pincodeFocusNode = FocusNode();
   final FocusNode _countryFocusNode = FocusNode();
+  final FocusNode _routeFocusNode = FocusNode();
+  final FocusNode _cowCountFocusNode = FocusNode();
+  final FocusNode _buffaloCountFocusNode = FocusNode();
+  final FocusNode _bullCountFocusNode = FocusNode();
+  final FocusNode _goatCountFocusNode = FocusNode();
 
   int? _selectedStateId;
   String _selectedStateName = '';
@@ -74,6 +87,8 @@ class _CustomerMasterScreenState extends State<CustomerMasterScreen> {
   String _selectedCityName = '';
   int? _selectedAreaId;
   String _selectedAreaName = '';
+  int? _selectedRouteId;
+  List<RouteListItem> _routes = [];
 
   bool _isActive = true;
   bool _isLoading = false;
@@ -109,6 +124,10 @@ class _CustomerMasterScreenState extends State<CustomerMasterScreen> {
     _areaController.dispose();
     _pincodeController.dispose();
     _countryController.dispose();
+    _cowCountController.dispose();
+    _buffaloCountController.dispose();
+    _bullCountController.dispose();
+    _goatCountController.dispose();
 
     _nameFocusNode.dispose();
     _companyFocusNode.dispose();
@@ -123,6 +142,11 @@ class _CustomerMasterScreenState extends State<CustomerMasterScreen> {
     _areaFocusNode.dispose();
     _pincodeFocusNode.dispose();
     _countryFocusNode.dispose();
+    _routeFocusNode.dispose();
+    _cowCountFocusNode.dispose();
+    _buffaloCountFocusNode.dispose();
+    _bullCountFocusNode.dispose();
+    _goatCountFocusNode.dispose();
 
     super.dispose();
   }
@@ -137,6 +161,7 @@ class _CustomerMasterScreenState extends State<CustomerMasterScreen> {
   }
 
   void _initFormData() {
+    _fetchRoutes();
     if (widget.customerToEdit != null) {
       _populateCustomerFields(widget.customerToEdit!);
     } else if (widget.customerId != null && widget.customerId! > 0) {
@@ -144,6 +169,19 @@ class _CustomerMasterScreenState extends State<CustomerMasterScreen> {
     } else {
       _isActive = true;
       _countryController.text = 'India';
+    }
+  }
+
+  Future<void> _fetchRoutes() async {
+    try {
+      final fetchedRoutes = await routeService.getAllRoutes();
+      if (mounted) {
+        setState(() {
+          _routes = fetchedRoutes;
+        });
+      }
+    } catch (_) {
+      // Handle error gracefully if routes fail to load
     }
   }
 
@@ -185,6 +223,10 @@ class _CustomerMasterScreenState extends State<CustomerMasterScreen> {
     _countryController.text = customer.custCountry.isNotEmpty
         ? customer.custCountry
         : 'India';
+    _cowCountController.text = customer.custCowCount.toString();
+    _buffaloCountController.text = customer.custBuffaloCount.toString();
+    _bullCountController.text = customer.custBullCount.toString();
+    _goatCountController.text = customer.custGoatCount.toString();
     _isActive = customer.custIsActive;
     _selectedStateName = customer.custState;
     _selectedCityName = customer.custCity;
@@ -193,6 +235,7 @@ class _CustomerMasterScreenState extends State<CustomerMasterScreen> {
     _selectedStateId = customer.custStateId > 0 ? customer.custStateId : null;
     _selectedCityId = customer.custCityId > 0 ? customer.custCityId : null;
     _selectedAreaId = customer.custAreaId > 0 ? customer.custAreaId : null;
+    _selectedRouteId = customer.custRouteId > 0 ? customer.custRouteId : null;
 
     // Resolve state ID if available
     if (_selectedStateId == null && customer.custState.isNotEmpty) {
@@ -313,6 +356,11 @@ class _CustomerMasterScreenState extends State<CustomerMasterScreen> {
         custCountry: _countryController.text.trim().isNotEmpty
             ? _countryController.text.trim()
             : 'India',
+        custRouteId: _selectedRouteId ?? 0,
+        custCowCount: int.tryParse(_cowCountController.text.trim()) ?? 0,
+        custBuffaloCount: int.tryParse(_buffaloCountController.text.trim()) ?? 0,
+        custBullCount: int.tryParse(_bullCountController.text.trim()) ?? 0,
+        custGoatCount: int.tryParse(_goatCountController.text.trim()) ?? 0,
         custBranchId: (isEditing && widget.customerToEdit != null && widget.customerToEdit!.custBranchId > 0)
             ? widget.customerToEdit!.custBranchId
             : ((sessionService.selectedBranchId != null && sessionService.selectedBranchId! > 0) ? sessionService.selectedBranchId! : 1),
@@ -350,12 +398,17 @@ class _CustomerMasterScreenState extends State<CustomerMasterScreen> {
         _areaController.clear();
         _pincodeController.clear();
         _countryController.text = 'India';
+        _cowCountController.text = '0';
+        _buffaloCountController.text = '0';
+        _bullCountController.text = '0';
+        _goatCountController.text = '0';
 
         setState(() {
           _selectedStateId = null;
           _selectedStateName = '';
           _selectedCityId = null;
           _selectedCityName = '';
+          _selectedRouteId = null;
           _isActive = true;
           _isLoading = false;
         });
@@ -401,6 +454,10 @@ class _CustomerMasterScreenState extends State<CustomerMasterScreen> {
           _areaController.clear();
           _pincodeController.clear();
           _countryController.text = 'India';
+          _cowCountController.text = '0';
+          _buffaloCountController.text = '0';
+          _bullCountController.text = '0';
+          _goatCountController.text = '0';
 
           setState(() {
             _selectedStateId = null;
@@ -409,6 +466,7 @@ class _CustomerMasterScreenState extends State<CustomerMasterScreen> {
             _selectedCityName = '';
             _selectedAreaId = null;
             _selectedAreaName = '';
+            _selectedRouteId = null;
             _isActive = true;
           });
           _nameFocusNode.requestFocus();
@@ -719,7 +777,56 @@ class _CustomerMasterScreenState extends State<CustomerMasterScreen> {
           ),
           const SizedBox(height: 8),
 
-          // Section 5: Status Switch
+          // Section 5: Route & Animal Details
+          _buildCardSection(
+            context,
+            title: 'Route & Animal Details',
+            icon: Icons.map_outlined,
+            color: Colors.brown,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildRouteField(),
+                const SizedBox(height: 12),
+                if (isDesktop) ...[
+                  Row(
+                    children: [
+                      Expanded(child: _buildCowCountField()),
+                      const SizedBox(width: 16),
+                      Expanded(child: _buildBuffaloCountField()),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(child: _buildBullCountField()),
+                      const SizedBox(width: 16),
+                      Expanded(child: _buildGoatCountField()),
+                    ],
+                  ),
+                ] else ...[
+                  Row(
+                    children: [
+                      Expanded(child: _buildCowCountField()),
+                      const SizedBox(width: 14),
+                      Expanded(child: _buildBuffaloCountField()),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(child: _buildBullCountField()),
+                      const SizedBox(width: 14),
+                      Expanded(child: _buildGoatCountField()),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          // Section 6: Status Switch
           Card(
             elevation: isDesktop ? 2 : 1,
             shape: RoundedRectangleBorder(
@@ -1235,12 +1342,88 @@ class _CustomerMasterScreenState extends State<CustomerMasterScreen> {
     return TextFormField(
       controller: _countryController,
       focusNode: _countryFocusNode,
-      textInputAction: TextInputAction.done,
-      onFieldSubmitted: (_) => _saveCustomer(),
+      textInputAction: TextInputAction.next,
+      onFieldSubmitted: (_) => _routeFocusNode.requestFocus(),
       decoration: InputDecoration(
         labelText: 'Country',
         hintText: 'e.g. India',
         prefixIcon: const Icon(Icons.public_outlined, size: 20),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
+  Widget _buildRouteField() {
+    return RouteDropdown(
+      selectedRouteId: _selectedRouteId,
+      focusNode: _routeFocusNode,
+      nextFocusNode: _cowCountFocusNode,
+      onChanged: (val) {
+        setState(() {
+          _selectedRouteId = val?.routeId;
+        });
+      },
+    );
+  }
+
+  Widget _buildCowCountField() {
+    return TextFormField(
+      controller: _cowCountController,
+      focusNode: _cowCountFocusNode,
+      keyboardType: TextInputType.number,
+      textInputAction: TextInputAction.next,
+      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+      onFieldSubmitted: (_) => _buffaloCountFocusNode.requestFocus(),
+      decoration: InputDecoration(
+        labelText: 'Cow Count',
+        prefixIcon: const Icon(Icons.pets_outlined, size: 20),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
+
+  Widget _buildBuffaloCountField() {
+    return TextFormField(
+      controller: _buffaloCountController,
+      focusNode: _buffaloCountFocusNode,
+      keyboardType: TextInputType.number,
+      textInputAction: TextInputAction.next,
+      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+      onFieldSubmitted: (_) => _bullCountFocusNode.requestFocus(),
+      decoration: InputDecoration(
+        labelText: 'Buffalo Count',
+        prefixIcon: const Icon(Icons.pets_outlined, size: 20),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
+
+  Widget _buildBullCountField() {
+    return TextFormField(
+      controller: _bullCountController,
+      focusNode: _bullCountFocusNode,
+      keyboardType: TextInputType.number,
+      textInputAction: TextInputAction.next,
+      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+      onFieldSubmitted: (_) => _goatCountFocusNode.requestFocus(),
+      decoration: InputDecoration(
+        labelText: 'Bull Count',
+        prefixIcon: const Icon(Icons.pets_outlined, size: 20),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
+
+  Widget _buildGoatCountField() {
+    return TextFormField(
+      controller: _goatCountController,
+      focusNode: _goatCountFocusNode,
+      keyboardType: TextInputType.number,
+      textInputAction: TextInputAction.done,
+      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+      onFieldSubmitted: (_) => _saveCustomer(),
+      decoration: InputDecoration(
+        labelText: 'Goat Count',
+        prefixIcon: const Icon(Icons.pets_outlined, size: 20),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );

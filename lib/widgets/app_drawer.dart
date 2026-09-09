@@ -537,19 +537,19 @@ class _AppDrawerState extends State<AppDrawer> {
                     );
                   },
                 ),
-                // _buildDrawerItem(
-                //   context: context,
-                //   icon: Icons.mail_outline_rounded,
-                //   iconColor: _getIconColor(context, Colors.red),
-                //   title: 'Send Mail',
-                //   onTap: () {
-                //     Navigator.of(context).push(
-                //       MaterialPageRoute(
-                //         builder: (context) => const SendMailScreen(),
-                //       ),
-                //     );
-                //   },
-                // ),
+                _buildDrawerItem(
+                  context: context,
+                  icon: Icons.mail_outline_rounded,
+                  iconColor: _getIconColor(context, Colors.red),
+                  title: 'Send Mail',
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const SendMailScreen(),
+                      ),
+                    );
+                  },
+                ),
                 // _buildDrawerItem(
                 //   context: context,
                 //   icon: Icons.picture_as_pdf_rounded,

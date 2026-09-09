@@ -334,6 +334,11 @@ class CustomerService extends ChangeNotifier {
       custIsActive: request.custIsActive,
       custCreatedBy: createdBy,
       custModifiedBy: modifiedBy,
+      custRouteId: request.custRouteId,
+      custCowCount: request.custCowCount,
+      custBuffaloCount: request.custBuffaloCount,
+      custBullCount: request.custBullCount,
+      custGoatCount: request.custGoatCount,
     );
 
     debugPrint(
@@ -442,6 +447,11 @@ class CustomerService extends ChangeNotifier {
         custIsActive: customer.custIsActive,
         custCreatedBy: customer.custCreatedBy,
         custModifiedBy: customer.custModifiedBy,
+        custRouteId: customer.custRouteId,
+        custCowCount: customer.custCowCount,
+        custBuffaloCount: customer.custBuffaloCount,
+        custBullCount: customer.custBullCount,
+        custGoatCount: customer.custGoatCount,
       ),
     );
   }
@@ -478,6 +488,11 @@ class CustomerService extends ChangeNotifier {
         custIsActive: customer.custIsActive,
         custCreatedBy: customer.custCreatedBy,
         custModifiedBy: customer.custModifiedBy,
+        custRouteId: customer.custRouteId,
+        custCowCount: customer.custCowCount,
+        custBuffaloCount: customer.custBuffaloCount,
+        custBullCount: customer.custBullCount,
+        custGoatCount: customer.custGoatCount,
       ),
     );
   }

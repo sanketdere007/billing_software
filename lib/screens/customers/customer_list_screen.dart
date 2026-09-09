@@ -1060,8 +1060,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                 _buildHeaderCell('Customer Name', flex: 3),
                 _buildHeaderCell('Mobile No', width: 140),
                 _buildHeaderCell('City', flex: 2),
-                _buildHeaderCell('Area', flex: 2),
-             //   _buildHeaderCell('GSTIN', width: 150),
+                _buildHeaderCell('Route', flex: 2),
                 _buildHeaderCell(
                   'Status',
                   width: 100,
@@ -1209,15 +1208,15 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                           ),
                         ),
 
-                        // Area
+                        // Route Name
                         Expanded(
                           flex: 2,
                           child: Text(
-                            customer.custArea.isNotEmpty
-                                ? customer.custArea
+                            customer.routeName.isNotEmpty
+                                ? customer.routeName
                                 : '—',
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: customer.custArea.isNotEmpty
+                              color: customer.routeName.isNotEmpty
                                   ? null
                                   : theme.hintColor,
                             ),
@@ -1461,7 +1460,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                     ),
                   ],
                   if (customer.custCity.isNotEmpty ||
-                      customer.custArea.isNotEmpty) ...[
+                      customer.routeName.isNotEmpty) ...[
                     const SizedBox(height: 6),
                     Row(
                       children: [
@@ -1474,8 +1473,8 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                         Expanded(
                           child: Text(
                             [
-                              if (customer.custArea.isNotEmpty)
-                                customer.custArea,
+                              if (customer.routeName.isNotEmpty)
+                                customer.routeName,
                               if (customer.custCity.isNotEmpty)
                                 customer.custCity,
                               if (customer.custState.isNotEmpty)

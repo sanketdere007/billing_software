@@ -32,6 +32,12 @@ class CustomerListItem {
   final int custModifiedBy;
   final String? custModifiedDate;
   final int custLedgerId;
+  final int custRouteId;
+  final String routeName;
+  final int custCowCount;
+  final int custBuffaloCount;
+  final int custBullCount;
+  final int custGoatCount;
 
   CustomerListItem({
     required this.custId,
@@ -63,6 +69,12 @@ class CustomerListItem {
     this.custModifiedBy = 0,
     this.custModifiedDate,
     this.custLedgerId = 0,
+    this.custRouteId = 0,
+    this.routeName = '',
+    this.custCowCount = 0,
+    this.custBuffaloCount = 0,
+    this.custBullCount = 0,
+    this.custGoatCount = 0,
   })  : custArea = custArea.isNotEmpty ? custArea : custAreaName,
         custAreaName = custAreaName.isNotEmpty ? custAreaName : custArea,
         custCity = custCity.isNotEmpty ? custCity : custCityName,
@@ -445,6 +457,14 @@ class CustomerListItem {
       parsedCustLedgerId = int.tryParse(json['custLedgerId'].toString()) ?? 0;
     }
 
+    // Parse Route and Counts
+    int parsedCustRouteId = int.tryParse(json['cust_RouteId']?.toString() ?? '0') ?? 0;
+    String parsedRouteName = json['route_Name']?.toString() ?? '';
+    int parsedCustCowCount = int.tryParse(json['cust_CowCount']?.toString() ?? '0') ?? 0;
+    int parsedCustBuffaloCount = int.tryParse(json['cust_BuffaloCount']?.toString() ?? '0') ?? 0;
+    int parsedCustBullCount = int.tryParse(json['cust_BullCount']?.toString() ?? '0') ?? 0;
+    int parsedCustGoatCount = int.tryParse(json['cust_GoatCount']?.toString() ?? '0') ?? 0;
+
     return CustomerListItem(
       custId: parsedCustId,
       custCode: parsedCustCode,
@@ -475,6 +495,12 @@ class CustomerListItem {
       custModifiedBy: parsedCustModifiedBy,
       custModifiedDate: parsedCustModifiedDate,
       custLedgerId: parsedCustLedgerId,
+      custRouteId: parsedCustRouteId,
+      routeName: parsedRouteName,
+      custCowCount: parsedCustCowCount,
+      custBuffaloCount: parsedCustBuffaloCount,
+      custBullCount: parsedCustBullCount,
+      custGoatCount: parsedCustGoatCount,
     );
   }
 
@@ -512,6 +538,12 @@ class CustomerListItem {
       'cust_ModifiedBy': custModifiedBy,
       if (custModifiedDate != null) 'cust_ModifiedDate': custModifiedDate,
       'Cust_LedgerId': custLedgerId,
+      'cust_RouteId': custRouteId,
+      'route_Name': routeName,
+      'cust_CowCount': custCowCount,
+      'cust_BuffaloCount': custBuffaloCount,
+      'cust_BullCount': custBullCount,
+      'cust_GoatCount': custGoatCount,
     };
   }
 
@@ -545,6 +577,12 @@ class CustomerListItem {
     int? custModifiedBy,
     String? custModifiedDate,
     int? custLedgerId,
+    int? custRouteId,
+    String? routeName,
+    int? custCowCount,
+    int? custBuffaloCount,
+    int? custBullCount,
+    int? custGoatCount,
   }) {
     final effectiveArea = custAreaName ?? custArea ?? this.custAreaName;
     final effectiveCity = custCityName ?? custCity ?? this.custCityName;
@@ -579,6 +617,12 @@ class CustomerListItem {
       custModifiedBy: custModifiedBy ?? this.custModifiedBy,
       custModifiedDate: custModifiedDate ?? this.custModifiedDate,
       custLedgerId: custLedgerId ?? this.custLedgerId,
+      custRouteId: custRouteId ?? this.custRouteId,
+      routeName: routeName ?? this.routeName,
+      custCowCount: custCowCount ?? this.custCowCount,
+      custBuffaloCount: custBuffaloCount ?? this.custBuffaloCount,
+      custBullCount: custBullCount ?? this.custBullCount,
+      custGoatCount: custGoatCount ?? this.custGoatCount,
     );
   }
 
@@ -681,6 +725,11 @@ class CustomerUpsertRequest {
   final bool custIsActive;
   final int custCreatedBy;
   final int custModifiedBy;
+  final int custRouteId;
+  final int custCowCount;
+  final int custBuffaloCount;
+  final int custBullCount;
+  final int custGoatCount;
 
   CustomerUpsertRequest({
     this.custId = 0,
@@ -702,6 +751,11 @@ class CustomerUpsertRequest {
     this.custIsActive = true,
     this.custCreatedBy = 0,
     this.custModifiedBy = 0,
+    this.custRouteId = 0,
+    this.custCowCount = 0,
+    this.custBuffaloCount = 0,
+    this.custBullCount = 0,
+    this.custGoatCount = 0,
   });
 
   Map<String, dynamic> toJson() {
@@ -725,6 +779,11 @@ class CustomerUpsertRequest {
       'cust_IsActive': custIsActive,
       'cust_CreatedBy': custCreatedBy,
       'cust_ModifiedBy': custModifiedBy,
+      'cust_RouteId': custRouteId,
+      'cust_CowCount': custCowCount,
+      'cust_BuffaloCount': custBuffaloCount,
+      'cust_BullCount': custBullCount,
+      'cust_GoatCount': custGoatCount,
     };
   }
 
@@ -782,6 +841,11 @@ class CustomerUpsertRequest {
           json['cust_IsActive'] == '1',
       custCreatedBy: int.tryParse(json['cust_CreatedBy']?.toString() ?? '0') ?? 0,
       custModifiedBy: int.tryParse(json['cust_ModifiedBy']?.toString() ?? '0') ?? 0,
+      custRouteId: int.tryParse(json['cust_RouteId']?.toString() ?? '0') ?? 0,
+      custCowCount: int.tryParse(json['cust_CowCount']?.toString() ?? '0') ?? 0,
+      custBuffaloCount: int.tryParse(json['cust_BuffaloCount']?.toString() ?? '0') ?? 0,
+      custBullCount: int.tryParse(json['cust_BullCount']?.toString() ?? '0') ?? 0,
+      custGoatCount: int.tryParse(json['cust_GoatCount']?.toString() ?? '0') ?? 0,
     );
   }
 }
