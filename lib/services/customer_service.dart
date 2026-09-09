@@ -258,6 +258,62 @@ class CustomerService extends ChangeNotifier {
     }
   }
 
+  /// Fetch customer list report from `/api/Customer/GetCustomerListReport`
+  Future<List<CustomerListReportItem>> getCustomerListReport({
+    int? pageNumber,
+    int? pageSize,
+    String? search,
+    String? areaId,
+    String? cityId,
+    String? stateId,
+    int? routeId,
+    int? branchId,
+    int? compId,
+    bool? isActive,
+  }) async {
+    final effectiveCompId = compId ?? sessionService.selectedCompId ?? 1;
+    final effectiveBranchId = branchId ?? sessionService.selectedBranchId ?? 1;
+
+    final Map<String, String> queryParameters = {
+      'CompId': effectiveCompId.toString(),
+      'BranchId': effectiveBranchId.toString(),
+      if (pageNumber != null) 'PageNumber': pageNumber.toString(),
+      if (pageSize != null) 'PageSize': pageSize.toString(),
+      if (search != null && search.trim().isNotEmpty) 'Search': search.trim(),
+      if (areaId != null && areaId.trim().isNotEmpty) 'AreaId': areaId.trim(),
+      if (cityId != null && cityId.trim().isNotEmpty) 'CityId': cityId.trim(),
+      if (stateId != null && stateId.trim().isNotEmpty) 'StateId': stateId.trim(),
+      if (routeId != null && routeId > 0) 'RouteId': routeId.toString(),
+      if (isActive != null) 'IsActive': isActive.toString(),
+    };
+
+    debugPrint('👥 [CustomerService.getCustomerListReport] Requesting with: $queryParameters');
+
+    try {
+      final dynamic response = await apiService.get(
+        '/api/Customer/GetCustomerListReport',
+        queryParameters: queryParameters,
+        requiresAuth: true,
+      );
+
+      if (response is Map<String, dynamic>) {
+        final reportResponse = CustomerListReportResponse.fromJson(response);
+        if (reportResponse.status) {
+          return reportResponse.data;
+        } else {
+          throw ApiException(reportResponse.message.isNotEmpty ? reportResponse.message : 'Failed to fetch customer list report');
+        }
+      }
+      
+      return [];
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException('Error fetching customer list report: $e');
+    }
+  }
+
+
   /// Fetch full customer details by ID from `/api/Customer/GetCustomerById/{Cust_Id}`
   Future<CustomerListItem?> getCustomerById(int custId) async {
     if (custId <= 0) return null;

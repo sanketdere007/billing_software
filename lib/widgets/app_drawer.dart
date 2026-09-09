@@ -55,6 +55,7 @@ import '../screens/reports/supplier_outstanding_report_screen.dart';
 import '../screens/reports/customer_outstanding_report_screen.dart';
 import '../screens/reports/collection_report_screen.dart';
 import '../screens/reports/current_stock_report_screen.dart';
+import '../screens/reports/customer_list_report_screen.dart';
 import '../screens/pdf/pdf_preview_screen.dart';
 
 class AppDrawer extends StatefulWidget {
@@ -537,19 +538,19 @@ class _AppDrawerState extends State<AppDrawer> {
                     );
                   },
                 ),
-                _buildDrawerItem(
-                  context: context,
-                  icon: Icons.mail_outline_rounded,
-                  iconColor: _getIconColor(context, Colors.red),
-                  title: 'Send Mail',
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const SendMailScreen(),
-                      ),
-                    );
-                  },
-                ),
+                // _buildDrawerItem(
+                //   context: context,
+                //   icon: Icons.mail_outline_rounded,
+                //   iconColor: _getIconColor(context, Colors.red),
+                //   title: 'Send Mail',
+                //   onTap: () {
+                //     Navigator.of(context).push(
+                //       MaterialPageRoute(
+                //         builder: (context) => const SendMailScreen(),
+                //       ),
+                //     );
+                //   },
+                // ),
                 // _buildDrawerItem(
                 //   context: context,
                 //   icon: Icons.picture_as_pdf_rounded,
@@ -1303,6 +1304,20 @@ class _AppDrawerState extends State<AppDrawer> {
                           MaterialPageRoute(
                             builder: (context) =>
                                 const CurrentStockReportScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _buildDrawerItem(
+                      context: context,
+                      icon: Icons.people_alt_rounded,
+                      iconColor: _getIconColor(context, Colors.indigo),
+                      title: 'Customer List',
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const CustomerListReportScreen(),
                           ),
                         );
                       },
