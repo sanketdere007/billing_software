@@ -463,13 +463,15 @@ class _CustomerListReportScreenState extends State<CustomerListReportScreen> {
                   child: const Row(
                     children: [
                       SizedBox(width: 50, child: Text('#', style: TextStyle(fontWeight: FontWeight.bold))),
-                      Expanded(flex: 2, child: Text('Code', style: TextStyle(fontWeight: FontWeight.bold))),
                       Expanded(flex: 3, child: Text('Customer Name', style: TextStyle(fontWeight: FontWeight.bold))),
                       Expanded(flex: 2, child: Text('Mobile', style: TextStyle(fontWeight: FontWeight.bold))),
                       Expanded(flex: 2, child: Text('City', style: TextStyle(fontWeight: FontWeight.bold))),
                       Expanded(flex: 2, child: Text('Area', style: TextStyle(fontWeight: FontWeight.bold))),
                       Expanded(flex: 2, child: Text('Route', style: TextStyle(fontWeight: FontWeight.bold))),
-                      Expanded(flex: 1, child: Text('Status', style: TextStyle(fontWeight: FontWeight.bold))),
+                      Expanded(flex: 1, child: Text('Cow', style: TextStyle(fontWeight: FontWeight.bold))),
+                      Expanded(flex: 1, child: Text('Buffalo', style: TextStyle(fontWeight: FontWeight.bold))),
+                      Expanded(flex: 1, child: Text('Bull', style: TextStyle(fontWeight: FontWeight.bold))),
+                      Expanded(flex: 1, child: Text('Goat', style: TextStyle(fontWeight: FontWeight.bold))),
                     ],
                   ),
                 ),
@@ -504,31 +506,15 @@ class _CustomerListReportScreenState extends State<CustomerListReportScreen> {
                           child: Row(
                             children: [
                               SizedBox(width: 50, child: Text('${index + 1}')),
-                              Expanded(flex: 2, child: Text(item.custCode)),
                               Expanded(flex: 3, child: Text(item.custName)),
                               Expanded(flex: 2, child: Text(item.custMobileNo)),
                               Expanded(flex: 2, child: Text(item.custCityName)),
                               Expanded(flex: 2, child: Text(item.custAreaName)),
                               Expanded(flex: 2, child: Text(item.routeName)),
-                              Expanded(
-                                flex: 1,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: item.custIsActive ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    item.custIsActive ? 'Active' : 'Inactive',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: item.custIsActive ? Colors.green : Colors.red,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              ),
+                              Expanded(flex: 1, child: Text(item.custCowCount.toString())),
+                              Expanded(flex: 1, child: Text(item.custBuffaloCount.toString())),
+                              Expanded(flex: 1, child: Text(item.custBullCount.toString())),
+                              Expanded(flex: 1, child: Text(item.custGoatCount.toString())),
                             ],
                           ),
                         ),
@@ -567,14 +553,10 @@ class _CustomerListReportScreenState extends State<CustomerListReportScreen> {
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Mobile: ${item.custMobileNo} | Code: ${item.custCode}'),
+                Text('Mobile: ${item.custMobileNo}'),
                 Text('City: ${item.custCityName} | Area: ${item.custAreaName}'),
+                Text('Cow: ${item.custCowCount} | Buffalo: ${item.custBuffaloCount} | Bull: ${item.custBullCount} | Goat: ${item.custGoatCount}', style: const TextStyle(fontSize: 12)),
               ],
-            ),
-            trailing: Icon(
-              Icons.circle,
-              size: 12,
-              color: item.custIsActive ? Colors.green : Colors.red,
             ),
             onTap: () {
               setState(() {
