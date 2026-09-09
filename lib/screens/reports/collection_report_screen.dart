@@ -9,6 +9,9 @@ import '../../services/session_service.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/app_message_dialog.dart';
 import '../../widgets/direct_back_scope.dart';
+import '../../models/receipt_pdf_data.dart';
+import '../../controllers/receipt_pdf_controller.dart';
+import '../../models/invoice_pdf_data.dart' show IndianCurrencyWords;
 
 class CollectionReportScreen extends StatefulWidget {
   const CollectionReportScreen({super.key});
@@ -379,6 +382,103 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
     ];
   }
 
+  ReceiptPdfData _getReceiptPdfData(CollectionReportData item) {
+    return ReceiptPdfData(
+      companyName: item.compName.isNotEmpty ? item.compName : (sessionService.selectedCompName ?? ''),
+      branchName: item.branchName.isNotEmpty ? item.branchName : (sessionService.selectedBranchName ?? ''),
+      receiptDate: item.receiptMasterReceiptDate != null ? _displayFormat.format(item.receiptMasterReceiptDate!) : '',
+      receiptNo: item.receiptMasterReceiptNo,
+      invoiceNo: '',
+      customerName: item.custName,
+      customerMobile: item.custMobileNo,
+      customerAddress: '',
+      
+      cashAmount: item.cashAmount,
+      cashRemark: '',
+      
+      cardAmount: item.cardAmount,
+      
+      upiAmount: item.upiAmount,
+      upiTransactionNo: '',
+      upiReferenceNo: '',
+      
+      bankAmount: item.bankAmount,
+      bankName: item.receiptMasterBankName,
+      bankAccountNo: '',
+      bankTransactionNo: '',
+      bankReferenceNo: item.receiptMasterBankReferenceNo,
+      bankTransferType: item.receiptMasterNEFTType,
+      
+      chequeAmount: item.chequeAmount,
+      chequeNo: item.receiptMasterChequeNo,
+      chequeBankName: item.receiptMasterBankName,
+      
+      otherAmount: item.otherAmount,
+      otherType: item.receiptMasterOtherPaymentType,
+      otherReference: item.receiptMasterOtherReferenceNo,
+      otherRemark: item.receiptMasterOtherRemark,
+      
+      totalAmount: item.totalCollection,
+      remarks: item.receiptMasterRemark,
+      amountInWords: IndianCurrencyWords.convert(item.totalCollection),
+    );
+  }
+
+  Future<void> _printReceipt(CollectionReportData item) async {
+    try {
+      final controller = ReceiptPdfController();
+      final data = _getReceiptPdfData(item);
+      await controller.generateFromData(data);
+      await controller.printPdf();
+    } catch (e) {
+      if (mounted) {
+        showErrorDialog(context, 'Failed to print receipt: $e');
+      }
+    }
+  }
+
+  Future<void> _downloadReceipt(CollectionReportData item) async {
+    try {
+      final controller = ReceiptPdfController();
+      final data = _getReceiptPdfData(item);
+      await controller.generateFromData(data);
+      final path = await controller.downloadPdf();
+      if (mounted && path != null) {
+        showSuccessDialog(context, 'Receipt downloaded to $path');
+      }
+    } catch (e) {
+      if (mounted) {
+        showErrorDialog(context, 'Failed to download receipt: $e');
+      }
+    }
+  }
+
+  Future<void> _shareReceiptPdf(CollectionReportData item) async {
+    try {
+      final controller = ReceiptPdfController();
+      final data = _getReceiptPdfData(item);
+      await controller.generateFromData(data);
+      await controller.shareAsPdf();
+    } catch (e) {
+      if (mounted) {
+        showErrorDialog(context, 'Failed to share receipt PDF: $e');
+      }
+    }
+  }
+
+  Future<void> _shareReceiptImage(CollectionReportData item) async {
+    try {
+      final controller = ReceiptPdfController();
+      final data = _getReceiptPdfData(item);
+      await controller.generateFromData(data);
+      await controller.shareAsImage();
+    } catch (e) {
+      if (mounted) {
+        showErrorDialog(context, 'Failed to share receipt Image: $e');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Focus(
@@ -601,8 +701,8 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
                   Expanded(flex: 2, child: Text('Date', style: TextStyle(fontWeight: FontWeight.bold))),
                   Expanded(flex: 2, child: Text('Receipt No', style: TextStyle(fontWeight: FontWeight.bold))),
                   Expanded(flex: 3, child: Text('Customer', style: TextStyle(fontWeight: FontWeight.bold))),
-                  Expanded(flex: 2, child: Text('Mode', style: TextStyle(fontWeight: FontWeight.bold))),
                   Expanded(flex: 2, child: Text('Amount', style: TextStyle(fontWeight: FontWeight.bold))),
+                  Expanded(flex: 2, child: Text('Action', style: TextStyle(fontWeight: FontWeight.bold))),
                 ],
               ),
             ),
@@ -621,12 +721,6 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
 
                   final item = _reportData[index];
                   final isSelected = index == _highlightedIndex;
-                  
-                  String paymentModeStr = 'Cash';
-                  if (item.bankAmount > 0) paymentModeStr = 'Bank';
-                  if (item.upiAmount > 0) paymentModeStr = 'UPI';
-                  if (item.cardAmount > 0) paymentModeStr = 'Card';
-                  if (item.chequeAmount > 0) paymentModeStr = 'Cheque';
 
                   return InkWell(
                     onTap: () {
@@ -647,12 +741,57 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
                           Expanded(flex: 2, child: Text(item.receiptMasterReceiptDate != null ? _displayFormat.format(item.receiptMasterReceiptDate!) : '')),
                           Expanded(flex: 2, child: Text(item.receiptMasterReceiptNo)),
                           Expanded(flex: 3, child: Text(item.custName)),
-                          Expanded(flex: 2, child: Text(paymentModeStr)),
                           Expanded(
                             flex: 2, 
                             child: Text(
                               item.totalCollection.toStringAsFixed(2),
                               style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 2,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.print_outlined, size: 20),
+                                  tooltip: 'Print',
+                                  padding: const EdgeInsets.all(4),
+                                  constraints: const BoxConstraints(),
+                                  onPressed: () => _printReceipt(item),
+                                ),
+                                const SizedBox(width: 8),
+                                IconButton(
+                                  icon: const Icon(Icons.download_outlined, size: 20),
+                                  tooltip: 'Download',
+                                  padding: const EdgeInsets.all(4),
+                                  constraints: const BoxConstraints(),
+                                  onPressed: () => _downloadReceipt(item),
+                                ),
+                                const SizedBox(width: 8),
+                                PopupMenuButton<String>(
+                                  icon: const Icon(Icons.share_outlined, size: 20),
+                                  tooltip: 'Share',
+                                  padding: const EdgeInsets.all(4),
+                                  onSelected: (value) {
+                                    if (value == 'pdf') {
+                                      _shareReceiptPdf(item);
+                                    } else if (value == 'image') {
+                                      _shareReceiptImage(item);
+                                    }
+                                  },
+                                  itemBuilder: (context) => [
+                                    const PopupMenuItem(
+                                      value: 'pdf',
+                                      child: Text('Share as PDF'),
+                                    ),
+                                    const PopupMenuItem(
+                                      value: 'image',
+                                      child: Text('Share as Image'),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -683,12 +822,6 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
 
         final item = _reportData[index];
         final isSelected = index == _highlightedIndex;
-        
-        String paymentModeStr = 'Cash';
-        if (item.bankAmount > 0) paymentModeStr = 'Bank';
-        if (item.upiAmount > 0) paymentModeStr = 'UPI';
-        if (item.cardAmount > 0) paymentModeStr = 'Card';
-        if (item.chequeAmount > 0) paymentModeStr = 'Cheque';
 
         return Card(
           elevation: isSelected ? 4 : 1,
@@ -699,10 +832,52 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Receipt: ${item.receiptMasterReceiptNo} • ${item.receiptMasterReceiptDate != null ? _displayFormat.format(item.receiptMasterReceiptDate!) : ''}'),
-                Text('Mode: $paymentModeStr'),
                 Text(
                   'Amount: ${item.totalCollection.toStringAsFixed(2)}',
                   style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.print_outlined, size: 20),
+                  tooltip: 'Print',
+                  padding: const EdgeInsets.all(4),
+                  constraints: const BoxConstraints(),
+                  onPressed: () => _printReceipt(item),
+                ),
+                const SizedBox(width: 4),
+                IconButton(
+                  icon: const Icon(Icons.download_outlined, size: 20),
+                  tooltip: 'Download',
+                  padding: const EdgeInsets.all(4),
+                  constraints: const BoxConstraints(),
+                  onPressed: () => _downloadReceipt(item),
+                ),
+                const SizedBox(width: 4),
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.share_outlined, size: 20),
+                  tooltip: 'Share',
+                  padding: const EdgeInsets.all(4),
+                  onSelected: (value) {
+                    if (value == 'pdf') {
+                      _shareReceiptPdf(item);
+                    } else if (value == 'image') {
+                      _shareReceiptImage(item);
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'pdf',
+                      child: Text('Share as PDF'),
+                    ),
+                    const PopupMenuItem(
+                      value: 'image',
+                      child: Text('Share as Image'),
+                    ),
+                  ],
                 ),
               ],
             ),
