@@ -298,11 +298,11 @@ class _BatchListScreenState extends State<BatchListScreen> {
                 ],
               ),
               drawer: const AppDrawer(isPermanent: false),
-              floatingActionButton: FloatingActionButton.extended(
-                onPressed: () => _navigateToEditBatch(),
-                icon: const Icon(Icons.add_box_rounded),
-                label: const Text('Add Batch'),
-              ),
+              // floatingActionButton: FloatingActionButton.extended(
+              //   onPressed: () => _navigateToEditBatch(),
+              //   icon: const Icon(Icons.add_box_rounded),
+              //   label: const Text('Add Batch'),
+              // ),
               body: Column(
                 children: [
                   _buildMobileFilterBar(),
@@ -518,7 +518,7 @@ class _BatchListScreenState extends State<BatchListScreen> {
               Text(
                 _hasActiveFilters
                     ? 'Try clearing filters or search query.'
-                    : 'Click "Add Batch" to create your first batch record.',
+                    : '', //'Click "Add Batch" to create your first batch record.',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -529,13 +529,13 @@ class _BatchListScreenState extends State<BatchListScreen> {
                   onPressed: _clearFilters,
                   icon: const Icon(Icons.filter_alt_off_rounded),
                   label: const Text('Clear Filters'),
-                )
-              else
-                FilledButton.icon(
-                  onPressed: () => _navigateToEditBatch(),
-                  icon: const Icon(Icons.add_box_rounded),
-                  label: const Text('Add New Batch'),
                 ),
+              // else
+              //   FilledButton.icon(
+              //     onPressed: () => _navigateToEditBatch(),
+              //     icon: const Icon(Icons.add_box_rounded),
+              //     label: const Text('Add New Batch'),
+              //   ),
             ],
           ),
         ),

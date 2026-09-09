@@ -9,7 +9,10 @@ import '../../services/api_service.dart';
 import '../../utils/api_constants.dart';
 
 import '../../services/session_service.dart';
-
+import '../../models/customer.dart';
+import '../../models/receipt_pdf_data.dart';
+import '../../models/invoice_pdf_data.dart' show IndianCurrencyWords;
+import '../pdf/receipt_pdf_preview_screen.dart';
 class ReceiptMasterScreen extends StatefulWidget {
   const ReceiptMasterScreen({super.key});
 
@@ -91,6 +94,7 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
   List<dynamic> _pendingInvoices = [];
   dynamic _selectedInvoice;
   bool _isLoadingInvoices = false;
+  CustomerListItem? _selectedCustomer;
 
   static const List<String> _bankTransferTypes = [
     'NEFT',
@@ -465,7 +469,56 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
             behavior: SnackBarBehavior.floating,
           ),
         );
-        Navigator.of(context).pop();
+        final responseData = response['data'] is Map ? response['data'] : null;
+        final generatedReceiptNo = responseData?['receiptMaster_ReceiptNo']?.toString() ??
+            response['receiptMaster_ReceiptNo']?.toString() ??
+            'N/A';
+
+        final pdfData = ReceiptPdfData(
+          companyName: sessionService.selectedCompName ?? 'Company Name',
+          branchName: sessionService.selectedBranchName ?? '',
+          receiptDate: _dateFormat.format(_receiptDate),
+          receiptNo: generatedReceiptNo,
+          invoiceNo: _invoiceNoController.text.trim(),
+          customerName: _selectedCustomer?.custName ?? '',
+          customerMobile: _selectedCustomer?.custMobileNo ?? '',
+          customerAddress: _selectedCustomer?.fullAddress ?? '',
+          
+          cashAmount: _cashAmount,
+          cashRemark: _cashRemarkController.text.trim(),
+          
+          cardAmount: _cardAmount,
+          
+          upiAmount: _upiAmount,
+          upiTransactionNo: _upiTransactionNoController.text.trim(),
+          upiReferenceNo: _upiReferenceNoController.text.trim(),
+          
+          bankAmount: _bankAmount,
+          bankName: _bankNameController.text.trim(),
+          bankAccountNo: _bankAccountNoController.text.trim(),
+          bankTransactionNo: _bankTransactionNoController.text.trim(),
+          bankReferenceNo: _bankReferenceNoController.text.trim(),
+          bankTransferType: _selectedBankTransferType ?? '',
+          
+          chequeAmount: _chequeAmount,
+          chequeNo: _chequeNoController.text.trim(),
+          chequeBankName: _chequeBankNameController.text.trim(),
+          
+          otherAmount: _otherAmount,
+          otherType: _otherTypeController.text.trim(),
+          otherReference: _otherReferenceController.text.trim(),
+          otherRemark: _otherRemarksController.text.trim(),
+          
+          totalAmount: _totalAmount,
+          remarks: _remarksController.text.trim(),
+          amountInWords: IndianCurrencyWords.convert(_totalAmount),
+        );
+
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => ReceiptPdfPreviewScreen(receiptData: pdfData),
+          ),
+        );
       } else {
         String errorMsg = 'Failed to save receipt';
         if (response != null) {
@@ -600,6 +653,7 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
                 ),
                 onChanged: (customer) {
                   setState(() {
+                    _selectedCustomer = customer;
                     _selectedAccountId = customer?.custId;
                     _selectedLedgerId = customer?.custLedgerId ?? 0;
                   });

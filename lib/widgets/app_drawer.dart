@@ -93,7 +93,7 @@ class _AppDrawerState extends State<AppDrawer> {
 
   @override
   Widget build(BuildContext context) {
-    return Drawer(
+    Widget drawerWidget = Drawer(
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
       child: Column(
         children: [
@@ -1387,6 +1387,14 @@ class _AppDrawerState extends State<AppDrawer> {
         ],
       ),
     );
+
+    if (PlatformHelper.isWindowsDesktopEffective) {
+      return SizedBox(
+        width: 250,
+        child: drawerWidget,
+      );
+    }
+    return drawerWidget;
   }
 
   void _showEmployeeDetails(BuildContext context, UserData user) {
