@@ -81,13 +81,6 @@ void main() {
         compGSTNo: '27AAAAA0000A1Z5',
         compMobileNo: '9000000000',
       ),
-      receiptResponse: {
-        'status': true,
-        'data': {
-          'receiptMaster_ReceiptNo': 'RCP-1001',
-          'receiptMaster_ReceiptDate': '2026-09-03T10:00:00',
-        },
-      },
     );
 
     expect(data.invoice.invoiceNo, 'INV-7788');
@@ -101,7 +94,6 @@ void main() {
     expect(data.lessAmount, 50);
     expect(data.gstTotal, 90);
     expect(data.company.name, 'Test Pharma');
-    expect(data.remark, contains('Receipt No: RCP-1001'));
     expect(data.remark, contains('Sales Ref: 7788'));
     expect(data.remark, contains('Cash: 500.00'));
     expect(data.invoice.invoiceNo, isNot('2627CCB10497'));

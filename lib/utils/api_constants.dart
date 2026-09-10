@@ -94,6 +94,10 @@ class ApiConstants {
   // Sales Entry Endpoints
   static const String insertOrUpdateSalesEntryEndpoint =
       '/api/SalesEntry/InsertOrUpdateSalesEntry';
+  static const String getAllSalesMasterEndpoint =
+      '/api/SalesEntry/GetAllSalesMaster';
+  static const String getAllSalesDetailEndpoint =
+      '/api/SalesEntry/GetAllSalesDetail';
   static const String getAllPendingAmountEndpoint =
       '/api/SalesEntry/GetAllPendingAmount';
 

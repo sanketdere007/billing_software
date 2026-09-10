@@ -90,4 +90,63 @@ class SalesEntryService extends ChangeNotifier {
       throw ApiException('Error saving sales entry: $e');
     }
   }
+
+  Future<SalesMasterListResponse> getAllSalesMaster({
+    int compId = 0,
+    int branchId = 0,
+    String? fromDate,
+    String? toDate,
+    String? search,
+    int? customerId,
+    int pageNumber = 1,
+    int pageSize = 10,
+  }) async {
+    try {
+      final queryParams = <String, String>{
+        'CompId': compId.toString(),
+        'BranchId': branchId.toString(),
+        'PageNumber': pageNumber.toString(),
+        'PageSize': pageSize.toString(),
+      };
+      
+      if (fromDate != null) queryParams['FromDate'] = fromDate;
+      if (toDate != null) queryParams['ToDate'] = toDate;
+      if (search != null && search.isNotEmpty) queryParams['Search'] = search;
+      if (customerId != null) queryParams['CustomerId'] = customerId.toString();
+
+      final uri = Uri.parse(ApiConstants.baseUrl + ApiConstants.getAllSalesMasterEndpoint)
+          .replace(queryParameters: queryParams);
+
+      final dynamic response = await apiService.get(
+        uri.toString().replaceFirst(ApiConstants.baseUrl, ''),
+        requiresAuth: true,
+      );
+
+      if (response is! Map<String, dynamic>) {
+        throw ApiException('Invalid response format from server.');
+      }
+
+      return SalesMasterListResponse.fromJson(response);
+    } catch (e) {
+      throw ApiException('Error fetching sales master data: $e');
+    }
+  }
+
+  Future<SalesDetailListResponse> getAllSalesDetail(int salesMasterId) async {
+    try {
+      final endpoint = '${ApiConstants.getAllSalesDetailEndpoint}/$salesMasterId';
+      final dynamic response = await apiService.get(
+        endpoint,
+        requiresAuth: true,
+      );
+
+      if (response is! Map<String, dynamic>) {
+        throw ApiException('Invalid response format from server.');
+      }
+
+      return SalesDetailListResponse.fromJson(response);
+    } catch (e) {
+      throw ApiException('Error fetching sales detail data: $e');
+    }
+  }
 }

@@ -609,3 +609,86 @@ int _asInt(dynamic value) {
   if (value is num) return value.toInt();
   return int.tryParse(value?.toString() ?? '') ?? 0;
 }
+
+// --- Get Models ---
+class SalesMasterListResponse {
+  final bool status;
+  final String message;
+  final SalesMasterDataList? data;
+  final String? error;
+
+  SalesMasterListResponse({required this.status, required this.message, this.data, this.error});
+
+  factory SalesMasterListResponse.fromJson(Map<String, dynamic> json) {
+    return SalesMasterListResponse(
+      status: json['status'] == true,
+      message: json['message']?.toString() ?? '',
+      data: json['data'] != null ? SalesMasterDataList.fromJson(json['data']) : null,
+      error: json['error']?.toString(),
+    );
+  }
+}
+
+class SalesMasterDataList {
+  final List<SalesMasterData> items;
+  final int totalRecords;
+  final int totalPages;
+  final int currentPage;
+  final int pageSize;
+
+  SalesMasterDataList({
+    required this.items,
+    this.totalRecords = 0,
+    this.totalPages = 0,
+    this.currentPage = 0,
+    this.pageSize = 0,
+  });
+
+  factory SalesMasterDataList.fromJson(Map<String, dynamic> json) {
+    return SalesMasterDataList(
+      items: (json['items'] as List<dynamic>?)?.map((e) => SalesMasterData.fromJson(e as Map<String, dynamic>)).toList() ?? [],
+      totalRecords: _asInt(json['totalRecords']),
+      totalPages: _asInt(json['totalPages']),
+      currentPage: _asInt(json['currentPage']),
+      pageSize: _asInt(json['pageSize']),
+    );
+  }
+}
+
+class SalesMasterData {
+  final Map<String, dynamic> raw;
+
+  SalesMasterData(this.raw);
+
+  factory SalesMasterData.fromJson(Map<String, dynamic> json) {
+    return SalesMasterData(json);
+  }
+}
+
+class SalesDetailListResponse {
+  final bool status;
+  final String message;
+  final List<SalesDetailData> data;
+  final String? error;
+
+  SalesDetailListResponse({required this.status, required this.message, required this.data, this.error});
+
+  factory SalesDetailListResponse.fromJson(Map<String, dynamic> json) {
+    return SalesDetailListResponse(
+      status: json['status'] == true,
+      message: json['message']?.toString() ?? '',
+      data: (json['data'] as List<dynamic>?)?.map((e) => SalesDetailData.fromJson(e as Map<String, dynamic>)).toList() ?? [],
+      error: json['error']?.toString(),
+    );
+  }
+}
+
+class SalesDetailData {
+  final Map<String, dynamic> raw;
+
+  SalesDetailData(this.raw);
+
+  factory SalesDetailData.fromJson(Map<String, dynamic> json) {
+    return SalesDetailData(json);
+  }
+}

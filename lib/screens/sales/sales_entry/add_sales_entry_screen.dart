@@ -21,6 +21,7 @@ import '../../../services/invoice_pdf_data_factory.dart';
 import '../../../services/shortcut_service.dart';
 import '../../pdf/pdf_preview_screen.dart';
 import 'payment_mode_dialog.dart';
+import 'sales_entry_view_list.dart';
 
 class SalePersistResult {
   final SalesEntryUpsertResponse salesResponse;
@@ -1685,6 +1686,14 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                         title: const Text('Add Sales Entry'),
                         backgroundColor: Colors.transparent,
                         elevation: 0,
+                        actions: [
+                          TextButton.icon(
+                            onPressed: _openSalesEntryView,
+                            icon: const Icon(Icons.list),
+                            label: const Text('View'),
+                          ),
+                          const SizedBox(width: 16),
+                        ],
                       ),
                       Expanded(child: content),
                     ],
@@ -1694,10 +1703,147 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
             ),
           )
         : Scaffold(
-            appBar: AppBar(title: const Text('Add Sales Entry')),
+            appBar: AppBar(
+              title: const Text('Add Sales Entry'),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.list),
+                  onPressed: _openSalesEntryView,
+                  tooltip: 'View Sales Entries',
+                ),
+              ],
+            ),
             drawer: const AppDrawer(),
             body: content,
           );
+  }
+
+  Future<void> _openSalesEntryView() async {
+    final selectedEntry = await Navigator.of(context).push<SalesMasterData>(
+      MaterialPageRoute(builder: (context) => const SalesEntryViewList()),
+    );
+    if (selectedEntry != null) {
+      _loadSalesEntry(selectedEntry);
+    }
+  }
+
+  Future<void> _loadSalesEntry(SalesMasterData master) async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final int masterId = master.raw['salesMaster_Id'] ?? 0;
+      final detailsResponse = await SalesEntryService().getAllSalesDetail(masterId);
+      
+      if (!mounted) return;
+
+      setState(() {
+        _selectedCustomer = master.raw['salesMaster_CustomerId'];
+        if (master.raw['salesMaster_InvoiceDate'] != null) {
+          final dateStr = master.raw['salesMaster_InvoiceDate'].toString();
+          _selectedDate = DateTime.tryParse(dateStr) ?? _selectedDate;
+        }
+
+        // Clear existing products
+        for (var p in _products) {
+          (p['qtyController'] as TextEditingController).dispose();
+          (p['rateController'] as TextEditingController).dispose();
+          (p['discAmtController'] as TextEditingController).dispose();
+          (p['productNode'] as FocusNode).dispose();
+          (p['qtyNode'] as FocusNode).dispose();
+          (p['rateNode'] as FocusNode).dispose();
+          (p['discNode'] as FocusNode).dispose();
+        }
+        _products.clear();
+
+        // Load details
+        for (final detail in detailsResponse.data) {
+          final raw = detail.raw;
+          final batchId = raw['salesEntryDetail_BatchId'] ?? 0;
+          final productId = raw['salesEntryDetail_ProductId'] ?? 0;
+
+          // Find batch
+          BatchListItem? batch;
+          try {
+            batch = _batchService.batches.firstWhere((b) => b.batchId == batchId);
+          } catch (_) {
+            // Try to find by productId if batch not found (fallback)
+            try {
+               batch = _batchService.batches.firstWhere((b) => b.batchProductId == productId);
+            } catch (_) {}
+          }
+          
+          if (batch == null) {
+             // Create dummy batch if not found to show data
+             batch = BatchListItem(
+                batchId: batchId,
+                batchProductId: productId,
+                batchBarcode: raw['salesEntryDetail_Barcode']?.toString() ?? '',
+                batchEANCode: raw['salesEntryDetail_EANCode']?.toString() ?? '',
+                batchLandingPrice: 0,
+                batchPurchasePrice: 0,
+                batchMRP: 0,
+                batchSellingPrice: (raw['salesEntryDetail_SellingPrice'] as num?)?.toDouble() ?? 0,
+                batchStock: 0,
+                batchAvailableStock: 0,
+                prodCode: raw['prod_Code']?.toString() ?? '',
+                prodName: raw['prod_Name']?.toString() ?? raw['salesEntryDetail_ProductName']?.toString() ?? '',
+                prodGSTPercent: (raw['salesEntryDetail_GSTPercentage'] as num?)?.toDouble() ?? 0,
+                unitName: raw['unit_ShortName']?.toString() ?? '',
+                prodUnitValue: 1.0,
+                batchCompId: 0,
+                compName: '',
+                batchBranchId: 0,
+                branchName: '',
+             );
+          }
+
+          final qty = (raw['salesEntryDetail_Qty'] as num?)?.toDouble() ?? 0.0;
+          final rate = (raw['salesEntryDetail_Rate'] as num?)?.toDouble() ?? 0.0;
+          final discAmt = (raw['salesEntryDetail_DiscountAmount'] as num?)?.toDouble() ?? 0.0;
+          final gstPct = (raw['salesEntryDetail_GSTPercentage'] as num?)?.toDouble() ?? 0.0;
+          
+          _products.add({
+            'product': batch,
+            'qty': qty,
+            'rate': rate,
+            'discAmt': discAmt,
+            'gstPct': gstPct,
+            'gross': 0.0,
+            'discounted': 0.0,
+            'gstAmt': 0.0,
+            'net': 0.0,
+            'qtyController': TextEditingController(text: qty.toString()),
+            'rateController': TextEditingController(text: rate.toString()),
+            'discAmtController': TextEditingController(text: discAmt.toString()),
+            'productNode': FocusNode(),
+            'qtyNode': FocusNode(),
+            'rateNode': FocusNode(),
+            'discNode': FocusNode(),
+          });
+        }
+        
+        // Add empty row at end if there are products
+        if (_products.isNotEmpty) {
+           _addNewEmptyRow();
+        } else {
+           _addNewEmptyRow();
+        }
+
+        _calculateTotals();
+      });
+    } catch (e) {
+      if (mounted) {
+        showErrorDialog(context, 'Failed to load details: $e');
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   Widget _buildSummaryItem(String label, String value) {
