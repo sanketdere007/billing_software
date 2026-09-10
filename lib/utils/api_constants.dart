@@ -90,6 +90,11 @@ class ApiConstants {
   // Purchase Entry Endpoints
   static const String insertOrUpdatePurchaseEntryEndpoint =
       '/api/PurchaseEntry/InsertOrUpdatePurchaseEntry';
+  static const String getPurchaseMasterViewListEndpoint =
+      '/api/PurchaseEntry/GetPurchaseMasterViewList';
+  static const String getPurchaseDetailViewListEndpoint =
+      '/api/PurchaseEntry/GetPurchaseDetailViewList';
+
 
   // Sales Entry Endpoints
   static const String insertOrUpdateSalesEntryEndpoint =

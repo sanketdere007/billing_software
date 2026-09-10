@@ -260,3 +260,214 @@ class PurchaseEntryUpsertResponse {
     );
   }
 }
+
+class PurchaseMasterViewItem {
+  final int purchaseMasterId;
+  final int compId;
+  final int branchId;
+  final int supplierId;
+  final int ledgerId;
+  final String invoiceNo;
+  final String invoiceDate;
+  final double subTotal;
+  final double discountAmount;
+  final double gstAmount;
+  final double otherCharges;
+  final double netAmount;
+  final double paidAmount;
+  final double balanceAmount;
+  final String status;
+  final String remark;
+  final String suppName;
+  final String branchName;
+  final String accLedgerName;
+  final String suppMobile;
+  final int totalRecords;
+
+  PurchaseMasterViewItem({
+    required this.purchaseMasterId,
+    required this.compId,
+    required this.branchId,
+    required this.supplierId,
+    required this.ledgerId,
+    required this.invoiceNo,
+    required this.invoiceDate,
+    required this.subTotal,
+    required this.discountAmount,
+    required this.gstAmount,
+    required this.otherCharges,
+    required this.netAmount,
+    required this.paidAmount,
+    required this.balanceAmount,
+    required this.status,
+    required this.remark,
+    required this.suppName,
+    required this.branchName,
+    required this.accLedgerName,
+    required this.suppMobile,
+    required this.totalRecords,
+  });
+
+  factory PurchaseMasterViewItem.fromJson(Map<String, dynamic> json) {
+    return PurchaseMasterViewItem(
+      purchaseMasterId: json['purchaseMaster_Id'] ?? 0,
+      compId: json['purchaseMaster_CompId'] ?? 0,
+      branchId: json['purchaseMaster_BranchId'] ?? 0,
+      supplierId: json['purchaseMaster_SupplierId'] ?? 0,
+      ledgerId: json['purchaseMaster_LedgerId'] ?? 0,
+      invoiceNo: json['purchaseMaster_InvoiceNo'] ?? '',
+      invoiceDate: json['purchaseMaster_InvoiceDate'] ?? '',
+      subTotal: (json['purchaseMaster_SubTotal'] ?? 0.0).toDouble(),
+      discountAmount: (json['purchaseMaster_DiscountAmount'] ?? 0.0).toDouble(),
+      gstAmount: (json['purchaseMaster_GSTAmount'] ?? 0.0).toDouble(),
+      otherCharges: (json['purchaseMaster_OtherCharges'] ?? 0.0).toDouble(),
+      netAmount: (json['purchaseMaster_NetAmount'] ?? 0.0).toDouble(),
+      paidAmount: (json['purchaseMaster_PaidAmount'] ?? 0.0).toDouble(),
+      balanceAmount: (json['purchaseMaster_BalanceAmount'] ?? 0.0).toDouble(),
+      status: json['purchaseMaster_Status'] ?? '',
+      remark: json['purchaseMaster_Remark'] ?? '',
+      suppName: json['supp_Name'] ?? '',
+      branchName: json['branch_Name'] ?? '',
+      accLedgerName: json['accLedger_Name'] ?? '',
+      suppMobile: json['supp_MobileNo'] ?? json['supp_Mobile'] ?? json['mobileNo'] ?? '',
+      totalRecords: json['totalRecords'] ?? 0,
+    );
+  }
+}
+
+class PurchaseMasterViewResponseData {
+  final List<PurchaseMasterViewItem> items;
+  final int totalRecords;
+  final int totalPages;
+  final int currentPage;
+  final int pageSize;
+
+  PurchaseMasterViewResponseData({
+    required this.items,
+    required this.totalRecords,
+    required this.totalPages,
+    required this.currentPage,
+    required this.pageSize,
+  });
+
+  factory PurchaseMasterViewResponseData.fromJson(Map<String, dynamic> json) {
+    return PurchaseMasterViewResponseData(
+      items: (json['items'] as List?)?.map((e) => PurchaseMasterViewItem.fromJson(e)).toList() ?? [],
+      totalRecords: json['totalRecords'] ?? 0,
+      totalPages: json['totalPages'] ?? 0,
+      currentPage: json['currentPage'] ?? 0,
+      pageSize: json['pageSize'] ?? 0,
+    );
+  }
+}
+
+class PurchaseMasterViewResponse {
+  final bool status;
+  final String message;
+  final PurchaseMasterViewResponseData? data;
+  final String? error;
+
+  PurchaseMasterViewResponse({
+    required this.status,
+    required this.message,
+    this.data,
+    this.error,
+  });
+
+  factory PurchaseMasterViewResponse.fromJson(Map<String, dynamic> json) {
+    return PurchaseMasterViewResponse(
+      status: json['status'] ?? false,
+      message: json['message'] ?? '',
+      data: json['data'] != null ? PurchaseMasterViewResponseData.fromJson(json['data']) : null,
+      error: json['error'],
+    );
+  }
+}
+
+class PurchaseDetailViewItem {
+  final int purchaseDetailId;
+  final int purchaseDetailMasterId;
+  final int compId;
+  final int branchId;
+  final int productId;
+  final String barcode;
+  final String eanCode;
+  final double qty;
+  final double landingPrice;
+  final double purchasePrice;
+  final double mrp;
+  final double sellingPrice;
+  final double discountPercent;
+  final double discountAmount;
+  final double gstPercent;
+  final double gstAmount;
+  final double totalAmount;
+  final String prodName;
+
+  PurchaseDetailViewItem({
+    required this.purchaseDetailId,
+    required this.purchaseDetailMasterId,
+    required this.compId,
+    required this.branchId,
+    required this.productId,
+    required this.barcode,
+    required this.eanCode,
+    required this.qty,
+    required this.landingPrice,
+    required this.purchasePrice,
+    required this.mrp,
+    required this.sellingPrice,
+    required this.discountPercent,
+    required this.discountAmount,
+    required this.gstPercent,
+    required this.gstAmount,
+    required this.totalAmount,
+    required this.prodName,
+  });
+
+  factory PurchaseDetailViewItem.fromJson(Map<String, dynamic> json) {
+    return PurchaseDetailViewItem(
+      purchaseDetailId: json['purchaseDetail_Id'] ?? 0,
+      purchaseDetailMasterId: json['purchaseDetail_MasterId'] ?? 0,
+      compId: json['purchaseDetail_CompId'] ?? 0,
+      branchId: json['purchaseDetail_BranchId'] ?? 0,
+      productId: json['purchaseDetail_ProductId'] ?? 0,
+      barcode: json['purchaseDetail_Barcode'] ?? '',
+      eanCode: json['purchaseDetail_EANCode'] ?? '',
+      qty: (json['purchaseDetail_Qty'] ?? 0.0).toDouble(),
+      landingPrice: (json['purchaseDetail_LandingPrice'] ?? 0.0).toDouble(),
+      purchasePrice: (json['purchaseDetail_PurchasePrice'] ?? 0.0).toDouble(),
+      mrp: (json['purchaseDetail_MRP'] ?? 0.0).toDouble(),
+      sellingPrice: (json['purchaseDetail_SellingPrice'] ?? 0.0).toDouble(),
+      discountPercent: (json['purchaseDetail_DiscountPercent'] ?? 0.0).toDouble(),
+      discountAmount: (json['purchaseDetail_DiscountAmount'] ?? 0.0).toDouble(),
+      gstPercent: (json['purchaseDetail_GSTPercent'] ?? 0.0).toDouble(),
+      gstAmount: (json['purchaseDetail_GSTAmount'] ?? 0.0).toDouble(),
+      totalAmount: (json['purchaseDetail_TotalAmount'] ?? 0.0).toDouble(),
+      prodName: json['prod_Name'] ?? '',
+    );
+  }
+}
+
+class PurchaseDetailViewResponse {
+  final bool status;
+  final String message;
+  final List<PurchaseDetailViewItem> data;
+  final String? error;
+
+  PurchaseDetailViewResponse({
+    required this.status,
+    required this.message,
+    required this.data,
+    this.error,
+  });
+
+  factory PurchaseDetailViewResponse.fromJson(Map<String, dynamic> json) {
+    return PurchaseDetailViewResponse(
+      status: json['status'] ?? false,
+      message: json['message'] ?? '',
+      data: (json['data'] as List?)?.map((e) => PurchaseDetailViewItem.fromJson(e)).toList() ?? [],
+      error: json['error'],
+    );
+  }
+}

@@ -11,6 +11,7 @@ import '../../../widgets/app_drawer.dart';
 import '../../../widgets/app_message_dialog.dart';
 import '../../../widgets/supplier_dropdown.dart';
 import 'purchase_entry_list_screen.dart';
+import 'purchase_entry_view_list_screen.dart';
 import 'product_selection_dialog.dart';
 import '../../../widgets/save_clear_shortcuts.dart';
 
@@ -130,6 +131,84 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
     _invoiceAmountController.text = entry.grandTotal.toStringAsFixed(2);
     _calculateTotals();
   }
+
+  Future<void> _loadMasterAndDetails(PurchaseMasterViewItem master) async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+
+      final details = await PurchaseEntryService().getPurchaseDetailViewList(master.purchaseMasterId);
+
+      _resetForm(); // clear first
+      _products.clear(); // remove the empty row added by resetForm
+
+      _invoiceNoController.text = master.invoiceNo;
+      try {
+        _selectedDate = DateTime.parse(master.invoiceDate);
+      } catch (_) {
+        _selectedDate = DateTime.now();
+      }
+      _selectedSupplier = master.supplierId;
+      _billDiscountController.text = master.discountAmount.toStringAsFixed(2);
+      _invoiceAmountController.text = master.netAmount.toStringAsFixed(2);
+
+      for (var d in details) {
+        final p = {
+          'product': ProductListItem(
+            prodId: d.productId,
+            prodCode: d.barcode,
+            prodName: d.prodName,
+            prodGSTPercent: d.gstPercent,
+          ),
+          'qty': d.qty,
+          'lc': d.landingPrice,
+          'pc': d.purchasePrice,
+          'mrp': d.mrp,
+          'sp': d.sellingPrice,
+          'discAmt': d.discountAmount,
+          'gstPct': d.gstPercent,
+          'gross': d.qty * d.purchasePrice,
+          'discounted': (d.qty * d.purchasePrice) - d.discountAmount,
+          'gstAmt': d.gstAmount,
+          'net': d.totalAmount,
+          'qtyController': TextEditingController(text: d.qty.toStringAsFixed(2)),
+          'lcController': TextEditingController(text: d.landingPrice.toStringAsFixed(2)),
+          'pcController': TextEditingController(text: d.purchasePrice.toStringAsFixed(2)),
+          'mrpController': TextEditingController(text: d.mrp.toStringAsFixed(2)),
+          'spController': TextEditingController(text: d.sellingPrice.toStringAsFixed(2)),
+          'discAmtController': TextEditingController(text: d.discountAmount.toStringAsFixed(2)),
+          'productNode': FocusNode(),
+          'qtyNode': FocusNode(),
+          'lcNode': FocusNode(),
+          'pcNode': FocusNode(),
+          'mrpNode': FocusNode(),
+          'spNode': FocusNode(),
+          'discNode': FocusNode(),
+        };
+        _products.add(p);
+      }
+
+      if (_products.isEmpty) {
+        _addNewEmptyRow();
+      } else {
+        _addNewEmptyRow(); // add empty row at the end
+      }
+
+      _calculateTotals();
+    } catch (e) {
+      if (mounted) {
+        await showErrorDialog(context, 'Failed to load details: $e');
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
 
   void _addNewEmptyRow() {
     _products.add({
@@ -1655,6 +1734,24 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                         title: const Text('Add Purchase Entry'),
                         backgroundColor: Colors.transparent,
                         elevation: 0,
+                        actions: [
+                          FilledButton.icon(
+                            onPressed: () async {
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const PurchaseEntryViewListScreen(),
+                                ),
+                              );
+                              if (result != null && result is PurchaseMasterViewItem) {
+                                _loadMasterAndDetails(result);
+                              }
+                            },
+                            icon: const Icon(Icons.list_alt, size: 18),
+                            label: const Text('View'),
+                          ),
+                          const SizedBox(width: 16),
+                        ],
                       ),
                       Expanded(child: content),
                     ],
@@ -1664,7 +1761,26 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
             ),
           )
         : Scaffold(
-            appBar: AppBar(title: const Text('Add Purchase Entry')),
+            appBar: AppBar(
+              title: const Text('Add Purchase Entry'),
+              actions: [
+                IconButton(
+                  onPressed: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PurchaseEntryViewListScreen(),
+                      ),
+                    );
+                    if (result != null && result is PurchaseMasterViewItem) {
+                      _loadMasterAndDetails(result);
+                    }
+                  },
+                  icon: const Icon(Icons.list_alt),
+                  tooltip: 'View',
+                ),
+              ],
+            ),
             drawer: const AppDrawer(),
             body: content,
           );

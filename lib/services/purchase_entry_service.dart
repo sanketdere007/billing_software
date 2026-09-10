@@ -91,5 +91,62 @@ class PurchaseEntryService extends ChangeNotifier {
       throw ApiException('Error saving purchase entry: $e');
     }
   }
+
+  Future<PurchaseMasterViewResponseData> getPurchaseMasterViewList({
+    required int pageNumber,
+    required int pageSize,
+    String searchText = '',
+    required DateTime fromDate,
+    required DateTime toDate,
+  }) async {
+    try {
+      final compId = sessionService.selectedCompId ?? 1;
+      final branchId = sessionService.selectedBranchId ?? 1;
+
+      final body = {
+        "compId": compId,
+        "branchId": branchId,
+        "searchText": searchText,
+        "fromDate": fromDate.toIso8601String(),
+        "toDate": toDate.toIso8601String(),
+        "pageNumber": pageNumber,
+        "pageSize": pageSize,
+      };
+
+      final response = await apiService.post(
+        ApiConstants.getPurchaseMasterViewListEndpoint,
+        body: body,
+        requiresAuth: true,
+      );
+
+      final viewResponse = PurchaseMasterViewResponse.fromJson(response);
+      if (viewResponse.status && viewResponse.data != null) {
+        return viewResponse.data!;
+      } else {
+        throw ApiException(viewResponse.message.isNotEmpty ? viewResponse.message : 'Failed to fetch purchase entries');
+      }
+    } catch (e) {
+      throw ApiException('Error fetching purchase entries: $e');
+    }
+  }
+
+  Future<List<PurchaseDetailViewItem>> getPurchaseDetailViewList(int purchaseMasterId) async {
+    try {
+      final response = await apiService.get(
+        '${ApiConstants.getPurchaseDetailViewListEndpoint}/$purchaseMasterId',
+        requiresAuth: true,
+      );
+
+      final detailResponse = PurchaseDetailViewResponse.fromJson(response);
+      if (detailResponse.status) {
+        return detailResponse.data;
+      } else {
+        throw ApiException(detailResponse.message.isNotEmpty ? detailResponse.message : 'Failed to fetch purchase details');
+      }
+    } catch (e) {
+      throw ApiException('Error fetching purchase details: $e');
+    }
+  }
 }
+
 
