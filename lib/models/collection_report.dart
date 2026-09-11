@@ -39,13 +39,13 @@ class CollectionReportRequest {
 class CollectionReportResponse {
   final bool status;
   final String message;
-  final List<CollectionReportData> data;
+  final CollectionReportDataObj? data;
   final String? error;
 
   CollectionReportResponse({
     required this.status,
     required this.message,
-    required this.data,
+    this.data,
     this.error,
   });
 
@@ -53,8 +53,37 @@ class CollectionReportResponse {
     return CollectionReportResponse(
       status: json['status'] ?? false,
       message: json['message'] ?? '',
-      data: (json['data'] as List?)?.map((e) => CollectionReportData.fromJson(e)).toList() ?? [],
+      data: json['data'] != null ? CollectionReportDataObj.fromJson(json['data']) : null,
       error: json['error'],
+    );
+  }
+}
+
+class CollectionReportDataObj {
+  final List<CollectionReportData> items;
+  final int totalRecords;
+  final double totalCollection;
+  final int totalPages;
+  final int currentPage;
+  final int pageSize;
+
+  CollectionReportDataObj({
+    required this.items,
+    required this.totalRecords,
+    required this.totalCollection,
+    required this.totalPages,
+    required this.currentPage,
+    required this.pageSize,
+  });
+
+  factory CollectionReportDataObj.fromJson(Map<String, dynamic> json) {
+    return CollectionReportDataObj(
+      items: (json['items'] as List?)?.map((e) => CollectionReportData.fromJson(e)).toList() ?? [],
+      totalRecords: json['totalRecords'] ?? 0,
+      totalCollection: (json['totalCollection'] ?? 0).toDouble(),
+      totalPages: json['totalPages'] ?? 0,
+      currentPage: json['currentPage'] ?? 0,
+      pageSize: json['pageSize'] ?? 0,
     );
   }
 }
@@ -78,7 +107,7 @@ class CollectionReportData {
   final String custEmail;
   final int receiptMasterLedgerId;
   final String accLedgerName;
-  final double totalCollection;
+  final double totalAmount;
   final double cashAmount;
   final double upiAmount;
   final double cardAmount;
@@ -122,7 +151,7 @@ class CollectionReportData {
     required this.custEmail,
     required this.receiptMasterLedgerId,
     required this.accLedgerName,
-    required this.totalCollection,
+    required this.totalAmount,
     required this.cashAmount,
     required this.upiAmount,
     required this.cardAmount,
@@ -168,7 +197,7 @@ class CollectionReportData {
       custEmail: json['cust_Email'] ?? '',
       receiptMasterLedgerId: json['receiptMaster_LedgerId'] ?? 0,
       accLedgerName: json['accLedger_Name'] ?? '',
-      totalCollection: (json['totalCollection'] ?? 0).toDouble(),
+      totalAmount: (json['totalAmount'] ?? 0).toDouble(),
       cashAmount: (json['cashAmount'] ?? 0).toDouble(),
       upiAmount: (json['upiAmount'] ?? 0).toDouble(),
       cardAmount: (json['cardAmount'] ?? 0).toDouble(),

@@ -117,7 +117,7 @@ class ReportExcelExportService {
             items[i].custName,
             items[i].custMobileNo,
             _collectionPaymentMode(items[i]),
-            ExcelExportHelper.formatAmount(items[i].totalCollection),
+            ExcelExportHelper.formatAmount(items[i].totalAmount),
             ExcelExportHelper.formatAmount(items[i].cashAmount),
             ExcelExportHelper.formatAmount(items[i].upiAmount),
             ExcelExportHelper.formatAmount(items[i].chequeAmount),

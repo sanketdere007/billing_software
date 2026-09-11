@@ -37,6 +37,9 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
   String? _errorMessage;
   List<CollectionReportData> _reportData = [];
   int _highlightedIndex = 0;
+  
+  int _totalRecords = 0;
+  double _totalCollection = 0.0;
 
   DateTime? _fromDate;
   DateTime? _toDate;
@@ -105,12 +108,12 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
 
       if (mounted) {
         setState(() {
-          if (response.data.isEmpty) {
+          if (response.data?.items.isEmpty ?? true) {
             _hasMoreData = false;
           } else {
             _pageNumber = nextPage;
-            _reportData.addAll(response.data);
-            if (response.data.length < _pageSize) {
+            _reportData.addAll(response.data!.items);
+            if (response.data!.items.length < _pageSize) {
               _hasMoreData = false;
             }
           }
@@ -215,6 +218,8 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
         _pageNumber = 1;
         _hasMoreData = true;
         _reportData.clear();
+        _totalRecords = 0;
+        _totalCollection = 0.0;
         _highlightedIndex = 0;
       }
     });
@@ -226,8 +231,10 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
       if (mounted) {
         setState(() {
           if (response.status) {
-            _reportData = response.data;
-            _hasMoreData = response.data.length == _pageSize;
+            _reportData = response.data?.items ?? [];
+            _totalRecords = response.data?.totalRecords ?? 0;
+            _totalCollection = response.data?.totalCollection ?? 0.0;
+            _hasMoreData = _reportData.length == _pageSize;
           } else {
             _errorMessage = response.message;
           }
@@ -298,9 +305,10 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
         pageSize: exportPageSize,
       );
       final response = await collectionReportService.getCollectionReport(request);
-      if (response.data.isEmpty) break;
-      allRecords.addAll(response.data);
-      if (response.data.length < exportPageSize) break;
+      final newItems = response.data?.items ?? [];
+      if (newItems.isEmpty) break;
+      allRecords.addAll(newItems);
+      if (newItems.length < exportPageSize) break;
       page++;
     }
     return allRecords;
@@ -418,9 +426,9 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
       otherReference: item.receiptMasterOtherReferenceNo,
       otherRemark: item.receiptMasterOtherRemark,
       
-      totalAmount: item.totalCollection,
+      totalAmount: item.totalAmount,
       remarks: item.receiptMasterRemark,
-      amountInWords: IndianCurrencyWords.convert(item.totalCollection),
+      amountInWords: IndianCurrencyWords.convert(item.totalAmount),
     );
   }
 
@@ -595,21 +603,7 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
                       ? const Center(child: Text('No collection records found.'))
                       : Column(
                           children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                              color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.15),
-                              child: Row(
-                                children: [
-                                  Text(
-                                    'Showing ${_reportData.length} records',
-                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+
                             Expanded(
                               child: isDesktop ? _buildDesktopDataTable() : _buildMobileList(),
                             ),
@@ -744,7 +738,7 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
                           Expanded(
                             flex: 2, 
                             child: Text(
-                              item.totalCollection.toStringAsFixed(2),
+                              item.totalAmount.toStringAsFixed(2),
                               style: const TextStyle(fontWeight: FontWeight.bold),
                             ),
                           ),
@@ -801,6 +795,25 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
                 },
               ),
             ),
+            // Footer
+            Container(
+              height: 48,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primaryContainer.withOpacity(0.35),
+                border: Border(top: BorderSide(color: theme.colorScheme.outlineVariant)),
+              ),
+              child: Row(
+                children: [
+                  SizedBox(width: 50, child: Text('$_totalRecords', style: const TextStyle(fontWeight: FontWeight.bold))),
+                  const Expanded(flex: 2, child: SizedBox()),
+                  const Expanded(flex: 2, child: SizedBox()),
+                  const Expanded(flex: 3, child: Padding(padding: EdgeInsets.only(right: 8.0), child: Text('Total :', textAlign: TextAlign.right, style: TextStyle(fontWeight: FontWeight.bold)))),
+                  Expanded(flex: 2, child: Text('₹ ${_totalCollection.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold))),
+                  const Expanded(flex: 2, child: SizedBox()),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -808,87 +821,107 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
   }
 
   Widget _buildMobileList() {
-    return ListView.builder(
-      controller: _scrollController,
-      padding: const EdgeInsets.all(8),
-      itemCount: _reportData.length + (_isFetchingMore ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (index == _reportData.length) {
-          return const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Center(child: CircularProgressIndicator()),
-          );
-        }
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.all(8),
+            itemCount: _reportData.length + (_isFetchingMore ? 1 : 0),
+            itemBuilder: (context, index) {
+              if (index == _reportData.length) {
+                return const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
 
-        final item = _reportData[index];
-        final isSelected = index == _highlightedIndex;
+              final item = _reportData[index];
+              final isSelected = index == _highlightedIndex;
 
-        return Card(
-          elevation: isSelected ? 4 : 1,
-          color: isSelected ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3) : null,
-          child: ListTile(
-            title: Text(item.custName, style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Receipt: ${item.receiptMasterReceiptNo} • ${item.receiptMasterReceiptDate != null ? _displayFormat.format(item.receiptMasterReceiptDate!) : ''}'),
-                Text(
-                  'Amount: ${item.totalCollection.toStringAsFixed(2)}',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.print_outlined, size: 20),
-                  tooltip: 'Print',
-                  padding: const EdgeInsets.all(4),
-                  constraints: const BoxConstraints(),
-                  onPressed: () => _printReceipt(item),
-                ),
-                const SizedBox(width: 4),
-                IconButton(
-                  icon: const Icon(Icons.download_outlined, size: 20),
-                  tooltip: 'Download',
-                  padding: const EdgeInsets.all(4),
-                  constraints: const BoxConstraints(),
-                  onPressed: () => _downloadReceipt(item),
-                ),
-                const SizedBox(width: 4),
-                PopupMenuButton<String>(
-                  icon: const Icon(Icons.share_outlined, size: 20),
-                  tooltip: 'Share',
-                  padding: const EdgeInsets.all(4),
-                  onSelected: (value) {
-                    if (value == 'pdf') {
-                      _shareReceiptPdf(item);
-                    } else if (value == 'image') {
-                      _shareReceiptImage(item);
-                    }
+              return Card(
+                elevation: isSelected ? 4 : 1,
+                color: isSelected ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3) : null,
+                child: ListTile(
+                  title: Text(item.custName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Receipt: ${item.receiptMasterReceiptNo} • ${item.receiptMasterReceiptDate != null ? _displayFormat.format(item.receiptMasterReceiptDate!) : ''}'),
+                      Text(
+                        'Amount: ${item.totalAmount.toStringAsFixed(2)}',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.print_outlined, size: 20),
+                        tooltip: 'Print',
+                        padding: const EdgeInsets.all(4),
+                        constraints: const BoxConstraints(),
+                        onPressed: () => _printReceipt(item),
+                      ),
+                      const SizedBox(width: 4),
+                      IconButton(
+                        icon: const Icon(Icons.download_outlined, size: 20),
+                        tooltip: 'Download',
+                        padding: const EdgeInsets.all(4),
+                        constraints: const BoxConstraints(),
+                        onPressed: () => _downloadReceipt(item),
+                      ),
+                      const SizedBox(width: 4),
+                      PopupMenuButton<String>(
+                        icon: const Icon(Icons.share_outlined, size: 20),
+                        tooltip: 'Share',
+                        padding: const EdgeInsets.all(4),
+                        onSelected: (value) {
+                          if (value == 'pdf') {
+                            _shareReceiptPdf(item);
+                          } else if (value == 'image') {
+                            _shareReceiptImage(item);
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          const PopupMenuItem(
+                            value: 'pdf',
+                            child: Text('Share as PDF'),
+                          ),
+                          const PopupMenuItem(
+                            value: 'image',
+                            child: Text('Share as Image'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  onTap: () {
+                    setState(() {
+                      _highlightedIndex = index;
+                    });
                   },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'pdf',
-                      child: Text('Share as PDF'),
-                    ),
-                    const PopupMenuItem(
-                      value: 'image',
-                      child: Text('Share as Image'),
-                    ),
-                  ],
                 ),
-              ],
-            ),
-            onTap: () {
-              setState(() {
-                _highlightedIndex = index;
-              });
+              );
             },
           ),
-        );
-      },
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.35),
+            border: Border(top: BorderSide(color: Theme.of(context).colorScheme.outlineVariant)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Total Records: $_totalRecords', style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text('Total Amount: ₹ ${_totalCollection.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

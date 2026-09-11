@@ -111,7 +111,7 @@ void main() {
       custEmail: '',
       receiptMasterLedgerId: 0,
       accLedgerName: '',
-      totalCollection: 1000,
+      totalAmount: 1000,
       cashAmount: 400,
       upiAmount: 600,
       cardAmount: 0,
@@ -136,6 +136,6 @@ void main() {
     expect(supplier.suppName, 'Supplier One');
     expect(customer.custName, 'Customer Two');
     expect(collection.receiptMasterReceiptNo, 'RCP-3');
-    expect(collection.totalCollection, 1000);
+    expect(collection.totalAmount, 1000);
   });
 }
