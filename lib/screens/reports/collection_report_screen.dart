@@ -32,12 +32,12 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
   bool _hasMoreData = true;
   int _pageNumber = 1;
   static const int _pageSize = 20;
-  
+
   String _searchQuery = '';
   String? _errorMessage;
   List<CollectionReportData> _reportData = [];
   int _highlightedIndex = 0;
-  
+
   int _totalRecords = 0;
   double _totalCollection = 0.0;
 
@@ -51,7 +51,7 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
     super.initState();
     _screenFocusNode.onKeyEvent = _handleKeyEvent;
     _scrollController.addListener(_onScroll);
-    
+
     // Set default dates to current month
     final now = DateTime.now();
     _fromDate = DateTime(now.year, now.month, 1);
@@ -76,7 +76,8 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
       _fetchMoreData();
     }
   }
@@ -95,7 +96,7 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
 
   Future<void> _fetchMoreData() async {
     if (_isLoading || _isFetchingMore || !_hasMoreData) return;
-    
+
     setState(() {
       _isFetchingMore = true;
     });
@@ -103,8 +104,10 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
     try {
       final nextPage = _pageNumber + 1;
       final request = _buildRequest(page: nextPage);
-      
-      final response = await collectionReportService.getCollectionReport(request);
+
+      final response = await collectionReportService.getCollectionReport(
+        request,
+      );
 
       if (mounted) {
         setState(() {
@@ -132,7 +135,7 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
   CollectionReportRequest _buildRequest({required int page}) {
     final compId = sessionService.selectedCompId ?? 0;
     final branchId = sessionService.selectedBranchId ?? 0;
-    
+
     return CollectionReportRequest(
       compId: compId,
       branchId: branchId,
@@ -162,7 +165,7 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
         }
       });
       _scrollToIndex(_highlightedIndex);
-      
+
       if (_highlightedIndex >= _reportData.length - 5) {
         _fetchMoreData();
       }
@@ -187,7 +190,7 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
   void _scrollToIndex(int index) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_scrollController.hasClients) return;
-      const double rowHeight = 53.0; 
+      const double rowHeight = 53.0;
       final targetOffset = index * rowHeight;
       final currentOffset = _scrollController.offset;
       final viewportHeight = _scrollController.position.viewportDimension;
@@ -226,8 +229,10 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
 
     try {
       final request = _buildRequest(page: 1);
-      final response = await collectionReportService.getCollectionReport(request);
-      
+      final response = await collectionReportService.getCollectionReport(
+        request,
+      );
+
       if (mounted) {
         setState(() {
           if (response.status) {
@@ -239,9 +244,12 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
             _errorMessage = response.message;
           }
           _isLoading = false;
-          
+
           if (_reportData.isNotEmpty) {
-            _highlightedIndex = _highlightedIndex.clamp(0, _reportData.length - 1);
+            _highlightedIndex = _highlightedIndex.clamp(
+              0,
+              _reportData.length - 1,
+            );
           } else {
             _highlightedIndex = 0;
           }
@@ -261,10 +269,14 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
   }
 
   Future<void> _selectDate(BuildContext context, bool isFromDate) async {
-    final initialDate = isFromDate ? (_fromDate ?? DateTime.now()) : (_toDate ?? DateTime.now());
+    final initialDate = isFromDate
+        ? (_fromDate ?? DateTime.now())
+        : (_toDate ?? DateTime.now());
     final pickedDate = await showDatePicker(
       context: context,
-      initialDate: initialDate.isAfter(DateTime.now()) ? DateTime.now() : initialDate,
+      initialDate: initialDate.isAfter(DateTime.now())
+          ? DateTime.now()
+          : initialDate,
       firstDate: DateTime(2000),
       lastDate: DateTime.now(),
     );
@@ -304,7 +316,9 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
         pageNumber: page,
         pageSize: exportPageSize,
       );
-      final response = await collectionReportService.getCollectionReport(request);
+      final response = await collectionReportService.getCollectionReport(
+        request,
+      );
       final newItems = response.data?.items ?? [];
       if (newItems.isEmpty) break;
       allRecords.addAll(newItems);
@@ -333,7 +347,9 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
         return;
       }
 
-      final result = await ReportExcelExportService.exportCollectionReport(records);
+      final result = await ReportExcelExportService.exportCollectionReport(
+        records,
+      );
       if (!mounted) return;
 
       if (result.success) {
@@ -368,7 +384,9 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
           label: Text(_isExporting ? 'Exporting...' : 'Export to Excel'),
           style: OutlinedButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
           ),
         ),
         const SizedBox(width: 8),
@@ -392,40 +410,46 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
 
   ReceiptPdfData _getReceiptPdfData(CollectionReportData item) {
     return ReceiptPdfData(
-      companyName: item.compName.isNotEmpty ? item.compName : (sessionService.selectedCompName ?? ''),
-      branchName: item.branchName.isNotEmpty ? item.branchName : (sessionService.selectedBranchName ?? ''),
-      receiptDate: item.receiptMasterReceiptDate != null ? _displayFormat.format(item.receiptMasterReceiptDate!) : '',
+      companyName: item.compName.isNotEmpty
+          ? item.compName
+          : (sessionService.selectedCompName ?? ''),
+      branchName: item.branchName.isNotEmpty
+          ? item.branchName
+          : (sessionService.selectedBranchName ?? ''),
+      receiptDate: item.receiptMasterReceiptDate != null
+          ? _displayFormat.format(item.receiptMasterReceiptDate!)
+          : '',
       receiptNo: item.receiptMasterReceiptNo,
       invoiceNo: '',
       customerName: item.custName,
       customerMobile: item.custMobileNo,
       customerAddress: '',
-      
+
       cashAmount: item.cashAmount,
       cashRemark: '',
-      
+
       cardAmount: item.cardAmount,
-      
+
       upiAmount: item.upiAmount,
       upiTransactionNo: '',
       upiReferenceNo: '',
-      
+
       bankAmount: item.bankAmount,
       bankName: item.receiptMasterBankName,
       bankAccountNo: '',
       bankTransactionNo: '',
       bankReferenceNo: item.receiptMasterBankReferenceNo,
       bankTransferType: item.receiptMasterNEFTType,
-      
+
       chequeAmount: item.chequeAmount,
       chequeNo: item.receiptMasterChequeNo,
       chequeBankName: item.receiptMasterBankName,
-      
+
       otherAmount: item.otherAmount,
       otherType: item.receiptMasterOtherPaymentType,
       otherReference: item.receiptMasterOtherReferenceNo,
       otherRemark: item.receiptMasterOtherRemark,
-      
+
       totalAmount: item.totalAmount,
       remarks: item.receiptMasterRemark,
       amountInWords: IndianCurrencyWords.convert(item.totalAmount),
@@ -514,15 +538,24 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
                           actions: [
                             Container(
                               width: 200,
-                              margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                              margin: const EdgeInsets.symmetric(
+                                vertical: 8,
+                                horizontal: 8,
+                              ),
                               child: TextField(
                                 controller: _searchController,
                                 decoration: InputDecoration(
                                   hintText: 'Search...',
-                                  prefixIcon: const Icon(Icons.search, size: 20),
+                                  prefixIcon: const Icon(
+                                    Icons.search,
+                                    size: 20,
+                                  ),
                                   suffixIcon: _searchController.text.isNotEmpty
                                       ? IconButton(
-                                          icon: const Icon(Icons.clear, size: 20),
+                                          icon: const Icon(
+                                            Icons.clear,
+                                            size: 20,
+                                          ),
                                           onPressed: () {
                                             _searchController.clear();
                                             _onSearchChanged('');
@@ -530,7 +563,10 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
                                         )
                                       : null,
                                   isDense: true,
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 0,
+                                  ),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(24),
                                   ),
@@ -541,7 +577,9 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
                             IconButton(
                               icon: const Icon(Icons.refresh_rounded),
                               tooltip: 'Refresh',
-                              onPressed: _isLoading ? null : () => _fetchReport(refresh: true),
+                              onPressed: _isLoading
+                                  ? null
+                                  : () => _fetchReport(refresh: true),
                             ),
                             const SizedBox(width: 8),
                             ..._exportActions(isDesktop: true),
@@ -563,7 +601,9 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
                   IconButton(
                     icon: const Icon(Icons.refresh_rounded),
                     tooltip: 'Refresh',
-                    onPressed: _isLoading ? null : () => _fetchReport(refresh: true),
+                    onPressed: _isLoading
+                        ? null
+                        : () => _fetchReport(refresh: true),
                   ),
                   ..._exportActions(isDesktop: false),
                 ],
@@ -585,30 +625,41 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
           child: _isLoading && _reportData.isEmpty
               ? const Center(child: CircularProgressIndicator())
               : _errorMessage != null && _reportData.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.error_outline_rounded, size: 48, color: Colors.red),
-                          const SizedBox(height: 16),
-                          Text('Failed to load report', style: Theme.of(context).textTheme.titleMedium),
-                          const SizedBox(height: 8),
-                          Text(_errorMessage!),
-                          const SizedBox(height: 16),
-                          FilledButton(onPressed: () => _fetchReport(refresh: true), child: const Text('Retry')),
-                        ],
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.error_outline_rounded,
+                        size: 48,
+                        color: Colors.red,
                       ),
-                    )
-                  : _reportData.isEmpty
-                      ? const Center(child: Text('No collection records found.'))
-                      : Column(
-                          children: [
-
-                            Expanded(
-                              child: isDesktop ? _buildDesktopDataTable() : _buildMobileList(),
-                            ),
-                          ],
-                        ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Failed to load report',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(_errorMessage!),
+                      const SizedBox(height: 16),
+                      FilledButton(
+                        onPressed: () => _fetchReport(refresh: true),
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                )
+              : _reportData.isEmpty
+              ? const Center(child: Text('No collection records found.'))
+              : Column(
+                  children: [
+                    Expanded(
+                      child: isDesktop
+                          ? _buildDesktopDataTable()
+                          : _buildMobileList(),
+                    ),
+                  ],
+                ),
         ),
       ],
     );
@@ -626,7 +677,11 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
           children: [
             OutlinedButton.icon(
               icon: const Icon(Icons.calendar_today, size: 18),
-              label: Text(_fromDate != null ? _displayFormat.format(_fromDate!) : 'From Date'),
+              label: Text(
+                _fromDate != null
+                    ? _displayFormat.format(_fromDate!)
+                    : 'From Date',
+              ),
               onPressed: () => _selectDate(context, true),
             ),
             const Padding(
@@ -635,7 +690,9 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
             ),
             OutlinedButton.icon(
               icon: const Icon(Icons.calendar_today, size: 18),
-              label: Text(_toDate != null ? _displayFormat.format(_toDate!) : 'To Date'),
+              label: Text(
+                _toDate != null ? _displayFormat.format(_toDate!) : 'To Date',
+              ),
               onPressed: () => _selectDate(context, false),
             ),
           ],
@@ -647,29 +704,33 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
-        border: Border(bottom: BorderSide(color: Theme.of(context).colorScheme.outlineVariant)),
-      ),
-      child: isDesktop 
-        ? filterContent
-        : Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  hintText: 'Search...',
-                  prefixIcon: const Icon(Icons.search),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                ),
-                onChanged: _onSearchChanged,
-              ),
-              const SizedBox(height: 16),
-              filterContent,
-            ],
+        border: Border(
+          bottom: BorderSide(
+            color: Theme.of(context).colorScheme.outlineVariant,
           ),
+        ),
+      ),
+      child: isDesktop
+          ? filterContent
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Search...',
+                    prefixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                  ),
+                  onChanged: _onSearchChanged,
+                ),
+                const SizedBox(height: 16),
+                filterContent,
+              ],
+            ),
     );
   }
 
@@ -687,16 +748,54 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               decoration: BoxDecoration(
                 color: theme.colorScheme.primaryContainer.withOpacity(0.35),
-                border: Border(bottom: BorderSide(color: theme.colorScheme.outlineVariant)),
+                border: Border(
+                  bottom: BorderSide(color: theme.colorScheme.outlineVariant),
+                ),
               ),
               child: const Row(
                 children: [
-                  SizedBox(width: 50, child: Text('#', style: TextStyle(fontWeight: FontWeight.bold))),
-                  Expanded(flex: 2, child: Text('Date', style: TextStyle(fontWeight: FontWeight.bold))),
-                  Expanded(flex: 2, child: Text('Receipt No', style: TextStyle(fontWeight: FontWeight.bold))),
-                  Expanded(flex: 3, child: Text('Customer', style: TextStyle(fontWeight: FontWeight.bold))),
-                  Expanded(flex: 2, child: Text('Amount', style: TextStyle(fontWeight: FontWeight.bold))),
-                  Expanded(flex: 2, child: Text('Action', style: TextStyle(fontWeight: FontWeight.bold))),
+                  SizedBox(
+                    width: 50,
+                    child: Text(
+                      '#',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      'Date',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      'Receipt No',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 3,
+                    child: Text(
+                      'Customer',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      'Amount',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      'Action',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -726,20 +825,44 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
                       height: 53,
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       decoration: BoxDecoration(
-                        color: isSelected ? theme.colorScheme.primaryContainer.withOpacity(0.3) : null,
-                        border: Border(bottom: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.3))),
+                        color: isSelected
+                            ? theme.colorScheme.primaryContainer.withOpacity(
+                                0.3,
+                              )
+                            : null,
+                        border: Border(
+                          bottom: BorderSide(
+                            color: theme.colorScheme.outlineVariant.withOpacity(
+                              0.3,
+                            ),
+                          ),
+                        ),
                       ),
                       child: Row(
                         children: [
                           SizedBox(width: 50, child: Text('${index + 1}')),
-                          Expanded(flex: 2, child: Text(item.receiptMasterReceiptDate != null ? _displayFormat.format(item.receiptMasterReceiptDate!) : '')),
-                          Expanded(flex: 2, child: Text(item.receiptMasterReceiptNo)),
+                          Expanded(
+                            flex: 2,
+                            child: Text(
+                              item.receiptMasterReceiptDate != null
+                                  ? _displayFormat.format(
+                                      item.receiptMasterReceiptDate!,
+                                    )
+                                  : '',
+                            ),
+                          ),
+                          Expanded(
+                            flex: 2,
+                            child: Text(item.receiptMasterReceiptNo),
+                          ),
                           Expanded(flex: 3, child: Text(item.custName)),
                           Expanded(
-                            flex: 2, 
+                            flex: 2,
                             child: Text(
                               item.totalAmount.toStringAsFixed(2),
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                           Expanded(
@@ -748,7 +871,10 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
-                                  icon: const Icon(Icons.print_outlined, size: 20),
+                                  icon: const Icon(
+                                    Icons.print_outlined,
+                                    size: 20,
+                                  ),
                                   tooltip: 'Print',
                                   padding: const EdgeInsets.all(4),
                                   constraints: const BoxConstraints(),
@@ -756,7 +882,10 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
                                 ),
                                 const SizedBox(width: 8),
                                 IconButton(
-                                  icon: const Icon(Icons.download_outlined, size: 20),
+                                  icon: const Icon(
+                                    Icons.download_outlined,
+                                    size: 20,
+                                  ),
                                   tooltip: 'Download',
                                   padding: const EdgeInsets.all(4),
                                   constraints: const BoxConstraints(),
@@ -764,7 +893,10 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
                                 ),
                                 const SizedBox(width: 8),
                                 PopupMenuButton<String>(
-                                  icon: const Icon(Icons.share_outlined, size: 20),
+                                  icon: const Icon(
+                                    Icons.share_outlined,
+                                    size: 20,
+                                  ),
                                   tooltip: 'Share',
                                   padding: const EdgeInsets.all(4),
                                   onSelected: (value) {
@@ -801,15 +933,39 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               decoration: BoxDecoration(
                 color: theme.colorScheme.primaryContainer.withOpacity(0.35),
-                border: Border(top: BorderSide(color: theme.colorScheme.outlineVariant)),
+                border: Border(
+                  top: BorderSide(color: theme.colorScheme.outlineVariant),
+                ),
               ),
               child: Row(
                 children: [
-                  SizedBox(width: 50, child: Text('$_totalRecords', style: const TextStyle(fontWeight: FontWeight.bold))),
+                  SizedBox(
+                    width: 50,
+                    child: Text(
+                      '$_totalRecords',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
                   const Expanded(flex: 2, child: SizedBox()),
                   const Expanded(flex: 2, child: SizedBox()),
-                  const Expanded(flex: 3, child: Padding(padding: EdgeInsets.only(right: 8.0), child: Text('Total :', textAlign: TextAlign.right, style: TextStyle(fontWeight: FontWeight.bold)))),
-                  Expanded(flex: 2, child: Text('₹ ${_totalCollection.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold))),
+                  const Expanded(
+                    flex: 3,
+                    child: Padding(
+                      padding: EdgeInsets.only(right: 8.0),
+                      child: Text(
+                        'Total :',
+                        textAlign: TextAlign.right,
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      '₹ ${_totalCollection.toStringAsFixed(2)}',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
                   const Expanded(flex: 2, child: SizedBox()),
                 ],
               ),
@@ -841,13 +997,22 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
 
               return Card(
                 elevation: isSelected ? 4 : 1,
-                color: isSelected ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3) : null,
+                color: isSelected
+                    ? Theme.of(
+                        context,
+                      ).colorScheme.primaryContainer.withOpacity(0.3)
+                    : null,
                 child: ListTile(
-                  title: Text(item.custName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  title: Text(
+                    item.custName,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Receipt: ${item.receiptMasterReceiptNo} • ${item.receiptMasterReceiptDate != null ? _displayFormat.format(item.receiptMasterReceiptDate!) : ''}'),
+                      Text(
+                        'Receipt: ${item.receiptMasterReceiptNo} • ${item.receiptMasterReceiptDate != null ? _displayFormat.format(item.receiptMasterReceiptDate!) : ''}',
+                      ),
                       Text(
                         'Amount: ${item.totalAmount.toStringAsFixed(2)}',
                         style: const TextStyle(fontWeight: FontWeight.bold),
@@ -910,14 +1075,26 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.35),
-            border: Border(top: BorderSide(color: Theme.of(context).colorScheme.outlineVariant)),
+            color: Theme.of(
+              context,
+            ).colorScheme.primaryContainer.withOpacity(0.35),
+            border: Border(
+              top: BorderSide(
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
+            ),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Total Records: $_totalRecords', style: const TextStyle(fontWeight: FontWeight.bold)),
-              Text('Total Amount: ₹ ${_totalCollection.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text(
+                'Total Records: $_totalRecords',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              Text(
+                'Total Amount: ₹ ${_totalCollection.toStringAsFixed(2)}',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
             ],
           ),
         ),

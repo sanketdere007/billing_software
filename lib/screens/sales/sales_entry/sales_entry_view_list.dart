@@ -214,7 +214,7 @@ class _SalesEntryViewListState extends State<SalesEntryViewList> {
                           actions: [
                             IconButton(
                               icon: const Icon(Icons.refresh_rounded),
-                              onPressed: _isLoading ? null : _fetchEntries,
+                              onPressed: _isLoading ? null : () => _fetchEntries(refresh: true),
                             )
                           ],
                         ),
@@ -236,7 +236,7 @@ class _SalesEntryViewListState extends State<SalesEntryViewList> {
                 actions: [
                   IconButton(
                     icon: const Icon(Icons.refresh_rounded),
-                    onPressed: _isLoading ? null : _fetchEntries,
+                    onPressed: _isLoading ? null : () => _fetchEntries(refresh: true),
                   )
                 ],
               ),
@@ -264,7 +264,7 @@ class _SalesEntryViewListState extends State<SalesEntryViewList> {
             Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: _fetchEntries,
+              onPressed: () => _fetchEntries(refresh: true),
               child: const Text('Retry'),
             )
           ],
