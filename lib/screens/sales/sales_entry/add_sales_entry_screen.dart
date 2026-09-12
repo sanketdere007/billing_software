@@ -202,7 +202,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
 
       if (exists) {
         if (!mounted) return;
-        await showWarningDialog(context, 'Product already added!');
+        await showWarningDialog(context, 'This batch number is already added.');
         return;
       }
 
