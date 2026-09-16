@@ -55,7 +55,7 @@ class _BatchSelectionDialogState extends State<BatchSelectionDialog> {
       } else {
         _filteredBatches = batchService.batches.where((b) {
           return b.prodName.toLowerCase().contains(query) ||
-                 b.prodCode.toLowerCase().contains(query);
+              b.prodCode.toLowerCase().contains(query);
         }).toList();
       }
       _highlightedIndex = 0;
@@ -111,7 +111,8 @@ class _BatchSelectionDialogState extends State<BatchSelectionDialog> {
       return KeyEventResult.handled;
     }
 
-    if (key == LogicalKeyboardKey.enter || key == LogicalKeyboardKey.numpadEnter) {
+    if (key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.numpadEnter) {
       _selectHighlighted();
       return KeyEventResult.handled;
     }
@@ -140,10 +141,7 @@ class _BatchSelectionDialogState extends State<BatchSelectionDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 8,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(
-          maxWidth: 600,
-          maxHeight: 600,
-        ),
+        constraints: const BoxConstraints(maxWidth: 600, maxHeight: 600),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -200,14 +198,15 @@ class _BatchSelectionDialogState extends State<BatchSelectionDialog> {
                           onPressed: () => _searchController.clear(),
                         )
                       : null,
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
                   filled: true,
-                  fillColor:
-                      theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                  fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
                 ),
               ),
             ),
@@ -225,7 +224,11 @@ class _BatchSelectionDialogState extends State<BatchSelectionDialog> {
                     ),
                   ),
                   const Spacer(),
-                  Icon(Icons.keyboard_outlined, size: 12, color: theme.hintColor),
+                  Icon(
+                    Icons.keyboard_outlined,
+                    size: 12,
+                    color: theme.hintColor,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     '↑/↓ navigate • Enter to select • Esc to close',
@@ -248,7 +251,8 @@ class _BatchSelectionDialogState extends State<BatchSelectionDialog> {
                     return const Center(child: CircularProgressIndicator());
                   }
 
-                  if (batchService.errorMessage != null && batchService.batches.isEmpty) {
+                  if (batchService.errorMessage != null &&
+                      batchService.batches.isEmpty) {
                     return Center(
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
@@ -285,7 +289,10 @@ class _BatchSelectionDialogState extends State<BatchSelectionDialog> {
 
                   return ListView.builder(
                     controller: _scrollController,
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     itemCount: _filteredBatches.length,
                     itemBuilder: (context, index) {
                       final batch = _filteredBatches[index];
@@ -335,31 +342,43 @@ class _BatchSelectionDialogState extends State<BatchSelectionDialog> {
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         Text(
                                           batch.prodName,
-                                          style: theme.textTheme.bodyMedium?.copyWith(
-                                            fontWeight: isSelected
-                                                ? FontWeight.bold
-                                                : FontWeight.w600,
-                                            color: isSelected
-                                                ? theme.colorScheme.onPrimaryContainer
-                                                : theme.colorScheme.onSurface,
-                                          ),
+                                          style: theme.textTheme.bodyMedium
+                                              ?.copyWith(
+                                                fontWeight: isSelected
+                                                    ? FontWeight.bold
+                                                    : FontWeight.w600,
+                                                color: isSelected
+                                                    ? theme
+                                                          .colorScheme
+                                                          .onPrimaryContainer
+                                                    : theme
+                                                          .colorScheme
+                                                          .onSurface,
+                                              ),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                         Text(
-                                          'Unit: ${batch.unitName}  |  Stock: ${batch.batchStock}  |  Unit Value: ${batch.formattedUnitValue}',
-                                          style: theme.textTheme.bodySmall?.copyWith(
-                                            color: isSelected
-                                                ? theme.colorScheme.onPrimaryContainer
-                                                    .withOpacity(0.8)
-                                                : theme.colorScheme.onSurfaceVariant,
-                                            fontSize: 11,
-                                          ),
+                                          'Unit: ${batch.unitName}  |  Stock: ${batch.batchAvailableStock}  |  Unit Value: ${batch.formattedUnitValue}',
+                                          style: theme.textTheme.bodySmall
+                                              ?.copyWith(
+                                                color: isSelected
+                                                    ? theme
+                                                          .colorScheme
+                                                          .onPrimaryContainer
+                                                          .withOpacity(0.8)
+                                                    : theme
+                                                          .colorScheme
+                                                          .onSurfaceVariant,
+                                                fontSize: 11,
+                                              ),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                         ),

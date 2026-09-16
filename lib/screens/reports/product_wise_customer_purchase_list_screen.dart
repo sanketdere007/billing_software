@@ -24,10 +24,12 @@ class ProductWiseCustomerPurchaseListScreen extends StatefulWidget {
   });
 
   @override
-  State<ProductWiseCustomerPurchaseListScreen> createState() => _ProductWiseCustomerPurchaseListScreenState();
+  State<ProductWiseCustomerPurchaseListScreen> createState() =>
+      _ProductWiseCustomerPurchaseListScreenState();
 }
 
-class _ProductWiseCustomerPurchaseListScreenState extends State<ProductWiseCustomerPurchaseListScreen> {
+class _ProductWiseCustomerPurchaseListScreenState
+    extends State<ProductWiseCustomerPurchaseListScreen> {
   final FocusNode _screenFocusNode = FocusNode();
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
@@ -38,7 +40,7 @@ class _ProductWiseCustomerPurchaseListScreenState extends State<ProductWiseCusto
   bool _hasMoreData = true;
   int _pageNumber = 1;
   static const int _pageSize = 15;
-  
+
   String _searchQuery = '';
   String? _errorMessage;
   List<ProductWiseCustomerPurchaseItem> _reportData = [];
@@ -70,7 +72,8 @@ class _ProductWiseCustomerPurchaseListScreenState extends State<ProductWiseCusto
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
       _fetchMoreData();
     }
   }
@@ -89,7 +92,7 @@ class _ProductWiseCustomerPurchaseListScreenState extends State<ProductWiseCusto
 
   Future<void> _fetchMoreData() async {
     if (_isLoading || _isFetchingMore || !_hasMoreData) return;
-    
+
     setState(() {
       _isFetchingMore = true;
     });
@@ -98,17 +101,18 @@ class _ProductWiseCustomerPurchaseListScreenState extends State<ProductWiseCusto
       final nextPage = _pageNumber + 1;
       final compId = sessionService.selectedCompId ?? 0;
       final branchId = sessionService.selectedBranchId ?? 0;
-      
-      final response = await productWiseSalesReportService.getProductWiseCustomerPurchaseList(
-        productId: widget.productId,
-        compId: compId,
-        branchId: branchId,
-        fromDate: widget.fromDate,
-        toDate: widget.toDate,
-        searchText: _searchQuery,
-        pageNumber: nextPage,
-        pageSize: _pageSize,
-      );
+
+      final response = await productWiseSalesReportService
+          .getProductWiseCustomerPurchaseList(
+            productId: widget.productId,
+            compId: compId,
+            branchId: branchId,
+            fromDate: widget.fromDate,
+            toDate: widget.toDate,
+            searchText: _searchQuery,
+            pageNumber: nextPage,
+            pageSize: _pageSize,
+          );
 
       if (mounted) {
         setState(() {
@@ -149,7 +153,7 @@ class _ProductWiseCustomerPurchaseListScreenState extends State<ProductWiseCusto
         }
       });
       _scrollToIndex(_highlightedIndex);
-      
+
       if (_highlightedIndex >= _reportData.length - 5) {
         _fetchMoreData();
       }
@@ -174,7 +178,7 @@ class _ProductWiseCustomerPurchaseListScreenState extends State<ProductWiseCusto
   void _scrollToIndex(int index) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_scrollController.hasClients) return;
-      const double rowHeight = 58.0; 
+      const double rowHeight = 58.0;
       final targetOffset = index * rowHeight;
       final currentOffset = _scrollController.offset;
       final viewportHeight = _scrollController.position.viewportDimension;
@@ -213,29 +217,35 @@ class _ProductWiseCustomerPurchaseListScreenState extends State<ProductWiseCusto
       final compId = sessionService.selectedCompId ?? 0;
       final branchId = sessionService.selectedBranchId ?? 0;
 
-      final response = await productWiseSalesReportService.getProductWiseCustomerPurchaseList(
-        productId: widget.productId,
-        compId: compId,
-        branchId: branchId,
-        fromDate: widget.fromDate,
-        toDate: widget.toDate,
-        searchText: _searchQuery,
-        pageNumber: 1,
-        pageSize: _pageSize,
-      );
-      
+      final response = await productWiseSalesReportService
+          .getProductWiseCustomerPurchaseList(
+            productId: widget.productId,
+            compId: compId,
+            branchId: branchId,
+            fromDate: widget.fromDate,
+            toDate: widget.toDate,
+            searchText: _searchQuery,
+            pageNumber: 1,
+            pageSize: _pageSize,
+          );
+
       if (mounted) {
         setState(() {
           if (response.status) {
             _reportData = response.items;
             _hasMoreData = response.items.length == _pageSize;
           } else {
-            _errorMessage = response.message.isNotEmpty ? response.message : 'Unknown error';
+            _errorMessage = response.message.isNotEmpty
+                ? response.message
+                : 'Unknown error';
           }
           _isLoading = false;
-          
+
           if (_reportData.isNotEmpty) {
-            _highlightedIndex = _highlightedIndex.clamp(0, _reportData.length - 1);
+            _highlightedIndex = _highlightedIndex.clamp(
+              0,
+              _reportData.length - 1,
+            );
           } else {
             _highlightedIndex = 0;
           }
@@ -294,7 +304,9 @@ class _ProductWiseCustomerPurchaseListScreenState extends State<ProductWiseCusto
                             IconButton(
                               icon: const Icon(Icons.refresh_rounded),
                               tooltip: 'Refresh',
-                              onPressed: _isLoading ? null : () => _fetchReport(refresh: true),
+                              onPressed: _isLoading
+                                  ? null
+                                  : () => _fetchReport(refresh: true),
                             ),
                             const SizedBox(width: 16),
                           ],
@@ -319,7 +331,9 @@ class _ProductWiseCustomerPurchaseListScreenState extends State<ProductWiseCusto
                   IconButton(
                     icon: const Icon(Icons.refresh_rounded),
                     tooltip: 'Refresh',
-                    onPressed: _isLoading ? null : () => _fetchReport(refresh: true),
+                    onPressed: _isLoading
+                        ? null
+                        : () => _fetchReport(refresh: true),
                   ),
                 ],
               ),
@@ -373,7 +387,10 @@ class _ProductWiseCustomerPurchaseListScreenState extends State<ProductWiseCusto
                           },
                         )
                       : null,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 0,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -413,7 +430,10 @@ class _ProductWiseCustomerPurchaseListScreenState extends State<ProductWiseCusto
                       },
                     )
                   : null,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 8,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -436,13 +456,23 @@ class _ProductWiseCustomerPurchaseListScreenState extends State<ProductWiseCusto
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline_rounded, size: 48, color: Colors.red),
+            const Icon(
+              Icons.error_outline_rounded,
+              size: 48,
+              color: Colors.red,
+            ),
             const SizedBox(height: 16),
-            Text('Failed to load report', style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              'Failed to load report',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 8),
             Text(_errorMessage!),
             const SizedBox(height: 16),
-            FilledButton(onPressed: () => _fetchReport(refresh: true), child: const Text('Retry')),
+            FilledButton(
+              onPressed: () => _fetchReport(refresh: true),
+              child: const Text('Retry'),
+            ),
           ],
         ),
       );
@@ -490,17 +520,51 @@ class _ProductWiseCustomerPurchaseListScreenState extends State<ProductWiseCusto
               padding: const EdgeInsets.symmetric(horizontal: 20),
               decoration: BoxDecoration(
                 color: theme.colorScheme.primaryContainer.withOpacity(0.35),
-                border: Border(bottom: BorderSide(color: theme.colorScheme.outlineVariant)),
+                border: Border(
+                  bottom: BorderSide(color: theme.colorScheme.outlineVariant),
+                ),
               ),
               child: const Row(
                 children: [
-                  SizedBox(width: 50, child: Text('#', style: TextStyle(fontWeight: FontWeight.bold))),
-                  Expanded(flex: 3, child: Text('Customer Name', style: TextStyle(fontWeight: FontWeight.bold))),
-                  Expanded(flex: 2, child: Text('Purchase Date', style: TextStyle(fontWeight: FontWeight.bold))),
-                  Expanded(flex: 1, child: Text('Rate', textAlign: TextAlign.right, style: TextStyle(fontWeight: FontWeight.bold))),
-                  Expanded(flex: 1, child: Text('Quantity', textAlign: TextAlign.right, style: TextStyle(fontWeight: FontWeight.bold))),
-                  Expanded(flex: 1, child: Text('Free Qty', textAlign: TextAlign.right, style: TextStyle(fontWeight: FontWeight.bold))),
-                  Expanded(flex: 2, child: Text('Amount', textAlign: TextAlign.right, style: TextStyle(fontWeight: FontWeight.bold))),
+                  SizedBox(
+                    width: 50,
+                    child: Text(
+                      '#',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 3,
+                    child: Text(
+                      'Customer Name',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      'Purchase Date',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  //  Expanded(flex: 1, child: Text('Rate', textAlign: TextAlign.right, style: TextStyle(fontWeight: FontWeight.bold))),
+                  Expanded(
+                    flex: 1,
+                    child: Text(
+                      'Quantity',
+                      textAlign: TextAlign.right,
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  // Expanded(flex: 1, child: Text('Free Qty', textAlign: TextAlign.right, style: TextStyle(fontWeight: FontWeight.bold))),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      'Amount',
+                      textAlign: TextAlign.right,
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -519,7 +583,7 @@ class _ProductWiseCustomerPurchaseListScreenState extends State<ProductWiseCusto
 
                   final item = _reportData[index];
                   final isSelected = index == _highlightedIndex;
-                  
+
                   return InkWell(
                     onTap: () {
                       setState(() {
@@ -530,35 +594,74 @@ class _ProductWiseCustomerPurchaseListScreenState extends State<ProductWiseCusto
                       height: 58,
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       decoration: BoxDecoration(
-                        color: isSelected ? theme.colorScheme.primaryContainer.withOpacity(0.3) : null,
-                        border: Border(bottom: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.3))),
+                        color: isSelected
+                            ? theme.colorScheme.primaryContainer.withOpacity(
+                                0.3,
+                              )
+                            : null,
+                        border: Border(
+                          bottom: BorderSide(
+                            color: theme.colorScheme.outlineVariant.withOpacity(
+                              0.3,
+                            ),
+                          ),
+                        ),
                       ),
                       child: Row(
                         children: [
                           SizedBox(width: 50, child: Text('${index + 1}')),
                           Expanded(
-                            flex: 3, 
+                            flex: 3,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Text(item.customerName.isNotEmpty ? item.customerName : 'Unknown Customer', maxLines: 1, overflow: TextOverflow.ellipsis),
+                                Text(
+                                  item.customerName.isNotEmpty
+                                      ? item.customerName
+                                      : 'Unknown Customer',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                                 if (item.customerMobile.isNotEmpty)
-                                  Text(item.customerMobile, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                                  Text(
+                                    item.customerMobile,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
                               ],
-                            )
+                            ),
                           ),
-                          Expanded(flex: 2, child: Text(item.purchaseDate != null ? DateFormat('dd MMM yyyy, hh:mm a').format(item.purchaseDate!) : '-')),
-                          Expanded(flex: 1, child: Text('₹ ${item.rate.toStringAsFixed(2)}', textAlign: TextAlign.right)),
-                          Expanded(flex: 1, child: Text(item.qty.toStringAsFixed(2), textAlign: TextAlign.right)),
-                          Expanded(flex: 1, child: Text(item.freeQty.toStringAsFixed(2), textAlign: TextAlign.right)),
                           Expanded(
-                            flex: 2, 
+                            flex: 2,
                             child: Text(
-                              '₹ ${item.amount.toStringAsFixed(2)}', 
+                              item.purchaseDate != null
+                                  ? DateFormat(
+                                      'dd MMM yyyy',
+                                    ).format(item.purchaseDate!)
+                                  : '-',
+                            ),
+                          ),
+                          //    Expanded(flex: 1, child: Text('₹ ${item.rate.toStringAsFixed(2)}', textAlign: TextAlign.right)),
+                          Expanded(
+                            flex: 1,
+                            child: Text(
+                              item.qty.toStringAsFixed(2),
                               textAlign: TextAlign.right,
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            )
+                            ),
+                          ),
+                          // Expanded(flex: 1, child: Text(item.freeQty.toStringAsFixed(2), textAlign: TextAlign.right)),
+                          Expanded(
+                            flex: 2,
+                            child: Text(
+                              '₹ ${item.amount.toStringAsFixed(2)}',
+                              textAlign: TextAlign.right,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -588,18 +691,31 @@ class _ProductWiseCustomerPurchaseListScreenState extends State<ProductWiseCusto
 
         final item = _reportData[index];
         final isSelected = index == _highlightedIndex;
-        
+
         return Card(
           elevation: isSelected ? 4 : 1,
-          color: isSelected ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3) : null,
+          color: isSelected
+              ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3)
+              : null,
           child: ListTile(
-            title: Text(item.customerName.isNotEmpty ? item.customerName : 'Unknown Customer', style: const TextStyle(fontWeight: FontWeight.bold)),
+            title: Text(
+              item.customerName.isNotEmpty
+                  ? item.customerName
+                  : 'Unknown Customer',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (item.customerMobile.isNotEmpty) Text('Mobile: ${item.customerMobile}'),
-                if (item.purchaseDate != null) Text('Date: ${DateFormat('dd MMM yyyy, hh:mm a').format(item.purchaseDate!)}'),
-                Text('Rate: ₹ ${item.rate.toStringAsFixed(2)} • Qty: ${item.qty.toStringAsFixed(2)} • Free: ${item.freeQty.toStringAsFixed(2)}'),
+                if (item.customerMobile.isNotEmpty)
+                  Text('Mobile: ${item.customerMobile}'),
+                if (item.purchaseDate != null)
+                  Text(
+                    'Date: ${DateFormat('dd MMM yyyy, hh:mm a').format(item.purchaseDate!)}',
+                  ),
+                Text(
+                  'Rate: ₹ ${item.rate.toStringAsFixed(2)} • Qty: ${item.qty.toStringAsFixed(2)} • Free: ${item.freeQty.toStringAsFixed(2)}',
+                ),
                 const SizedBox(height: 4),
                 Text(
                   'Amount: ₹ ${item.amount.toStringAsFixed(2)}',

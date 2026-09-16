@@ -599,7 +599,7 @@ class _ProductWiseSalesReportScreenState extends State<ProductWiseSalesReportScr
                   Expanded(flex: 3, child: Text('Product Name', style: TextStyle(fontWeight: FontWeight.bold))),
                   Expanded(flex: 1, child: Text('HSN Code', style: TextStyle(fontWeight: FontWeight.bold))),
                   Expanded(flex: 1, child: Text('Quantity', textAlign: TextAlign.right, style: TextStyle(fontWeight: FontWeight.bold))),
-                  Expanded(flex: 1, child: Text('Free Qty', textAlign: TextAlign.right, style: TextStyle(fontWeight: FontWeight.bold))),
+             //     Expanded(flex: 1, child: Text('Free Qty', textAlign: TextAlign.right, style: TextStyle(fontWeight: FontWeight.bold))),
                   Expanded(flex: 2, child: Text('Total Amount', textAlign: TextAlign.right, style: TextStyle(fontWeight: FontWeight.bold))),
                 ],
               ),
@@ -640,7 +640,7 @@ class _ProductWiseSalesReportScreenState extends State<ProductWiseSalesReportScr
                           Expanded(flex: 3, child: Text(item.productName.isNotEmpty ? item.productName : 'N/A')),
                           Expanded(flex: 1, child: Text(item.hsnCode.isNotEmpty ? item.hsnCode : '-')),
                           Expanded(flex: 1, child: Text(item.totalQty.toStringAsFixed(2), textAlign: TextAlign.right)),
-                          Expanded(flex: 1, child: Text(item.totalFreeQty.toStringAsFixed(2), textAlign: TextAlign.right)),
+                        //  Expanded(flex: 1, child: Text(item.totalFreeQty.toStringAsFixed(2), textAlign: TextAlign.right)),
                           Expanded(
                             flex: 2, 
                             child: Text(
