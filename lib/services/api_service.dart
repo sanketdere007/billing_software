@@ -152,6 +152,65 @@ class ApiService {
     }
   }
 
+  /// DELETE request helper
+  Future<dynamic> delete(
+    String endpoint, {
+    Map<String, String>? queryParameters,
+    bool requiresAuth = true,
+    Duration? timeout,
+  }) async {
+    final uri = _buildUri(endpoint, queryParameters: queryParameters);
+    Map<String, String> headers;
+
+    if (requiresAuth) {
+      headers = await sessionService.getAuthHeaders();
+    } else {
+      headers = Map<String, String>.from(ApiConstants.defaultHeaders);
+    }
+
+    try {
+      debugPrint('┌────────────────────────────────────────────────────────');
+      debugPrint('│ 🗑️ [API DELETE] $uri');
+      debugPrint('│ 🏷️  Query Parameters: ${queryParameters ?? {}}');
+      debugPrint('│ 🔑 Headers: $headers');
+      debugPrint('└────────────────────────────────────────────────────────');
+
+      final response = await _client
+          .delete(uri, headers: headers)
+          .timeout(timeout ?? ApiConstants.timeoutDuration);
+
+      debugPrint('┌────────────────────────────────────────────────────────');
+      debugPrint('│ 📥 [API DELETE Response] Status: ${response.statusCode} for $uri');
+      debugPrint('│ 📄 Body: ${response.body}');
+      debugPrint('└────────────────────────────────────────────────────────');
+
+      return _processResponse(response);
+    } on SocketException catch (e) {
+      if (e.osError != null && e.osError!.errorCode == 101) {
+        throw ApiException('No Internet Connection');
+      }
+      throw ApiException(
+        'Unable to connect to server.\nPlease try again later.',
+      );
+    } on TimeoutException {
+      throw ApiException('Connection timed out. Please try again.');
+    } on FormatException {
+      throw ApiException('Invalid response format from server.');
+    } on HttpException {
+      throw ApiException(
+        'Unable to connect to server.\nPlease try again later.',
+      );
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(
+        e.toString().contains('Failed host lookup')
+            ? 'No Internet Connection'
+            : 'Unable to connect to server.\nPlease try again later.',
+      );
+    }
+  }
+
   /// Build URI supporting absolute or relative endpoints
   Uri _buildUri(String endpoint, {Map<String, String>? queryParameters}) {
     String fullUrl;

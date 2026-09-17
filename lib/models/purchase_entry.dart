@@ -2,6 +2,7 @@ class PurchaseEntryProduct {
   final String id;
   final String productId;
   final String productName;
+  final String batchNo;
   final String barcode;
   final double quantity;
   final String unit;
@@ -19,6 +20,7 @@ class PurchaseEntryProduct {
     required this.id,
     required this.productId,
     required this.productName,
+    this.batchNo = '',
     this.barcode = '',
     required this.quantity,
     required this.unit,
@@ -149,6 +151,7 @@ class PurchaseEntryDetailData {
   final int compId;
   final int branchId;
   final int productId;
+  final String batchNo;
   final String barcode;
   final String eanCode;
   final double qty;
@@ -166,6 +169,7 @@ class PurchaseEntryDetailData {
     this.compId = 0,
     this.branchId = 0,
     required this.productId,
+    this.batchNo = '',
     this.barcode = '',
     this.eanCode = '',
     required this.qty,
@@ -185,6 +189,7 @@ class PurchaseEntryDetailData {
       "purchaseDetail_CompId": compId,
       "purchaseDetail_BranchId": branchId,
       "purchaseDetail_ProductId": productId,
+      "purchaseDetail_BatchNumber": batchNo,
       "purchaseDetail_Barcode": barcode,
       "purchaseDetail_EANCode": eanCode,
       "purchaseDetail_Qty": qty,
@@ -390,6 +395,7 @@ class PurchaseDetailViewItem {
   final int compId;
   final int branchId;
   final int productId;
+  final String batchNo;
   final String barcode;
   final String eanCode;
   final double qty;
@@ -410,6 +416,7 @@ class PurchaseDetailViewItem {
     required this.compId,
     required this.branchId,
     required this.productId,
+    required this.batchNo,
     required this.barcode,
     required this.eanCode,
     required this.qty,
@@ -432,6 +439,7 @@ class PurchaseDetailViewItem {
       compId: json['purchaseDetail_CompId'] ?? 0,
       branchId: json['purchaseDetail_BranchId'] ?? 0,
       productId: json['purchaseDetail_ProductId'] ?? 0,
+      batchNo: json['purchaseDetail_BatchNumber'] ?? '',
       barcode: json['purchaseDetail_Barcode'] ?? '',
       eanCode: json['purchaseDetail_EANCode'] ?? '',
       qty: (json['purchaseDetail_Qty'] ?? 0.0).toDouble(),

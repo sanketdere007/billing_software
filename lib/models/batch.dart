@@ -19,6 +19,7 @@ class BatchListItem {
   final String batchBarcode;
   final String batchEANCode;
   final bool batchIsActive;
+  final String batchNumber;
 
   BatchListItem({
     required this.batchId,
@@ -41,6 +42,7 @@ class BatchListItem {
     this.batchBarcode = '',
     this.batchEANCode = '',
     this.batchIsActive = true,
+    this.batchNumber = '',
   });
 
   factory BatchListItem.fromJson(Map<String, dynamic> json) {
@@ -90,6 +92,7 @@ class BatchListItem {
       batchBarcode: json['batch_Barcode']?.toString() ?? '',
       batchEANCode: json['batch_EANCode']?.toString() ?? '',
       batchIsActive: json['batch_IsActive'] == true || json['batch_IsActive'] == 'true',
+      batchNumber: json['batch_Number']?.toString() ?? '',
     );
   }
 

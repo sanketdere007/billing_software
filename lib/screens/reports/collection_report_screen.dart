@@ -184,6 +184,13 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
       return KeyEventResult.handled;
     }
 
+    if (key == LogicalKeyboardKey.escape) {
+      if (_highlightedIndex >= 0 && _highlightedIndex < _reportData.length) {
+        _deleteReceipt(_reportData[_highlightedIndex]);
+        return KeyEventResult.handled;
+      }
+    }
+
     return KeyEventResult.ignored;
   }
 
@@ -507,6 +514,61 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
     } catch (e) {
       if (mounted) {
         showErrorDialog(context, 'Failed to share receipt Image: $e');
+      }
+    }
+  }
+
+  Future<void> _deleteReceipt(CollectionReportData item) async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirm Delete'),
+          content: Text('Are you sure you want to delete receipt ${item.receiptMasterReceiptNo}?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('No'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+              child: const Text('Yes'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm != true) return;
+
+    if (!mounted) return;
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final response = await collectionReportService.deleteReceiptEntry(item.receiptMasterId);
+      
+      if (mounted) {
+        if (response['status'] == true) {
+          await showSuccessDialog(context, response['message'] ?? 'Deleted successfully');
+          _fetchReport(refresh: true);
+        } else {
+          await showErrorDialog(context, response['message'] ?? 'Failed to delete');
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        await showErrorDialog(context, e.toString().replaceAll('ApiException: ', ''));
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
@@ -892,6 +954,18 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
                                   onPressed: () => _downloadReceipt(item),
                                 ),
                                 const SizedBox(width: 8),
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.delete_outline,
+                                    size: 20,
+                                    color: Colors.red,
+                                  ),
+                                  tooltip: 'Delete',
+                                  padding: const EdgeInsets.all(4),
+                                  constraints: const BoxConstraints(),
+                                  onPressed: () => _deleteReceipt(item),
+                                ),
+                                const SizedBox(width: 8),
                                 PopupMenuButton<String>(
                                   icon: const Icon(
                                     Icons.share_outlined,
@@ -1036,6 +1110,14 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
                         padding: const EdgeInsets.all(4),
                         constraints: const BoxConstraints(),
                         onPressed: () => _downloadReceipt(item),
+                      ),
+                      const SizedBox(width: 4),
+                      IconButton(
+                        icon: const Icon(Icons.delete_outline, size: 20, color: Colors.red),
+                        tooltip: 'Delete',
+                        padding: const EdgeInsets.all(4),
+                        constraints: const BoxConstraints(),
+                        onPressed: () => _deleteReceipt(item),
                       ),
                       const SizedBox(width: 4),
                       PopupMenuButton<String>(

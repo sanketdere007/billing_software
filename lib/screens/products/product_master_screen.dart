@@ -43,6 +43,7 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
 
   final TextEditingController _batchBarcodeController = TextEditingController();
   final TextEditingController _batchEANCodeController = TextEditingController();
+  final TextEditingController _batchNumberController = TextEditingController();
   final TextEditingController _batchStockController = TextEditingController(
     text: '0',
   );
@@ -70,6 +71,7 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
 
   final FocusNode _batchBarcodeFocusNode = FocusNode();
   final FocusNode _batchEANCodeFocusNode = FocusNode();
+  final FocusNode _batchNumberFocusNode = FocusNode();
   final FocusNode _batchStockFocusNode = FocusNode();
   final FocusNode _batchLandingPriceFocusNode = FocusNode();
   final FocusNode _batchPurchasePriceFocusNode = FocusNode();
@@ -125,6 +127,7 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
 
     _batchBarcodeController.dispose();
     _batchEANCodeController.dispose();
+    _batchNumberController.dispose();
     _batchStockController.dispose();
     _batchLandingPriceController.dispose();
     _batchPurchasePriceController.dispose();
@@ -133,6 +136,7 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
 
     _batchBarcodeFocusNode.dispose();
     _batchEANCodeFocusNode.dispose();
+    _batchNumberFocusNode.dispose();
     _batchStockFocusNode.dispose();
     _batchLandingPriceFocusNode.dispose();
     _batchPurchasePriceFocusNode.dispose();
@@ -195,6 +199,7 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
 
     _batchBarcodeController.text = product.batchBarcode;
     _batchEANCodeController.text = product.batchEANCode;
+    _batchNumberController.text = product.batchNumber;
     _batchStockController.text = product.batchStock.toString();
     _batchLandingPriceController.text = product.batchLandingPrice.toString();
     _batchPurchasePriceController.text = product.batchPurchasePrice.toString();
@@ -332,6 +337,7 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
         prodModifiedBy: widget.productToEdit != null ? _currentEmpId : 0,
         batchBarcode: _batchBarcodeController.text.trim(),
         batchEANCode: _batchEANCodeController.text.trim(),
+        batchNumber: _batchNumberController.text.trim(),
         batchStock: double.tryParse(_batchStockController.text.trim()) ?? 0.0,
         batchLandingPrice:
             double.tryParse(_batchLandingPriceController.text.trim()) ?? 0.0,
@@ -375,6 +381,7 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
         _unitValueController.text = '0';
         _batchBarcodeController.clear();
         _batchEANCodeController.clear();
+        _batchNumberController.clear();
         _batchStockController.text = '0';
         _batchLandingPriceController.text = '0';
         _batchPurchasePriceController.text = '0';
@@ -427,6 +434,7 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
           _unitValueController.text = '0';
           _batchBarcodeController.clear();
           _batchEANCodeController.clear();
+          _batchNumberController.clear();
           _batchStockController.text = '0';
           _batchLandingPriceController.text = '0';
           _batchPurchasePriceController.text = '0';
@@ -660,6 +668,8 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
                 if (isDesktop) ...[
                   Row(
                     children: [
+                      Expanded(child: _buildBatchNumberField()),
+                      const SizedBox(width: 16),
                       Expanded(child: _buildBatchBarcodeField()),
                       const SizedBox(width: 16),
                       Expanded(child: _buildBatchEANCodeField()),
@@ -680,6 +690,8 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
                     ],
                   ),
                 ] else ...[
+                  _buildBatchNumberField(),
+                  const SizedBox(height: 14),
                   _buildBatchBarcodeField(),
                   const SizedBox(height: 14),
                   _buildBatchEANCodeField(),
@@ -1105,13 +1117,28 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
       selectedGstId: _selectedGstId,
       selectedGstPercent: isEditing ? _selectedGstPercent : null,
       focusNode: _gstFocusNode,
-      onSelectionComplete: () => _batchBarcodeFocusNode.requestFocus(),
+      onSelectionComplete: () => _batchNumberFocusNode.requestFocus(),
       onChanged: (val) {
         setState(() {
           _selectedGstId = val?.gstTaxId;
           _selectedGstPercent = val?.gstTaxPercentage ?? 0.0;
         });
       },
+    );
+  }
+
+  Widget _buildBatchNumberField() {
+    return TextFormField(
+      controller: _batchNumberController,
+      focusNode: _batchNumberFocusNode,
+      textInputAction: TextInputAction.next,
+      onFieldSubmitted: (_) => _batchBarcodeFocusNode.requestFocus(),
+      decoration: InputDecoration(
+        labelText: 'Batch Number',
+        hintText: 'Enter batch number',
+        prefixIcon: const Icon(Icons.tag, size: 20),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
     );
   }
 

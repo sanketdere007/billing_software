@@ -33,6 +33,7 @@ class ProductListItem {
   final double batchPurchasePrice;
   final double batchMRP;
   final double batchSellingPrice;
+  final String batchNumber;
 
   ProductListItem({
     required this.prodId,
@@ -66,6 +67,7 @@ class ProductListItem {
     this.batchPurchasePrice = 0.0,
     this.batchMRP = 0.0,
     this.batchSellingPrice = 0.0,
+    this.batchNumber = '',
   });
 
   // Backwards compatibility getters if needed, otherwise clean properties
@@ -163,6 +165,7 @@ class ProductListItem {
       batchPurchasePrice: double.tryParse(json['batch_PurchasePrice']?.toString() ?? '0') ?? 0.0,
       batchMRP: double.tryParse(json['batch_MRP']?.toString() ?? '0') ?? 0.0,
       batchSellingPrice: double.tryParse(json['batch_SellingPrice']?.toString() ?? '0') ?? 0.0,
+      batchNumber: json['batch_Number']?.toString() ?? '',
     );
   }
 
@@ -199,6 +202,7 @@ class ProductListItem {
       'batch_PurchasePrice': batchPurchasePrice,
       'batch_MRP': batchMRP,
       'batch_SellingPrice': batchSellingPrice,
+      'batch_Number': batchNumber,
     };
   }
 
@@ -227,6 +231,7 @@ class ProductListItem {
     String? prodUnitShortName,
     String? prodCreatedDate,
     String? prodModifiedDate,
+    String? batchNumber,
   }) {
     return ProductListItem(
       prodId: prodId ?? this.prodId,
@@ -253,6 +258,7 @@ class ProductListItem {
       prodUnitShortName: prodUnitShortName ?? this.prodUnitShortName,
       prodCreatedDate: prodCreatedDate ?? this.prodCreatedDate,
       prodModifiedDate: prodModifiedDate ?? this.prodModifiedDate,
+      batchNumber: batchNumber ?? this.batchNumber,
     );
   }
 
@@ -353,6 +359,7 @@ class ProductUpsertRequest {
   final double batchPurchasePrice;
   final double batchMRP;
   final double batchSellingPrice;
+  final String batchNumber;
 
   ProductUpsertRequest({
     this.prodId = 0,
@@ -377,6 +384,7 @@ class ProductUpsertRequest {
     this.batchPurchasePrice = 0.0,
     this.batchMRP = 0.0,
     this.batchSellingPrice = 0.0,
+    this.batchNumber = '',
   });
 
   Map<String, dynamic> toJson() {
@@ -403,6 +411,7 @@ class ProductUpsertRequest {
       'batch_PurchasePrice': batchPurchasePrice,
       'batch_MRP': batchMRP,
       'batch_SellingPrice': batchSellingPrice,
+      'batch_Number': batchNumber.trim(),
     };
   }
 }

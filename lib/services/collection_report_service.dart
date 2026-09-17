@@ -15,6 +15,14 @@ class CollectionReportService {
 
     return CollectionReportResponse.fromJson(response);
   }
+
+  Future<Map<String, dynamic>> deleteReceiptEntry(int id) async {
+    final response = await _apiService.delete(
+      '/api/ReceiptEntry/DeleteReceiptEntry/$id',
+      requiresAuth: true,
+    );
+    return response as Map<String, dynamic>;
+  }
 }
 
 final collectionReportService = CollectionReportService();

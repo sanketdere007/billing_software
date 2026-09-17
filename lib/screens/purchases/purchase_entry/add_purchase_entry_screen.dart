@@ -86,10 +86,12 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
     if (_selectedSupplier == 0) {
       // Try to match by name if ID parsing fails
       try {
-        _selectedSupplier = _supplierService.suppliers.firstWhere((s) => s.suppName == entry.supplierName).suppId;
+        _selectedSupplier = _supplierService.suppliers
+            .firstWhere((s) => s.suppName == entry.supplierName)
+            .suppId;
       } catch (_) {}
     }
-    
+
     // Find products and load them
     for (var prod in entry.products) {
       final p = {
@@ -99,24 +101,40 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
           prodName: prod.productName,
           prodGSTPercent: prod.gstPercent,
         ),
+        'batchNo': prod.batchNo,
         'qty': prod.quantity,
         'lc': prod.landingPrice,
         'pc': prod.purchasePrice,
         'mrp': prod.mrp,
         'sp': prod.sellingPrice,
-        'discAmt': prod.taxAmount, // Using taxAmount as a placeholder for discount if any, or wait, entry has no discAmt per product?
+        'discAmt': prod
+            .taxAmount, // Using taxAmount as a placeholder for discount if any, or wait, entry has no discAmt per product?
         'gstPct': prod.gstPercent,
         'gross': prod.quantity * prod.purchasePrice,
-        'discounted': prod.quantity * prod.purchasePrice, // assuming no product-level discount in model
+        'discounted':
+            prod.quantity *
+            prod.purchasePrice, // assuming no product-level discount in model
         'gstAmt': prod.taxAmount,
         'net': prod.total,
-        'qtyController': TextEditingController(text: prod.quantity.toStringAsFixed(2)),
-        'lcController': TextEditingController(text: prod.landingPrice.toStringAsFixed(2)),
-        'pcController': TextEditingController(text: prod.purchasePrice.toStringAsFixed(2)),
-        'mrpController': TextEditingController(text: prod.mrp.toStringAsFixed(2)),
-        'spController': TextEditingController(text: prod.sellingPrice.toStringAsFixed(2)),
+        'batchNoController': TextEditingController(text: prod.batchNo),
+        'qtyController': TextEditingController(
+          text: prod.quantity.toStringAsFixed(2),
+        ),
+        'lcController': TextEditingController(
+          text: prod.landingPrice.toStringAsFixed(2),
+        ),
+        'pcController': TextEditingController(
+          text: prod.purchasePrice.toStringAsFixed(2),
+        ),
+        'mrpController': TextEditingController(
+          text: prod.mrp.toStringAsFixed(2),
+        ),
+        'spController': TextEditingController(
+          text: prod.sellingPrice.toStringAsFixed(2),
+        ),
         'discAmtController': TextEditingController(text: '0.0'),
         'productNode': FocusNode(),
+        'batchNoNode': FocusNode(),
         'qtyNode': FocusNode(),
         'lcNode': FocusNode(),
         'pcNode': FocusNode(),
@@ -138,7 +156,9 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
         _isLoading = true;
       });
 
-      final details = await PurchaseEntryService().getPurchaseDetailViewList(master.purchaseMasterId);
+      final details = await PurchaseEntryService().getPurchaseDetailViewList(
+        master.purchaseMasterId,
+      );
 
       _resetForm(); // clear first
       _products.clear(); // remove the empty row added by resetForm
@@ -161,6 +181,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
             prodName: d.prodName,
             prodGSTPercent: d.gstPercent,
           ),
+          'batchNo': d.batchNo,
           'qty': d.qty,
           'lc': d.landingPrice,
           'pc': d.purchasePrice,
@@ -172,13 +193,27 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
           'discounted': (d.qty * d.purchasePrice) - d.discountAmount,
           'gstAmt': d.gstAmount,
           'net': d.totalAmount,
-          'qtyController': TextEditingController(text: d.qty.toStringAsFixed(2)),
-          'lcController': TextEditingController(text: d.landingPrice.toStringAsFixed(2)),
-          'pcController': TextEditingController(text: d.purchasePrice.toStringAsFixed(2)),
-          'mrpController': TextEditingController(text: d.mrp.toStringAsFixed(2)),
-          'spController': TextEditingController(text: d.sellingPrice.toStringAsFixed(2)),
-          'discAmtController': TextEditingController(text: d.discountAmount.toStringAsFixed(2)),
+          'batchNoController': TextEditingController(text: d.batchNo),
+          'qtyController': TextEditingController(
+            text: d.qty.toStringAsFixed(2),
+          ),
+          'lcController': TextEditingController(
+            text: d.landingPrice.toStringAsFixed(2),
+          ),
+          'pcController': TextEditingController(
+            text: d.purchasePrice.toStringAsFixed(2),
+          ),
+          'mrpController': TextEditingController(
+            text: d.mrp.toStringAsFixed(2),
+          ),
+          'spController': TextEditingController(
+            text: d.sellingPrice.toStringAsFixed(2),
+          ),
+          'discAmtController': TextEditingController(
+            text: d.discountAmount.toStringAsFixed(2),
+          ),
           'productNode': FocusNode(),
+          'batchNoNode': FocusNode(),
           'qtyNode': FocusNode(),
           'lcNode': FocusNode(),
           'pcNode': FocusNode(),
@@ -209,10 +244,10 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
     }
   }
 
-
   void _addNewEmptyRow() {
     _products.add({
       'product': null, // null indicates empty row
+      'batchNo': '',
       'qty': 1.0,
       'lc': 0.0,
       'pc': 0.0,
@@ -224,6 +259,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
       'discounted': 0.0,
       'gstAmt': 0.0,
       'net': 0.0,
+      'batchNoController': TextEditingController(text: ''),
       'qtyController': TextEditingController(text: '1.0'),
       'lcController': TextEditingController(text: '0.0'),
       'pcController': TextEditingController(text: '0.0'),
@@ -231,6 +267,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
       'spController': TextEditingController(text: '0.0'),
       'discAmtController': TextEditingController(text: '0.0'),
       'productNode': FocusNode(),
+      'batchNoNode': FocusNode(),
       'qtyNode': FocusNode(),
       'lcNode': FocusNode(),
       'pcNode': FocusNode(),
@@ -254,6 +291,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
     _billDiscountController.dispose();
 
     for (var p in _products) {
+      (p['batchNoController'] as TextEditingController).dispose();
       (p['qtyController'] as TextEditingController).dispose();
       (p['lcController'] as TextEditingController).dispose();
       (p['pcController'] as TextEditingController).dispose();
@@ -261,6 +299,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
       (p['spController'] as TextEditingController).dispose();
       (p['discAmtController'] as TextEditingController).dispose();
       (p['productNode'] as FocusNode).dispose();
+      (p['batchNoNode'] as FocusNode).dispose();
       (p['qtyNode'] as FocusNode).dispose();
       (p['lcNode'] as FocusNode).dispose();
       (p['pcNode'] as FocusNode).dispose();
@@ -347,18 +386,26 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
         p['pc'] = selectedProduct.batchPurchasePrice;
         p['mrp'] = selectedProduct.batchMRP;
         p['sp'] = selectedProduct.batchSellingPrice;
-        (p['lcController'] as TextEditingController).text = selectedProduct.batchLandingPrice.toStringAsFixed(2);
-        (p['pcController'] as TextEditingController).text = selectedProduct.batchPurchasePrice.toStringAsFixed(2);
-        (p['mrpController'] as TextEditingController).text = selectedProduct.batchMRP.toStringAsFixed(2);
-        (p['spController'] as TextEditingController).text = selectedProduct.batchSellingPrice.toStringAsFixed(2);
+        (p['lcController'] as TextEditingController).text = selectedProduct
+            .batchLandingPrice
+            .toStringAsFixed(2);
+        (p['pcController'] as TextEditingController).text = selectedProduct
+            .batchPurchasePrice
+            .toStringAsFixed(2);
+        (p['mrpController'] as TextEditingController).text = selectedProduct
+            .batchMRP
+            .toStringAsFixed(2);
+        (p['spController'] as TextEditingController).text = selectedProduct
+            .batchSellingPrice
+            .toStringAsFixed(2);
         // Keep existing values or reset if needed, currently keeping default 1.0 qty
       });
       _calculateTotals();
 
-      // Auto-focus quantity field of this row
+      // Auto-focus batchNo field of this row
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          (_products[index]['qtyNode'] as FocusNode).requestFocus();
+          (_products[index]['batchNoNode'] as FocusNode).requestFocus();
         }
       });
     } else {
@@ -377,6 +424,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
       final p = _products[index];
       setState(() {
         p['product'] = null;
+        p['batchNo'] = '';
         p['qty'] = 1.0;
         p['lc'] = 0.0;
         p['pc'] = 0.0;
@@ -384,6 +432,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
         p['sp'] = 0.0;
         p['discAmt'] = 0.0;
         p['gstPct'] = 0.0;
+        (p['batchNoController'] as TextEditingController).text = '';
         (p['qtyController'] as TextEditingController).text = '1.0';
         (p['lcController'] as TextEditingController).text = '0.0';
         (p['pcController'] as TextEditingController).text = '0.0';
@@ -394,6 +443,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
     } else {
       setState(() {
         final removed = _products.removeAt(index);
+        (removed['batchNoController'] as TextEditingController).dispose();
         (removed['qtyController'] as TextEditingController).dispose();
         (removed['lcController'] as TextEditingController).dispose();
         (removed['pcController'] as TextEditingController).dispose();
@@ -401,6 +451,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
         (removed['spController'] as TextEditingController).dispose();
         (removed['discAmtController'] as TextEditingController).dispose();
         (removed['productNode'] as FocusNode).dispose();
+        (removed['batchNoNode'] as FocusNode).dispose();
         (removed['qtyNode'] as FocusNode).dispose();
         (removed['lcNode'] as FocusNode).dispose();
         (removed['pcNode'] as FocusNode).dispose();
@@ -504,6 +555,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
           compId: compId,
           branchId: branchId,
           productId: prod.prodId,
+          batchNo: p['batchNo'] ?? '',
           barcode: '',
           eanCode: '',
           qty: p['qty'],
@@ -555,6 +607,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
 
       // Clear and re-init products
       for (var p in _products) {
+        (p['batchNoController'] as TextEditingController).dispose();
         (p['qtyController'] as TextEditingController).dispose();
         (p['lcController'] as TextEditingController).dispose();
         (p['pcController'] as TextEditingController).dispose();
@@ -562,6 +615,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
         (p['spController'] as TextEditingController).dispose();
         (p['discAmtController'] as TextEditingController).dispose();
         (p['productNode'] as FocusNode).dispose();
+        (p['batchNoNode'] as FocusNode).dispose();
         (p['qtyNode'] as FocusNode).dispose();
         (p['lcNode'] as FocusNode).dispose();
         (p['pcNode'] as FocusNode).dispose();
@@ -678,6 +732,9 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
         (p['qtyNode'] as FocusNode).requestFocus();
         return KeyEventResult.handled;
       } else if (fieldName == 'qty') {
+        (p['batchNoNode'] as FocusNode).requestFocus();
+        return KeyEventResult.handled;
+      } else if (fieldName == 'batchNo') {
         (p['productNode'] as FocusNode).requestFocus();
         return KeyEventResult.handled;
       } else if (fieldName == 'product') {
@@ -697,9 +754,12 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
     if (key == LogicalKeyboardKey.arrowRight) {
       if (fieldName == 'product') {
         if (p['product'] != null) {
-          (p['qtyNode'] as FocusNode).requestFocus();
+          (p['batchNoNode'] as FocusNode).requestFocus();
           return KeyEventResult.handled;
         }
+      } else if (fieldName == 'batchNo') {
+        (p['qtyNode'] as FocusNode).requestFocus();
+        return KeyEventResult.handled;
       } else if (fieldName == 'qty') {
         (p['lcNode'] as FocusNode).requestFocus();
         return KeyEventResult.handled;
@@ -735,6 +795,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
 
     // Fixed widths for columns
     const double colProductName = 260;
+    const double colBatchNo = 120;
     const double colQty = 100;
     const double colLC = 100;
     const double colPC = 100;
@@ -748,6 +809,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
     const double colAction = 60;
     const double totalWidth =
         colProductName +
+        colBatchNo +
         colQty +
         colLC +
         colPC +
@@ -852,11 +914,24 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                               'Product Name',
                               effectiveProductNameWidth,
                             ),
+                            buildHeaderCell('Batch No', colBatchNo),
                             buildHeaderCell('Qty', colQty, isNumeric: true),
-                            buildHeaderCell('Landing Cost', colLC, isNumeric: true),
-                            buildHeaderCell('Purchase Cost', colPC, isNumeric: true),
+                            buildHeaderCell(
+                              'Landing Cost',
+                              colLC,
+                              isNumeric: true,
+                            ),
+                            buildHeaderCell(
+                              'Purchase Cost',
+                              colPC,
+                              isNumeric: true,
+                            ),
                             buildHeaderCell('MRP', colMRP, isNumeric: true),
-                            buildHeaderCell('Selling Price', colSP, isNumeric: true),
+                            buildHeaderCell(
+                              'Selling Price',
+                              colSP,
+                              isNumeric: true,
+                            ),
                             buildHeaderCell('Gross', colGross, isNumeric: true),
                             buildHeaderCell(
                               'Dis',
@@ -909,6 +984,13 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                                 index,
                                 'product',
                               );
+                          (p['batchNoNode'] as FocusNode).onKeyEvent =
+                              (node, event) => _handleGridKeyEvent(
+                                node,
+                                event,
+                                index,
+                                'batchNo',
+                              );
                           (p['qtyNode'] as FocusNode).onKeyEvent =
                               (node, event) => _handleGridKeyEvent(
                                 node,
@@ -917,19 +999,11 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                                 'qty',
                               );
                           (p['lcNode'] as FocusNode).onKeyEvent =
-                              (node, event) => _handleGridKeyEvent(
-                                node,
-                                event,
-                                index,
-                                'lc',
-                              );
+                              (node, event) =>
+                                  _handleGridKeyEvent(node, event, index, 'lc');
                           (p['pcNode'] as FocusNode).onKeyEvent =
-                              (node, event) => _handleGridKeyEvent(
-                                node,
-                                event,
-                                index,
-                                'pc',
-                              );
+                              (node, event) =>
+                                  _handleGridKeyEvent(node, event, index, 'pc');
                           (p['mrpNode'] as FocusNode).onKeyEvent =
                               (node, event) => _handleGridKeyEvent(
                                 node,
@@ -938,12 +1012,8 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                                 'mrp',
                               );
                           (p['spNode'] as FocusNode).onKeyEvent =
-                              (node, event) => _handleGridKeyEvent(
-                                node,
-                                event,
-                                index,
-                                'sp',
-                              );
+                              (node, event) =>
+                                  _handleGridKeyEvent(node, event, index, 'sp');
                           (p['discNode'] as FocusNode).onKeyEvent =
                               (node, event) => _handleGridKeyEvent(
                                 node,
@@ -955,6 +1025,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                           return AnimatedBuilder(
                             animation: Listenable.merge([
                               p['productNode'] as FocusNode,
+                              p['batchNoNode'] as FocusNode,
                               p['qtyNode'] as FocusNode,
                               p['lcNode'] as FocusNode,
                               p['pcNode'] as FocusNode,
@@ -965,6 +1036,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                             builder: (context, child) {
                               final isRowFocused =
                                   (p['productNode'] as FocusNode).hasFocus ||
+                                  (p['batchNoNode'] as FocusNode).hasFocus ||
                                   (p['qtyNode'] as FocusNode).hasFocus ||
                                   (p['lcNode'] as FocusNode).hasFocus ||
                                   (p['pcNode'] as FocusNode).hasFocus ||
@@ -1097,6 +1169,27 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                                   ),
                                   buildDataCell(
                                     TextFormField(
+                                      controller: p['batchNoController'],
+                                      focusNode: p['batchNoNode'],
+                                      enabled: !isEmptyRow,
+                                      keyboardType: TextInputType.text,
+                                      textInputAction: TextInputAction.next,
+                                      decoration: _gridInputDecoration(theme),
+                                      onChanged: (val) {
+                                        p['batchNo'] = val;
+                                      },
+                                      onFieldSubmitted: (_) =>
+                                          (p['qtyNode'] as FocusNode)
+                                              .requestFocus(),
+                                    ),
+                                    colBatchNo,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 4,
+                                    ),
+                                  ),
+                                  buildDataCell(
+                                    TextFormField(
                                       controller: p['qtyController'],
                                       focusNode: p['qtyNode'],
                                       enabled: !isEmptyRow,
@@ -1113,7 +1206,9 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                                         p['qty'] = double.tryParse(val) ?? 0.0;
                                         _calculateTotals();
                                       },
-                                      onFieldSubmitted: (_) => (p['lcNode'] as FocusNode).requestFocus(),
+                                      onFieldSubmitted: (_) =>
+                                          (p['lcNode'] as FocusNode)
+                                              .requestFocus(),
                                     ),
                                     colQty,
                                     padding: const EdgeInsets.symmetric(
@@ -1130,16 +1225,23 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                                       textAlign: TextAlign.right,
                                       textInputAction: TextInputAction.next,
                                       inputFormatters: [
-                                        FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d*')),
+                                        FilteringTextInputFormatter.allow(
+                                          RegExp(r'^\d+\.?\d*'),
+                                        ),
                                       ],
                                       decoration: _gridInputDecoration(theme),
                                       onChanged: (val) {
                                         p['lc'] = double.tryParse(val) ?? 0.0;
                                       },
-                                      onFieldSubmitted: (_) => (p['pcNode'] as FocusNode).requestFocus(),
+                                      onFieldSubmitted: (_) =>
+                                          (p['pcNode'] as FocusNode)
+                                              .requestFocus(),
                                     ),
                                     colLC,
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 4,
+                                    ),
                                   ),
                                   buildDataCell(
                                     TextFormField(
@@ -1150,22 +1252,33 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                                       textAlign: TextAlign.right,
                                       textInputAction: TextInputAction.next,
                                       inputFormatters: [
-                                        FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d*')),
+                                        FilteringTextInputFormatter.allow(
+                                          RegExp(r'^\d+\.?\d*'),
+                                        ),
                                       ],
                                       decoration: _gridInputDecoration(theme),
                                       onChanged: (val) {
-                                        final newPc = double.tryParse(val) ?? 0.0;
+                                        final newPc =
+                                            double.tryParse(val) ?? 0.0;
                                         p['pc'] = newPc;
                                         if (newPc <= 0.0) {
                                           p['discAmt'] = 0.0;
-                                          (p['discAmtController'] as TextEditingController).text = '0.0';
+                                          (p['discAmtController']
+                                                      as TextEditingController)
+                                                  .text =
+                                              '0.0';
                                         }
                                         _calculateTotals();
                                       },
-                                      onFieldSubmitted: (_) => (p['mrpNode'] as FocusNode).requestFocus(),
+                                      onFieldSubmitted: (_) =>
+                                          (p['mrpNode'] as FocusNode)
+                                              .requestFocus(),
                                     ),
                                     colPC,
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 4,
+                                    ),
                                   ),
                                   buildDataCell(
                                     TextFormField(
@@ -1176,16 +1289,23 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                                       textAlign: TextAlign.right,
                                       textInputAction: TextInputAction.next,
                                       inputFormatters: [
-                                        FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d*')),
+                                        FilteringTextInputFormatter.allow(
+                                          RegExp(r'^\d+\.?\d*'),
+                                        ),
                                       ],
                                       decoration: _gridInputDecoration(theme),
                                       onChanged: (val) {
                                         p['mrp'] = double.tryParse(val) ?? 0.0;
                                       },
-                                      onFieldSubmitted: (_) => (p['spNode'] as FocusNode).requestFocus(),
+                                      onFieldSubmitted: (_) =>
+                                          (p['spNode'] as FocusNode)
+                                              .requestFocus(),
                                     ),
                                     colMRP,
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 4,
+                                    ),
                                   ),
                                   buildDataCell(
                                     TextFormField(
@@ -1196,7 +1316,9 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                                       textAlign: TextAlign.right,
                                       textInputAction: TextInputAction.next,
                                       inputFormatters: [
-                                        FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d*')),
+                                        FilteringTextInputFormatter.allow(
+                                          RegExp(r'^\d+\.?\d*'),
+                                        ),
                                       ],
                                       decoration: _gridInputDecoration(theme),
                                       onChanged: (val) {
@@ -1204,26 +1326,36 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                                       },
                                       onFieldSubmitted: (_) {
                                         if ((p['pc'] ?? 0.0) > 0.0) {
-                                          (p['discNode'] as FocusNode).requestFocus();
+                                          (p['discNode'] as FocusNode)
+                                              .requestFocus();
                                         } else {
                                           if (index == _products.length - 1) {
                                             setState(() {
                                               _addNewEmptyRow();
                                             });
-                                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                                              if (mounted) {
-                                                final newNode = _products.last['productNode'] as FocusNode;
-                                                newNode.requestFocus();
-                                              }
-                                            });
+                                            WidgetsBinding.instance
+                                                .addPostFrameCallback((_) {
+                                                  if (mounted) {
+                                                    final newNode =
+                                                        _products
+                                                                .last['productNode']
+                                                            as FocusNode;
+                                                    newNode.requestFocus();
+                                                  }
+                                                });
                                           } else {
-                                            (_products[index + 1]['productNode'] as FocusNode).requestFocus();
+                                            (_products[index + 1]['productNode']
+                                                    as FocusNode)
+                                                .requestFocus();
                                           }
                                         }
                                       },
                                     ),
                                     colSP,
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 4,
+                                    ),
                                   ),
                                   buildDataCell(
                                     Text(
@@ -1245,8 +1377,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                                       controller: p['discAmtController'],
                                       focusNode: p['discNode'],
                                       enabled:
-                                          !isEmptyRow &&
-                                          (p['pc'] ?? 0.0) > 0.0,
+                                          !isEmptyRow && (p['pc'] ?? 0.0) > 0.0,
                                       keyboardType: TextInputType.number,
                                       textAlign: TextAlign.right,
                                       textInputAction: TextInputAction.next,
@@ -1732,7 +1863,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                     children: [
                       AppBar(
                         title: const Text('Add Purchase Entry'),
-                        backgroundColor: Colors.transparent,
+                        //     backgroundColor: Colors.transparent,
                         elevation: 0,
                         actions: [
                           FilledButton.icon(
@@ -1740,10 +1871,12 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                               final result = await Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const PurchaseEntryViewListScreen(),
+                                  builder: (context) =>
+                                      const PurchaseEntryViewListScreen(),
                                 ),
                               );
-                              if (result != null && result is PurchaseMasterViewItem) {
+                              if (result != null &&
+                                  result is PurchaseMasterViewItem) {
                                 _loadMasterAndDetails(result);
                               }
                             },
@@ -1769,7 +1902,8 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                     final result = await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const PurchaseEntryViewListScreen(),
+                        builder: (context) =>
+                            const PurchaseEntryViewListScreen(),
                       ),
                     );
                     if (result != null && result is PurchaseMasterViewItem) {

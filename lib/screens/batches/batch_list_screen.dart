@@ -694,7 +694,7 @@ class _BatchListScreenState extends State<BatchListScreen> {
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
-                                batch.batchId.toString(),
+                                batch.batchNumber.isNotEmpty ? batch.batchNumber : batch.batchId.toString(),
                                 style: const TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
@@ -931,6 +931,13 @@ class _BatchListScreenState extends State<BatchListScreen> {
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              'Batch No: ${batch.batchNumber.isNotEmpty ? batch.batchNumber : batch.batchId}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
                             ),
                           ],
                         ),

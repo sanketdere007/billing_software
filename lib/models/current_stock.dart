@@ -22,6 +22,7 @@ class CurrentStock {
   final bool isActive;
   final DateTime? createdDate;
   final DateTime? modifiedDate;
+  final String batchNumber;
 
   CurrentStock({
     required this.compId,
@@ -47,6 +48,7 @@ class CurrentStock {
     required this.isActive,
     this.createdDate,
     this.modifiedDate,
+    this.batchNumber = '',
   });
 
   factory CurrentStock.fromJson(Map<String, dynamic> json) {
@@ -74,6 +76,7 @@ class CurrentStock {
       isActive: json['batch_IsActive'] == 1 || json['batch_IsActive'] == true || json['batch_IsActive'] == '1',
       createdDate: json['batch_CreatedDate'] != null ? DateTime.tryParse(json['batch_CreatedDate']) : null,
       modifiedDate: json['batch_ModifiedDate'] != null ? DateTime.tryParse(json['batch_ModifiedDate']) : null,
+      batchNumber: json['batch_Number']?.toString() ?? '',
     );
   }
 }

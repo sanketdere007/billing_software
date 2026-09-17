@@ -1684,7 +1684,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                     children: [
                       AppBar(
                         title: const Text('Add Sales Entry'),
-                        backgroundColor: Colors.transparent,
+                     //   backgroundColor: Colors.transparent,
                         elevation: 0,
                         actions: [
                           TextButton.icon(
