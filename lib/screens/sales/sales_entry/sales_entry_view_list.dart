@@ -5,6 +5,7 @@ import '../../../services/sales_entry_service.dart';
 import '../../../widgets/direct_back_scope.dart';
 import '../../../widgets/app_drawer.dart';
 import '../../../services/session_service.dart';
+import '../../../widgets/app_confirm_dialog.dart';
 
 class SalesEntryViewList extends StatefulWidget {
   const SalesEntryViewList({super.key});
@@ -183,6 +184,34 @@ class _SalesEntryViewListState extends State<SalesEntryViewList> {
     Navigator.pop(context, entry);
   }
 
+  Future<void> _deleteEntry(int salesMasterId) async {
+    final confirmed = await showAppConfirmDialog(
+      context,
+      title: 'Delete Sales Entry',
+      message: 'Are you sure you want to delete this sales entry? This action cannot be undone.',
+    );
+
+    if (confirmed == true) {
+      try {
+        setState(() => _isLoading = true);
+        await _salesEntryService.deleteSalesEntryApi(salesMasterId);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Sales entry deleted successfully.')),
+          );
+        }
+        _fetchEntries(refresh: true);
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to delete: $e'), backgroundColor: Colors.red),
+          );
+          setState(() => _isLoading = false);
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Focus(
@@ -292,6 +321,7 @@ class _SalesEntryViewListState extends State<SalesEntryViewList> {
               Expanded(flex: 2, child: Text('Paid Amt', textAlign: TextAlign.right, style: TextStyle(fontWeight: FontWeight.bold))),
               Expanded(flex: 2, child: Text('Bal Amt', textAlign: TextAlign.right, style: TextStyle(fontWeight: FontWeight.bold))),
               Expanded(flex: 2, child: Text('Net Amt', textAlign: TextAlign.right, style: TextStyle(fontWeight: FontWeight.bold))),
+              Expanded(flex: 1, child: Text('Action', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold))),
             ],
           ),
         ),
@@ -367,6 +397,18 @@ class _SalesEntryViewListState extends State<SalesEntryViewList> {
                           '₹${raw['salesMaster_GrandTotal'] ?? 0}',
                           textAlign: TextAlign.right,
                           style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      Expanded(
+                        flex: 1,
+                        child: IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () {
+                            final id = raw['salesMaster_Id'];
+                            if (id != null) {
+                              _deleteEntry(id is int ? id : int.parse(id.toString()));
+                            }
+                          },
                         ),
                       ),
                     ],

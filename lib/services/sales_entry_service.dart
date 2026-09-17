@@ -149,4 +149,26 @@ class SalesEntryService extends ChangeNotifier {
       throw ApiException('Error fetching sales detail data: $e');
     }
   }
+
+  Future<Map<String, dynamic>> deleteSalesEntryApi(int salesMasterId) async {
+    try {
+      final endpoint = '${ApiConstants.deleteSalesEntryEndpoint}/$salesMasterId';
+      final dynamic response = await apiService.delete(
+        endpoint,
+        requiresAuth: true,
+      );
+
+      if (response is! Map<String, dynamic>) {
+        throw ApiException('Invalid response format from server.');
+      }
+
+      if (response['status'] == false) {
+        throw ApiException(response['message'] ?? 'Failed to delete sales entry.');
+      }
+
+      return response;
+    } catch (e) {
+      throw ApiException(e is ApiException ? e.message : 'Error deleting sales entry: $e');
+    }
+  }
 }

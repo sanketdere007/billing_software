@@ -8,6 +8,7 @@ import '../../services/report_excel_export_service.dart';
 import '../../services/session_service.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/app_message_dialog.dart';
+import '../../widgets/app_confirm_dialog.dart';
 import '../../widgets/direct_back_scope.dart';
 import '../../models/receipt_pdf_data.dart';
 import '../../controllers/receipt_pdf_controller.dart';
@@ -519,27 +520,12 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
   }
 
   Future<void> _deleteReceipt(CollectionReportData item) async {
-    final bool? confirm = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Confirm Delete'),
-          content: Text('Are you sure you want to delete receipt ${item.receiptMasterReceiptNo}?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('No'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.error,
-              ),
-              child: const Text('Yes'),
-            ),
-          ],
-        );
-      },
+    final bool? confirm = await showAppConfirmDialog(
+      context,
+      title: 'Confirm Delete',
+      message: 'Are you sure you want to delete receipt ${item.receiptMasterReceiptNo}?',
+      icon: Icons.delete_outline_rounded,
+      iconColor: Colors.red,
     );
 
     if (confirm != true) return;

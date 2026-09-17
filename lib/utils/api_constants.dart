@@ -105,6 +105,8 @@ class ApiConstants {
       '/api/SalesEntry/GetAllSalesDetail';
   static const String getAllPendingAmountEndpoint =
       '/api/SalesEntry/GetAllPendingAmount';
+  static const String deleteSalesEntryEndpoint =
+      '/api/SalesEntry/DeleteSalesEntry';
 
   // Payment Endpoints
   static const String insertOrUpdatePaymentEndpoint =
