@@ -10,6 +10,7 @@ import '../../widgets/app_drawer.dart';
 import '../../widgets/app_message_dialog.dart';
 import '../../widgets/app_confirm_dialog.dart';
 import '../../widgets/direct_back_scope.dart';
+import '../../widgets/custom_date_picker_field.dart';
 import '../../models/receipt_pdf_data.dart';
 import '../../controllers/receipt_pdf_controller.dart';
 import '../../models/invoice_pdf_data.dart' show IndianCurrencyWords;
@@ -523,7 +524,8 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
     final bool? confirm = await showAppConfirmDialog(
       context,
       title: 'Confirm Delete',
-      message: 'Are you sure you want to delete receipt ${item.receiptMasterReceiptNo}?',
+      message:
+          'Are you sure you want to delete receipt ${item.receiptMasterReceiptNo}?',
       icon: Icons.delete_outline_rounded,
       iconColor: Colors.red,
     );
@@ -536,19 +538,30 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
     });
 
     try {
-      final response = await collectionReportService.deleteReceiptEntry(item.receiptMasterId);
-      
+      final response = await collectionReportService.deleteReceiptEntry(
+        item.receiptMasterId,
+      );
+
       if (mounted) {
         if (response['status'] == true) {
-          await showSuccessDialog(context, response['message'] ?? 'Deleted successfully');
+          await showSuccessDialog(
+            context,
+            response['message'] ?? 'Deleted successfully',
+          );
           _fetchReport(refresh: true);
         } else {
-          await showErrorDialog(context, response['message'] ?? 'Failed to delete');
+          await showErrorDialog(
+            context,
+            response['message'] ?? 'Failed to delete',
+          );
         }
       }
     } catch (e) {
       if (mounted) {
-        await showErrorDialog(context, e.toString().replaceAll('ApiException: ', ''));
+        await showErrorDialog(
+          context,
+          e.toString().replaceAll('ApiException: ', ''),
+        );
       }
     } finally {
       if (mounted) {
@@ -584,44 +597,6 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
                         appBar: AppBar(
                           title: const Text('Collection Report'),
                           actions: [
-                            Container(
-                              width: 200,
-                              margin: const EdgeInsets.symmetric(
-                                vertical: 8,
-                                horizontal: 8,
-                              ),
-                              child: TextField(
-                                controller: _searchController,
-                                decoration: InputDecoration(
-                                  hintText: 'Search...',
-                                  prefixIcon: const Icon(
-                                    Icons.search,
-                                    size: 20,
-                                  ),
-                                  suffixIcon: _searchController.text.isNotEmpty
-                                      ? IconButton(
-                                          icon: const Icon(
-                                            Icons.clear,
-                                            size: 20,
-                                          ),
-                                          onPressed: () {
-                                            _searchController.clear();
-                                            _onSearchChanged('');
-                                          },
-                                        )
-                                      : null,
-                                  isDense: true,
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 0,
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(24),
-                                  ),
-                                ),
-                                onChanged: _onSearchChanged,
-                              ),
-                            ),
                             IconButton(
                               icon: const Icon(Icons.refresh_rounded),
                               tooltip: 'Refresh',
@@ -714,71 +689,74 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
   }
 
   Widget _buildFilters({required bool isDesktop}) {
-    final filterContent = Wrap(
-      spacing: 16,
-      runSpacing: 16,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        // Date filters
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            OutlinedButton.icon(
-              icon: const Icon(Icons.calendar_today, size: 18),
-              label: Text(
-                _fromDate != null
-                    ? _displayFormat.format(_fromDate!)
-                    : 'From Date',
-              ),
-              onPressed: () => _selectDate(context, true),
-            ),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8.0),
-              child: Text('-'),
-            ),
-            OutlinedButton.icon(
-              icon: const Icon(Icons.calendar_today, size: 18),
-              label: Text(
-                _toDate != null ? _displayFormat.format(_toDate!) : 'To Date',
-              ),
-              onPressed: () => _selectDate(context, false),
-            ),
-          ],
-        ),
-      ],
-    );
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        border: Border(
-          bottom: BorderSide(
-            color: Theme.of(context).colorScheme.outlineVariant,
-          ),
-        ),
-      ),
-      child: isDesktop
-          ? filterContent
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: 'Search...',
-                    prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                  ),
-                  onChanged: _onSearchChanged,
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 2,
+            child: TextField(
+              controller: _searchController,
+              decoration: const InputDecoration(
+                labelText: 'Search',
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
                 ),
-                const SizedBox(height: 16),
-                filterContent,
-              ],
+              ),
+              onChanged: _onSearchChanged,
             ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: CustomDatePickerField(
+              labelText: 'From Date',
+              initialDate: _fromDate,
+              lastDate: DateTime.now(),
+              onDateSelected: (date) {
+                if (_toDate != null && date.isAfter(_toDate!)) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('From Date cannot be later than To Date.'),
+                    ),
+                  );
+                } else {
+                  setState(() {
+                    _fromDate = date;
+                  });
+                  _fetchReport(refresh: true);
+                }
+              },
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: CustomDatePickerField(
+              labelText: 'To Date',
+              initialDate: _toDate,
+              lastDate: DateTime.now(),
+              onDateSelected: (date) {
+                if (_fromDate != null && date.isBefore(_fromDate!)) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'To Date cannot be earlier than From Date.',
+                      ),
+                    ),
+                  );
+                } else {
+                  setState(() {
+                    _toDate = date;
+                  });
+                  _fetchReport(refresh: true);
+                }
+              },
+            ),
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
     );
   }
 
@@ -1099,7 +1077,11 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
                       ),
                       const SizedBox(width: 4),
                       IconButton(
-                        icon: const Icon(Icons.delete_outline, size: 20, color: Colors.red),
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          size: 20,
+                          color: Colors.red,
+                        ),
                         tooltip: 'Delete',
                         padding: const EdgeInsets.all(4),
                         constraints: const BoxConstraints(),
