@@ -1404,10 +1404,7 @@ class _AppDrawerState extends State<AppDrawer> {
     );
 
     if (PlatformHelper.isWindowsDesktopEffective) {
-      return SizedBox(
-        width: 250,
-        child: drawerWidget,
-      );
+      return SizedBox(width: 250, child: drawerWidget);
     }
     return drawerWidget;
   }

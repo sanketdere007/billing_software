@@ -380,21 +380,21 @@ class _SalesEntryViewListState extends State<SalesEntryViewList> {
                       Expanded(
                         flex: 2,
                         child: Text(
-                          '₹${raw['salesMaster_PaidAmount'] ?? 0}',
+                          '${raw['salesMaster_PaidAmount'] ?? 0}',
                           textAlign: TextAlign.right,
                         ),
                       ),
                       Expanded(
                         flex: 2,
                         child: Text(
-                          '₹${raw['salesMaster_BalanceAmount'] ?? 0}',
+                          '${raw['salesMaster_BalanceAmount'] ?? 0}',
                           textAlign: TextAlign.right,
                         ),
                       ),
                       Expanded(
                         flex: 2,
                         child: Text(
-                          '₹${raw['salesMaster_GrandTotal'] ?? 0}',
+                          '${raw['salesMaster_GrandTotal'] ?? 0}',
                           textAlign: TextAlign.right,
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),

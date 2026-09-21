@@ -507,7 +507,7 @@ class _CustomerOutstandingReportScreenState extends State<CustomerOutstandingRep
                       SizedBox(width: 50, child: Text('#', style: TextStyle(fontWeight: FontWeight.bold))),
                       Expanded(flex: 3, child: Text('Customer Name', style: TextStyle(fontWeight: FontWeight.bold))),
                       Expanded(flex: 2, child: Text('Mobile', style: TextStyle(fontWeight: FontWeight.bold))),
-                      Expanded(flex: 2, child: Text('Invoice Amt', style: TextStyle(fontWeight: FontWeight.bold))),
+                     // Expanded(flex: 2, child: Text('Invoice Amt', style: TextStyle(fontWeight: FontWeight.bold))),
                       Expanded(flex: 2, child: Text('Paid Amt', style: TextStyle(fontWeight: FontWeight.bold))),
                       Expanded(flex: 2, child: Text('Outstanding', style: TextStyle(fontWeight: FontWeight.bold))),
                     ],
@@ -550,7 +550,7 @@ class _CustomerOutstandingReportScreenState extends State<CustomerOutstandingRep
                               SizedBox(width: 50, child: Text('${index + 1}')),
                               Expanded(flex: 3, child: Text(item.custName)),
                               Expanded(flex: 2, child: Text(item.custMobileNo)),
-                              Expanded(flex: 2, child: Text(item.totalInvoiceAmount.toStringAsFixed(2))),
+                        //      Expanded(flex: 2, child: Text(item.totalInvoiceAmount.toStringAsFixed(2))),
                               Expanded(flex: 2, child: Text(item.totalPaidAmount.toStringAsFixed(2))),
                               Expanded(
                                 flex: 2, 

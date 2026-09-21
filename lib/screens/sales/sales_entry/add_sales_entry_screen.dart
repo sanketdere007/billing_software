@@ -104,6 +104,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
       'product': null, // null indicates empty row
       'qty': 1.0,
       'rate': 0.0,
+      'discPct': 0.0,
       'discAmt': 0.0,
       'gstPct': 0.0,
       'gross': 0.0,
@@ -112,10 +113,12 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
       'net': 0.0,
       'qtyController': TextEditingController(text: '1.0'),
       'rateController': TextEditingController(text: '0.0'),
+      'discPctController': TextEditingController(text: '0'),
       'discAmtController': TextEditingController(text: '0.0'),
       'productNode': FocusNode(),
       'qtyNode': FocusNode(),
       'rateNode': FocusNode(),
+      'discPctNode': FocusNode(),
       'discNode': FocusNode(),
     });
   }
@@ -129,10 +132,12 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
     for (var p in _products) {
       (p['qtyController'] as TextEditingController).dispose();
       (p['rateController'] as TextEditingController).dispose();
+      (p['discPctController'] as TextEditingController).dispose();
       (p['discAmtController'] as TextEditingController).dispose();
       (p['productNode'] as FocusNode).dispose();
       (p['qtyNode'] as FocusNode).dispose();
       (p['rateNode'] as FocusNode).dispose();
+      (p['discPctNode'] as FocusNode).dispose();
       (p['discNode'] as FocusNode).dispose();
     }
     super.dispose();
@@ -150,10 +155,39 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
 
       double qty = (p['qty'] as num?)?.toDouble() ?? 0.0;
       double rate = (p['rate'] as num?)?.toDouble() ?? 0.0;
-      double disc = (p['discAmt'] as num?)?.toDouble() ?? 0.0;
       double gstPct = (p['gstPct'] as num?)?.toDouble() ?? 0.0;
 
       double gross = qty * rate;
+      double disc = 0.0;
+
+      if ((p['discPctNode'] as FocusNode).hasFocus) {
+        double pct = (p['discPct'] as num?)?.toDouble() ?? 0.0;
+        disc = gross * (pct / 100);
+        p['discAmt'] = disc;
+        final amtStr = disc.toStringAsFixed(2).replaceAll(RegExp(r'\.00$'), '');
+        if ((p['discAmtController'] as TextEditingController).text != amtStr &&
+            (p['discAmtController'] as TextEditingController).text != disc.toString()) {
+          (p['discAmtController'] as TextEditingController).text = amtStr;
+        }
+      } else {
+        disc = (p['discAmt'] as num?)?.toDouble() ?? 0.0;
+        if (gross > 0) {
+          double pct = (disc / gross) * 100;
+          p['discPct'] = pct;
+          final pctStr = pct.toStringAsFixed(2).replaceAll(RegExp(r'\.00$'), '');
+          if ((p['discPctController'] as TextEditingController).text != pctStr &&
+              (p['discPctController'] as TextEditingController).text != pct.toString()) {
+            (p['discPctController'] as TextEditingController).text = pctStr;
+          }
+        } else {
+          p['discPct'] = 0.0;
+          if ((p['discPctController'] as TextEditingController).text != '0' &&
+              (p['discPctController'] as TextEditingController).text != '0.0') {
+            (p['discPctController'] as TextEditingController).text = '0';
+          }
+        }
+      }
+
       double discounted = gross - disc;
       if (discounted < 0) discounted = 0;
 
@@ -275,10 +309,12 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
         p['product'] = null;
         p['qty'] = 1.0;
         p['rate'] = 0.0;
+        p['discPct'] = 0.0;
         p['discAmt'] = 0.0;
         p['gstPct'] = 0.0;
         (p['qtyController'] as TextEditingController).text = '1.0';
         (p['rateController'] as TextEditingController).text = '0.0';
+        (p['discPctController'] as TextEditingController).text = '0';
         (p['discAmtController'] as TextEditingController).text = '0.0';
       });
     } else {
@@ -286,10 +322,12 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
         final removed = _products.removeAt(index);
         (removed['qtyController'] as TextEditingController).dispose();
         (removed['rateController'] as TextEditingController).dispose();
+        (removed['discPctController'] as TextEditingController).dispose();
         (removed['discAmtController'] as TextEditingController).dispose();
         (removed['productNode'] as FocusNode).dispose();
         (removed['qtyNode'] as FocusNode).dispose();
         (removed['rateNode'] as FocusNode).dispose();
+        (removed['discPctNode'] as FocusNode).dispose();
         (removed['discNode'] as FocusNode).dispose();
       });
     }
@@ -459,7 +497,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
         final double taxable = (p['discounted'] as num?)?.toDouble() ?? 0;
         final double net = (p['net'] as num?)?.toDouble() ?? 0;
         final double gross = qty * rate;
-        final double discPct = gross > 0 ? (discAmt / gross) * 100 : 0;
+        final double discPct = (p['discPct'] as num?)?.toDouble() ?? (gross > 0 ? (discAmt / gross) * 100 : 0);
 
         final double cgstPct = isInterstate ? 0 : gstPct / 2;
         final double sgstPct = isInterstate ? 0 : gstPct / 2;
@@ -833,6 +871,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
     const double colQty = 100;
     const double colRate = 120;
     const double colGross = 100;
+    const double colDiscPct = 80;
     const double colDiscount = 110;
     const double colGstPct = 80;
     const double colGstAmt = 100;
@@ -843,6 +882,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
         colQty +
         colRate +
         colGross +
+        colDiscPct +
         colDiscount +
         colGstPct +
         colGstAmt +
@@ -943,6 +983,11 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                               isNumeric: true,
                             ),
                             buildHeaderCell('Gross', colGross, isNumeric: true),
+                            buildHeaderCell(
+                              'Disc (%)',
+                              colDiscPct,
+                              isNumeric: true,
+                            ),
                             buildHeaderCell(
                               'Discount',
                               colDiscount,
@@ -1212,7 +1257,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                                       },
                                       onFieldSubmitted: (_) {
                                         if ((p['rate'] ?? 0.0) > 0.0) {
-                                          (p['discNode'] as FocusNode)
+                                          (p['discPctNode'] as FocusNode)
                                               .requestFocus();
                                         } else {
                                           if (index == _products.length - 1) {
@@ -1257,6 +1302,37 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                                     ),
                                     colGross,
                                     isNumeric: true,
+                                  ),
+                                  buildDataCell(
+                                    TextFormField(
+                                      controller: p['discPctController'],
+                                      focusNode: p['discPctNode'],
+                                      enabled:
+                                          !isEmptyRow &&
+                                          (p['rate'] ?? 0.0) > 0.0,
+                                      keyboardType: TextInputType.number,
+                                      textAlign: TextAlign.right,
+                                      textInputAction: TextInputAction.next,
+                                      inputFormatters: [
+                                        FilteringTextInputFormatter.allow(
+                                          RegExp(r'^\d+\.?\d*'),
+                                        ),
+                                      ],
+                                      decoration: _gridInputDecoration(theme),
+                                      onChanged: (val) {
+                                        p['discPct'] =
+                                            double.tryParse(val) ?? 0.0;
+                                        _calculateTotals();
+                                      },
+                                      onFieldSubmitted: (_) {
+                                        (p['discNode'] as FocusNode).requestFocus();
+                                      },
+                                    ),
+                                    colDiscPct,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 4,
+                                    ),
                                   ),
                                   buildDataCell(
                                     TextFormField(
@@ -1802,12 +1878,14 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
           final qty = (raw['salesEntryDetail_Qty'] as num?)?.toDouble() ?? 0.0;
           final rate = (raw['salesEntryDetail_Rate'] as num?)?.toDouble() ?? 0.0;
           final discAmt = (raw['salesEntryDetail_DiscountAmount'] as num?)?.toDouble() ?? 0.0;
+          final discPct = (raw['salesEntryDetail_DiscountPercentage'] as num?)?.toDouble() ?? 0.0;
           final gstPct = (raw['salesEntryDetail_GSTPercentage'] as num?)?.toDouble() ?? 0.0;
           
           _products.add({
             'product': batch,
             'qty': qty,
             'rate': rate,
+            'discPct': discPct,
             'discAmt': discAmt,
             'gstPct': gstPct,
             'gross': 0.0,
@@ -1816,10 +1894,12 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
             'net': 0.0,
             'qtyController': TextEditingController(text: qty.toString()),
             'rateController': TextEditingController(text: rate.toString()),
+            'discPctController': TextEditingController(text: discPct.toString()),
             'discAmtController': TextEditingController(text: discAmt.toString()),
             'productNode': FocusNode(),
             'qtyNode': FocusNode(),
             'rateNode': FocusNode(),
+            'discPctNode': FocusNode(),
             'discNode': FocusNode(),
           });
         }
