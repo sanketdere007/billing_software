@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/app_drawer.dart';
-import '../widgets/dashboard/dashboard_filters.dart';
+import '../widgets/custom_date_picker_field.dart';
 import '../widgets/dashboard/quick_actions.dart';
 import '../widgets/dashboard/summary_cards.dart';
 import '../widgets/dashboard/dashboard_charts.dart';
@@ -18,10 +18,8 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   Map<String, dynamic>? _summaryData;
   bool _isLoading = true;
-  DateTimeRange _selectedDateRange = DateTimeRange(
-    start: DateTime.now(),
-    end: DateTime.now(),
-  );
+  DateTime _fromDate = DateTime.now();
+  DateTime _toDate = DateTime.now();
 
   @override
   void initState() {
@@ -35,27 +33,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
     
     try {
       final compId = sessionService.selectedCompId ?? 0;
-      final branchId = sessionService.selectedBranchId ?? 0;
       
       // We set fromDate to the start of the day and toDate to the end of the day
-      DateTime fromDate = DateTime(
-        _selectedDateRange.start.year,
-        _selectedDateRange.start.month,
-        _selectedDateRange.start.day,
+      DateTime fromDateApi = DateTime(
+        _fromDate.year,
+        _fromDate.month,
+        _fromDate.day,
       );
       
-      DateTime toDate = DateTime(
-        _selectedDateRange.end.year,
-        _selectedDateRange.end.month,
-        _selectedDateRange.end.day,
+      DateTime toDateApi = DateTime(
+        _toDate.year,
+        _toDate.month,
+        _toDate.day,
         23, 59, 59, 999
       );
       
       final queryParameters = {
         'CompId': compId.toString(),
-        'BranchId': branchId.toString(),
-        'FromDate': fromDate.toIso8601String(),
-        'ToDate': toDate.toIso8601String(),
+        'FromDate': fromDateApi.toIso8601String(),
+        'ToDate': toDateApi.toIso8601String(),
         'LowStockQty': '10',
       };
       
@@ -106,6 +102,57 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     appBar: AppBar(
                       title: const Text('Overview'),
                       actions: [
+                        Center(
+                          child: SizedBox(
+                            width: 140,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              child: CustomDatePickerField(
+                                initialDate: _fromDate,
+                                lastDate: DateTime.now(),
+                                labelText: 'From Date',
+                                onDateSelected: (date) {
+                                  if (date.isAfter(_toDate)) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('From Date cannot be greater than To Date.')),
+                                    );
+                                    return;
+                                  }
+                                  setState(() {
+                                    _fromDate = date;
+                                  });
+                                  _fetchDashboardSummary();
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Center(
+                          child: SizedBox(
+                            width: 140,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              child: CustomDatePickerField(
+                                initialDate: _toDate,
+                                lastDate: DateTime.now(),
+                                labelText: 'To Date',
+                                onDateSelected: (date) {
+                                  if (date.isBefore(_fromDate)) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('To Date cannot be smaller than From Date.')),
+                                    );
+                                    return;
+                                  }
+                                  setState(() {
+                                    _toDate = date;
+                                  });
+                                  _fetchDashboardSummary();
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
                         IconButton(
                           icon: const Icon(Icons.refresh),
                           onPressed: _handleRefresh,
@@ -128,6 +175,64 @@ class _DashboardScreenState extends State<DashboardScreen> {
               backgroundColor: isDark ? Colors.grey[900] : Colors.blue.shade700,
               foregroundColor: Colors.white,
               elevation: 0,
+              actions: [
+                Center(
+                  child: SizedBox(
+                    width: 110,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: CustomDatePickerField(
+                        initialDate: _fromDate,
+                        lastDate: DateTime.now(),
+                        labelText: 'From',
+                        onDateSelected: (date) {
+                          if (date.isAfter(_toDate)) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('From Date cannot be greater than To Date.')),
+                            );
+                            return;
+                          }
+                          setState(() {
+                            _fromDate = date;
+                          });
+                          _fetchDashboardSummary();
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Center(
+                  child: SizedBox(
+                    width: 110,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: CustomDatePickerField(
+                        initialDate: _toDate,
+                        lastDate: DateTime.now(),
+                        labelText: 'To',
+                        onDateSelected: (date) {
+                          if (date.isBefore(_fromDate)) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('To Date cannot be smaller than From Date.')),
+                            );
+                            return;
+                          }
+                          setState(() {
+                            _toDate = date;
+                          });
+                          _fetchDashboardSummary();
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  onPressed: _handleRefresh,
+                  tooltip: 'Refresh Dashboard',
+                ),
+              ],
             ),
             drawer: const AppDrawer(isPermanent: false),
             body: _buildDashboardContent(context, isDesktop, isDark),
@@ -143,18 +248,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: DashboardFilters(
-              onDateRangeChanged: (val) {
-                _selectedDateRange = val;
-                _fetchDashboardSummary();
-              },
-              onBranchChanged: (val) {
-                _fetchDashboardSummary();
-              },
-            ),
-          ),
           Expanded(
             child: RefreshIndicator(
               onRefresh: _handleRefresh,
