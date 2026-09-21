@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../models/sales_entry.dart';
 import '../../../services/sales_entry_service.dart';
 import '../../../widgets/direct_back_scope.dart';
 import '../../../widgets/app_drawer.dart';
+import '../../../widgets/custom_date_picker_field.dart';
 import '../../../services/session_service.dart';
 import '../../../widgets/app_confirm_dialog.dart';
 
@@ -28,6 +30,11 @@ class _SalesEntryViewListState extends State<SalesEntryViewList> {
   bool _hasMore = true;
   bool _isFetchingMore = false;
 
+  DateTime? _fromDate = DateTime.now();
+  DateTime? _toDate = DateTime.now();
+  final TextEditingController _searchController = TextEditingController();
+  Timer? _debounce;
+
   @override
   void initState() {
     super.initState();
@@ -46,11 +53,14 @@ class _SalesEntryViewListState extends State<SalesEntryViewList> {
     _scrollController.removeListener(_onScroll);
     _screenFocusNode.dispose();
     _scrollController.dispose();
+    _searchController.dispose();
+    _debounce?.cancel();
     super.dispose();
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
       if (!_isLoading && !_isFetchingMore && _hasMore) {
         _fetchEntries();
       }
@@ -76,9 +86,21 @@ class _SalesEntryViewListState extends State<SalesEntryViewList> {
       final compId = sessionService.selectedCompId ?? 0;
       final branchId = sessionService.selectedBranchId ?? 0;
 
+      String? fromDateStr;
+      String? toDateStr;
+      if (_fromDate != null) {
+        fromDateStr = _fromDate!.toIso8601String().split('T').first;
+      }
+      if (_toDate != null) {
+        toDateStr = _toDate!.toIso8601String().split('T').first;
+      }
+
       final response = await _salesEntryService.getAllSalesMaster(
         compId: compId,
         branchId: branchId,
+        fromDate: fromDateStr,
+        toDate: toDateStr,
+        search: _searchController.text.trim(),
         pageNumber: _currentPage,
         pageSize: 20,
       );
@@ -87,18 +109,18 @@ class _SalesEntryViewListState extends State<SalesEntryViewList> {
         setState(() {
           final newItems = response.data?.items ?? [];
           if (refresh) {
-             _entries = newItems;
-             _highlightedIndex = 0;
+            _entries = newItems;
+            _highlightedIndex = 0;
           } else {
-             _entries.addAll(newItems);
+            _entries.addAll(newItems);
           }
-          
+
           if (newItems.length < 20) {
             _hasMore = false;
           } else {
             _currentPage++;
           }
-          
+
           _isLoading = false;
           _isFetchingMore = false;
         });
@@ -145,7 +167,8 @@ class _SalesEntryViewListState extends State<SalesEntryViewList> {
       return KeyEventResult.handled;
     }
 
-    if (key == LogicalKeyboardKey.enter || key == LogicalKeyboardKey.numpadEnter) {
+    if (key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.numpadEnter) {
       if (_highlightedIndex >= 0 && _highlightedIndex < _entries.length) {
         _selectEntry(_entries[_highlightedIndex]);
         return KeyEventResult.handled;
@@ -188,7 +211,8 @@ class _SalesEntryViewListState extends State<SalesEntryViewList> {
     final confirmed = await showAppConfirmDialog(
       context,
       title: 'Delete Sales Entry',
-      message: 'Are you sure you want to delete this sales entry? This action cannot be undone.',
+      message:
+          'Are you sure you want to delete this sales entry? This action cannot be undone.',
     );
 
     if (confirmed == true) {
@@ -204,7 +228,10 @@ class _SalesEntryViewListState extends State<SalesEntryViewList> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to delete: $e'), backgroundColor: Colors.red),
+            SnackBar(
+              content: Text('Failed to delete: $e'),
+              backgroundColor: Colors.red,
+            ),
           );
           setState(() => _isLoading = false);
         }
@@ -243,8 +270,10 @@ class _SalesEntryViewListState extends State<SalesEntryViewList> {
                           actions: [
                             IconButton(
                               icon: const Icon(Icons.refresh_rounded),
-                              onPressed: _isLoading ? null : () => _fetchEntries(refresh: true),
-                            )
+                              onPressed: _isLoading
+                                  ? null
+                                  : () => _fetchEntries(refresh: true),
+                            ),
                           ],
                         ),
                         body: _buildBody(),
@@ -265,8 +294,10 @@ class _SalesEntryViewListState extends State<SalesEntryViewList> {
                 actions: [
                   IconButton(
                     icon: const Icon(Icons.refresh_rounded),
-                    onPressed: _isLoading ? null : () => _fetchEntries(refresh: true),
-                  )
+                    onPressed: _isLoading
+                        ? null
+                        : () => _fetchEntries(refresh: true),
+                  ),
                 ],
               ),
               drawer: const AppDrawer(isPermanent: false),
@@ -278,146 +309,328 @@ class _SalesEntryViewListState extends State<SalesEntryViewList> {
     );
   }
 
+  Widget _buildFilterRow() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 2,
+            child: TextField(
+              controller: _searchController,
+              decoration: const InputDecoration(
+                labelText: 'Search',
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+              ),
+              onChanged: (value) {
+                if (_debounce?.isActive ?? false) _debounce!.cancel();
+                _debounce = Timer(const Duration(milliseconds: 500), () {
+                  _fetchEntries(refresh: true);
+                });
+              },
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: CustomDatePickerField(
+              labelText: 'From Date',
+              initialDate: _fromDate,
+              lastDate: DateTime.now(),
+              onDateSelected: (date) {
+                if (_toDate != null && date.isAfter(_toDate!)) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('From Date cannot be later than To Date.'),
+                    ),
+                  );
+                } else {
+                  setState(() {
+                    _fromDate = date;
+                  });
+                  _fetchEntries(refresh: true);
+                }
+              },
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: CustomDatePickerField(
+              labelText: 'To Date',
+              initialDate: _toDate,
+              lastDate: DateTime.now(),
+              onDateSelected: (date) {
+                if (_fromDate != null && date.isBefore(_fromDate!)) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('To Date cannot be earlier than From Date.'),
+                    ),
+                  );
+                } else {
+                  setState(() {
+                    _toDate = date;
+                  });
+                  _fetchEntries(refresh: true);
+                }
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildBody() {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (_errorMessage != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
-            const SizedBox(height: 16),
-            Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => _fetchEntries(refresh: true),
-              child: const Text('Retry'),
-            )
-          ],
-        ),
-      );
-    }
-
-    if (_entries.isEmpty) {
-      return const Center(child: Text('No sales entries found.'));
-    }
-
     return Column(
       children: [
-        // Header Row
-        Container(
-          color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.5),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: const Row(
-            children: [
-              Expanded(flex: 1, child: Text('#', style: TextStyle(fontWeight: FontWeight.bold))),
-              Expanded(flex: 2, child: Text('Invoice No', style: TextStyle(fontWeight: FontWeight.bold))),
-              Expanded(flex: 3, child: Text('Customer Name', style: TextStyle(fontWeight: FontWeight.bold))),
-              Expanded(flex: 2, child: Text('Mobile', style: TextStyle(fontWeight: FontWeight.bold))),
-              Expanded(flex: 2, child: Text('Date', style: TextStyle(fontWeight: FontWeight.bold))),
-              Expanded(flex: 2, child: Text('Paid Amt', textAlign: TextAlign.right, style: TextStyle(fontWeight: FontWeight.bold))),
-              Expanded(flex: 2, child: Text('Bal Amt', textAlign: TextAlign.right, style: TextStyle(fontWeight: FontWeight.bold))),
-              Expanded(flex: 2, child: Text('Net Amt', textAlign: TextAlign.right, style: TextStyle(fontWeight: FontWeight.bold))),
-              Expanded(flex: 1, child: Text('Action', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold))),
-            ],
-          ),
-        ),
-        // Data List
-        Expanded(
-          child: ListView.builder(
-            controller: _scrollController,
-            itemCount: _entries.length + (_isFetchingMore ? 1 : 0),
-            itemBuilder: (context, index) {
-              if (index == _entries.length) {
-                 return const Padding(
-                   padding: EdgeInsets.symmetric(vertical: 16),
-                   child: Center(child: CircularProgressIndicator()),
-                 );
-              }
-              
-              final entry = _entries[index];
-              final isHighlighted = index == _highlightedIndex;
-              final raw = entry.raw;
-
-              return InkWell(
-                onTap: () => _selectEntry(entry),
-                child: Container(
-                  height: 56.0,
-                  color: isHighlighted
-                      ? Theme.of(context).colorScheme.primaryContainer
-                      : (index.isEven
-                          ? Theme.of(context).colorScheme.surface
-                          : Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3)),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Row(
+        _buildFilterRow(),
+        if (_isLoading)
+          const Expanded(child: Center(child: CircularProgressIndicator()))
+        else if (_errorMessage != null)
+          Expanded(
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                  const SizedBox(height: 16),
+                  Text(
+                    _errorMessage!,
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => _fetchEntries(refresh: true),
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else if (_entries.isEmpty)
+          const Expanded(child: Center(child: Text('No sales entries found.')))
+        else
+          Expanded(
+            child: Column(
+              children: [
+                // Header Row
+                Container(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primaryContainer.withOpacity(0.5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  child: const Row(
                     children: [
                       Expanded(
                         flex: 1,
-                        child: Text('${index + 1}'),
+                        child: Text(
+                          '#',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
                       ),
                       Expanded(
                         flex: 2,
                         child: Text(
-                          raw['salesMaster_InvoiceNo']?.toString() ?? '',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
+                          'Invoice No',
+                          style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
                       Expanded(
                         flex: 3,
-                        child: Text(raw['cust_Name']?.toString() ?? ''),
-                      ),
-                      Expanded(
-                        flex: 2,
-                        child: Text(raw['cust_MobileNo']?.toString() ?? ''),
-                      ),
-                      Expanded(
-                        flex: 2,
-                        child: Text(raw['salesMaster_InvoiceDate']?.toString().split('T').first ?? ''),
-                      ),
-                      Expanded(
-                        flex: 2,
                         child: Text(
-                          '${raw['salesMaster_PaidAmount'] ?? 0}',
-                          textAlign: TextAlign.right,
+                          'Customer Name',
+                          style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
                       Expanded(
                         flex: 2,
                         child: Text(
-                          '${raw['salesMaster_BalanceAmount'] ?? 0}',
-                          textAlign: TextAlign.right,
+                          'Mobile',
+                          style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
                       Expanded(
                         flex: 2,
                         child: Text(
-                          '${raw['salesMaster_GrandTotal'] ?? 0}',
+                          'Date',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: Text(
+                          'Discount',
                           textAlign: TextAlign.right,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: Text(
+                          'Paid Amt',
+                          textAlign: TextAlign.right,
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: Text(
+                          'Bal Amt',
+                          textAlign: TextAlign.right,
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: Text(
+                          'Net Amt',
+                          textAlign: TextAlign.right,
+                          style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
                       Expanded(
                         flex: 1,
-                        child: IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () {
-                            final id = raw['salesMaster_Id'];
-                            if (id != null) {
-                              _deleteEntry(id is int ? id : int.parse(id.toString()));
-                            }
-                          },
+                        child: Text(
+                          'Action',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
                     ],
                   ),
                 ),
-              );
-            },
+                // Data List
+                Expanded(
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    itemCount: _entries.length + (_isFetchingMore ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (index == _entries.length) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          child: Center(child: CircularProgressIndicator()),
+                        );
+                      }
+
+                      final entry = _entries[index];
+                      final isHighlighted = index == _highlightedIndex;
+                      final raw = entry.raw;
+
+                      return InkWell(
+                        onTap: () => _selectEntry(entry),
+                        child: Container(
+                          height: 56.0,
+                          color: isHighlighted
+                              ? Theme.of(context).colorScheme.primaryContainer
+                              : (index.isEven
+                                    ? Theme.of(context).colorScheme.surface
+                                    : Theme.of(context)
+                                          .colorScheme
+                                          .surfaceVariant
+                                          .withOpacity(0.3)),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(flex: 1, child: Text('${index + 1}')),
+                              Expanded(
+                                flex: 2,
+                                child: Text(
+                                  raw['salesMaster_InvoiceNo']?.toString() ??
+                                      '',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                flex: 3,
+                                child: Text(raw['cust_Name']?.toString() ?? ''),
+                              ),
+                              Expanded(
+                                flex: 2,
+                                child: Text(
+                                  raw['cust_MobileNo']?.toString() ?? '',
+                                ),
+                              ),
+                              Expanded(
+                                flex: 2,
+                                child: Text(
+                                  raw['salesMaster_InvoiceDate']
+                                          ?.toString()
+                                          .split('T')
+                                          .first ??
+                                      '',
+                                ),
+                              ),
+                              Expanded(
+                                flex: 2,
+                                child: Text(
+                                  '${raw['salesMaster_TotalDiscount'] ?? 0}',
+                                  textAlign: TextAlign.right,
+                                ),
+                              ),
+                              Expanded(
+                                flex: 2,
+                                child: Text(
+                                  '${raw['salesMaster_PaidAmount'] ?? 0}',
+                                  textAlign: TextAlign.right,
+                                ),
+                              ),
+                              Expanded(
+                                flex: 2,
+                                child: Text(
+                                  '${raw['salesMaster_BalanceAmount'] ?? 0}',
+                                  textAlign: TextAlign.right,
+                                ),
+                              ),
+                              Expanded(
+                                flex: 2,
+                                child: Text(
+                                  '${raw['salesMaster_GrandTotal'] ?? 0}',
+                                  textAlign: TextAlign.right,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                flex: 1,
+                                child: IconButton(
+                                  icon: const Icon(
+                                    Icons.delete,
+                                    color: Colors.red,
+                                  ),
+                                  onPressed: () {
+                                    final id = raw['salesMaster_Id'];
+                                    if (id != null) {
+                                      _deleteEntry(
+                                        id is int
+                                            ? id
+                                            : int.parse(id.toString()),
+                                      );
+                                    }
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
       ],
     );
   }
