@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../models/purchase_entry.dart';
 import '../../../services/purchase_entry_service.dart';
 import '../../../widgets/app_drawer.dart';
+import '../../../widgets/custom_date_picker_field.dart';
 
 class PurchaseEntryViewListScreen extends StatefulWidget {
   const PurchaseEntryViewListScreen({super.key});
@@ -27,8 +28,8 @@ class _PurchaseEntryViewListScreenState extends State<PurchaseEntryViewListScree
   List<PurchaseMasterViewItem> _entries = [];
   int _highlightedIndex = 0;
 
-  DateTime _fromDate = DateTime(DateTime.now().year, DateTime.now().month, 1);
-  DateTime _toDate = DateTime.now();
+  DateTime? _fromDate = DateTime.now();
+  DateTime? _toDate = DateTime.now();
 
   @override
   void initState() {
@@ -66,8 +67,8 @@ class _PurchaseEntryViewListScreenState extends State<PurchaseEntryViewListScree
         pageNumber: 1,
         pageSize: 1000,
         searchText: _searchController.text.trim(),
-        fromDate: _fromDate,
-        toDate: _toDate,
+        fromDate: _fromDate ?? DateTime.now(),
+        toDate: _toDate ?? DateTime.now(),
       );
 
       if (mounted) {
@@ -165,6 +166,91 @@ class _PurchaseEntryViewListScreenState extends State<PurchaseEntryViewListScree
     });
   }
 
+  Widget _buildFilterRow() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 2,
+            child: TextField(
+              controller: _searchController,
+              focusNode: _searchFocusNode,
+              decoration: InputDecoration(
+                hintText: 'Search Purchase Invoices...',
+                labelText: 'Search',
+                border: const OutlineInputBorder(),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                prefixIcon: const Icon(Icons.search_rounded),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear_rounded),
+                        onPressed: () {
+                          _searchController.clear();
+                          _fetchEntries();
+                          _screenFocusNode.requestFocus();
+                        },
+                      )
+                    : null,
+              ),
+              onChanged: (value) {
+                setState(() {});
+                _onSearchChanged(value);
+              },
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: CustomDatePickerField(
+              labelText: 'From Date',
+              initialDate: _fromDate,
+              lastDate: DateTime.now(),
+              onDateSelected: (date) {
+                if (_toDate != null && date.isAfter(_toDate!)) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('From Date cannot be later than To Date.'),
+                    ),
+                  );
+                } else {
+                  setState(() {
+                    _fromDate = date;
+                  });
+                  _fetchEntries();
+                }
+              },
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: CustomDatePickerField(
+              labelText: 'To Date',
+              initialDate: _toDate,
+              lastDate: DateTime.now(),
+              onDateSelected: (date) {
+                if (_fromDate != null && date.isBefore(_fromDate!)) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('To Date cannot be earlier than From Date.'),
+                    ),
+                  );
+                } else {
+                  setState(() {
+                    _toDate = date;
+                  });
+                  _fetchEntries();
+                }
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -176,44 +262,7 @@ class _PurchaseEntryViewListScreenState extends State<PurchaseEntryViewListScree
       onKeyEvent: _handleKeyEvent,
       child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            color: theme.colorScheme.surface,
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _searchController,
-                    focusNode: _searchFocusNode,
-                    onChanged: _onSearchChanged,
-                    decoration: InputDecoration(
-                      hintText: 'Search Purchase Invoices...',
-                      prefixIcon: const Icon(Icons.search_rounded),
-                      suffixIcon: _searchController.text.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear_rounded),
-                              onPressed: () {
-                                _searchController.clear();
-                                _fetchEntries();
-                                _screenFocusNode.requestFocus();
-                              },
-                            )
-                          : null,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Text(
-                  'Use ↑ / ↓ to navigate, Enter to select',
-                  style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
-                ),
-              ],
-            ),
-          ),
+          _buildFilterRow(),
           Expanded(
             child: _isLoading && _entries.isEmpty
                 ? const Center(child: CircularProgressIndicator())
@@ -366,7 +415,7 @@ class _PurchaseEntryViewListScreenState extends State<PurchaseEntryViewListScree
             const VerticalDivider(width: 1, thickness: 1),
             Expanded(
               child: Scaffold(
-                appBar: AppBar(title: const Text('Select Purchase Entry')),
+                appBar: AppBar(title: const Text('View Purchase Entry')),
                 body: content,
               ),
             ),
@@ -376,7 +425,7 @@ class _PurchaseEntryViewListScreenState extends State<PurchaseEntryViewListScree
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Select Purchase Entry')),
+      appBar: AppBar(title: const Text('View Purchase Entry')),
       body: content,
     );
   }
