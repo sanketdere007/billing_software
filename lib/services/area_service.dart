@@ -98,6 +98,40 @@ class AreaService extends ChangeNotifier {
     }
   }
 
+  /// Fetch available areas for a route
+  Future<List<AvailableAreaForRoute>> getAvailableForRoute(
+    int routeId, {
+    String? search,
+  }) async {
+    final cleanSearch = (search == null || search == 'null') ? '' : search.trim();
+    
+    final Map<String, String> queryParameters = {
+      'routeId': routeId.toString(),
+      'search': cleanSearch,
+    };
+
+    try {
+      final dynamic response = await apiService.get(
+        ApiConstants.getAvailableForRouteEndpoint,
+        queryParameters: queryParameters,
+        requiresAuth: true,
+      );
+
+      if (response is Map<String, dynamic>) {
+        final res = AvailableAreaForRouteResponse.fromJson(response);
+        if (res.status) {
+          return res.data;
+        } else {
+          throw ApiException(res.message.isNotEmpty ? res.message : 'Failed to fetch available areas.');
+        }
+      }
+      return [];
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException('Error fetching available areas: $e');
+    }
+  }
+
   /// Insert or update area
   Future<AreaUpsertResponse> insertOrUpdateArea(AreaUpsertRequest request) async {
     int createdBy = request.areaCreatedBy;

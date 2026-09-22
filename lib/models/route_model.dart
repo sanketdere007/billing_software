@@ -9,6 +9,7 @@ class RouteListItem {
   final int routeModifiedBy;
   final String? routeCreatedDate;
   final String? routeModifiedDate;
+  final List<int> routeDetail_AreaIds;
 
   RouteListItem({
     required this.routeId,
@@ -21,6 +22,7 @@ class RouteListItem {
     this.routeModifiedBy = 0,
     this.routeCreatedDate,
     this.routeModifiedDate,
+    this.routeDetail_AreaIds = const [],
   });
 
   String get id => routeId.toString();
@@ -28,6 +30,13 @@ class RouteListItem {
   bool get isActive => routeIsActive;
 
   factory RouteListItem.fromJson(Map<String, dynamic> json) {
+    List<int> areaIds = [];
+    if (json['routeDetail_AreaIds'] != null && json['routeDetail_AreaIds'] is List) {
+      areaIds = (json['routeDetail_AreaIds'] as List)
+          .map((e) => _parseInt(e))
+          .toList();
+    }
+
     return RouteListItem(
       routeId: _parseInt(json['route_Id']),
       routeCompId: _parseInt(json['route_CompId']),
@@ -42,6 +51,7 @@ class RouteListItem {
       routeModifiedBy: int.tryParse(json['route_ModifiedBy']?.toString() ?? '0') ?? 0,
       routeCreatedDate: json['route_CreatedDate']?.toString(),
       routeModifiedDate: json['route_ModifiedDate']?.toString(),
+      routeDetail_AreaIds: areaIds,
     );
   }
 
@@ -57,6 +67,7 @@ class RouteListItem {
       'route_ModifiedBy': routeModifiedBy,
       if (routeCreatedDate != null) 'route_CreatedDate': routeCreatedDate,
       if (routeModifiedDate != null) 'route_ModifiedDate': routeModifiedDate,
+      'routeDetail_AreaIds': routeDetail_AreaIds,
     };
   }
 
@@ -71,6 +82,7 @@ class RouteListItem {
     int? routeModifiedBy,
     String? routeCreatedDate,
     String? routeModifiedDate,
+    List<int>? routeDetail_AreaIds,
   }) {
     return RouteListItem(
       routeId: routeId ?? this.routeId,
@@ -83,6 +95,7 @@ class RouteListItem {
       routeModifiedBy: routeModifiedBy ?? this.routeModifiedBy,
       routeCreatedDate: routeCreatedDate ?? this.routeCreatedDate,
       routeModifiedDate: routeModifiedDate ?? this.routeModifiedDate,
+      routeDetail_AreaIds: routeDetail_AreaIds ?? this.routeDetail_AreaIds,
     );
   }
 
@@ -147,6 +160,7 @@ class RouteUpsertRequest {
   final bool routeIsActive;
   final int routeCreatedBy;
   final int routeModifiedBy;
+  final List<int> routeDetail_AreaIds;
 
   RouteUpsertRequest({
     this.routeId = 0,
@@ -157,6 +171,7 @@ class RouteUpsertRequest {
     this.routeIsActive = true,
     this.routeCreatedBy = 0,
     this.routeModifiedBy = 0,
+    this.routeDetail_AreaIds = const [],
   });
 
   Map<String, dynamic> toJson() {
@@ -169,6 +184,7 @@ class RouteUpsertRequest {
       'route_IsActive': routeIsActive,
       'route_CreatedBy': routeCreatedBy,
       'route_ModifiedBy': routeModifiedBy,
+      'routeDetail_AreaIds': routeDetail_AreaIds,
     };
   }
 }

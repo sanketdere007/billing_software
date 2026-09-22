@@ -50,6 +50,8 @@ class ApiConstants {
   static const String getAllAreasEndpoint = '/api/Area/GetAllAreas';
   static const String insertOrUpdateAreaEndpoint =
       '/api/Area/InsertorUpdateArea';
+  static const String getAvailableForRouteEndpoint =
+      '/api/Area/GetAvailableForRoute';
 
   // State Endpoints
   static const String getAllStatesEndpoint = '/api/State/GetAllStates';

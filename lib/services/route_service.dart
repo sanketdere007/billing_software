@@ -155,6 +155,7 @@ class RouteService extends ChangeNotifier {
       routeIsActive: request.routeIsActive,
       routeCreatedBy: createdBy,
       routeModifiedBy: modifiedBy,
+      routeDetail_AreaIds: request.routeDetail_AreaIds,
     );
 
     debugPrint(

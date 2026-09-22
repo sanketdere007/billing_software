@@ -294,3 +294,54 @@ class AreaUpsertResponse {
     );
   }
 }
+
+class AvailableAreaForRoute {
+  final int areaId;
+  final String areaName;
+  final bool isSelected;
+
+  AvailableAreaForRoute({
+    required this.areaId,
+    required this.areaName,
+    required this.isSelected,
+  });
+
+  factory AvailableAreaForRoute.fromJson(Map<String, dynamic> json) {
+    return AvailableAreaForRoute(
+      areaId: int.tryParse(json['area_Id']?.toString() ?? '0') ?? 0,
+      areaName: json['area_Name']?.toString() ?? '',
+      isSelected: json['isSelected'] == true || json['isSelected'] == 'true',
+    );
+  }
+}
+
+class AvailableAreaForRouteResponse {
+  final bool status;
+  final String message;
+  final List<AvailableAreaForRoute> data;
+  final String? error;
+
+  AvailableAreaForRouteResponse({
+    required this.status,
+    required this.message,
+    required this.data,
+    this.error,
+  });
+
+  factory AvailableAreaForRouteResponse.fromJson(Map<String, dynamic> json) {
+    List<AvailableAreaForRoute> areasList = [];
+    if (json['data'] != null && json['data'] is List) {
+      areasList = (json['data'] as List)
+          .whereType<Map<String, dynamic>>()
+          .map((item) => AvailableAreaForRoute.fromJson(item))
+          .toList();
+    }
+
+    return AvailableAreaForRouteResponse(
+      status: json['status'] == true || json['status'] == 'true',
+      message: json['message']?.toString() ?? '',
+      data: areasList,
+      error: json['error']?.toString(),
+    );
+  }
+}

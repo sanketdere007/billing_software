@@ -6,6 +6,7 @@ import '../../widgets/app_drawer.dart';
 import '../../widgets/app_message_dialog.dart';
 import '../../widgets/direct_back_scope.dart';
 import '../../widgets/save_clear_shortcuts.dart';
+import '../../widgets/multi_select_area_dropdown.dart';
 
 class RouteMasterScreen extends StatefulWidget {
   final RouteListItem? routeToEdit;
@@ -36,6 +37,7 @@ class _RouteMasterScreenState extends State<RouteMasterScreen> {
   bool _isFetchingDetails = false;
   int _currentEmpId = 0;
   int _routeId = 0;
+  List<int> _selectedAreaIds = [];
 
   bool get isEditing => _routeId > 0 || widget.routeToEdit != null;
 
@@ -111,6 +113,7 @@ class _RouteMasterScreenState extends State<RouteMasterScreen> {
     _nameController.text = route.routeName;
     _descriptionController.text = route.routeDescription;
     _isActive = route.routeIsActive;
+    _selectedAreaIds = List.from(route.routeDetail_AreaIds);
   }
 
   Future<void> _saveRoute({bool saveAndNew = false}) async {
@@ -130,6 +133,7 @@ class _RouteMasterScreenState extends State<RouteMasterScreen> {
         routeName: _nameController.text.trim(),
         routeDescription: _descriptionController.text.trim(),
         routeIsActive: _isActive,
+        routeDetail_AreaIds: _selectedAreaIds,
         routeBranchId: (isEditing &&
                 widget.routeToEdit != null &&
                 widget.routeToEdit!.routeBranchId > 0)
@@ -184,6 +188,7 @@ class _RouteMasterScreenState extends State<RouteMasterScreen> {
         setState(() {
           _isActive = true;
           _isLoading = false;
+          _selectedAreaIds = [];
         });
         _nameFocusNode.requestFocus();
       } else {
@@ -217,6 +222,7 @@ class _RouteMasterScreenState extends State<RouteMasterScreen> {
           _descriptionController.clear();
           setState(() {
             _isActive = true;
+            _selectedAreaIds = [];
           });
           _nameFocusNode.requestFocus();
         }
@@ -343,6 +349,8 @@ class _RouteMasterScreenState extends State<RouteMasterScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(child: _buildNameField()),
+                      const SizedBox(width: 16),
+                      Expanded(child: _buildAreasDropdown()),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -354,6 +362,8 @@ class _RouteMasterScreenState extends State<RouteMasterScreen> {
                   ),
                 ] else ...[
                   _buildNameField(),
+                  const SizedBox(height: 14),
+                  _buildAreasDropdown(),
                   const SizedBox(height: 14),
                   _buildDescriptionField(),
                 ],
@@ -586,6 +596,34 @@ class _RouteMasterScreenState extends State<RouteMasterScreen> {
         }
         return null;
       },
+    );
+  }
+
+  Widget _buildAreasDropdown() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Areas *',
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+        ),
+        const SizedBox(height: 4),
+        MultiSelectAreaDropdown(
+          routeId: _routeId,
+          selectedAreaIds: _selectedAreaIds,
+          onChanged: (values) {
+            setState(() {
+              _selectedAreaIds = values;
+            });
+          },
+          validator: (val) {
+            if (val == null || val.isEmpty) {
+              return 'At least one area is required under the route.';
+            }
+            return null;
+          },
+        ),
+      ],
     );
   }
 
