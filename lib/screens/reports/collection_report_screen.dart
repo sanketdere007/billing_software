@@ -896,16 +896,16 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                IconButton(
-                                  icon: const Icon(
-                                    Icons.print_outlined,
-                                    size: 20,
-                                  ),
-                                  tooltip: 'Print',
-                                  padding: const EdgeInsets.all(4),
-                                  constraints: const BoxConstraints(),
-                                  onPressed: () => _printReceipt(item),
-                                ),
+                                // IconButton(
+                                //   icon: const Icon(
+                                //     Icons.print_outlined,
+                                //     size: 20,
+                                //   ),
+                                //   tooltip: 'Print',
+                                //   padding: const EdgeInsets.all(4),
+                                //   constraints: const BoxConstraints(),
+                                //   onPressed: () => _printReceipt(item),
+                                // ),
                                 const SizedBox(width: 8),
                                 IconButton(
                                   icon: const Icon(
@@ -930,31 +930,31 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
                                   onPressed: () => _deleteReceipt(item),
                                 ),
                                 const SizedBox(width: 8),
-                                PopupMenuButton<String>(
-                                  icon: const Icon(
-                                    Icons.share_outlined,
-                                    size: 20,
-                                  ),
-                                  tooltip: 'Share',
-                                  padding: const EdgeInsets.all(4),
-                                  onSelected: (value) {
-                                    if (value == 'pdf') {
-                                      _shareReceiptPdf(item);
-                                    } else if (value == 'image') {
-                                      _shareReceiptImage(item);
-                                    }
-                                  },
-                                  itemBuilder: (context) => [
-                                    const PopupMenuItem(
-                                      value: 'pdf',
-                                      child: Text('Share as PDF'),
-                                    ),
-                                    const PopupMenuItem(
-                                      value: 'image',
-                                      child: Text('Share as Image'),
-                                    ),
-                                  ],
-                                ),
+                                // PopupMenuButton<String>(
+                                //   icon: const Icon(
+                                //     Icons.share_outlined,
+                                //     size: 20,
+                                //   ),
+                                //   tooltip: 'Share',
+                                //   padding: const EdgeInsets.all(4),
+                                //   onSelected: (value) {
+                                //     if (value == 'pdf') {
+                                //       _shareReceiptPdf(item);
+                                //     } else if (value == 'image') {
+                                //       _shareReceiptImage(item);
+                                //     }
+                                //   },
+                                //   itemBuilder: (context) => [
+                                //     const PopupMenuItem(
+                                //       value: 'pdf',
+                                //       child: Text('Share as PDF'),
+                                //     ),
+                                //     const PopupMenuItem(
+                                //       value: 'image',
+                                //       child: Text('Share as Image'),
+                                //     ),
+                                //   ],
+                                // ),
                               ],
                             ),
                           ),
@@ -1060,13 +1060,13 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      IconButton(
-                        icon: const Icon(Icons.print_outlined, size: 20),
-                        tooltip: 'Print',
-                        padding: const EdgeInsets.all(4),
-                        constraints: const BoxConstraints(),
-                        onPressed: () => _printReceipt(item),
-                      ),
+                      // IconButton(
+                      //   icon: const Icon(Icons.print_outlined, size: 20),
+                      //   tooltip: 'Print',
+                      //   padding: const EdgeInsets.all(4),
+                      //   constraints: const BoxConstraints(),
+                      //   onPressed: () => _printReceipt(item),
+                      // ),
                       const SizedBox(width: 4),
                       IconButton(
                         icon: const Icon(Icons.download_outlined, size: 20),

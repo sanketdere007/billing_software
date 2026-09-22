@@ -8,6 +8,7 @@ import '../../services/session_service.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/app_message_dialog.dart';
 import '../../widgets/direct_back_scope.dart';
+import '../../widgets/custom_date_picker_field.dart';
 import 'product_wise_customer_purchase_list_screen.dart';
 
 class ProductWiseSalesReportScreen extends StatefulWidget {
@@ -29,22 +30,16 @@ class _ProductWiseSalesReportScreenState extends State<ProductWiseSalesReportScr
   int _pageNumber = 1;
   static const int _pageSize = 15;
   
-  String _searchQuery = '';
   String? _errorMessage;
   List<ProductWiseSalesItem> _reportData = [];
   int _highlightedIndex = 0;
 
-  late DateTimeRange _selectedDateRange;
+  DateTime? _fromDate = DateTime.now();
+  DateTime? _toDate = DateTime.now();
 
   @override
   void initState() {
     super.initState();
-    // Default to last 30 days
-    final now = DateTime.now();
-    _selectedDateRange = DateTimeRange(
-      start: now.subtract(const Duration(days: 30)),
-      end: now,
-    );
 
     _screenFocusNode.onKeyEvent = _handleKeyEvent;
     _scrollController.addListener(_onScroll);
@@ -73,54 +68,6 @@ class _ProductWiseSalesReportScreenState extends State<ProductWiseSalesReportScr
     }
   }
 
-  void _onSearchChanged(String query) {
-    if (_debounce?.isActive ?? false) _debounce!.cancel();
-    _debounce = Timer(const Duration(milliseconds: 500), () {
-      if (_searchQuery != query) {
-        setState(() {
-          _searchQuery = query;
-        });
-        _fetchReport(refresh: true);
-      }
-    });
-  }
-
-  Future<void> _pickDateRange() async {
-    final DateTimeRange? picked = await showDateRangePicker(
-      context: context,
-      initialDateRange: _selectedDateRange,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: Theme.of(context).colorScheme.copyWith(
-              primary: Theme.of(context).colorScheme.primary,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (picked != null && picked != _selectedDateRange) {
-      setState(() {
-        _selectedDateRange = picked;
-      });
-      _fetchReport(refresh: true);
-    }
-  }
-
-  String _formatDateRange() {
-    final start = DateFormat('dd MMM, yyyy').format(_selectedDateRange.start);
-    final end = DateFormat('dd MMM, yyyy').format(_selectedDateRange.end);
-    if (_selectedDateRange.start.isAtSameMomentAs(_selectedDateRange.end) || 
-        (start == end)) {
-      return start;
-    }
-    return '$start - $end';
-  }
-
   Future<void> _fetchMoreData() async {
     if (_isLoading || _isFetchingMore || !_hasMoreData) return;
     
@@ -136,9 +83,9 @@ class _ProductWiseSalesReportScreenState extends State<ProductWiseSalesReportScr
       final response = await productWiseSalesReportService.getProductWiseSalesReport(
         compId: compId,
         branchId: branchId,
-        fromDate: _selectedDateRange.start,
-        toDate: _selectedDateRange.end,
-        searchText: _searchQuery,
+        fromDate: _fromDate ?? DateTime.now(),
+        toDate: _toDate ?? DateTime.now(),
+        searchText: _searchController.text.trim(),
         pageNumber: nextPage,
         pageSize: _pageSize,
       );
@@ -256,9 +203,9 @@ class _ProductWiseSalesReportScreenState extends State<ProductWiseSalesReportScr
       final response = await productWiseSalesReportService.getProductWiseSalesReport(
         compId: compId,
         branchId: branchId,
-        fromDate: _selectedDateRange.start,
-        toDate: _selectedDateRange.end,
-        searchText: _searchQuery,
+        fromDate: _fromDate ?? DateTime.now(),
+        toDate: _toDate ?? DateTime.now(),
+        searchText: _searchController.text.trim(),
         pageNumber: 1,
         pageSize: _pageSize,
       );
@@ -299,8 +246,8 @@ class _ProductWiseSalesReportScreenState extends State<ProductWiseSalesReportScr
         builder: (context) => ProductWiseCustomerPurchaseListScreen(
           productId: item.productId,
           productName: item.productName,
-          fromDate: _selectedDateRange.start,
-          toDate: _selectedDateRange.end,
+          fromDate: _fromDate ?? DateTime.now(),
+          toDate: _toDate ?? DateTime.now(),
         ),
       ),
     );
@@ -341,7 +288,7 @@ class _ProductWiseSalesReportScreenState extends State<ProductWiseSalesReportScr
                         ),
                         body: Column(
                           children: [
-                            _buildDesktopFilterBar(),
+                            _buildFilterRow(),
                             Expanded(child: _buildBodyContent(isDesktop: true)),
                           ],
                         ),
@@ -366,7 +313,7 @@ class _ProductWiseSalesReportScreenState extends State<ProductWiseSalesReportScr
               drawer: const AppDrawer(isPermanent: false),
               body: Column(
                 children: [
-                  _buildMobileFilterBar(),
+                  _buildFilterRow(),
                   Expanded(child: _buildBodyContent(isDesktop: false)),
                 ],
               ),
@@ -377,140 +324,73 @@ class _ProductWiseSalesReportScreenState extends State<ProductWiseSalesReportScr
     );
   }
 
-  Widget _buildDesktopFilterBar() {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        border: Border(
-          bottom: BorderSide(
-            color: isDark ? Colors.white10 : Colors.black12,
-            width: 1,
-          ),
-        ),
-      ),
+  Widget _buildFilterRow() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
       child: Row(
         children: [
           Expanded(
             flex: 2,
-            child: SizedBox(
-              height: 44,
-              child: TextField(
-                controller: _searchController,
-                onChanged: _onSearchChanged,
-                decoration: InputDecoration(
-                  hintText: 'Search by Product Name, HSN...',
-                  prefixIcon: const Icon(Icons.search_rounded, size: 20),
-                  suffixIcon: _searchController.text.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear_rounded, size: 18),
-                          onPressed: () {
-                            _searchController.clear();
-                            _onSearchChanged('');
-                          },
-                        )
-                      : null,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  filled: true,
-                  fillColor: isDark
-                      ? theme.colorScheme.surfaceVariant.withOpacity(0.3)
-                      : Colors.grey.shade50,
+            child: TextField(
+              controller: _searchController,
+              decoration: const InputDecoration(
+                labelText: 'Search',
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
                 ),
               ),
+              onChanged: (value) {
+                if (_debounce?.isActive ?? false) _debounce!.cancel();
+                _debounce = Timer(const Duration(milliseconds: 500), () {
+                  _fetchReport(refresh: true);
+                });
+              },
             ),
           ),
           const SizedBox(width: 16),
-          InkWell(
-            onTap: _pickDateRange,
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              height: 44,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                border: Border.all(color: theme.colorScheme.outline),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.date_range, size: 18, color: theme.colorScheme.primary),
-                  const SizedBox(width: 8),
-                  Text(
-                    _formatDateRange(),
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                  ),
-                  const SizedBox(width: 4),
-                  const Icon(Icons.arrow_drop_down, size: 20),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMobileFilterBar() {
-    final theme = Theme.of(context);
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-      color: theme.colorScheme.surface,
-      child: Column(
-        children: [
-          TextField(
-            controller: _searchController,
-            onChanged: _onSearchChanged,
-            decoration: InputDecoration(
-              hintText: 'Search products...',
-              prefixIcon: const Icon(Icons.search_rounded),
-              suffixIcon: _searchController.text.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear_rounded),
-                      onPressed: () {
-                        _searchController.clear();
-                        _onSearchChanged('');
-                      },
-                    )
-                  : null,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              filled: true,
-              fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
-            ),
-          ),
-          const SizedBox(height: 8),
-          InkWell(
-            onTap: _pickDateRange,
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              height: 48,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                border: Border.all(color: theme.colorScheme.outline),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.date_range, size: 18, color: theme.colorScheme.primary),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      _formatDateRange(),
-                      style: const TextStyle(fontSize: 14),
+          Expanded(
+            child: CustomDatePickerField(
+              labelText: 'From Date',
+              initialDate: _fromDate,
+              lastDate: DateTime.now(),
+              onDateSelected: (date) {
+                if (_toDate != null && date.isAfter(_toDate!)) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('From Date cannot be later than To Date.'),
                     ),
-                  ),
-                  const Icon(Icons.arrow_drop_down, size: 20),
-                ],
-              ),
+                  );
+                } else {
+                  setState(() {
+                    _fromDate = date;
+                  });
+                  _fetchReport(refresh: true);
+                }
+              },
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: CustomDatePickerField(
+              labelText: 'To Date',
+              initialDate: _toDate,
+              lastDate: DateTime.now(),
+              onDateSelected: (date) {
+                if (_fromDate != null && date.isBefore(_fromDate!)) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('To Date cannot be earlier than From Date.'),
+                    ),
+                  );
+                } else {
+                  setState(() {
+                    _toDate = date;
+                  });
+                  _fetchReport(refresh: true);
+                }
+              },
             ),
           ),
         ],
