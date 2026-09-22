@@ -163,6 +163,27 @@ class RouteService extends ChangeNotifier {
     }
   }
 
+  /// Delete route detail
+  Future<Map<String, dynamic>> deleteRouteDetail(int id) async {
+    try {
+      final dynamic response = await apiService.delete(
+        '${ApiConstants.deleteRouteDetailEndpoint}/$id',
+        requiresAuth: true,
+      );
+
+      if (response is Map<String, dynamic>) {
+        return response;
+      }
+      return {
+        'status': false,
+        'message': 'Invalid response format',
+      };
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException('Error deleting route detail: $e');
+    }
+  }
+
   /// Insert or update route
   Future<RouteUpsertResponse> insertOrUpdateRoute(
     RouteUpsertRequest request,

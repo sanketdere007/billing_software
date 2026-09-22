@@ -73,6 +73,8 @@ class ApiConstants {
       '/api/Route/InsertorUpdateRoute';
   static const String getAllRouteDetailsEndpoint =
       '/api/Route/GetAllRouteDetails';
+  static const String deleteRouteDetailEndpoint =
+      '/api/Route/DeleteRouteDetail';
 
   // Batch Endpoints
   static const String getAllBatchesEndpoint = '/api/Batch/GetAllBatches';

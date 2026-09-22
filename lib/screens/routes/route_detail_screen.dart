@@ -78,6 +78,53 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
     _fetchDetails();
   }
 
+  Future<void> _deleteDetail(int id) async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final response = await _routeService.deleteRouteDetail(id);
+
+      if (!mounted) return;
+
+      if (response['status'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              response['message']?.toString() ?? 'Removed successfully',
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+        _fetchDetails();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              response['message']?.toString() ?? 'Failed to remove',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceAll('ApiException: ', '')),
+          backgroundColor: Colors.red,
+        ),
+      );
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
@@ -88,10 +135,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
           return Scaffold(
             body: Row(
               children: [
-                const SizedBox(
-                  width: 250,
-                  child: AppDrawer(isPermanent: true),
-                ),
+                const SizedBox(width: 250, child: AppDrawer(isPermanent: true)),
                 const VerticalDivider(width: 1, thickness: 1),
                 Expanded(
                   child: Scaffold(
@@ -240,9 +284,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
             horizontal: 12,
             vertical: 8,
           ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           filled: true,
           fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
         ),
@@ -374,6 +416,11 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                 _buildHeaderCell('#', width: 50, alignment: Alignment.center),
                 _buildHeaderCell('Route Name', flex: 2),
                 _buildHeaderCell('Area Name', flex: 3),
+                _buildHeaderCell(
+                  'Action',
+                  width: 100,
+                  alignment: Alignment.center,
+                ),
               ],
             ),
           ),
@@ -431,7 +478,8 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                       Expanded(
                         flex: 2,
                         child: Text(
-                          detail['route_Name']?.toString() ?? widget.route.routeName,
+                          detail['route_Name']?.toString() ??
+                              widget.route.routeName,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
@@ -444,10 +492,56 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                       Expanded(
                         flex: 3,
                         child: Text(
-                          detail['area_Name']?.toString() ?? detail['areaName']?.toString() ?? '—',
+                          detail['area_Name']?.toString() ??
+                              detail['areaName']?.toString() ??
+                              '—',
                           style: theme.textTheme.bodyMedium,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+
+                      // Action
+                      SizedBox(
+                        width: 100,
+                        child: Center(
+                          child: _details.length > 1
+                              ? TextButton(
+                                  onPressed: () {
+                                    final id =
+                                        int.tryParse(
+                                          detail['routeDetail_Id']
+                                                  ?.toString() ??
+                                              detail['routeDetailId']
+                                                  ?.toString() ??
+                                              detail['id']?.toString() ??
+                                              '0',
+                                        ) ??
+                                        0;
+                                    if (id > 0) {
+                                      _deleteDetail(id);
+                                    } else {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Invalid detail ID'),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: Colors.red,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    minimumSize: Size.zero,
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  child: const Text('Remove'),
+                                )
+                              : const SizedBox.shrink(),
                         ),
                       ),
                     ],
@@ -512,7 +606,9 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                   children: [
                     CircleAvatar(
                       radius: 20,
-                      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.primaryContainer,
                       child: Icon(
                         Icons.map_rounded,
                         color: Theme.of(context).colorScheme.onPrimaryContainer,
@@ -522,7 +618,8 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        detail['route_Name']?.toString() ?? widget.route.routeName,
+                        detail['route_Name']?.toString() ??
+                            widget.route.routeName,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 15,
@@ -549,7 +646,9 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                       ),
                       Expanded(
                         child: Text(
-                          detail['area_Name']?.toString() ?? detail['areaName']?.toString() ?? '—',
+                          detail['area_Name']?.toString() ??
+                              detail['areaName']?.toString() ??
+                              '—',
                           style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
@@ -559,6 +658,42 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                     ],
                   ),
                 ),
+                if (_details.length > 1) ...[
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () {
+                        final id =
+                            int.tryParse(
+                              detail['routeDetail_Id']?.toString() ??
+                                  detail['routeDetailId']?.toString() ??
+                                  detail['id']?.toString() ??
+                                  '0',
+                            ) ??
+                            0;
+                        if (id > 0) {
+                          _deleteDetail(id);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Invalid detail ID'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      },
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.red,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                      ),
+                      child: const Text('Remove'),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
