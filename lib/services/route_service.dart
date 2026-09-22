@@ -125,6 +125,44 @@ class RouteService extends ChangeNotifier {
     }
   }
 
+  /// Fetch all route details
+  Future<List<Map<String, dynamic>>> getAllRouteDetails(
+    int routeId, {
+    String? search,
+  }) async {
+    final cleanSearch = (search == null || search == 'null') ? '' : search.trim();
+    
+    final Map<String, String> queryParameters = {
+      'Route_Id': routeId.toString(),
+    };
+
+    if (cleanSearch.isNotEmpty) {
+      queryParameters['Search'] = cleanSearch;
+    }
+
+    try {
+      final dynamic response = await apiService.get(
+        ApiConstants.getAllRouteDetailsEndpoint,
+        queryParameters: queryParameters,
+        requiresAuth: true,
+      );
+
+      if (response is Map<String, dynamic> && response.containsKey('data')) {
+        final data = response['data'];
+        if (data is List) {
+          return data.whereType<Map<String, dynamic>>().toList();
+        }
+      } else if (response is List) {
+        return response.whereType<Map<String, dynamic>>().toList();
+      }
+
+      return [];
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException('Error fetching route details: $e');
+    }
+  }
+
   /// Insert or update route
   Future<RouteUpsertResponse> insertOrUpdateRoute(
     RouteUpsertRequest request,

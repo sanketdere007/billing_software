@@ -17,7 +17,8 @@ class MultiSelectAreaDropdown extends StatefulWidget {
   });
 
   @override
-  State<MultiSelectAreaDropdown> createState() => _MultiSelectAreaDropdownState();
+  State<MultiSelectAreaDropdown> createState() =>
+      _MultiSelectAreaDropdownState();
 }
 
 class _MultiSelectAreaDropdownState extends State<MultiSelectAreaDropdown> {
@@ -71,12 +72,12 @@ class _MultiSelectAreaDropdownState extends State<MultiSelectAreaDropdown> {
       validator: widget.validator,
       builder: (fieldState) {
         final hasError = fieldState.hasError;
-        
+
         String displayText = 'Select Areas';
         if (_displayNames.isNotEmpty) {
-           displayText = _displayNames;
+          displayText = _displayNames;
         } else if (_currentSelection.isNotEmpty) {
-           displayText = '${_currentSelection.length} area(s) selected';
+          displayText = '${_currentSelection.length} area(s) selected';
         }
 
         return Column(
@@ -86,10 +87,15 @@ class _MultiSelectAreaDropdownState extends State<MultiSelectAreaDropdown> {
               onTap: () => _showMultiSelectDialog(fieldState),
               borderRadius: BorderRadius.circular(4),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 14,
+                ),
                 decoration: BoxDecoration(
                   border: Border.all(
-                    color: hasError ? theme.colorScheme.error : theme.colorScheme.outline,
+                    color: hasError
+                        ? theme.colorScheme.error
+                        : theme.colorScheme.outline,
                   ),
                   borderRadius: BorderRadius.circular(4),
                   color: theme.colorScheme.surface,
@@ -106,15 +112,20 @@ class _MultiSelectAreaDropdownState extends State<MultiSelectAreaDropdown> {
                       child: Text(
                         displayText,
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: _currentSelection.isEmpty 
-                              ? theme.colorScheme.onSurfaceVariant.withOpacity(0.6)
+                          color: _currentSelection.isEmpty
+                              ? theme.colorScheme.onSurfaceVariant.withOpacity(
+                                  0.6,
+                                )
                               : theme.colorScheme.onSurface,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    Icon(Icons.arrow_drop_down, color: theme.colorScheme.onSurfaceVariant),
+                    Icon(
+                      Icons.arrow_drop_down,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ],
                 ),
               ),
@@ -168,7 +179,10 @@ class _MultiSelectAreaDialogState extends State<_MultiSelectAreaDialog> {
   Future<void> _fetchAreas(String search) async {
     setState(() => _isLoading = true);
     try {
-      final areas = await _areaService.getAvailableForRoute(widget.routeId, search: search);
+      final areas = await _areaService.getAvailableForRoute(
+        widget.routeId,
+        search: search,
+      );
       if (mounted) {
         setState(() {
           _areas = areas;
@@ -180,14 +194,14 @@ class _MultiSelectAreaDialogState extends State<_MultiSelectAreaDialog> {
               }
             }
           } else {
-             // ensure we track what is returned as selected if not already in our list? 
-             // actually the user wants it to show selected if `isSelected` is true.
-             // We'll merge them.
-             for (var area in areas) {
-               if (area.isSelected && !_selectedIds.contains(area.areaId)) {
-                 _selectedIds.add(area.areaId);
-               }
-             }
+            // ensure we track what is returned as selected if not already in our list?
+            // actually the user wants it to show selected if `isSelected` is true.
+            // We'll merge them.
+            for (var area in areas) {
+              if (area.isSelected && !_selectedIds.contains(area.areaId)) {
+                _selectedIds.add(area.areaId);
+              }
+            }
           }
         });
       }
@@ -210,7 +224,9 @@ class _MultiSelectAreaDialogState extends State<_MultiSelectAreaDialog> {
   List<AvailableAreaForRoute> get _filteredAreas {
     final query = _searchController.text.toLowerCase();
     if (query.isEmpty) return _areas;
-    return _areas.where((a) => a.areaName.toLowerCase().contains(query)).toList();
+    return _areas
+        .where((a) => a.areaName.toLowerCase().contains(query))
+        .toList();
   }
 
   @override
@@ -242,34 +258,37 @@ class _MultiSelectAreaDialogState extends State<_MultiSelectAreaDialog> {
                   hintText: 'Search Area',
                   prefixIcon: Icon(Icons.search),
                   border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 10),
+                  contentPadding: EdgeInsets.symmetric(
+                    vertical: 0,
+                    horizontal: 10,
+                  ),
                 ),
               ),
             ),
             const SizedBox(height: 10),
             Expanded(
-              child: _isLoading 
-                ? const Center(child: CircularProgressIndicator())
-                : ListView.builder(
-                    itemCount: _filteredAreas.length,
-                    itemBuilder: (context, index) {
-                      final area = _filteredAreas[index];
-                      final isSelected = _selectedIds.contains(area.areaId);
-                      return CheckboxListTile(
-                        title: Text(area.areaName),
-                        value: isSelected,
-                        onChanged: (bool? selected) {
-                          setState(() {
-                            if (selected == true) {
-                              _selectedIds.add(area.areaId);
-                            } else {
-                              _selectedIds.remove(area.areaId);
-                            }
-                          });
-                        },
-                      );
-                    },
-                  ),
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : ListView.builder(
+                      itemCount: _filteredAreas.length,
+                      itemBuilder: (context, index) {
+                        final area = _filteredAreas[index];
+                        final isSelected = _selectedIds.contains(area.areaId);
+                        return CheckboxListTile(
+                          title: Text(area.areaName),
+                          value: isSelected,
+                          onChanged: (bool? selected) {
+                            setState(() {
+                              if (selected == true) {
+                                _selectedIds.add(area.areaId);
+                              } else {
+                                _selectedIds.remove(area.areaId);
+                              }
+                            });
+                          },
+                        );
+                      },
+                    ),
             ),
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -288,10 +307,10 @@ class _MultiSelectAreaDialogState extends State<_MultiSelectAreaDialog> {
                           .where((a) => _selectedIds.contains(a.areaId))
                           .map((a) => a.areaName)
                           .toList();
-                      final displayNames = selectedNames.isNotEmpty 
-                          ? selectedNames.join(', ') 
+                      final displayNames = selectedNames.isNotEmpty
+                          ? selectedNames.join(', ')
                           : '${_selectedIds.length} area(s) selected';
-                          
+
                       Navigator.of(context).pop({
                         'selectedIds': _selectedIds,
                         'displayNames': displayNames,

@@ -8,6 +8,7 @@ import '../../widgets/app_drawer.dart';
 import '../../widgets/app_message_dialog.dart';
 import '../../widgets/direct_back_scope.dart';
 import 'route_master_screen.dart';
+import 'route_detail_screen.dart';
 
 class RouteListScreen extends StatefulWidget {
   const RouteListScreen({super.key});
@@ -99,7 +100,7 @@ class _RouteListScreenState extends State<RouteListScreen> {
     if (key == LogicalKeyboardKey.enter ||
         key == LogicalKeyboardKey.numpadEnter) {
       if (_highlightedIndex >= 0 && _highlightedIndex < _routes.length) {
-        _navigateToEditRoute(_routes[_highlightedIndex]);
+        _navigateToRouteDetail(_routes[_highlightedIndex]);
         return KeyEventResult.handled;
       }
     }
@@ -255,6 +256,14 @@ class _RouteListScreenState extends State<RouteListScreen> {
       }
       _fetchRoutes();
     }
+  }
+
+  void _navigateToRouteDetail(RouteListItem route) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => RouteDetailScreen(route: route),
+      ),
+    );
   }
 
   @override
@@ -765,7 +774,7 @@ class _RouteListScreenState extends State<RouteListScreen> {
                     setState(() {
                       _highlightedIndex = index;
                     });
-                    _showRouteDetailsDialog(route);
+                    _navigateToRouteDetail(route);
                   },
                   onDoubleTap: () => _navigateToEditRoute(route),
                   child: Container(
@@ -848,16 +857,7 @@ class _RouteListScreenState extends State<RouteListScreen> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.visibility_outlined,
-                                  size: 18,
-                                ),
-                                tooltip: 'View Details',
-                                splashRadius: 18,
-                                onPressed: () =>
-                                    _showRouteDetailsDialog(route),
-                              ),
+                              // Removed View Details eye icon
                               IconButton(
                                 icon: const Icon(Icons.edit_outlined, size: 18),
                                 tooltip: 'Edit Route',
@@ -958,7 +958,7 @@ class _RouteListScreenState extends State<RouteListScreen> {
           elevation: 1.5,
           child: InkWell(
             borderRadius: BorderRadius.circular(12),
-            onTap: () => _showRouteDetailsDialog(route),
+            onTap: () => _navigateToRouteDetail(route),
             child: Padding(
               padding: const EdgeInsets.all(14.0),
               child: Column(
@@ -1031,12 +1031,7 @@ class _RouteListScreenState extends State<RouteListScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      TextButton.icon(
-                        icon: const Icon(Icons.visibility_outlined, size: 16),
-                        label: const Text('View Details'),
-                        onPressed: () => _showRouteDetailsDialog(route),
-                      ),
-                      const SizedBox(width: 8),
+                      // Removed View Details text button
                       FilledButton.tonalIcon(
                         icon: const Icon(Icons.edit_outlined, size: 16),
                         label: const Text('Edit'),
@@ -1053,38 +1048,4 @@ class _RouteListScreenState extends State<RouteListScreen> {
     );
   }
 
-  void _showRouteDetailsDialog(RouteListItem route) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Route Details'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Name: ${route.routeName}', style: const TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              Text('Description: ${route.routeDescription.isNotEmpty ? route.routeDescription : "—"}'),
-              const SizedBox(height: 8),
-              Text('Status: ${route.routeIsActive ? "Active" : "Inactive"}'),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Close'),
-            ),
-            FilledButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                _navigateToEditRoute(route);
-              },
-              child: const Text('Edit'),
-            ),
-          ],
-        );
-      },
-    );
-  }
 }
