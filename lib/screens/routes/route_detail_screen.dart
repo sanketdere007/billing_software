@@ -521,7 +521,9 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                                     if (id > 0) {
                                       _deleteDetail(id);
                                     } else {
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
                                         const SnackBar(
                                           content: Text('Invalid detail ID'),
                                           backgroundColor: Colors.red,

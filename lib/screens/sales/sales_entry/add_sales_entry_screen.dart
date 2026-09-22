@@ -59,7 +59,11 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
   final _invoiceDateNode = FocusNode();
   final _customerNode = FocusNode();
 
+  final _billDiscountPctController = TextEditingController(text: '0');
   final _billDiscountController = TextEditingController(text: '0');
+  final _billDiscountPctNode = FocusNode();
+  final _billDiscountAmtNode = FocusNode();
+  bool _isDiscountPctLastEdited = false;
   DateTime _selectedDate = DateTime(
     DateTime.now().year,
     DateTime.now().month,
@@ -78,6 +82,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
   double _finalPayable = 0.0;
 
   bool _isLoading = false;
+  bool _isViewMode = false;
 
   final CustomerService _customerService = CustomerService();
   final BatchService _batchService = batchService;
@@ -88,6 +93,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
     _customerService.getAllCustomers();
     _batchService.getAllBatches();
     productService.getAllProducts(isActive: true);
+    _billDiscountPctController.addListener(_calculateTotals);
     _billDiscountController.addListener(_calculateTotals);
 
     // Auto-add first empty row
@@ -127,7 +133,10 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
   void dispose() {
     _invoiceDateNode.dispose();
     _customerNode.dispose();
+    _billDiscountPctController.dispose();
     _billDiscountController.dispose();
+    _billDiscountPctNode.dispose();
+    _billDiscountAmtNode.dispose();
 
     for (var p in _products) {
       (p['qtyController'] as TextEditingController).dispose();
@@ -206,7 +215,38 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
       subTotal += net;
     }
 
-    double bDisc = double.tryParse(_billDiscountController.text) ?? 0.0;
+    if (_billDiscountPctNode.hasFocus) {
+      _isDiscountPctLastEdited = true;
+    } else if (_billDiscountAmtNode.hasFocus) {
+      _isDiscountPctLastEdited = false;
+    }
+
+    double bDisc = 0.0;
+    if (_isDiscountPctLastEdited) {
+      double pct = double.tryParse(_billDiscountPctController.text) ?? 0.0;
+      bDisc = subTotal * (pct / 100);
+      final amtStr = bDisc.toStringAsFixed(2).replaceAll(RegExp(r'\.00$'), '');
+      if (_billDiscountController.text != amtStr &&
+          _billDiscountController.text != bDisc.toString()) {
+        _billDiscountController.text = amtStr;
+      }
+    } else {
+      bDisc = double.tryParse(_billDiscountController.text) ?? 0.0;
+      if (subTotal > 0) {
+        double pct = (bDisc / subTotal) * 100;
+        final pctStr = pct.toStringAsFixed(2).replaceAll(RegExp(r'\.00$'), '');
+        if (_billDiscountPctController.text != pctStr &&
+            _billDiscountPctController.text != pct.toString()) {
+          _billDiscountPctController.text = pctStr;
+        }
+      } else {
+        if (_billDiscountPctController.text != '0' &&
+            _billDiscountPctController.text != '0.0') {
+          _billDiscountPctController.text = '0';
+        }
+      }
+    }
+
     double finalPay = subTotal - bDisc;
     if (finalPay < 0) finalPay = 0;
 
@@ -376,6 +416,10 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
   }
 
   Future<void> _saveEntry() async {
+    if (_isViewMode) {
+      await showWarningDialog(context, 'Cannot save in view mode. Please click Clear to start a new entry.');
+      return;
+    }
     if (_isLoading) return;
     if (!_formKey.currentState!.validate()) return;
     if (_selectedCustomer == null) {
@@ -598,6 +642,8 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
         otherReferenceNo: payment.otherReferenceNo,
         otherDate: payment.otherDate?.toIso8601String(),
         otherRemark: payment.otherRemark,
+        billWiseDiscountPercentage: double.tryParse(_billDiscountPctController.text) ?? 0.0,
+        billWiseDiscountAmount: double.tryParse(_billDiscountController.text) ?? 0.0,
         remark: payment.remark,
         billingName: billingName,
         billingAddress: billingAddress,
@@ -707,7 +753,9 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
 
   void _resetForm() {
     setState(() {
+      _isViewMode = false;
       _billDiscountController.text = '0';
+      _billDiscountPctController.text = '0';
       _selectedCustomer = null;
 
       // Clear and re-init products
@@ -1668,9 +1716,29 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                           '₹${_totalGST.toStringAsFixed(2)}',
                         ),
                         SizedBox(
+                          width: 120,
+                          child: TextFormField(
+                            controller: _billDiscountPctController,
+                            focusNode: _billDiscountPctNode,
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                RegExp(r'^\d+\.?\d*'),
+                              ),
+                            ],
+                            decoration: const InputDecoration(
+                              labelText: 'Bill Dis %',
+                              border: OutlineInputBorder(),
+                              isDense: true,
+                              suffixText: '%',
+                            ),
+                          ),
+                        ),
+                        SizedBox(
                           width: 150,
                           child: TextFormField(
                             controller: _billDiscountController,
+                            focusNode: _billDiscountAmtNode,
                             keyboardType: TextInputType.number,
                             inputFormatters: [
                               FilteringTextInputFormatter.allow(
@@ -1714,31 +1782,56 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       const SizedBox(height: 12),
-                      SizedBox(
-                        width: 200,
-                        height: 48,
-                        child: FilledButton.icon(
-                          onPressed: _isLoading ? null : _saveEntry,
-                          icon: _isLoading
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (_isViewMode)
+                            Padding(
+                              padding: const EdgeInsets.only(right: 12.0),
+                              child: SizedBox(
+                                height: 48,
+                                child: OutlinedButton.icon(
+                                  onPressed: _resetForm,
+                                  icon: const Icon(Icons.clear_all_rounded),
+                                  label: const Text(
+                                    'Clear',
+                                    style: TextStyle(fontSize: 16),
                                   ),
-                                )
-                              : const Icon(Icons.save_rounded),
-                          label: Text(
-                            _isLoading ? 'Saving...' : 'Save Sales',
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                          style: FilledButton.styleFrom(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                                  style: OutlinedButton.styleFrom(
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          SizedBox(
+                            width: 200,
+                            height: 48,
+                            child: FilledButton.icon(
+                              onPressed: _isLoading ? null : _saveEntry,
+                              icon: _isLoading
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Icon(Icons.save_rounded),
+                              label: Text(
+                                _isLoading ? 'Saving...' : 'Save Sales',
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                              style: FilledButton.styleFrom(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
                             ),
                           ),
-                        ),
+                        ],
                       ),
                     ],
                   ),
@@ -1815,11 +1908,17 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
       if (!mounted) return;
 
       setState(() {
+        _isViewMode = true;
         _selectedCustomer = master.raw['salesMaster_CustomerId'];
         if (master.raw['salesMaster_InvoiceDate'] != null) {
           final dateStr = master.raw['salesMaster_InvoiceDate'].toString();
           _selectedDate = DateTime.tryParse(dateStr) ?? _selectedDate;
         }
+        
+        final pctStr = ((master.raw['salesMaster_BillWiseDiscountPercentage'] as num?)?.toDouble() ?? 0.0).toStringAsFixed(2).replaceAll(RegExp(r'\.00$'), '');
+        final amtStr = ((master.raw['salesMaster_BillWiseDiscountAmount'] as num?)?.toDouble() ?? 0.0).toStringAsFixed(2).replaceAll(RegExp(r'\.00$'), '');
+        _billDiscountPctController.text = pctStr;
+        _billDiscountController.text = amtStr;
 
         // Clear existing products
         for (var p in _products) {

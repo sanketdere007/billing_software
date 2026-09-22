@@ -134,6 +134,8 @@ class SalesEntryMasterData {
   final bool isActive;
   final int createdBy;
   final int modifiedBy;
+  final double billWiseDiscountPercentage;
+  final double billWiseDiscountAmount;
 
   SalesEntryMasterData({
     this.salesMasterId = 0,
@@ -190,6 +192,8 @@ class SalesEntryMasterData {
     this.isActive = true,
     this.createdBy = 0,
     this.modifiedBy = 0,
+    this.billWiseDiscountPercentage = 0,
+    this.billWiseDiscountAmount = 0,
   });
 
   Map<String, dynamic> toJson() {
@@ -248,6 +252,8 @@ class SalesEntryMasterData {
       'salesMaster_IsActive': isActive,
       'salesMaster_CreatedBy': createdBy,
       'salesMaster_ModifiedBy': modifiedBy,
+      'salesMaster_BillWiseDiscountPercentage': billWiseDiscountPercentage,
+      'salesMaster_BillWiseDiscountAmount': billWiseDiscountAmount,
     };
   }
 }
