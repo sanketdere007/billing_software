@@ -463,6 +463,14 @@ class _SalesEntryViewListState extends State<SalesEntryViewList> {
                         ),
                       ),
                       Expanded(
+                        flex: 1,
+                        child: Text(
+                          'Qty',
+                          textAlign: TextAlign.right,
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      Expanded(
                         flex: 2,
                         child: Text(
                           'Discount',
@@ -569,6 +577,13 @@ class _SalesEntryViewListState extends State<SalesEntryViewList> {
                                           .split('T')
                                           .first ??
                                       '',
+                                ),
+                              ),
+                              Expanded(
+                                flex: 1,
+                                child: Text(
+                                  '${raw['salesMaster_TotalQty'] ?? 0}',
+                                  textAlign: TextAlign.right,
                                 ),
                               ),
                               Expanded(

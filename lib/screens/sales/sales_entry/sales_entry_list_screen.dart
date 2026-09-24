@@ -499,6 +499,7 @@ class _SalesEntryListScreenState extends State<SalesEntryListScreen> {
                 DataColumn(label: Text('Invoice No', style: TextStyle(fontWeight: FontWeight.bold))),
                 DataColumn(label: Text('Date', style: TextStyle(fontWeight: FontWeight.bold))),
                 DataColumn(label: Text('Customer', style: TextStyle(fontWeight: FontWeight.bold))),
+                DataColumn(label: Text('Qty', style: TextStyle(fontWeight: FontWeight.bold))),
                 DataColumn(label: Text('Mode', style: TextStyle(fontWeight: FontWeight.bold))),
                 DataColumn(label: Text('Amount (₹)', style: TextStyle(fontWeight: FontWeight.bold))),
                 DataColumn(label: Text('Status', style: TextStyle(fontWeight: FontWeight.bold))),
@@ -510,6 +511,7 @@ class _SalesEntryListScreenState extends State<SalesEntryListScreen> {
                     DataCell(Text(entry.invoiceNo, style: const TextStyle(fontWeight: FontWeight.w500))),
                     DataCell(Text(_dateFormat.format(entry.invoiceDate))),
                     DataCell(Text(entry.customerName)),
+                    DataCell(Text(entry.totalQuantity.toStringAsFixed(2))),
                     DataCell(Text(entry.payments.keys.join(', '))),
                     DataCell(Text(entry.grandTotal.toStringAsFixed(2), style: const TextStyle(fontWeight: FontWeight.w600))),
                     DataCell(

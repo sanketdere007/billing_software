@@ -463,6 +463,14 @@ class _SalesReturnViewListState extends State<SalesReturnViewList> {
                         ),
                       ),
                       Expanded(
+                        flex: 1,
+                        child: Text(
+                          'Qty',
+                          textAlign: TextAlign.right,
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      Expanded(
                         flex: 2,
                         child: Text(
                           'Discount',
@@ -569,6 +577,13 @@ class _SalesReturnViewListState extends State<SalesReturnViewList> {
                                           .split('T')
                                           .first ??
                                       '',
+                                ),
+                              ),
+                              Expanded(
+                                flex: 1,
+                                child: Text(
+                                  '${raw['salesReturnMaster_TotalQty'] ?? 0}',
+                                  textAlign: TextAlign.right,
                                 ),
                               ),
                               Expanded(
