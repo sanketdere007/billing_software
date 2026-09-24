@@ -643,22 +643,6 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
               ),
               const SizedBox(width: 12),
 
-              // State Filter
-              Expanded(
-                flex: 2,
-                child: SizedBox(
-                  height: 44,
-                  child: StateDropdown(
-                    selectedStateId: _selectedStateId,
-                    isFilter: true,
-                    allOptionLabel: 'All States',
-                    labelText: 'State Filter',
-                    hintText: 'All States',
-                    onChanged: _onStateChanged,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
 
               // City Filter
               Expanded(
@@ -791,17 +775,6 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
           const SizedBox(height: 8),
           Row(
             children: [
-              Expanded(
-                child: StateDropdown(
-                  selectedStateId: _selectedStateId,
-                  isFilter: true,
-                  allOptionLabel: 'All States',
-                  labelText: 'State',
-                  hintText: 'All States',
-                  onChanged: _onStateChanged,
-                ),
-              ),
-              const SizedBox(width: 8),
               Expanded(
                 child: CityDropdown(
                   selectedCityId: _selectedCityId,

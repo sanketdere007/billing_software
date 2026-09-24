@@ -14,7 +14,8 @@ class ReceiptPdfPreviewScreen extends StatefulWidget {
   const ReceiptPdfPreviewScreen({super.key, this.receiptData});
 
   @override
-  State<ReceiptPdfPreviewScreen> createState() => _ReceiptPdfPreviewScreenState();
+  State<ReceiptPdfPreviewScreen> createState() =>
+      _ReceiptPdfPreviewScreenState();
 }
 
 class _ReceiptPdfPreviewScreenState extends State<ReceiptPdfPreviewScreen> {
@@ -143,24 +144,31 @@ class _ReceiptPdfPreviewScreenState extends State<ReceiptPdfPreviewScreen> {
     try {
       final phone = widget.receiptData?.customerMobile ?? '';
       final parsedPhone = phone.replaceAll(RegExp(r'[^0-9]'), '');
-      
+
       // Save PDF to downloads so user can attach it easily
       final path = await _controller.downloadPdf();
       if (mounted && path != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Saved to $path. Please attach this file in WhatsApp!'),
+            content: Text(
+              'Saved to $path. Please attach this file in WhatsApp!',
+            ),
             duration: const Duration(seconds: 4),
-          )
+          ),
         );
       }
 
-      final url = Uri.parse('https://web.whatsapp.com/send?phone=$parsedPhone&text=Hello, please find your receipt attached.');
+      final url = Uri.parse(
+        'https://web.whatsapp.com/send?phone=$parsedPhone&text=Hello, please find your receipt attached.',
+      );
       if (await canLaunchUrl(url)) {
         await launchUrl(url, mode: LaunchMode.externalApplication);
       } else {
         if (!mounted) return;
-        await showErrorDialog(context, 'Could not open WhatsApp Web. Please check your browser.');
+        await showErrorDialog(
+          context,
+          'Could not open WhatsApp Web. Please check your browser.',
+        );
       }
     } catch (e) {
       if (!mounted) return;

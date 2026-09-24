@@ -70,7 +70,7 @@ class _SupplierMasterScreenState extends State<SupplierMasterScreen> {
   final FocusNode _pincodeFocusNode = FocusNode();
   final FocusNode _countryFocusNode = FocusNode();
 
-  int? _selectedStateId;
+  int? _selectedStateId = 26;
   String _selectedStateName = '';
   int? _selectedCityId;
   String _selectedCityName = '';
@@ -354,7 +354,7 @@ class _SupplierMasterScreenState extends State<SupplierMasterScreen> {
         _countryController.text = 'India';
 
         setState(() {
-          _selectedStateId = null;
+          _selectedStateId = 26;
           _selectedStateName = '';
           _selectedCityId = null;
           _selectedCityName = '';
@@ -405,7 +405,7 @@ class _SupplierMasterScreenState extends State<SupplierMasterScreen> {
           _pincodeController.clear();
           _countryController.text = 'India';
           setState(() {
-            _selectedStateId = null;
+            _selectedStateId = 26;
             _selectedStateName = '';
             _selectedCityId = null;
             _selectedCityName = '';
@@ -625,27 +625,7 @@ class _SupplierMasterScreenState extends State<SupplierMasterScreen> {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: StateDropdown(
-                          selectedStateId: _selectedStateId,
-                          focusNode: _stateFocusNode,
-                          nextFocusNode: _cityFocusNode,
-                          labelText: 'State',
-                          hintText: 'Select State',
-                          onChanged: (StateModel? state) {
-                            setState(() {
-                              _selectedStateId = state?.stateId;
-                              _selectedStateName = state?.stateName ?? '';
-                              _selectedCityId = null;
-                              _selectedCityName = '';
-                              _selectedAreaId = null;
-                              _selectedAreaName = '';
-                              _areaController.clear();
-                            });
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 16),
+
                       Expanded(
                         child: CityDropdown(
                           selectedCityId: _selectedCityId,
@@ -679,25 +659,7 @@ class _SupplierMasterScreenState extends State<SupplierMasterScreen> {
                     ],
                   ),
                 ] else ...[
-                  StateDropdown(
-                    selectedStateId: _selectedStateId,
-                    focusNode: _stateFocusNode,
-                    nextFocusNode: _cityFocusNode,
-                    labelText: 'State',
-                    hintText: 'Select State',
-                    onChanged: (StateModel? state) {
-                      setState(() {
-                        _selectedStateId = state?.stateId;
-                        _selectedStateName = state?.stateName ?? '';
-                        _selectedCityId = null;
-                        _selectedCityName = '';
-                        _selectedAreaId = null;
-                        _selectedAreaName = '';
-                        _areaController.clear();
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 12),
+
                   CityDropdown(
                     selectedCityId: _selectedCityId,
                     stateId: _selectedStateId,
