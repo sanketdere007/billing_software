@@ -12,6 +12,7 @@ import '../../services/customer_excel_import_service.dart';
 import '../../services/session_service.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/app_message_dialog.dart';
+import '../../widgets/app_confirm_dialog.dart';
 import '../../widgets/city_dropdown.dart';
 import '../../widgets/area_dropdown.dart';
 import '../../widgets/direct_back_scope.dart';
@@ -525,24 +526,13 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
       });
 
       // Show confirmation dialog
-      final bool? confirm = await showDialog<bool>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text('Confirm Import'),
-          content: Text(
+      final bool? confirm = await showAppConfirmDialog(
+        context,
+        title: 'Confirm Import',
+        message:
             'Are you sure you want to import ${parsedData.length} customer records?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text('No'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(ctx).pop(true),
-              child: const Text('Yes'),
-            ),
-          ],
-        ),
+        icon: Icons.upload_file_rounded,
+        iconColor: Colors.blue,
       );
 
       if (confirm == true) {
