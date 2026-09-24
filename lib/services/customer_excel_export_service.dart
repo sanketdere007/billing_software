@@ -164,7 +164,7 @@ class CustomerExcelExportService {
 
     // Encode to ZIP (.xlsx)
     final zipEncoder = ZipEncoder();
-    return zipEncoder.encode(archive);
+    return zipEncoder.encode(archive) ?? <int>[];
   }
 
   /// Builds worksheet XML including frozen first row, auto-fit column widths, and customer rows

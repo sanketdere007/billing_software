@@ -61,6 +61,8 @@ class ApiConstants {
   static const String getCustomerByIdEndpoint = '/api/Customer/GetCustomerById';
   static const String insertOrUpdateCustomerEndpoint =
       '/api/Customer/InsertorUpdateCustomer';
+  static const String importCustomerExcelEndpoint = 
+      '/api/Customer/ImportCustomerExcel';
 
   // Product Endpoints
   static const String getAllProductsEndpoint = '/api/Product/GetAllProducts';

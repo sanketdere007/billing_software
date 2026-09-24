@@ -8,6 +8,7 @@ import '../../models/area.dart';
 import '../../models/state_model.dart';
 import '../../services/customer_service.dart';
 import '../../services/customer_excel_export_service.dart';
+import '../../services/customer_excel_import_service.dart';
 import '../../services/session_service.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/app_message_dialog.dart';
@@ -44,16 +45,23 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
   bool? _selectedStatus; // null = All, true = Active, false = Inactive
   bool _isLoading = false;
   bool _isExporting = false;
+  bool _isImporting = false;
   String? _errorMessage;
   List<CustomerListItem> _allCustomers = [];
   List<CustomerListItem> _customers = [];
   int _highlightedIndex = 0;
+
+  int _pageNumber = 1;
+  final int _pageSize = 20;
+  bool _hasMore = true;
+  bool _isFetchingMore = false;
 
   @override
   void initState() {
     super.initState();
     _screenFocusNode.onKeyEvent = _handleKeyEvent;
     _searchFocusNode.onKeyEvent = _handleKeyEvent;
+    _scrollController.addListener(_onScroll);
     sessionService.addListener(_onSessionChanged);
     _fetchCustomers();
 
@@ -296,12 +304,23 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
     _fetchCustomers();
   }
 
-  Future<void> _fetchCustomers() async {
-    if (!mounted) return;
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 200 &&
+        !_isLoading &&
+        !_isFetchingMore &&
+        _hasMore) {
+      _fetchMoreCustomers();
+    }
+  }
+
+  Future<void> _fetchMoreCustomers() async {
+    if (!mounted || !_hasMore) return;
     setState(() {
-      _isLoading = true;
-      _errorMessage = null;
+      _isFetchingMore = true;
     });
+
+    _pageNumber++;
 
     try {
       final customers = await _customerService.getAllCustomers(
@@ -313,18 +332,62 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
         areaId: _selectedAreaId,
         area: _selectedAreaName,
         isActive: _selectedStatus,
+        pageNumber: _pageNumber,
+        pageSize: _pageSize,
       );
 
       if (mounted) {
         setState(() {
-          if (_customerService.customers.isNotEmpty) {
-            _allCustomers = _customerService.customers;
-          } else if (!_hasActiveFilters) {
-            _allCustomers = customers;
+          if (customers.length < _pageSize) {
+            _hasMore = false;
           }
-          _customers = _applyFilters(
-            _allCustomers.isNotEmpty ? _allCustomers : customers,
-          );
+          _allCustomers.addAll(customers);
+          // Since the API handles filtering, we don't apply client side filters for pagination
+          _customers = List.from(_allCustomers);
+          _isFetchingMore = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isFetchingMore = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _fetchCustomers({bool isRefresh = true}) async {
+    if (!mounted) return;
+    if (isRefresh) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+        _pageNumber = 1;
+        _hasMore = true;
+      });
+    }
+
+    try {
+      final customers = await _customerService.getAllCustomers(
+        search: _searchController.text.trim(),
+        stateId: _selectedStateId,
+        state: _selectedStateName,
+        cityId: _selectedCityId,
+        city: _selectedCityName,
+        areaId: _selectedAreaId,
+        area: _selectedAreaName,
+        isActive: _selectedStatus,
+        pageNumber: _pageNumber,
+        pageSize: _pageSize,
+      );
+
+      if (mounted) {
+        setState(() {
+          if (customers.length < _pageSize) {
+            _hasMore = false;
+          }
+          _allCustomers = customers;
+          _customers = List.from(_allCustomers);
           _isLoading = false;
           if (_customers.isNotEmpty) {
             _highlightedIndex = _highlightedIndex.clamp(
@@ -335,7 +398,9 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
             _highlightedIndex = 0;
           }
         });
-        _scrollToIndex(_highlightedIndex);
+        if (isRefresh) {
+          _scrollToIndex(_highlightedIndex);
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -427,6 +492,97 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
     }
   }
 
+  Future<void> _importFromExcel() async {
+    setState(() {
+      _isImporting = true;
+    });
+
+    try {
+      final parsedData = await CustomerExcelImportService.pickAndParseExcel();
+      if (!mounted) return;
+
+      if (parsedData == null) {
+        // User canceled
+        setState(() {
+          _isImporting = false;
+        });
+        return;
+      }
+
+      if (parsedData.isEmpty) {
+        setState(() {
+          _isImporting = false;
+        });
+        await showWarningDialog(
+          context,
+          'No valid records found in the selected Excel file.',
+        );
+        return;
+      }
+
+      setState(() {
+        _isImporting = false;
+      });
+
+      // Show confirmation dialog
+      final bool? confirm = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Confirm Import'),
+          content: Text(
+            'Are you sure you want to import ${parsedData.length} customer records?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text('No'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: const Text('Yes'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirm == true) {
+        setState(() {
+          _isLoading = true;
+        });
+        final response = await _customerService.importCustomerExcel(parsedData);
+        if (!mounted) return;
+        setState(() {
+          _isLoading = false;
+        });
+
+        final data = response['data'] ?? {};
+        final total = data['totalRecords'] ?? 0;
+        final inserted = data['insertedRecords'] ?? 0;
+        final duplicate = data['duplicateRecords'] ?? 0;
+        final success = data['success'] ?? false;
+        final msg =
+            data['message'] ?? response['message'] ?? 'Import successful';
+
+        if (success || response['status'] == true) {
+          await showSuccessDialog(
+            context,
+            '$msg\nTotal: $total\nInserted: $inserted\nDuplicates: $duplicate',
+          );
+          _fetchCustomers();
+        } else {
+          await showErrorDialog(context, msg);
+        }
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isImporting = false;
+        _isLoading = false;
+      });
+      await showErrorDialog(context, 'Failed to import customers: $e');
+    }
+  }
+
   void _showCustomerDetailsDialog(CustomerListItem customer) {
     showDialog(
       context: context,
@@ -469,6 +625,38 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                               icon: const Icon(Icons.refresh_rounded),
                               tooltip: 'Refresh Customers',
                               onPressed: _isLoading ? null : _fetchCustomers,
+                            ),
+                            const SizedBox(width: 8),
+                            OutlinedButton.icon(
+                              onPressed: _isImporting || _isLoading
+                                  ? null
+                                  : _importFromExcel,
+                              icon: _isImporting
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.upload_file_outlined,
+                                      size: 18,
+                                    ),
+                              label: Text(
+                                _isImporting
+                                    ? 'Importing...'
+                                    : 'Import from Excel',
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 10,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
                             ),
                             const SizedBox(width: 8),
                             OutlinedButton.icon(
@@ -541,6 +729,19 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
               appBar: AppBar(
                 title: const Text('Customer Master'),
                 actions: [
+                  IconButton(
+                    icon: _isImporting
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.upload_file_rounded),
+                    tooltip: 'Import from Excel',
+                    onPressed: _isImporting || _isLoading
+                        ? null
+                        : _importFromExcel,
+                  ),
                   IconButton(
                     icon: _isExporting
                         ? const SizedBox(
@@ -642,7 +843,6 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                 ),
               ),
               const SizedBox(width: 12),
-
 
               // City Filter
               Expanded(
@@ -1033,6 +1233,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                 _buildHeaderCell('Customer Name', flex: 3),
                 _buildHeaderCell('Mobile No', width: 140),
                 _buildHeaderCell('City', flex: 2),
+                _buildHeaderCell('Area', flex: 2),
                 _buildHeaderCell('Route', flex: 2),
                 _buildHeaderCell(
                   'Status',
@@ -1052,8 +1253,21 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
-              itemCount: _customers.length,
+              itemCount: _customers.length + (_isFetchingMore ? 1 : 0),
               itemBuilder: (context, index) {
+                if (index == _customers.length) {
+                  return const SizedBox(
+                    height: 58,
+                    child: Center(
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+                  );
+                }
+
                 final customer = _customers[index];
                 final isHighlighted = _highlightedIndex == index;
 
@@ -1176,6 +1390,23 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                               //   customer.custState,
                             ].join(', '),
                             style: theme.textTheme.bodyMedium,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+
+                        // Area
+                        Expanded(
+                          flex: 2,
+                          child: Text(
+                            customer.custArea.isNotEmpty
+                                ? customer.custArea
+                                : '—',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: customer.custArea.isNotEmpty
+                                  ? null
+                                  : theme.hintColor,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -1326,9 +1557,23 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
 
   Widget _buildMobileListView() {
     return ListView.builder(
+      controller: _scrollController,
       padding: const EdgeInsets.all(12),
-      itemCount: _customers.length,
+      itemCount: _customers.length + (_isFetchingMore ? 1 : 0),
       itemBuilder: (context, index) {
+        if (index == _customers.length) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 20),
+            child: Center(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          );
+        }
+
         final customer = _customers[index];
 
         return Card(
@@ -1433,6 +1678,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                     ),
                   ],
                   if (customer.custCity.isNotEmpty ||
+                      customer.custArea.isNotEmpty ||
                       customer.routeName.isNotEmpty) ...[
                     const SizedBox(height: 6),
                     Row(
@@ -1450,6 +1696,8 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                                 customer.routeName,
                               if (customer.custCity.isNotEmpty)
                                 customer.custCity,
+                              if (customer.custArea.isNotEmpty)
+                                customer.custArea,
                               if (customer.custState.isNotEmpty)
                                 customer.custState,
                             ].join(', '),

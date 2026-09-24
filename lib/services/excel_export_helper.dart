@@ -49,7 +49,8 @@ class ExcelExportHelper {
   }) {
     final archive = Archive();
 
-    final contentTypesXml = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    final contentTypesXml =
+        '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
   <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
   <Default Extension="xml" ContentType="application/xml"/>
@@ -57,31 +58,39 @@ class ExcelExportHelper {
   <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
   <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
 </Types>''';
-    archive.addFile(ArchiveFile(
-      '[Content_Types].xml',
-      contentTypesXml.length,
-      utf8.encode(contentTypesXml),
-    ));
+    archive.addFile(
+      ArchiveFile(
+        '[Content_Types].xml',
+        contentTypesXml.length,
+        utf8.encode(contentTypesXml),
+      ),
+    );
 
     final relsXml = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
   <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
 </Relationships>''';
-    archive.addFile(ArchiveFile('_rels/.rels', relsXml.length, utf8.encode(relsXml)));
+    archive.addFile(
+      ArchiveFile('_rels/.rels', relsXml.length, utf8.encode(relsXml)),
+    );
 
-    final workbookRelsXml = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    final workbookRelsXml =
+        '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
   <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
   <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
 </Relationships>''';
-    archive.addFile(ArchiveFile(
-      'xl/_rels/workbook.xml.rels',
-      workbookRelsXml.length,
-      utf8.encode(workbookRelsXml),
-    ));
+    archive.addFile(
+      ArchiveFile(
+        'xl/_rels/workbook.xml.rels',
+        workbookRelsXml.length,
+        utf8.encode(workbookRelsXml),
+      ),
+    );
 
     final safeSheetName = _escapeXml(_sanitizeSheetName(sheetName));
-    final workbookXml = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    final workbookXml =
+        '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
   <bookViews>
     <workbookView xWindow="0" yWindow="0" windowWidth="20480" windowHeight="10240"/>
@@ -90,7 +99,13 @@ class ExcelExportHelper {
     <sheet name="$safeSheetName" sheetId="1" r:id="rId1"/>
   </sheets>
 </workbook>''';
-    archive.addFile(ArchiveFile('xl/workbook.xml', workbookXml.length, utf8.encode(workbookXml)));
+    archive.addFile(
+      ArchiveFile(
+        'xl/workbook.xml',
+        workbookXml.length,
+        utf8.encode(workbookXml),
+      ),
+    );
 
     final stylesXml = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
@@ -152,16 +167,20 @@ class ExcelExportHelper {
     </xf>
   </cellXfs>
 </styleSheet>''';
-    archive.addFile(ArchiveFile('xl/styles.xml', stylesXml.length, utf8.encode(stylesXml)));
+    archive.addFile(
+      ArchiveFile('xl/styles.xml', stylesXml.length, utf8.encode(stylesXml)),
+    );
 
     final sheet1Xml = _buildSheetXml(columns: columns, rows: rows);
-    archive.addFile(ArchiveFile(
-      'xl/worksheets/sheet1.xml',
-      sheet1Xml.length,
-      utf8.encode(sheet1Xml),
-    ));
+    archive.addFile(
+      ArchiveFile(
+        'xl/worksheets/sheet1.xml',
+        sheet1Xml.length,
+        utf8.encode(sheet1Xml),
+      ),
+    );
 
-    return ZipEncoder().encode(archive);
+    return ZipEncoder().encode(archive) ?? <int>[];
   }
 
   static Future<ExcelExportResult> exportSheet({
@@ -252,11 +271,12 @@ class ExcelExportHelper {
       if (kIsWeb) return false;
 
       if (PlatformHelper.isWindowsDesktop) {
-        final result = await Process.run(
-          'cmd.exe',
-          ['/c', 'start', '""', filePath],
-          runInShell: true,
-        );
+        final result = await Process.run('cmd.exe', [
+          '/c',
+          'start',
+          '""',
+          filePath,
+        ], runInShell: true);
         return result.exitCode == 0;
       }
 
@@ -279,10 +299,14 @@ class ExcelExportHelper {
   }) {
     final buffer = StringBuffer();
     buffer.writeln('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>');
-    buffer.writeln('<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">');
+    buffer.writeln(
+      '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">',
+    );
     buffer.writeln('  <sheetViews>');
     buffer.writeln('    <sheetView tabSelected="1" workbookViewId="0">');
-    buffer.writeln('      <pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/>');
+    buffer.writeln(
+      '      <pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/>',
+    );
     buffer.writeln('    </sheetView>');
     buffer.writeln('  </sheetViews>');
     buffer.writeln('  <sheetFormatPr defaultRowHeight="20" customHeight="1"/>');
@@ -332,7 +356,9 @@ class ExcelExportHelper {
         final style = _styleFor(column.align);
 
         if (column.type == ExcelCellType.number && val.isNotEmpty) {
-          buffer.writeln('      <c r="$cellRef" s="$style" t="n"><v>$val</v></c>');
+          buffer.writeln(
+            '      <c r="$cellRef" s="$style" t="n"><v>$val</v></c>',
+          );
         } else {
           final escaped = _escapeXml(val);
           buffer.writeln(

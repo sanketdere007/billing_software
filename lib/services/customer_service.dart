@@ -98,34 +98,40 @@ class CustomerService extends ChangeNotifier {
         requiresAuth: true,
       );
 
+      List<CustomerListItem> fetchedCustomers = [];
       if (response is Map<String, dynamic>) {
         final custResponse = CustomerListResponse.fromJson(response);
         if (custResponse.status || custResponse.data.isNotEmpty) {
-          _customers = custResponse.data;
+          fetchedCustomers = custResponse.data;
         } else if (response['data'] is List) {
-          _customers = (response['data'] as List)
+          fetchedCustomers = (response['data'] as List)
               .whereType<Map<String, dynamic>>()
               .map((e) => CustomerListItem.fromJson(e))
               .toList();
         } else {
-          _customers = [];
+          fetchedCustomers = [];
           _errorMessage = custResponse.message.isNotEmpty
               ? custResponse.message
               : 'No customers found.';
         }
       } else if (response is List) {
-        _customers = response
+        fetchedCustomers = response
             .whereType<Map<String, dynamic>>()
             .map((e) => CustomerListItem.fromJson(e))
             .toList();
       } else {
-        _customers = [];
+        fetchedCustomers = [];
+      }
+
+      // Only update cache if we are fetching all customers without pagination
+      if (pageNumber == null && pageSize == null) {
+        _customers = fetchedCustomers;
       }
 
       _errorMessage = null;
 
       // Apply client-side fallback filtering on fetched list
-      List<CustomerListItem> filteredResult = _customers;
+      List<CustomerListItem> filteredResult = fetchedCustomers;
       final bool hasFilters =
           cleanSearch.isNotEmpty ||
           effectiveStateId > 0 ||
@@ -427,6 +433,49 @@ class CustomerService extends ChangeNotifier {
       rethrow;
     } catch (e) {
       throw ApiException('Error saving customer: $e');
+    }
+  }
+
+  /// Import customers via POST `/api/Customer/ImportCustomerExcel`
+  Future<Map<String, dynamic>> importCustomerExcel(List<Map<String, dynamic>> data) async {
+    int branchId = sessionService.selectedBranchId ?? 0;
+    int compId = sessionService.selectedCompId ?? 0;
+    
+    int createdBy = 0;
+    try {
+      final user = await sessionService.getUserData();
+      createdBy = user?.empId ?? 0;
+    } catch (_) {}
+
+    final requestBody = {
+      "data": data,
+      "compId": compId,
+      "branchId": branchId,
+      "createdBy": createdBy,
+    };
+
+    debugPrint('👥 [CustomerService.importCustomerExcel] Request payload with ${data.length} records');
+
+    try {
+      final dynamic response = await apiService.post(
+        ApiConstants.importCustomerExcelEndpoint,
+        body: requestBody,
+        requiresAuth: true,
+      );
+
+      if (response is! Map<String, dynamic>) {
+        throw ApiException('Invalid response format from server.');
+      }
+
+      if (response['status'] == true) {
+        return response;
+      } else {
+        throw ApiException(response['message'] ?? response['error'] ?? 'Failed to import customers.');
+      }
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException('Error importing customers: $e');
     }
   }
 
