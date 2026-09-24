@@ -1,67 +1,142 @@
 import 'package:flutter/foundation.dart';
 import '../models/sales_return.dart';
+import '../utils/api_constants.dart';
+import 'api_service.dart';
 
 class SalesReturnService extends ChangeNotifier {
   static final SalesReturnService _instance = SalesReturnService._internal();
   factory SalesReturnService() => _instance;
   SalesReturnService._internal();
 
-  final List<SalesReturn> _returns = [];
+  Future<SalesReturnUpsertResponse> insertOrUpdateSalesReturnEntry(
+    SalesReturnUpsertRequest request,
+  ) async {
+    try {
+      final dynamic response = await apiService.post(
+        ApiConstants.insertOrUpdateSalesReturnEntryEndpoint,
+        body: request.toJson(),
+        requiresAuth: true,
+      );
 
-  List<SalesReturn> get returns => List.unmodifiable(_returns);
+      if (response is! Map<String, dynamic>) {
+        throw ApiException('Invalid response format from server.');
+      }
 
-  void initializeDummyData() {
-    if (_returns.isEmpty) {
-      _returns.addAll([
-        SalesReturn(
-          id: 'SR-001',
-          returnNo: 'RET-2023-001',
-          returnDate: DateTime.now().subtract(const Duration(days: 1)),
-          invoiceNo: 'INV-2023-001',
-          customerId: 'CUST-001',
-          customerName: 'Acme Corp',
-          products: [
-            SalesReturnProduct(
-              id: 'SRP-001',
-              productId: 'PROD-001',
-              productName: 'Laptop Dell XPS',
-              returnQuantity: 1,
-              unit: 'PCS',
-              price: 85000,
-              refundAmount: 85000,
-              returnReason: 'Defective screen',
-              isDamaged: true,
-            )
-          ],
-          totalReturnQuantity: 1,
-          returnAmount: 85000,
-          grandRefund: 85000,
-          refundMode: 'Credit Note',
-          refundStatus: 'Completed',
-        ),
-      ]);
-      notifyListeners();
+      final upsertResponse = SalesReturnUpsertResponse.fromJson(response);
+
+      if (upsertResponse.status ||
+          (upsertResponse.data != null && upsertResponse.data!.status)) {
+        return upsertResponse;
+      } else {
+        final msg = upsertResponse.message.isNotEmpty
+            ? upsertResponse.message
+            : (upsertResponse.data?.message ?? 'Failed to save sales return entry.');
+        throw ApiException(msg);
+      }
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException('Error saving sales return entry: $e');
     }
   }
 
-  Future<void> addReturn(SalesReturn salesReturn) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    _returns.add(salesReturn);
-    notifyListeners();
-  }
+  Future<SalesReturnMasterListResponse> getSalesReturnList({
+    required int compId,
+    required int branchId,
+    int? customerId,
+    String? fromDate,
+    String? toDate,
+    String search = '',
+    int pageNumber = 1,
+    int pageSize = 20,
+  }) async {
+    try {
+      final body = {
+        "compId": compId,
+        "branchId": branchId,
+        "customerId": customerId ?? 0,
+        "fromDate": fromDate,
+        "toDate": toDate,
+        "search": search,
+        "pageNumber": pageNumber,
+        "pageSize": pageSize,
+      };
 
-  Future<void> updateReturn(SalesReturn salesReturn) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    final index = _returns.indexWhere((r) => r.id == salesReturn.id);
-    if (index != -1) {
-      _returns[index] = salesReturn;
-      notifyListeners();
+      final dynamic response = await apiService.post(
+        ApiConstants.getSalesReturnListEndpoint,
+        body: body,
+        requiresAuth: true,
+      );
+
+      if (response is! Map<String, dynamic>) {
+        throw ApiException('Invalid response format from server.');
+      }
+
+      final listResponse = SalesReturnMasterListResponse.fromJson(response);
+
+      if (listResponse.status) {
+        return listResponse;
+      } else {
+        throw ApiException(listResponse.message.isNotEmpty
+            ? listResponse.message
+            : 'Failed to load sales return entries.');
+      }
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException('Error loading sales return entries: $e');
     }
   }
 
-  Future<void> deleteReturn(String id) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    _returns.removeWhere((r) => r.id == id);
-    notifyListeners();
+  Future<void> deleteSalesReturnApi(int salesReturnMasterId) async {
+    try {
+      final endpoint = '${ApiConstants.deleteSalesReturnEntryEndpoint}/$salesReturnMasterId';
+      final dynamic response = await apiService.delete(
+        endpoint,
+        requiresAuth: true,
+      );
+
+      if (response is! Map<String, dynamic>) {
+        throw ApiException('Invalid response format from server.');
+      }
+
+      if (response['status'] == true) {
+        return;
+      } else {
+        throw ApiException(response['message']?.toString() ?? 'Failed to delete sales return entry.');
+      }
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException('Error deleting sales return entry: $e');
+    }
+  }
+
+  Future<SalesReturnDetailListResponse> getSalesReturnDetailList(int salesReturnMasterId) async {
+    try {
+      final endpoint = '${ApiConstants.getSalesReturnDetailListEndpoint}/$salesReturnMasterId';
+      final dynamic response = await apiService.get(
+        endpoint,
+        requiresAuth: true,
+      );
+
+      if (response is! Map<String, dynamic>) {
+        throw ApiException('Invalid response format from server.');
+      }
+
+      final detailListResponse = SalesReturnDetailListResponse.fromJson(response);
+      
+      if (!detailListResponse.status) {
+        throw ApiException(detailListResponse.message.isNotEmpty 
+            ? detailListResponse.message 
+            : 'Failed to load sales return details.');
+      }
+      
+      return detailListResponse;
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException('Error loading sales return details: $e');
+    }
   }
 }

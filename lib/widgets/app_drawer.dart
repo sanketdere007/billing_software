@@ -1106,19 +1106,19 @@ class _AppDrawerState extends State<AppDrawer> {
                         );
                       },
                     ),
-                    // _buildDrawerItem(
-                    //   context: context,
-                    //   icon: Icons.assignment_return_rounded,
-                    //   iconColor: _getIconColor(context, Colors.cyan),
-                    //   title: 'Sales Return',
-                    //   shortcutKey: 'Ctrl+F5',
-                    //   onTap: () {
-                    //     shortcutService.navigateToNamedScreen(
-                    //       AppRoutes.salesReturnAdd,
-                    //       () => const AddSalesReturnScreen(),
-                    //     );
-                    //   },
-                    // ),
+                    _buildDrawerItem(
+                      context: context,
+                      icon: Icons.assignment_return_rounded,
+                      iconColor: _getIconColor(context, Colors.cyan),
+                      title: 'Sales Return',
+                      shortcutKey: 'Ctrl+F5',
+                      onTap: () {
+                        shortcutService.navigateToNamedScreen(
+                          AppRoutes.salesReturnAdd,
+                          () => const AddSalesReturnScreen(),
+                        );
+                      },
+                    ),
                   ],
                 ),
 

@@ -114,6 +114,16 @@ class ApiConstants {
   static const String deleteSalesEntryEndpoint =
       '/api/SalesEntry/DeleteSalesEntry';
 
+  // Sales Return Endpoints
+  static const String insertOrUpdateSalesReturnEntryEndpoint =
+      '/api/SalesReturnEntry/InsertOrUpdateSalesReturnEntry';
+  static const String getSalesReturnListEndpoint = 
+      '/api/SalesReturnEntry/GetSalesReturnList';
+  static const String deleteSalesReturnEntryEndpoint =
+      '/api/SalesReturnEntry/DeleteSalesReturnEntry';
+  static const String getSalesReturnDetailListEndpoint =
+      '/api/SalesReturnEntry/GetSalesReturnEntryDetailList';
+
   // Payment Endpoints
   static const String insertOrUpdatePaymentEndpoint =
       '/api/Payment/InsertOrUpdatePayment';
