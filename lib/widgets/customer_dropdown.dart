@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/customer.dart';
@@ -142,46 +143,47 @@ class _CustomerDropdownState extends State<CustomerDropdown> {
 
   Future<void> _loadCustomers({bool force = false}) async {
     if (!mounted) return;
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
+    
+    if (widget.selectedCustomerId != null && widget.selectedCustomerId! > 0) {
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
 
-    try {
-      final customers = await _customerService.getAllCustomers();
-      if (mounted) {
-        _availableCustomers = customers;
-        _syncSelectedCustomer();
+      try {
+        final customer = await _customerService.getCustomerById(widget.selectedCustomerId!);
+        if (mounted) {
+          if (customer != null) {
+            _availableCustomers = [customer];
+          }
+          _syncSelectedCustomer();
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _error = e.toString().replaceAll('ApiException: ', '');
+          });
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
       }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _error = e.toString().replaceAll('ApiException: ', '');
-        });
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+    } else {
+      _syncSelectedCustomer();
     }
   }
 
   void _openSearchDialog([FormFieldState<CustomerListItem?>? fieldState]) async {
     if (!widget.enabled || _isLoading) return;
 
-    if (_availableCustomers.isEmpty) {
-      await _loadCustomers(force: true);
-      if (_availableCustomers.isEmpty) return;
-    }
-
     if (!mounted) return;
 
     final CustomerListItem? picked = await showDialog<CustomerListItem?>(
       context: context,
       builder: (context) => _CustomerSearchDialog(
-        customers: _availableCustomers,
         selectedCustomerId: _selectedCustomer?.custId,
         isFilter: widget.isFilter,
         allOptionLabel: widget.allOptionLabel ?? 'All Customers',
@@ -545,13 +547,11 @@ class _CustomerSearchDialog extends StatefulWidget {
     custModifiedBy: 0,
   );
 
-  final List<CustomerListItem> customers;
   final int? selectedCustomerId;
   final bool isFilter;
   final String allOptionLabel;
 
   const _CustomerSearchDialog({
-    required this.customers,
     this.selectedCustomerId,
     required this.isFilter,
     required this.allOptionLabel,
@@ -562,67 +562,115 @@ class _CustomerSearchDialog extends StatefulWidget {
 }
 
 class _CustomerSearchDialogState extends State<_CustomerSearchDialog> {
+  final CustomerService _customerService = CustomerService();
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   final ScrollController _scrollController = ScrollController();
   List<CustomerListItem> _filteredCustomers = [];
   int _highlightedIndex = 0;
+  
+  bool _isLoading = false;
+  bool _hasMore = true;
+  int _currentPage = 1;
+  final int _pageSize = 20;
+  Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
-    _filteredCustomers = widget.customers;
     _searchController.addListener(_onSearchChanged);
-
-    if (widget.isFilter && widget.selectedCustomerId == null) {
-      _highlightedIndex = 0;
-    } else if (widget.selectedCustomerId != null) {
-      final foundIndex =
-          widget.customers.indexWhere((c) => c.custId == widget.selectedCustomerId);
-      if (foundIndex != -1) {
-        _highlightedIndex = widget.isFilter ? foundIndex + 1 : foundIndex;
-      }
-    }
+    _scrollController.addListener(_onScroll);
 
     _searchFocusNode.onKeyEvent = _handleKeyEvent;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _searchFocusNode.requestFocus();
-        _scrollToIndex(_highlightedIndex);
       }
     });
+    
+    _fetchPage();
   }
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     _searchFocusNode.dispose();
+    _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
   }
 
+  void _onScroll() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200 && !_isLoading && _hasMore) {
+      _fetchPage();
+    }
+  }
+
   void _onSearchChanged() {
-    final query = _searchController.text.trim().toLowerCase();
-    setState(() {
-      if (query.isEmpty) {
-        _filteredCustomers = widget.customers;
-      } else {
-        _filteredCustomers = widget.customers.where((c) {
-          return c.custName.toLowerCase().contains(query) ||
-                 c.custCompanyName.toLowerCase().contains(query) ||
-                 c.custMobileNo.toLowerCase().contains(query) ||
-                 c.custCode.toLowerCase().contains(query);
-        }).toList();
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        setState(() {
+          _filteredCustomers.clear();
+          _currentPage = 1;
+          _hasMore = true;
+          _highlightedIndex = 0;
+        });
+        _fetchPage();
       }
-      _highlightedIndex = 0;
     });
-    _scrollToIndex(0);
+  }
+
+  Future<void> _fetchPage() async {
+    if (_isLoading || !_hasMore) return;
+    
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final query = _searchController.text.trim();
+      final customers = await _customerService.getAllCustomers(
+        search: query,
+        pageNumber: _currentPage,
+        pageSize: _pageSize,
+      );
+
+      if (mounted) {
+        setState(() {
+          if (_currentPage == 1) {
+            _filteredCustomers = customers;
+            if (widget.isFilter && widget.selectedCustomerId == null) {
+              _highlightedIndex = 0;
+            } else if (widget.selectedCustomerId != null) {
+              final foundIndex = _filteredCustomers.indexWhere((c) => c.custId == widget.selectedCustomerId);
+              if (foundIndex != -1) {
+                _highlightedIndex = widget.isFilter ? foundIndex + 1 : foundIndex;
+              }
+            }
+          } else {
+            _filteredCustomers.addAll(customers);
+          }
+          _currentPage++;
+          _hasMore = customers.length == _pageSize;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching customers: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   int get _totalItemsCount =>
-      widget.isFilter ? _filteredCustomers.length + 1 : _filteredCustomers.length;
+      (widget.isFilter ? _filteredCustomers.length + 1 : _filteredCustomers.length) + (_hasMore ? 1 : 0);
 
   void _scrollToIndex(int index) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -653,20 +701,24 @@ class _CustomerSearchDialogState extends State<_CustomerSearchDialog> {
     if (event is! KeyDownEvent) return KeyEventResult.ignored;
 
     final key = event.logicalKey;
-    final total = _totalItemsCount;
-    if (total == 0) return KeyEventResult.ignored;
+    final maxSelectable = _totalItemsCount - (_hasMore ? 1 : 0);
+    if (maxSelectable <= 0) return KeyEventResult.ignored;
 
     if (key == LogicalKeyboardKey.arrowDown) {
       setState(() {
-        _highlightedIndex = (_highlightedIndex + 1) % total;
+        _highlightedIndex = (_highlightedIndex + 1) % maxSelectable;
       });
       _scrollToIndex(_highlightedIndex);
+      // Trigger load more if we get close to bottom via keyboard
+      if (_highlightedIndex >= maxSelectable - 5 && !_isLoading && _hasMore) {
+        _fetchPage();
+      }
       return KeyEventResult.handled;
     }
 
     if (key == LogicalKeyboardKey.arrowUp) {
       setState(() {
-        _highlightedIndex = (_highlightedIndex - 1 + total) % total;
+        _highlightedIndex = (_highlightedIndex - 1 + maxSelectable) % maxSelectable;
       });
       _scrollToIndex(_highlightedIndex);
       return KeyEventResult.handled;
@@ -687,7 +739,8 @@ class _CustomerSearchDialogState extends State<_CustomerSearchDialog> {
   }
 
   void _selectHighlighted() {
-    if (_totalItemsCount == 0) return;
+    final maxSelectable = _totalItemsCount - (_hasMore ? 1 : 0);
+    if (maxSelectable <= 0) return;
 
     if (widget.isFilter) {
       if (_highlightedIndex == 0) {
@@ -843,6 +896,18 @@ class _CustomerSearchDialogState extends State<_CustomerSearchDialog> {
                         }
                         
                         final customerIndex = widget.isFilter ? index - 1 : index;
+                        if (customerIndex >= _filteredCustomers.length) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            child: Center(
+                              child: SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            ),
+                          );
+                        }
                         final customer = _filteredCustomers[customerIndex];
                         
                         return _buildListTile(
