@@ -612,10 +612,12 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
       for (var p in _products) {
         (p['qtyController'] as TextEditingController).dispose();
         (p['rateController'] as TextEditingController).dispose();
+        (p['discPctController'] as TextEditingController).dispose();
         (p['discAmtController'] as TextEditingController).dispose();
         (p['productNode'] as FocusNode).dispose();
         (p['qtyNode'] as FocusNode).dispose();
         (p['rateNode'] as FocusNode).dispose();
+        (p['discPctNode'] as FocusNode).dispose();
         (p['discNode'] as FocusNode).dispose();
       }
       _products.clear();
@@ -710,6 +712,9 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
 
     if (key == LogicalKeyboardKey.arrowLeft) {
       if (fieldName == 'disc') {
+        (p['discPctNode'] as FocusNode).requestFocus();
+        return KeyEventResult.handled;
+      } else if (fieldName == 'discPct') {
         (p['rateNode'] as FocusNode).requestFocus();
         return KeyEventResult.handled;
       } else if (fieldName == 'rate') {
@@ -742,10 +747,13 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
         return KeyEventResult.handled;
       } else if (fieldName == 'rate') {
         if ((p['rate'] ?? 0.0) > 0.0) {
-          (p['discNode'] as FocusNode).requestFocus();
+          (p['discPctNode'] as FocusNode).requestFocus();
         } else if (index < _products.length - 1) {
           (_products[index + 1]['productNode'] as FocusNode).requestFocus();
         }
+        return KeyEventResult.handled;
+      } else if (fieldName == 'discPct') {
+        (p['discNode'] as FocusNode).requestFocus();
         return KeyEventResult.handled;
       } else if (fieldName == 'disc') {
         if (index < _products.length - 1) {
@@ -946,6 +954,13 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
                                 index,
                                 'rate',
                               );
+                          (p['discPctNode'] as FocusNode).onKeyEvent =
+                              (node, event) => _handleGridKeyEvent(
+                                node,
+                                event,
+                                index,
+                                'discPct',
+                              );
                           (p['discNode'] as FocusNode).onKeyEvent =
                               (node, event) => _handleGridKeyEvent(
                                 node,
@@ -959,6 +974,7 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
                               p['productNode'] as FocusNode,
                               p['qtyNode'] as FocusNode,
                               p['rateNode'] as FocusNode,
+                              p['discPctNode'] as FocusNode,
                               p['discNode'] as FocusNode,
                             ]),
                             builder: (context, child) {
@@ -966,6 +982,7 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
                                   (p['productNode'] as FocusNode).hasFocus ||
                                   (p['qtyNode'] as FocusNode).hasFocus ||
                                   (p['rateNode'] as FocusNode).hasFocus ||
+                                  (p['discPctNode'] as FocusNode).hasFocus ||
                                   (p['discNode'] as FocusNode).hasFocus;
                               return Container(
                                 key: ValueKey(

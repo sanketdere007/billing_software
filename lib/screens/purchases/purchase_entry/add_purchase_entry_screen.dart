@@ -674,6 +674,59 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
       return KeyEventResult.handled;
     }
 
+    if (key == LogicalKeyboardKey.enter || key == LogicalKeyboardKey.numpadEnter) {
+      if (fieldName == 'batchNo') {
+        (p['qtyNode'] as FocusNode).requestFocus();
+        return KeyEventResult.handled;
+      } else if (fieldName == 'qty') {
+        (p['lcNode'] as FocusNode).requestFocus();
+        return KeyEventResult.handled;
+      } else if (fieldName == 'lc') {
+        (p['pcNode'] as FocusNode).requestFocus();
+        return KeyEventResult.handled;
+      } else if (fieldName == 'pc') {
+        (p['mrpNode'] as FocusNode).requestFocus();
+        return KeyEventResult.handled;
+      } else if (fieldName == 'mrp') {
+        (p['spNode'] as FocusNode).requestFocus();
+        return KeyEventResult.handled;
+      } else if (fieldName == 'sp') {
+        if ((p['pc'] ?? 0.0) > 0.0) {
+          (p['discNode'] as FocusNode).requestFocus();
+        } else {
+          if (index == _products.length - 1) {
+            setState(() {
+              _addNewEmptyRow();
+            });
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                final newNode = _products.last['productNode'] as FocusNode;
+                newNode.requestFocus();
+              }
+            });
+          } else {
+            (_products[index + 1]['productNode'] as FocusNode).requestFocus();
+          }
+        }
+        return KeyEventResult.handled;
+      } else if (fieldName == 'disc') {
+        if (index == _products.length - 1) {
+          setState(() {
+            _addNewEmptyRow();
+          });
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              final newNode = _products.last['productNode'] as FocusNode;
+              newNode.requestFocus();
+            }
+          });
+        } else {
+          (_products[index + 1]['productNode'] as FocusNode).requestFocus();
+        }
+        return KeyEventResult.handled;
+      }
+    }
+
     // 2. Up Arrow
     if (key == LogicalKeyboardKey.arrowUp) {
       if (index > 0) {
