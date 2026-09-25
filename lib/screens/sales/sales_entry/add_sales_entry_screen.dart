@@ -174,7 +174,8 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
         p['discAmt'] = disc;
         final amtStr = disc.toStringAsFixed(2).replaceAll(RegExp(r'\.00$'), '');
         if ((p['discAmtController'] as TextEditingController).text != amtStr &&
-            (p['discAmtController'] as TextEditingController).text != disc.toString()) {
+            (p['discAmtController'] as TextEditingController).text !=
+                disc.toString()) {
           (p['discAmtController'] as TextEditingController).text = amtStr;
         }
       } else {
@@ -182,9 +183,13 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
         if (gross > 0) {
           double pct = (disc / gross) * 100;
           p['discPct'] = pct;
-          final pctStr = pct.toStringAsFixed(2).replaceAll(RegExp(r'\.00$'), '');
-          if ((p['discPctController'] as TextEditingController).text != pctStr &&
-              (p['discPctController'] as TextEditingController).text != pct.toString()) {
+          final pctStr = pct
+              .toStringAsFixed(2)
+              .replaceAll(RegExp(r'\.00$'), '');
+          if ((p['discPctController'] as TextEditingController).text !=
+                  pctStr &&
+              (p['discPctController'] as TextEditingController).text !=
+                  pct.toString()) {
             (p['discPctController'] as TextEditingController).text = pctStr;
           }
         } else {
@@ -411,7 +416,10 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
 
   Future<void> _saveEntry() async {
     if (_isViewMode) {
-      await showWarningDialog(context, 'Cannot save in view mode. Please click Clear to start a new entry.');
+      await showWarningDialog(
+        context,
+        'Cannot save in view mode. Please click Clear to start a new entry.',
+      );
       return;
     }
     if (_isLoading) return;
@@ -535,7 +543,9 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
         final double taxable = (p['discounted'] as num?)?.toDouble() ?? 0;
         final double net = (p['net'] as num?)?.toDouble() ?? 0;
         final double gross = qty * rate;
-        final double discPct = (p['discPct'] as num?)?.toDouble() ?? (gross > 0 ? (discAmt / gross) * 100 : 0);
+        final double discPct =
+            (p['discPct'] as num?)?.toDouble() ??
+            (gross > 0 ? (discAmt / gross) * 100 : 0);
 
         final double cgstPct = isInterstate ? 0 : gstPct / 2;
         final double sgstPct = isInterstate ? 0 : gstPct / 2;
@@ -551,7 +561,8 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
           batchId: prod.batchId,
           productName: prod.prodName,
           hsnCode: '',
-          unitId: productService
+          unitId:
+              productService
                   .getProductByIdFromCache(prod.batchProductId)
                   ?.prodUnitId ??
               0,
@@ -636,8 +647,10 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
         otherReferenceNo: payment.otherReferenceNo,
         otherDate: payment.otherDate?.toIso8601String(),
         otherRemark: payment.otherRemark,
-        billWiseDiscountPercentage: double.tryParse(_billDiscountPctController.text) ?? 0.0,
-        billWiseDiscountAmount: double.tryParse(_billDiscountController.text) ?? 0.0,
+        billWiseDiscountPercentage:
+            double.tryParse(_billDiscountPctController.text) ?? 0.0,
+        billWiseDiscountAmount:
+            double.tryParse(_billDiscountController.text) ?? 0.0,
         remark: payment.remark,
         billingName: billingName,
         billingAddress: billingAddress,
@@ -666,12 +679,13 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
         receiptDate: _selectedDate.toIso8601String(),
         customerId: _selectedCustomer!,
         ledgerId: customer?.custLedgerId ?? 0,
-        totalAmount: payment.cashAmount + 
-                     payment.upiAmount + 
-                     payment.cardAmount + 
-                     payment.chequeAmount + 
-                     payment.bankAmount + 
-                     payment.otherAmount,
+        totalAmount:
+            payment.cashAmount +
+            payment.upiAmount +
+            payment.cardAmount +
+            payment.chequeAmount +
+            payment.bankAmount +
+            payment.otherAmount,
         cashAmount: payment.cashAmount,
         upiAmount: payment.upiAmount,
         cardAmount: payment.cardAmount,
@@ -709,7 +723,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
           remark: payment.remark,
           createdBy: empId,
           modifiedBy: empId,
-        )
+        ),
       ];
 
       final request = SalesEntryUpsertRequest(
@@ -772,7 +786,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
       );
       _calculateTotals();
     });
-    
+
     // Refresh product list
     _batchService.getAllBatches();
 
@@ -839,6 +853,8 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
         fieldName != 'product') {
       String controllerKey = fieldName == 'disc'
           ? 'discAmtController'
+          : fieldName == 'discPct'
+          ? 'discPctController'
           : '${fieldName}Controller';
       final controller = p[controllerKey] as TextEditingController;
       if (controller.selection.isValid) {
@@ -860,6 +876,9 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
     // 5. Left Arrow move focus
     if (key == LogicalKeyboardKey.arrowLeft) {
       if (fieldName == 'disc') {
+        (p['discPctNode'] as FocusNode).requestFocus();
+        return KeyEventResult.handled;
+      } else if (fieldName == 'discPct') {
         (p['rateNode'] as FocusNode).requestFocus();
         return KeyEventResult.handled;
       } else if (fieldName == 'rate') {
@@ -893,10 +912,13 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
         return KeyEventResult.handled;
       } else if (fieldName == 'rate') {
         if ((p['rate'] ?? 0.0) > 0.0) {
-          (p['discNode'] as FocusNode).requestFocus();
+          (p['discPctNode'] as FocusNode).requestFocus();
         } else if (index < _products.length - 1) {
           (_products[index + 1]['productNode'] as FocusNode).requestFocus();
         }
+        return KeyEventResult.handled;
+      } else if (fieldName == 'discPct') {
+        (p['discNode'] as FocusNode).requestFocus();
         return KeyEventResult.handled;
       } else if (fieldName == 'disc') {
         if (index < _products.length - 1) {
@@ -1099,6 +1121,13 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                                 index,
                                 'rate',
                               );
+                          (p['discPctNode'] as FocusNode).onKeyEvent =
+                              (node, event) => _handleGridKeyEvent(
+                                node,
+                                event,
+                                index,
+                                'discPct',
+                              );
                           (p['discNode'] as FocusNode).onKeyEvent =
                               (node, event) => _handleGridKeyEvent(
                                 node,
@@ -1112,6 +1141,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                               p['productNode'] as FocusNode,
                               p['qtyNode'] as FocusNode,
                               p['rateNode'] as FocusNode,
+                              p['discPctNode'] as FocusNode,
                               p['discNode'] as FocusNode,
                             ]),
                             builder: (context, child) {
@@ -1119,6 +1149,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                                   (p['productNode'] as FocusNode).hasFocus ||
                                   (p['qtyNode'] as FocusNode).hasFocus ||
                                   (p['rateNode'] as FocusNode).hasFocus ||
+                                  (p['discPctNode'] as FocusNode).hasFocus ||
                                   (p['discNode'] as FocusNode).hasFocus;
                               return Container(
                                 key: ValueKey(
@@ -1371,7 +1402,8 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                                         _calculateTotals();
                                       },
                                       onFieldSubmitted: (_) {
-                                        (p['discNode'] as FocusNode).requestFocus();
+                                        (p['discNode'] as FocusNode)
+                                            .requestFocus();
                                       },
                                     ),
                                     colDiscPct,
@@ -1437,9 +1469,9 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                                       isEmptyRow
                                           ? '-'
                                           : ((p['gstPct'] as num?)
-                                                      ?.toDouble() ??
-                                                  0)
-                                              .toStringAsFixed(2),
+                                                        ?.toDouble() ??
+                                                    0)
+                                                .toStringAsFixed(2),
                                       style: TextStyle(
                                         color: isEmptyRow
                                             ? theme.hintColor
@@ -1454,9 +1486,9 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                                       isEmptyRow
                                           ? '-'
                                           : ((p['gstAmt'] as num?)
-                                                      ?.toDouble() ??
-                                                  0)
-                                              .toStringAsFixed(2),
+                                                        ?.toDouble() ??
+                                                    0)
+                                                .toStringAsFixed(2),
                                       style: TextStyle(
                                         color: isEmptyRow
                                             ? theme.hintColor
@@ -1851,7 +1883,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                     children: [
                       AppBar(
                         title: const Text('Add Sales Entry'),
-                     //   backgroundColor: Colors.transparent,
+                        //   backgroundColor: Colors.transparent,
                         elevation: 0,
                         actions: [
                           TextButton.icon(
@@ -1901,8 +1933,10 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
 
     try {
       final int masterId = master.raw['salesMaster_Id'] ?? 0;
-      final detailsResponse = await SalesEntryService().getAllSalesDetail(masterId);
-      
+      final detailsResponse = await SalesEntryService().getAllSalesDetail(
+        masterId,
+      );
+
       if (!mounted) return;
 
       setState(() {
@@ -1912,9 +1946,19 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
           final dateStr = master.raw['salesMaster_InvoiceDate'].toString();
           _selectedDate = DateTime.tryParse(dateStr) ?? _selectedDate;
         }
-        
-        final pctStr = ((master.raw['salesMaster_BillWiseDiscountPercentage'] as num?)?.toDouble() ?? 0.0).toStringAsFixed(2).replaceAll(RegExp(r'\.00$'), '');
-        final amtStr = ((master.raw['salesMaster_BillWiseDiscountAmount'] as num?)?.toDouble() ?? 0.0).toStringAsFixed(2).replaceAll(RegExp(r'\.00$'), '');
+
+        final pctStr =
+            ((master.raw['salesMaster_BillWiseDiscountPercentage'] as num?)
+                        ?.toDouble() ??
+                    0.0)
+                .toStringAsFixed(2)
+                .replaceAll(RegExp(r'\.00$'), '');
+        final amtStr =
+            ((master.raw['salesMaster_BillWiseDiscountAmount'] as num?)
+                        ?.toDouble() ??
+                    0.0)
+                .toStringAsFixed(2)
+                .replaceAll(RegExp(r'\.00$'), '');
         _billDiscountPctController.text = pctStr;
         _billDiscountController.text = amtStr;
 
@@ -1939,45 +1983,64 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
           // Find batch
           BatchListItem? batch;
           try {
-            batch = _batchService.batches.firstWhere((b) => b.batchId == batchId);
+            batch = _batchService.batches.firstWhere(
+              (b) => b.batchId == batchId,
+            );
           } catch (_) {
             // Try to find by productId if batch not found (fallback)
             try {
-               batch = _batchService.batches.firstWhere((b) => b.batchProductId == productId);
+              batch = _batchService.batches.firstWhere(
+                (b) => b.batchProductId == productId,
+              );
             } catch (_) {}
           }
-          
+
           if (batch == null) {
-             // Create dummy batch if not found to show data
-             batch = BatchListItem(
-                batchId: batchId,
-                batchProductId: productId,
-                batchBarcode: raw['salesEntryDetail_Barcode']?.toString() ?? '',
-                batchEANCode: raw['salesEntryDetail_EANCode']?.toString() ?? '',
-                batchLandingPrice: 0,
-                batchPurchasePrice: 0,
-                batchMRP: 0,
-                batchSellingPrice: (raw['salesEntryDetail_SellingPrice'] as num?)?.toDouble() ?? 0,
-                batchStock: 0,
-                batchAvailableStock: 0,
-                prodCode: raw['prod_Code']?.toString() ?? '',
-                prodName: raw['prod_Name']?.toString() ?? raw['salesEntryDetail_ProductName']?.toString() ?? '',
-                prodGSTPercent: (raw['salesEntryDetail_GSTPercentage'] as num?)?.toDouble() ?? 0,
-                unitName: raw['unit_ShortName']?.toString() ?? '',
-                prodUnitValue: 1.0,
-                batchCompId: 0,
-                compName: '',
-                batchBranchId: 0,
-                branchName: '',
-             );
+            // Create dummy batch if not found to show data
+            batch = BatchListItem(
+              batchId: batchId,
+              batchProductId: productId,
+              batchBarcode: raw['salesEntryDetail_Barcode']?.toString() ?? '',
+              batchEANCode: raw['salesEntryDetail_EANCode']?.toString() ?? '',
+              batchLandingPrice: 0,
+              batchPurchasePrice: 0,
+              batchMRP: 0,
+              batchSellingPrice:
+                  (raw['salesEntryDetail_SellingPrice'] as num?)?.toDouble() ??
+                  0,
+              batchStock: 0,
+              batchAvailableStock: 0,
+              prodCode: raw['prod_Code']?.toString() ?? '',
+              prodName:
+                  raw['prod_Name']?.toString() ??
+                  raw['salesEntryDetail_ProductName']?.toString() ??
+                  '',
+              prodGSTPercent:
+                  (raw['salesEntryDetail_GSTPercentage'] as num?)?.toDouble() ??
+                  0,
+              unitName: raw['unit_ShortName']?.toString() ?? '',
+              prodUnitValue: 1.0,
+              batchCompId: 0,
+              compName: '',
+              batchBranchId: 0,
+              branchName: '',
+            );
           }
 
           final qty = (raw['salesEntryDetail_Qty'] as num?)?.toDouble() ?? 0.0;
-          final rate = (raw['salesEntryDetail_Rate'] as num?)?.toDouble() ?? 0.0;
-          final discAmt = (raw['salesEntryDetail_DiscountAmount'] as num?)?.toDouble() ?? 0.0;
-          final discPct = (raw['salesEntryDetail_DiscountPercentage'] as num?)?.toDouble() ?? 0.0;
-          final gstPct = (raw['salesEntryDetail_GSTPercentage'] as num?)?.toDouble() ?? 0.0;
-          
+          final rate =
+              (raw['salesEntryDetail_Rate'] as num?)?.toDouble() ?? 0.0;
+          final discAmt =
+              (raw['salesEntryDetail_DiscountAmount'] as num?)?.toDouble() ??
+              0.0;
+          final discPct =
+              (raw['salesEntryDetail_DiscountPercentage'] as num?)
+                  ?.toDouble() ??
+              0.0;
+          final gstPct =
+              (raw['salesEntryDetail_GSTPercentage'] as num?)?.toDouble() ??
+              0.0;
+
           _products.add({
             'product': batch,
             'qty': qty,
@@ -1991,8 +2054,12 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
             'net': 0.0,
             'qtyController': TextEditingController(text: qty.toString()),
             'rateController': TextEditingController(text: rate.toString()),
-            'discPctController': TextEditingController(text: discPct.toString()),
-            'discAmtController': TextEditingController(text: discAmt.toString()),
+            'discPctController': TextEditingController(
+              text: discPct.toString(),
+            ),
+            'discAmtController': TextEditingController(
+              text: discAmt.toString(),
+            ),
             'productNode': FocusNode(),
             'qtyNode': FocusNode(),
             'rateNode': FocusNode(),
@@ -2000,12 +2067,12 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
             'discNode': FocusNode(),
           });
         }
-        
+
         // Add empty row at end if there are products
         if (_products.isNotEmpty) {
-           _addNewEmptyRow();
+          _addNewEmptyRow();
         } else {
-           _addNewEmptyRow();
+          _addNewEmptyRow();
         }
 
         _calculateTotals();
