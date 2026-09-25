@@ -216,13 +216,13 @@ class _BatchSelectionDialogState extends State<BatchSelectionDialog> {
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 2),
               child: Row(
                 children: [
-                  Text(
-                    '${_filteredBatches.length} ${_filteredBatches.length == 1 ? 'batch' : 'batches'} found',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      fontSize: 11,
-                    ),
-                  ),
+                  // Text(
+                  //   '${_filteredBatches.length} ${_filteredBatches.length == 1 ? 'batch' : 'batches'} found',
+                  //   style: theme.textTheme.bodySmall?.copyWith(
+                  //     color: theme.colorScheme.onSurfaceVariant,
+                  //     fontSize: 11,
+                  //   ),
+                  // ),
                   const Spacer(),
                   Icon(
                     Icons.keyboard_outlined,
@@ -348,7 +348,7 @@ class _BatchSelectionDialogState extends State<BatchSelectionDialog> {
                                           MainAxisAlignment.center,
                                       children: [
                                         Text(
-                                          batch.prodName,
+                                          '${batch.prodName} ${batch.formattedUnitValue} ${batch.unitName} ',
                                           style: theme.textTheme.bodyMedium
                                               ?.copyWith(
                                                 fontWeight: isSelected
@@ -366,7 +366,7 @@ class _BatchSelectionDialogState extends State<BatchSelectionDialog> {
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                         Text(
-                                          'Batch: ${batch.batchNumber}  |  Unit: ${batch.unitName}  |  Stock: ${batch.batchAvailableStock}  |  Unit Value: ${batch.formattedUnitValue}',
+                                          'Batch: ${batch.batchNumber}  |  Stock: ${batch.batchAvailableStock}',
                                           style: theme.textTheme.bodySmall
                                               ?.copyWith(
                                                 color: isSelected
@@ -377,7 +377,7 @@ class _BatchSelectionDialogState extends State<BatchSelectionDialog> {
                                                     : theme
                                                           .colorScheme
                                                           .onSurfaceVariant,
-                                                fontSize: 11,
+                                                fontSize: 12,
                                               ),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,

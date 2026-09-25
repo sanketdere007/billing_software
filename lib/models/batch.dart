@@ -15,7 +15,7 @@ class BatchListItem {
   final double batchPurchasePrice;
   final double batchMRP;
   final double batchSellingPrice;
-  final double prodGSTPercent; 
+  final double prodGSTPercent;
   final String batchBarcode;
   final String batchEANCode;
   final bool batchIsActive;
@@ -91,7 +91,8 @@ class BatchListItem {
       ),
       batchBarcode: json['batch_Barcode']?.toString() ?? '',
       batchEANCode: json['batch_EANCode']?.toString() ?? '',
-      batchIsActive: json['batch_IsActive'] == true || json['batch_IsActive'] == 'true',
+      batchIsActive:
+          json['batch_IsActive'] == true || json['batch_IsActive'] == 'true',
       batchNumber: json['batch_Number']?.toString() ?? '',
     );
   }
@@ -234,9 +235,11 @@ class BatchUpsertResponseData {
       message: json['message']?.toString() ?? '',
       batchId: int.tryParse(json['batch_Id']?.toString() ?? '0') ?? 0,
       oldStock: double.tryParse(json['oldStock']?.toString() ?? '0') ?? 0.0,
-      oldAvailableStock: double.tryParse(json['oldAvailableStock']?.toString() ?? '0') ?? 0.0,
+      oldAvailableStock:
+          double.tryParse(json['oldAvailableStock']?.toString() ?? '0') ?? 0.0,
       newStock: double.tryParse(json['newStock']?.toString() ?? '0') ?? 0.0,
-      newAvailableStock: double.tryParse(json['newAvailableStock']?.toString() ?? '0') ?? 0.0,
+      newAvailableStock:
+          double.tryParse(json['newAvailableStock']?.toString() ?? '0') ?? 0.0,
     );
   }
 }
@@ -258,7 +261,9 @@ class BatchUpsertResponse {
     return BatchUpsertResponse(
       status: json['status'] == true || json['status'] == 'true',
       message: json['message']?.toString() ?? '',
-      data: json['data'] != null ? BatchUpsertResponseData.fromJson(json['data']) : null,
+      data: json['data'] != null
+          ? BatchUpsertResponseData.fromJson(json['data'])
+          : null,
       error: json['error']?.toString(),
     );
   }

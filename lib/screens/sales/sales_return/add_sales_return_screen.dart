@@ -92,7 +92,6 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
     super.initState();
     _customerService.getAllCustomers();
     _batchService.getAllBatches();
-    productService.getAllProducts(isActive: true);
     _billDiscountPctController.addListener(_calculateTotals);
     _billDiscountController.addListener(_calculateTotals);
 
@@ -313,11 +312,6 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
   Future<double> _resolveGstPercent(BatchListItem batch) async {
     final cached = productService.getProductByIdFromCache(batch.batchProductId);
     if (cached != null) return cached.prodGSTPercent;
-    try {
-      await productService.getAllProducts(isActive: true);
-      final loaded = productService.getProductByIdFromCache(batch.batchProductId);
-      if (loaded != null) return loaded.prodGSTPercent;
-    } catch (_) {}
     return batch.prodGSTPercent;
   }
 
@@ -634,6 +628,10 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
       );
       _calculateTotals();
     });
+    
+    // Refresh product list
+    _batchService.getAllBatches();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _customerNode.requestFocus();
     });
