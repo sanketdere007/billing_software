@@ -104,23 +104,9 @@ class SettingsScreen extends StatelessWidget {
                   ),
                   const VerticalDivider(width: 1, thickness: 1),
                   Expanded(
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(24.0),
-                          child: Align(
-                            alignment: Alignment.topLeft,
-                            child: Text(
-                              'Settings',
-                              style: theme.textTheme.headlineMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: theme.colorScheme.onSurface,
-                              ),
-                            ),
-                          ),
-                        ),
-                        Expanded(child: content),
-                      ],
+                    child: Scaffold(
+                      appBar: AppBar(title: const Text('Settings')),
+                      body: content,
                     ),
                   ),
                 ],
@@ -128,14 +114,7 @@ class SettingsScreen extends StatelessWidget {
             );
           } else {
             return Scaffold(
-              appBar: AppBar(
-                title: const Text('Settings'),
-                backgroundColor: isDark
-                    ? Colors.grey[900]
-                    : Colors.blue.shade700,
-                foregroundColor: Colors.white,
-                elevation: 0,
-              ),
+              appBar: AppBar(title: const Text('Settings')),
               drawer: const AppDrawer(isPermanent: false),
               body: content,
             );

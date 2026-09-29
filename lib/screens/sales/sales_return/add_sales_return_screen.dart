@@ -1555,8 +1555,8 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
                 children: [
                   Expanded(
                     child: Wrap(
-                      spacing: 24,
-                      runSpacing: 12,
+                      spacing: 16,
+                      runSpacing: 10,
                       children: [
                         _buildSummaryItem(
                           'Total Qty',
@@ -1621,10 +1621,10 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
                         'Final Payable',
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          fontSize: 24,
+                          fontSize: 20,
                         ),
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: 8),
                       Text(
                         '₹${_finalPayable.toStringAsFixed(2)}',
                         style: Theme.of(context).textTheme.headlineMedium
@@ -1633,7 +1633,7 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
                               color: Theme.of(context).colorScheme.primary,
                             ),
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: 8),
                     ],
                   ),
                   Column(
@@ -1648,7 +1648,7 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
                             Padding(
                               padding: const EdgeInsets.only(right: 12.0),
                               child: SizedBox(
-                                height: 48,
+                                height: 40,
                                 child: OutlinedButton.icon(
                                   onPressed: _resetForm,
                                   icon: const Icon(Icons.clear_all_rounded),
@@ -1665,8 +1665,8 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
                               ),
                             ),
                           SizedBox(
-                            width: 200,
-                            height: 48,
+                            width: 160,
+                            height: 40,
                             child: FilledButton.icon(
                               onPressed: _isLoading ? null : _saveEntry,
                               icon: _isLoading

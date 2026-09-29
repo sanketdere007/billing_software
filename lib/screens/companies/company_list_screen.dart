@@ -84,7 +84,8 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
       return KeyEventResult.handled;
     }
 
-    if (key == LogicalKeyboardKey.enter || key == LogicalKeyboardKey.numpadEnter) {
+    if (key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.numpadEnter) {
       if (_highlightedIndex >= 0 && _highlightedIndex < _companies.length) {
         _navigateToAddCompany(_companies[_highlightedIndex]);
         return KeyEventResult.handled;
@@ -148,20 +149,22 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
 
   void _filterLocal() {
     if (!mounted) return;
-    
+
     List<CompanyListItem> filtered = _companyService.companies;
-    
+
     // Status filter is already applied via API parameter, but apply here just in case API doesn't support it fully
     if (_selectedStatus != null) {
-      filtered = filtered.where((c) => c.compIsActive == _selectedStatus).toList();
+      filtered = filtered
+          .where((c) => c.compIsActive == _selectedStatus)
+          .toList();
     }
 
     final query = _searchController.text.trim().toLowerCase();
     if (query.isNotEmpty) {
       filtered = filtered.where((c) {
         return c.compName.toLowerCase().contains(query) ||
-               (c.code?.toLowerCase().contains(query) ?? false) ||
-               (c.compEmail.toLowerCase().contains(query));
+            (c.code?.toLowerCase().contains(query) ?? false) ||
+            (c.compEmail.toLowerCase().contains(query));
       }).toList();
     }
 
@@ -188,8 +191,7 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
   }
 
   bool get _hasActiveFilters =>
-      _searchController.text.isNotEmpty ||
-      _selectedStatus != null;
+      _searchController.text.isNotEmpty || _selectedStatus != null;
 
   void _navigateToAddCompany([CompanyListItem? company]) async {
     final result = await Navigator.of(context).push<bool>(
@@ -233,17 +235,17 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                               tooltip: 'Refresh Companies',
                               onPressed: _isLoading ? null : _fetchCompanies,
                             ),
-                            const SizedBox(width: 8),
-                            FilledButton.icon(
-                              onPressed: () => _navigateToAddCompany(),
-                              icon: const Icon(Icons.add_rounded, size: 18),
-                              label: const Text('Add Company'),
-                              style: FilledButton.styleFrom(
-                                backgroundColor: Theme.of(context).colorScheme.primary,
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                              ),
-                            ),
-                            const SizedBox(width: 16),
+                            // const SizedBox(width: 8),
+                            // FilledButton.icon(
+                            //   onPressed: () => _navigateToAddCompany(),
+                            //   icon: const Icon(Icons.add_rounded, size: 18),
+                            //   label: const Text('Add Company'),
+                            //   style: FilledButton.styleFrom(
+                            //     backgroundColor: Theme.of(context).colorScheme.primary,
+                            //     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            //   ),
+                            // ),
+                            // const SizedBox(width: 16),
                           ],
                         ),
                         body: Column(
@@ -299,7 +301,9 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         border: Border(
-          bottom: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.5)),
+          bottom: BorderSide(
+            color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+          ),
         ),
       ),
       child: Row(
@@ -323,8 +327,13 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                         },
                       )
                     : null,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 0),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 0,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
                 filled: true,
                 fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.2),
               ),
@@ -354,7 +363,9 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
               },
               style: SegmentedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
             ),
           ),
@@ -366,8 +377,13 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
               icon: const Icon(Icons.filter_alt_off_rounded, size: 16),
               label: const Text('Reset'),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 14,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
             ),
           ],
@@ -385,7 +401,9 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         border: Border(
-          bottom: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.5)),
+          bottom: BorderSide(
+            color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+          ),
         ),
       ),
       child: Column(
@@ -407,8 +425,13 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                       },
                     )
                   : null,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 0),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 0,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
               filled: true,
               fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.2),
             ),
@@ -429,9 +452,18 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                     _fetchCompanies();
                   },
                   itemBuilder: (context) => [
-                    const PopupMenuItem(value: null, child: Text('All Statuses')),
-                    const PopupMenuItem(value: true, child: Text('Active Only')),
-                    const PopupMenuItem(value: false, child: Text('Inactive Only')),
+                    const PopupMenuItem(
+                      value: null,
+                      child: Text('All Statuses'),
+                    ),
+                    const PopupMenuItem(
+                      value: true,
+                      child: Text('Active Only'),
+                    ),
+                    const PopupMenuItem(
+                      value: false,
+                      child: Text('Inactive Only'),
+                    ),
                   ],
                   child: Container(
                     height: 48,
@@ -464,7 +496,9 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                               : (_selectedStatus! ? 'Active' : 'Inactive'),
                           style: TextStyle(
                             fontSize: 14,
-                            fontWeight: _selectedStatus != null ? FontWeight.bold : FontWeight.normal,
+                            fontWeight: _selectedStatus != null
+                                ? FontWeight.bold
+                                : FontWeight.normal,
                             color: _selectedStatus != null
                                 ? theme.colorScheme.primary
                                 : null,
@@ -513,11 +547,17 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline_rounded, size: 56, color: Theme.of(context).colorScheme.error),
+              Icon(
+                Icons.error_outline_rounded,
+                size: 56,
+                color: Theme.of(context).colorScheme.error,
+              ),
               const SizedBox(height: 16),
               Text(
                 'Failed to load companies',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Text(
@@ -547,7 +587,9 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primaryContainer.withOpacity(0.3),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -558,8 +600,12 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
               ),
               const SizedBox(height: 18),
               Text(
-                _hasActiveFilters ? 'No companies match your filter' : 'No companies found',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                _hasActiveFilters
+                    ? 'No companies match your filter'
+                    : 'No companies found',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Text(
@@ -617,7 +663,10 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
               ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: isDark
                       ? Colors.white.withOpacity(0.06)
@@ -627,7 +676,11 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.keyboard_outlined, size: 14, color: theme.hintColor),
+                    Icon(
+                      Icons.keyboard_outlined,
+                      size: 14,
+                      color: theme.hintColor,
+                    ),
                     const SizedBox(width: 6),
                     Text(
                       'Use ↑ / ↓ to navigate • Enter / Click to Edit',
@@ -652,13 +705,17 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
               elevation: 1,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
-                side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.5)),
+                side: BorderSide(
+                  color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+                ),
               ),
               clipBehavior: Clip.antiAlias,
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   const double minTableWidth = 900.0;
-                  final tableWidth = constraints.maxWidth < minTableWidth ? minTableWidth : constraints.maxWidth;
+                  final tableWidth = constraints.maxWidth < minTableWidth
+                      ? minTableWidth
+                      : constraints.maxWidth;
 
                   Widget tableContent = SizedBox(
                     width: tableWidth,
@@ -669,10 +726,12 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                           height: 48,
                           padding: const EdgeInsets.symmetric(horizontal: 20),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.primaryContainer.withOpacity(0.35),
+                            color: theme.colorScheme.primaryContainer
+                                .withOpacity(0.35),
                             border: Border(
                               bottom: BorderSide(
-                                color: theme.colorScheme.outlineVariant.withOpacity(0.6),
+                                color: theme.colorScheme.outlineVariant
+                                    .withOpacity(0.6),
                                 width: 1.5,
                               ),
                             ),
@@ -681,31 +740,74 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                             children: [
                               SizedBox(
                                 width: 60,
-                                child: Text('#', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                child: Text(
+                                  '#',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                ),
                               ),
                               Expanded(
                                 flex: 4,
-                                child: Text('Company Name', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                child: Text(
+                                  'Company Name',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                ),
                               ),
                               Expanded(
                                 flex: 2,
-                                child: Text('Code', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                child: Text(
+                                  'Code',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                ),
                               ),
                               Expanded(
                                 flex: 3,
-                                child: Text('GST Number', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                child: Text(
+                                  'GST Number',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                ),
                               ),
                               Expanded(
                                 flex: 3,
-                                child: Text('City', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                child: Text(
+                                  'City',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                ),
                               ),
                               Expanded(
                                 flex: 2,
-                                child: Text('Status', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                child: Text(
+                                  'Status',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                ),
                               ),
                               SizedBox(
                                 width: 80,
-                                child: Text('Actions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center),
+                                child: Text(
+                                  'Actions',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
                               ),
                             ],
                           ),
@@ -719,7 +821,8 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                             separatorBuilder: (context, index) => Divider(
                               height: 1,
                               thickness: 1,
-                              color: theme.colorScheme.outlineVariant.withOpacity(0.3),
+                              color: theme.colorScheme.outlineVariant
+                                  .withOpacity(0.3),
                             ),
                             itemBuilder: (context, index) {
                               final company = _companies[index];
@@ -727,17 +830,22 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
 
                               return Material(
                                 color: isHighlighted
-                                    ? theme.colorScheme.primary.withOpacity(isDark ? 0.22 : 0.12)
+                                    ? theme.colorScheme.primary.withOpacity(
+                                        isDark ? 0.22 : 0.12,
+                                      )
                                     : Colors.transparent,
                                 child: InkWell(
-                                  hoverColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                                  hoverColor: theme.colorScheme.surfaceVariant
+                                      .withOpacity(0.3),
                                   onTap: () {
                                     setState(() => _highlightedIndex = index);
                                     _navigateToAddCompany(company);
                                   },
                                   child: Container(
                                     height: 52,
-                                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                    ),
                                     child: Row(
                                       children: [
                                         // Index with Highlight Indicator
@@ -750,19 +858,30 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                                                 Container(
                                                   width: 3.5,
                                                   height: 24,
-                                                  margin: const EdgeInsets.only(right: 6),
+                                                  margin: const EdgeInsets.only(
+                                                    right: 6,
+                                                  ),
                                                   decoration: BoxDecoration(
-                                                    color: theme.colorScheme.primary,
-                                                    borderRadius: BorderRadius.circular(2),
+                                                    color: theme
+                                                        .colorScheme
+                                                        .primary,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          2,
+                                                        ),
                                                   ),
                                                 ),
                                               Text(
                                                 '${index + 1}',
                                                 style: TextStyle(
                                                   color: isHighlighted
-                                                      ? theme.colorScheme.primary
+                                                      ? theme
+                                                            .colorScheme
+                                                            .primary
                                                       : Colors.grey.shade600,
-                                                  fontWeight: isHighlighted ? FontWeight.bold : FontWeight.normal,
+                                                  fontWeight: isHighlighted
+                                                      ? FontWeight.bold
+                                                      : FontWeight.normal,
                                                 ),
                                               ),
                                             ],
@@ -776,22 +895,36 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
                                               Container(
-                                                padding: const EdgeInsets.all(6),
-                                                decoration: BoxDecoration(
-                                                  color: theme.colorScheme.primary.withOpacity(0.1),
-                                                  borderRadius: BorderRadius.circular(6),
+                                                padding: const EdgeInsets.all(
+                                                  6,
                                                 ),
-                                                child: Icon(Icons.business_rounded, size: 16, color: theme.colorScheme.primary),
+                                                decoration: BoxDecoration(
+                                                  color: theme
+                                                      .colorScheme
+                                                      .primary
+                                                      .withOpacity(0.1),
+                                                  borderRadius:
+                                                      BorderRadius.circular(6),
+                                                ),
+                                                child: Icon(
+                                                  Icons.business_rounded,
+                                                  size: 16,
+                                                  color:
+                                                      theme.colorScheme.primary,
+                                                ),
                                               ),
                                               const SizedBox(width: 10),
                                               Expanded(
                                                 child: Text(
                                                   company.compName,
                                                   style: TextStyle(
-                                                    fontWeight: isHighlighted ? FontWeight.bold : FontWeight.w500,
+                                                    fontWeight: isHighlighted
+                                                        ? FontWeight.bold
+                                                        : FontWeight.w500,
                                                     fontSize: 14,
                                                   ),
-                                                  overflow: TextOverflow.ellipsis,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                 ),
                                               ),
                                             ],
@@ -803,7 +936,9 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                                           flex: 2,
                                           child: Text(
                                             company.code ?? '-',
-                                            style: const TextStyle(fontSize: 13),
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                            ),
                                             overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
@@ -812,11 +947,16 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                                         Expanded(
                                           flex: 3,
                                           child: Text(
-                                            company.compGSTNo.isNotEmpty ? company.compGSTNo : '-',
+                                            company.compGSTNo.isNotEmpty
+                                                ? company.compGSTNo
+                                                : '-',
                                             style: TextStyle(
                                               fontSize: 13,
                                               fontFamily: 'monospace',
-                                              color: company.compGSTNo.isNotEmpty ? null : Colors.grey.shade500,
+                                              color:
+                                                  company.compGSTNo.isNotEmpty
+                                                  ? null
+                                                  : Colors.grey.shade500,
                                             ),
                                             overflow: TextOverflow.ellipsis,
                                           ),
@@ -826,8 +966,12 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                                         Expanded(
                                           flex: 3,
                                           child: Text(
-                                            company.compCity.isNotEmpty ? company.compCity : '-',
-                                            style: const TextStyle(fontSize: 13),
+                                            company.compCity.isNotEmpty
+                                                ? company.compCity
+                                                : '-',
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                            ),
                                             overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
@@ -839,38 +983,70 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
                                               Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 8,
+                                                      vertical: 4,
+                                                    ),
                                                 decoration: BoxDecoration(
                                                   color: company.compIsActive
-                                                      ? Colors.green.withOpacity(0.15)
-                                                      : Colors.grey.withOpacity(0.2),
-                                                  borderRadius: BorderRadius.circular(20),
+                                                      ? Colors.green
+                                                            .withOpacity(0.15)
+                                                      : Colors.grey.withOpacity(
+                                                          0.2,
+                                                        ),
+                                                  borderRadius:
+                                                      BorderRadius.circular(20),
                                                   border: Border.all(
                                                     color: company.compIsActive
-                                                        ? Colors.green.withOpacity(0.3)
-                                                        : Colors.grey.withOpacity(0.3),
+                                                        ? Colors.green
+                                                              .withOpacity(0.3)
+                                                        : Colors.grey
+                                                              .withOpacity(0.3),
                                                   ),
                                                 ),
                                                 child: Row(
-                                                  mainAxisSize: MainAxisSize.min,
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
                                                   children: [
                                                     Container(
                                                       width: 6,
                                                       height: 6,
                                                       decoration: BoxDecoration(
                                                         shape: BoxShape.circle,
-                                                        color: company.compIsActive ? Colors.green : Colors.grey.shade600,
+                                                        color:
+                                                            company.compIsActive
+                                                            ? Colors.green
+                                                            : Colors
+                                                                  .grey
+                                                                  .shade600,
                                                       ),
                                                     ),
                                                     const SizedBox(width: 6),
                                                     Text(
-                                                      company.compIsActive ? 'Active' : 'Inactive',
+                                                      company.compIsActive
+                                                          ? 'Active'
+                                                          : 'Inactive',
                                                       style: TextStyle(
                                                         fontSize: 11,
-                                                        fontWeight: FontWeight.bold,
-                                                        color: company.compIsActive
-                                                            ? (isDark ? Colors.green.shade300 : Colors.green.shade700)
-                                                            : (isDark ? Colors.grey.shade400 : Colors.grey.shade700),
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        color:
+                                                            company.compIsActive
+                                                            ? (isDark
+                                                                  ? Colors
+                                                                        .green
+                                                                        .shade300
+                                                                  : Colors
+                                                                        .green
+                                                                        .shade700)
+                                                            : (isDark
+                                                                  ? Colors
+                                                                        .grey
+                                                                        .shade400
+                                                                  : Colors
+                                                                        .grey
+                                                                        .shade700),
                                                       ),
                                                     ),
                                                   ],
@@ -886,13 +1062,20 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                                           child: Align(
                                             alignment: Alignment.center,
                                             child: IconButton(
-                                              icon: const Icon(Icons.edit_rounded, size: 18),
+                                              icon: const Icon(
+                                                Icons.edit_rounded,
+                                                size: 18,
+                                              ),
                                               color: theme.colorScheme.primary,
                                               tooltip: 'Edit Company',
-                                              onPressed: () => _navigateToAddCompany(company),
+                                              onPressed: () =>
+                                                  _navigateToAddCompany(
+                                                    company,
+                                                  ),
                                               splashRadius: 20,
                                               padding: EdgeInsets.zero,
-                                              constraints: const BoxConstraints(),
+                                              constraints:
+                                                  const BoxConstraints(),
                                             ),
                                           ),
                                         ),
@@ -968,7 +1151,11 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                           color: theme.colorScheme.primaryContainer,
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Icon(Icons.business_rounded, color: theme.colorScheme.primary, size: 22),
+                        child: Icon(
+                          Icons.business_rounded,
+                          color: theme.colorScheme.primary,
+                          size: 22,
+                        ),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
@@ -977,18 +1164,29 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                           children: [
                             Text(
                               company.compName,
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              company.compCity.isNotEmpty ? company.compCity : 'No city specified',
-                              style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
+                              company.compCity.isNotEmpty
+                                  ? company.compCity
+                                  : 'No city specified',
+                              style: TextStyle(
+                                color: theme.colorScheme.onSurfaceVariant,
+                                fontSize: 13,
+                              ),
                             ),
                           ],
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: company.compIsActive
                               ? Colors.green.withOpacity(0.15)
@@ -1000,7 +1198,9 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
-                            color: company.compIsActive ? Colors.green.shade700 : Colors.grey.shade700,
+                            color: company.compIsActive
+                                ? Colors.green.shade700
+                                : Colors.grey.shade700,
                           ),
                         ),
                       ),
@@ -1015,22 +1215,43 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Code', style: TextStyle(fontSize: 11, color: theme.hintColor)),
+                          Text(
+                            'Code',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: theme.hintColor,
+                            ),
+                          ),
                           const SizedBox(height: 2),
                           Text(
                             company.code ?? '-',
-                            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w500,
+                              fontSize: 13,
+                            ),
                           ),
                         ],
                       ),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Text('GST Number', style: TextStyle(fontSize: 11, color: theme.hintColor)),
+                          Text(
+                            'GST Number',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: theme.hintColor,
+                            ),
+                          ),
                           const SizedBox(height: 2),
                           Text(
-                            company.compGSTNo.isNotEmpty ? company.compGSTNo : '-',
-                            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13, fontFamily: 'monospace'),
+                            company.compGSTNo.isNotEmpty
+                                ? company.compGSTNo
+                                : '-',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w500,
+                              fontSize: 13,
+                              fontFamily: 'monospace',
+                            ),
                           ),
                         ],
                       ),
