@@ -523,6 +523,19 @@ class _SubCategoryMasterScreenState extends State<SubCategoryMasterScreen> {
                     OutlinedButton(
                       onPressed: _isLoading
                           ? null
+                          : () => SaveClearShortcuts.invokeClear(context),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text('Clear (F10)'),
+                    ),
+                    const SizedBox(height: 10, width: 12),
+                    OutlinedButton(
+                      onPressed: _isLoading
+                          ? null
                           : () => Navigator.of(context).pop(),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
@@ -610,7 +623,7 @@ class _SubCategoryMasterScreenState extends State<SubCategoryMasterScreen> {
                           : Text(
                               isEditing
                                   ? 'Update SubCategory'
-                                  : 'Save SubCategory',
+                                  : 'Save SubCategory (F9)',
                             ),
                     ),
                     if (!isEditing) ...[
@@ -629,6 +642,19 @@ class _SubCategoryMasterScreenState extends State<SubCategoryMasterScreen> {
                       ),
                     ],
                     const SizedBox(height: 10),
+                    OutlinedButton(
+                      onPressed: _isLoading
+                          ? null
+                          : () => SaveClearShortcuts.invokeClear(context),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text('Clear (F10)'),
+                    ),
+                    const SizedBox(height: 10, width: 12),
                     OutlinedButton(
                       onPressed: _isLoading
                           ? null

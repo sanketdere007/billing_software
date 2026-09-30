@@ -315,6 +315,12 @@ class _AddGstScreenState extends State<AddGstScreen> {
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
                                 OutlinedButton.icon(
+                                  onPressed: () => SaveClearShortcuts.invokeClear(context),
+                                  icon: const Icon(Icons.clear_all_rounded, size: 18),
+                                  label: const Text('Clear (F10)'),
+                                ),
+                                const SizedBox(width: 16),
+                                OutlinedButton.icon(
                                   onPressed: () => Navigator.of(context).pop(), 
                                   icon: const Icon(Icons.close_rounded, size: 18),
                                   label: const Text('Cancel'),
@@ -357,6 +363,13 @@ class _AddGstScreenState extends State<AddGstScreen> {
                                   ),
                                   const SizedBox(height: 12),
                                 ],
+                                OutlinedButton.icon(
+                                  onPressed: () => SaveClearShortcuts.invokeClear(context),
+                                  icon: const Icon(Icons.clear_all_rounded, size: 18),
+                                  label: const Text('Clear (F10)'),
+                                  style: OutlinedButton.styleFrom(padding: const EdgeInsets.all(16)),
+                                ),
+                                const SizedBox(height: 12),
                                 OutlinedButton.icon(
                                   onPressed: () => Navigator.of(context).pop(), 
                                   icon: const Icon(Icons.close_rounded, size: 18),

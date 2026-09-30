@@ -704,7 +704,7 @@ class _BranchMasterScreenState extends State<BranchMasterScreen> {
                     height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                   )
-                : Text(isEditing ? 'Update Branch' : 'Save Branch'),
+                : Text(isEditing ? 'Update Branch (F9)' : 'Save Branch (F9)'),
           ),
         ],
       );
@@ -724,7 +724,7 @@ class _BranchMasterScreenState extends State<BranchMasterScreen> {
                     height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                   )
-                : Text(isEditing ? 'Update Branch' : 'Save Branch'),
+                : Text(isEditing ? 'Update Branch (F9)' : 'Save Branch (F9)'),
           ),
           if (!isEditing) ...[
             const SizedBox(height: 10),
@@ -738,6 +738,15 @@ class _BranchMasterScreenState extends State<BranchMasterScreen> {
             ),
           ],
           const SizedBox(height: 10),
+          OutlinedButton(
+            onPressed: _isLoading ? null : () => SaveClearShortcuts.invokeClear(context),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text('Clear (F10)'),
+          ),
+          const SizedBox(height: 10, width: 12),
           OutlinedButton(
             onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
             style: OutlinedButton.styleFrom(

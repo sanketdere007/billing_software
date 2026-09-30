@@ -2001,31 +2001,53 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                     //       ),
                     // ),
                     const SizedBox(height: 12),
-                    SizedBox(
-                      width: 185,
-                      height: 40,
-                      child: FilledButton.icon(
-                        onPressed: _isLoading ? null : _saveEntry,
-                        icon: _isLoading
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Icon(Icons.save_rounded),
-                        label: Text(
-                          _isLoading ? 'Saving...' : 'Save Purchase',
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                        style: FilledButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          height: 40,
+                          child: OutlinedButton(
+                            onPressed: _resetForm,
+
+                            style: OutlinedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: const Text(
+                              'Clear (F10)',
+                              style: TextStyle(fontSize: 16),
+                            ),
                           ),
                         ),
-                      ),
+                        const SizedBox(width: 12),
+                        SizedBox(
+                          width: 140,
+                          height: 40,
+                          child: FilledButton.icon(
+                            onPressed: _isLoading ? null : _saveEntry,
+                            icon: _isLoading
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Icon(Icons.save_rounded),
+                            label: Text(
+                              _isLoading ? 'Saving...' : 'Save (F9)',
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                            style: FilledButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

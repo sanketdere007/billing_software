@@ -39,7 +39,7 @@ void main() {
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: body)));
   }
 
-  testWidgets('F1 and F2 work on first open', (tester) async {
+  testWidgets('F9 and F10 work on first open', (tester) async {
     PlatformHelper.setOverrideForTesting(true);
     var saveCount = 0;
     var clearCount = 0;
@@ -50,13 +50,13 @@ void main() {
       onClear: () => clearCount++,
     );
 
-    await tester.sendKeyEvent(LogicalKeyboardKey.f1);
-    await tester.sendKeyEvent(LogicalKeyboardKey.f2);
+    await tester.sendKeyEvent(LogicalKeyboardKey.f9);
+    await tester.sendKeyEvent(LogicalKeyboardKey.f10);
     expect(saveCount, 1);
     expect(clearCount, 1);
   });
 
-  testWidgets('F1 and F2 keep working after TextField focus and button tap', (
+  testWidgets('F9 and F10 keep working after TextField focus and button tap', (
     tester,
   ) async {
     PlatformHelper.setOverrideForTesting(true);
@@ -71,20 +71,20 @@ void main() {
 
     await tester.tap(find.byKey(const Key('field')));
     await tester.pump();
-    await tester.sendKeyEvent(LogicalKeyboardKey.f1);
-    await tester.sendKeyEvent(LogicalKeyboardKey.f2);
+    await tester.sendKeyEvent(LogicalKeyboardKey.f9);
+    await tester.sendKeyEvent(LogicalKeyboardKey.f10);
     expect(saveCount, 1);
     expect(clearCount, 1);
 
     await tester.tap(find.text('Action'));
     await tester.pump();
-    await tester.sendKeyEvent(LogicalKeyboardKey.f1);
-    await tester.sendKeyEvent(LogicalKeyboardKey.f2);
+    await tester.sendKeyEvent(LogicalKeyboardKey.f9);
+    await tester.sendKeyEvent(LogicalKeyboardKey.f10);
     expect(saveCount, 2);
     expect(clearCount, 2);
   });
 
-  testWidgets('F1 and F2 keep working after a dialog is opened and closed', (
+  testWidgets('F9 and F10 keep working after a dialog is opened and closed', (
     tester,
   ) async {
     PlatformHelper.setOverrideForTesting(true);
@@ -118,13 +118,13 @@ void main() {
     expect(find.text('Dialog'), findsOneWidget);
 
     // Underlying screen must not save while a dialog route is on top.
-    await tester.sendKeyEvent(LogicalKeyboardKey.f1);
+    await tester.sendKeyEvent(LogicalKeyboardKey.f9);
     expect(saveCount, 0);
 
     Navigator.of(tester.element(find.text('Dialog'))).pop();
     await tester.pumpAndSettle();
 
-    await tester.sendKeyEvent(LogicalKeyboardKey.f1);
+    await tester.sendKeyEvent(LogicalKeyboardKey.f9);
     expect(saveCount, 1);
   });
 
@@ -139,7 +139,7 @@ void main() {
       nested: true,
     );
 
-    await tester.sendKeyEvent(LogicalKeyboardKey.f1);
+    await tester.sendKeyEvent(LogicalKeyboardKey.f9);
     expect(saveCount, 1);
   });
 
@@ -153,7 +153,7 @@ void main() {
       onClear: () {},
     );
 
-    await tester.sendKeyEvent(LogicalKeyboardKey.f1);
+    await tester.sendKeyEvent(LogicalKeyboardKey.f9);
     expect(saveCount, 0);
   });
 }

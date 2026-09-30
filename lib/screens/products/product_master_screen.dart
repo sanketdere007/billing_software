@@ -830,6 +830,23 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
                     OutlinedButton.icon(
                       onPressed: _isLoading
                           ? null
+                          : () => SaveClearShortcuts.invokeClear(context),
+                      icon: const Icon(Icons.clear_all_rounded, size: 18),
+                      label: const Text('Clear (F10)'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 14,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    OutlinedButton.icon(
+                      onPressed: _isLoading
+                          ? null
                           : () => Navigator.of(context).pop(),
                       icon: const Icon(Icons.close_rounded, size: 18),
                       label: const Text('Cancel'),
@@ -886,7 +903,7 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
                       label: Text(
                         _isLoading
                             ? 'Saving...'
-                            : (isEditing ? 'Update Product' : 'Save Product'),
+                            : (isEditing ? 'Update Product (F9)' : 'Save Product (F9)'),
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                       style: FilledButton.styleFrom(

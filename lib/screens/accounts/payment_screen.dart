@@ -1169,7 +1169,7 @@ class _PaymentMasterScreenState extends State<PaymentMasterScreen> {
                 color: Colors.white,
               ),
             )
-          : const Text('Save Payment'),
+          : const Text('Save Payment (F9)'),
     );
 
     final clearButton = OutlinedButton(
@@ -1181,7 +1181,7 @@ class _PaymentMasterScreenState extends State<PaymentMasterScreen> {
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
-      child: const Text('Clear'),
+      child: const Text('Clear (F10)'),
     );
 
     final cancelButton = OutlinedButton(

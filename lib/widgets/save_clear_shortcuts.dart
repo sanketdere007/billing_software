@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../utils/platform_helper.dart';
 
-/// Windows-only F1 (Save) / F2 (Clear) shortcuts that stay active for the
+/// Windows-only F9 (Save) / F10 (Clear) shortcuts that stay active for the
 /// lifetime of the screen, regardless of which control has focus.
 class SaveClearShortcuts extends StatefulWidget {
   final Widget child;
@@ -17,10 +17,20 @@ class SaveClearShortcuts extends StatefulWidget {
   });
 
   @override
-  State<SaveClearShortcuts> createState() => _SaveClearShortcutsState();
+  State<SaveClearShortcuts> createState() => SaveClearShortcutsState();
+
+  static void invokeSave(BuildContext context) {
+    final state = context.findAncestorStateOfType<SaveClearShortcutsState>();
+    state?.widget.onSave?.call();
+  }
+
+  static void invokeClear(BuildContext context) {
+    final state = context.findAncestorStateOfType<SaveClearShortcutsState>();
+    state?.widget.onClear?.call();
+  }
 }
 
-class _SaveClearShortcutsState extends State<SaveClearShortcuts> {
+class SaveClearShortcutsState extends State<SaveClearShortcuts> {
   /// The same [KeyEvent] instance, if already handled by a nested
   /// [SaveClearShortcuts] on this screen.
   static KeyEvent? _handledEvent;
@@ -57,11 +67,11 @@ class _SaveClearShortcutsState extends State<SaveClearShortcuts> {
     if (!mounted) return false;
 
     final key = event.logicalKey;
-    if (key != LogicalKeyboardKey.f1 && key != LogicalKeyboardKey.f2) {
+    if (key != LogicalKeyboardKey.f9 && key != LogicalKeyboardKey.f10) {
       return false;
     }
 
-    // Match SingleActivator defaults: F1/F2 only, no Ctrl/Shift/Alt/Meta.
+    // Match SingleActivator defaults: F9/F10 only, no Ctrl/Shift/Alt/Meta.
     if (HardwareKeyboard.instance.isControlPressed ||
         HardwareKeyboard.instance.isShiftPressed ||
         HardwareKeyboard.instance.isAltPressed ||
@@ -79,7 +89,7 @@ class _SaveClearShortcutsState extends State<SaveClearShortcuts> {
     }
 
     final VoidCallback? action =
-        key == LogicalKeyboardKey.f1 ? widget.onSave : widget.onClear;
+        key == LogicalKeyboardKey.f9 ? widget.onSave : widget.onClear;
     if (action == null) return false;
 
     _handledEvent = event;

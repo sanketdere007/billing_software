@@ -534,6 +534,14 @@ class _RouteMasterScreenState extends State<RouteMasterScreen> {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           OutlinedButton(
+            onPressed: () => SaveClearShortcuts.invokeClear(context),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            ),
+            child: const Text('Clear (F10)'),
+          ),
+          const SizedBox(width: 12),
+          OutlinedButton(
             onPressed: () => Navigator.of(context).pop(),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
@@ -568,7 +576,7 @@ class _RouteMasterScreenState extends State<RouteMasterScreen> {
                     ),
                   )
                 : const Icon(Icons.save_rounded, size: 18),
-            label: Text(_isLoading ? 'Saving...' : 'Save Route'),
+            label: Text(_isLoading ? 'Saving...' : 'Save Route (F9)'),
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
             ),

@@ -162,8 +162,8 @@ class _AreaMasterScreenState extends State<AreaMasterScreen> {
       final successMsg = response.message.isNotEmpty
           ? response.message
           : (isEditing
-              ? 'Area updated successfully!'
-              : 'Area created successfully!');
+                ? 'Area updated successfully!'
+                : 'Area created successfully!');
 
       await showSuccessDialog(context, successMsg);
       if (!mounted) return;
@@ -214,67 +214,70 @@ class _AreaMasterScreenState extends State<AreaMasterScreen> {
       child: DirectBackScope(
         child: LayoutBuilder(
           builder: (context, constraints) {
-          final isDesktop = constraints.maxWidth >= 800;
+            final isDesktop = constraints.maxWidth >= 800;
 
-          final formCard = _buildFormCard(context, isDesktop);
+            final formCard = _buildFormCard(context, isDesktop);
 
-          if (isDesktop) {
-            return Scaffold(
-              body: Row(
-                children: [
-                  const SizedBox(
-                    width: 250,
-                    child: AppDrawer(isPermanent: true),
-                  ),
-                  const VerticalDivider(width: 1, thickness: 1),
-                  Expanded(
-                    child: Scaffold(
-                      appBar: AppBar(
-                        title: Text(isEditing ? 'Edit Area' : 'Add New Area'),
-                        leading: IconButton(
-                          icon: const Icon(Icons.arrow_back),
-                          tooltip: 'Back to Area List',
-                          onPressed: () => Navigator.of(context).pop(),
+            if (isDesktop) {
+              return Scaffold(
+                body: Row(
+                  children: [
+                    const SizedBox(
+                      width: 250,
+                      child: AppDrawer(isPermanent: true),
+                    ),
+                    const VerticalDivider(width: 1, thickness: 1),
+                    Expanded(
+                      child: Scaffold(
+                        appBar: AppBar(
+                          title: Text(isEditing ? 'Edit Area' : 'Add New Area'),
+                          leading: IconButton(
+                            icon: const Icon(Icons.arrow_back),
+                            tooltip: 'Back to Area List',
+                            onPressed: () => Navigator.of(context).pop(),
+                          ),
                         ),
-                      ),
-                      body: Container(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .surfaceVariant
-                            .withOpacity(0.15),
-                        child: Center(
-                          child: SingleChildScrollView(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 24, vertical: 32),
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 680),
-                              child: formCard,
+                        body: Container(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surfaceVariant.withOpacity(0.15),
+                          child: Center(
+                            child: SingleChildScrollView(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 32,
+                              ),
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 680,
+                                ),
+                                child: formCard,
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+              );
+            }
+
+            // Mobile / Tablet layout
+            return Scaffold(
+              appBar: AppBar(
+                title: Text(isEditing ? 'Edit Area' : 'Add New Area'),
+              ),
+              body: SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: formCard,
               ),
             );
-          }
-
-          // Mobile / Tablet layout
-          return Scaffold(
-            appBar: AppBar(
-              title: Text(isEditing ? 'Edit Area' : 'Add New Area'),
-            ),
-            body: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: formCard,
-            ),
-          );
-        },
+          },
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildFormCard(BuildContext context, bool isDesktop) {
     final theme = Theme.of(context);
@@ -338,7 +341,9 @@ class _AreaMasterScreenState extends State<AreaMasterScreen> {
                   if (isEditing)
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.secondaryContainer,
                         borderRadius: BorderRadius.circular(8),
@@ -367,8 +372,11 @@ class _AreaMasterScreenState extends State<AreaMasterScreen> {
                 labelText: 'Select State',
                 hintText: _selectedStateName ?? 'Choose a state',
                 isRequired: true,
-                prefixIcon: const Icon(Icons.map_rounded,
-                    size: 20, color: Colors.blueAccent),
+                prefixIcon: const Icon(
+                  Icons.map_rounded,
+                  size: 20,
+                  color: Colors.blueAccent,
+                ),
                 onChanged: (StateModel? state) {
                   setState(() {
                     _selectedStateId = state?.stateId;
@@ -396,8 +404,11 @@ class _AreaMasterScreenState extends State<AreaMasterScreen> {
                 labelText: 'Select City',
                 hintText: _selectedCityName ?? 'Choose a city',
                 isRequired: true,
-                prefixIcon: const Icon(Icons.location_city_rounded,
-                    size: 20, color: Colors.blueAccent),
+                prefixIcon: const Icon(
+                  Icons.location_city_rounded,
+                  size: 20,
+                  color: Colors.blueAccent,
+                ),
                 onChanged: (CityListItem? city) {
                   setState(() {
                     _selectedCityId = city?.cityId;
@@ -430,8 +441,11 @@ class _AreaMasterScreenState extends State<AreaMasterScreen> {
                 decoration: InputDecoration(
                   labelText: 'Area Name *',
                   hintText: 'Enter area or locality name (e.g. Andheri West)',
-                  prefixIcon: const Icon(Icons.place_outlined,
-                      size: 20, color: Colors.blueAccent),
+                  prefixIcon: const Icon(
+                    Icons.place_outlined,
+                    size: 20,
+                    color: Colors.blueAccent,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -467,8 +481,11 @@ class _AreaMasterScreenState extends State<AreaMasterScreen> {
                 decoration: InputDecoration(
                   labelText: 'Pincode',
                   hintText: 'Enter postal/pin code (e.g. 400053)',
-                  prefixIcon: const Icon(Icons.pin_drop_outlined,
-                      size: 20, color: Colors.blueAccent),
+                  prefixIcon: const Icon(
+                    Icons.pin_drop_outlined,
+                    size: 20,
+                    color: Colors.blueAccent,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -504,8 +521,7 @@ class _AreaMasterScreenState extends State<AreaMasterScreen> {
                         },
                   title: const Text(
                     'Active Status',
-                    style:
-                        TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                   ),
                   subtitle: Text(
                     _isActive
@@ -523,7 +539,8 @@ class _AreaMasterScreenState extends State<AreaMasterScreen> {
                     color: _isActive ? Colors.green : Colors.grey,
                   ),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8)),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
               const SizedBox(height: 28),
@@ -534,13 +551,33 @@ class _AreaMasterScreenState extends State<AreaMasterScreen> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     OutlinedButton(
-                      onPressed:
-                          _isLoading ? null : () => Navigator.of(context).pop(),
+                      onPressed: _isLoading
+                          ? null
+                          : () => SaveClearShortcuts.invokeClear(context),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 14),
+                          vertical: 14,
+                          horizontal: 10,
+                        ),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text('Clear (F10)'),
+                    ),
+                    const SizedBox(width: 12),
+                    OutlinedButton(
+                      onPressed: _isLoading
+                          ? null
+                          : () => Navigator.of(context).pop(),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 14,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                       child: const Text('Cancel'),
                     ),
@@ -552,9 +589,12 @@ class _AreaMasterScreenState extends State<AreaMasterScreen> {
                             : () => _saveArea(saveAndNew: true),
                         style: FilledButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 14),
+                            horizontal: 20,
+                            vertical: 14,
+                          ),
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8)),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
                         child: const Text('Save & Add Another'),
                       ),
@@ -566,16 +606,21 @@ class _AreaMasterScreenState extends State<AreaMasterScreen> {
                           : () => _saveArea(saveAndNew: false),
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 28, vertical: 14),
+                          horizontal: 28,
+                          vertical: 14,
+                        ),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                       child: _isLoading
                           ? const SizedBox(
                               width: 18,
                               height: 18,
                               child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.white),
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             )
                           : Text(isEditing ? 'Update Area' : 'Save Area'),
                     ),
@@ -592,16 +637,21 @@ class _AreaMasterScreenState extends State<AreaMasterScreen> {
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                       child: _isLoading
                           ? const SizedBox(
                               width: 18,
                               height: 18,
                               child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.white),
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             )
-                          : Text(isEditing ? 'Update Area' : 'Save Area'),
+                          : Text(
+                              isEditing ? 'Update Area (F9)' : 'Save Area (F9)',
+                            ),
                     ),
                     if (!isEditing) ...[
                       const SizedBox(height: 10),
@@ -612,19 +662,35 @@ class _AreaMasterScreenState extends State<AreaMasterScreen> {
                         style: FilledButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8)),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
                         child: const Text('Save & Add Another'),
                       ),
                     ],
                     const SizedBox(height: 10),
                     OutlinedButton(
-                      onPressed:
-                          _isLoading ? null : () => Navigator.of(context).pop(),
+                      onPressed: _isLoading
+                          ? null
+                          : () => SaveClearShortcuts.invokeClear(context),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text('Clear (F10)'),
+                    ),
+                    const SizedBox(height: 10, width: 12),
+                    OutlinedButton(
+                      onPressed: _isLoading
+                          ? null
+                          : () => Navigator.of(context).pop(),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                       child: const Text('Cancel'),
                     ),

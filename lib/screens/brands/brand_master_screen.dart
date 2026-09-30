@@ -380,6 +380,15 @@ class _BrandMasterScreenState extends State<BrandMasterScreen> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     OutlinedButton(
+                      onPressed: _isLoading ? null : () => SaveClearShortcuts.invokeClear(context),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      child: const Text('Clear (F10)'),
+                    ),
+                    const SizedBox(height: 10, width: 12),
+                    OutlinedButton(
                       onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
@@ -445,6 +454,15 @@ class _BrandMasterScreenState extends State<BrandMasterScreen> {
                       ),
                     ],
                     const SizedBox(height: 10),
+                    OutlinedButton(
+                      onPressed: _isLoading ? null : () => SaveClearShortcuts.invokeClear(context),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      child: const Text('Clear (F10)'),
+                    ),
+                    const SizedBox(height: 10, width: 12),
                     OutlinedButton(
                       onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
                       style: OutlinedButton.styleFrom(

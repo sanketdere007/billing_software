@@ -389,6 +389,15 @@ class _CategoryMasterScreenState extends State<CategoryMasterScreen> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     OutlinedButton(
+                      onPressed: _isLoading ? null : () => SaveClearShortcuts.invokeClear(context),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      child: const Text('Clear (F10)'),
+                    ),
+                    const SizedBox(height: 10, width: 12),
+                    OutlinedButton(
                       onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
@@ -440,7 +449,7 @@ class _CategoryMasterScreenState extends State<CategoryMasterScreen> {
                               height: 18,
                               child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                             )
-                          : Text(isEditing ? 'Update Category' : 'Save Category'),
+                          : Text(isEditing ? 'Update Category (F9)' : 'Save Category (F9)'),
                     ),
                     if (!isEditing) ...[
                       const SizedBox(height: 10),
@@ -454,6 +463,15 @@ class _CategoryMasterScreenState extends State<CategoryMasterScreen> {
                       ),
                     ],
                     const SizedBox(height: 10),
+                    OutlinedButton(
+                      onPressed: _isLoading ? null : () => SaveClearShortcuts.invokeClear(context),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      child: const Text('Clear (F10)'),
+                    ),
+                    const SizedBox(height: 10, width: 12),
                     OutlinedButton(
                       onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
                       style: OutlinedButton.styleFrom(

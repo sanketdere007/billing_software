@@ -801,6 +801,16 @@ class _SupplierMasterScreenState extends State<SupplierMasterScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     OutlinedButton.icon(
+                      onPressed: _isLoading ? null : () => SaveClearShortcuts.invokeClear(context),
+                      icon: const Icon(Icons.clear_all_rounded, size: 18),
+                      label: const Text('Clear (F10)'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    OutlinedButton.icon(
                       onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
                       icon: const Icon(Icons.close_rounded, size: 18),
                       label: const Text('Cancel'),
@@ -832,7 +842,7 @@ class _SupplierMasterScreenState extends State<SupplierMasterScreen> {
                             )
                           : Icon(isEditing ? Icons.save_rounded : Icons.check_circle_rounded, size: 18),
                       label: Text(
-                        _isLoading ? 'Saving...' : (isEditing ? 'Update Supplier' : 'Save Supplier'),
+                        _isLoading ? 'Saving...' : (isEditing ? 'Update Supplier (F9)' : 'Save Supplier (F9)'),
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                       style: FilledButton.styleFrom(

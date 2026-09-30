@@ -1163,7 +1163,7 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
                 color: Colors.white,
               ),
             )
-          : const Text('Save Receipt'),
+          : const Text('Save Receipt (F9)'),
     );
 
     final clearButton = OutlinedButton(
@@ -1175,7 +1175,7 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
-      child: const Text('Clear'),
+      child: const Text('Clear (F10)'),
     );
 
     final cancelButton = OutlinedButton(

@@ -1815,28 +1815,27 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          if (_isViewMode)
-                            Padding(
-                              padding: const EdgeInsets.only(right: 12.0),
-                              child: SizedBox(
-                                height: 40,
-                                child: OutlinedButton.icon(
-                                  onPressed: _resetForm,
-                                  icon: const Icon(Icons.clear_all_rounded),
-                                  label: const Text(
-                                    'Clear',
-                                    style: TextStyle(fontSize: 16),
+                          Padding(
+                            padding: const EdgeInsets.only(right: 12.0),
+                            child: SizedBox(
+                              height: 40,
+                              child: OutlinedButton(
+                                onPressed: _resetForm,
+
+                                style: OutlinedButton.styleFrom(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
                                   ),
-                                  style: OutlinedButton.styleFrom(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
+                                ),
+                                child: Text(
+                                  'Clear (F10)',
+                                  style: TextStyle(fontSize: 16),
                                 ),
                               ),
                             ),
+                          ),
                           SizedBox(
-                            width: 160,
+                            width: 140,
                             height: 40,
                             child: FilledButton.icon(
                               onPressed: _isLoading ? null : _saveEntry,
@@ -1851,7 +1850,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                                     )
                                   : const Icon(Icons.save_rounded),
                               label: Text(
-                                _isLoading ? 'Saving...' : 'Save Sales',
+                                _isLoading ? 'Saving...' : 'Save (F9)',
                                 style: const TextStyle(fontSize: 16),
                               ),
                               style: FilledButton.styleFrom(

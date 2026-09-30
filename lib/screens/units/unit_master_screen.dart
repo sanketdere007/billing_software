@@ -482,7 +482,7 @@ class _UnitMasterScreenState extends State<UnitMasterScreen> {
                                 color: Colors.white,
                               ),
                             )
-                          : Text(isEditing ? 'Update Unit' : 'Save Unit'),
+                          : Text(isEditing ? 'Update Unit (F9)' : 'Save Unit (F9)'),
                     ),
                   ],
                 )
@@ -509,7 +509,7 @@ class _UnitMasterScreenState extends State<UnitMasterScreen> {
                                 color: Colors.white,
                               ),
                             )
-                          : Text(isEditing ? 'Update Unit' : 'Save Unit'),
+                          : Text(isEditing ? 'Update Unit (F9)' : 'Save Unit (F9)'),
                     ),
                     if (!isEditing) ...[
                       const SizedBox(height: 10),
@@ -527,6 +527,19 @@ class _UnitMasterScreenState extends State<UnitMasterScreen> {
                       ),
                     ],
                     const SizedBox(height: 10),
+                    OutlinedButton(
+                      onPressed: _isLoading
+                          ? null
+                          : () => SaveClearShortcuts.invokeClear(context),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text('Clear (F10)'),
+                    ),
+                    const SizedBox(height: 10, width: 12),
                     OutlinedButton(
                       onPressed: _isLoading
                           ? null
