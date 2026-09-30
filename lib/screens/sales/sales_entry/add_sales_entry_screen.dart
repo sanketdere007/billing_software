@@ -104,6 +104,25 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
     });
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _updateEscBehavior();
+  }
+
+  void _updateEscBehavior() {
+    if (!mounted) return;
+    final route = ModalRoute.of(context);
+    if (route == null) return;
+
+    final hasProducts = _products.any((p) => p['product'] != null);
+    if (_isViewMode || !hasProducts) {
+      shortcutService.registerDirectBackRoute(route);
+    } else {
+      shortcutService.unregisterDirectBackRoute(route);
+    }
+  }
+
   void _addNewEmptyRow() {
     _products.add({
       'product': null, // null indicates empty row
@@ -262,6 +281,8 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
       _billDiscount = bDisc;
       _finalPayable = finalPay;
     });
+
+    _updateEscBehavior();
   }
 
   Future<void> _selectProductForEmptyRow(int index) async {

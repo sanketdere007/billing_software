@@ -14,6 +14,7 @@ import 'purchase_entry_list_screen.dart';
 import 'purchase_entry_view_list_screen.dart';
 import 'product_selection_dialog.dart';
 import '../../../widgets/save_clear_shortcuts.dart';
+import '../../../services/shortcut_service.dart';
 
 class AddPurchaseEntryScreen extends StatefulWidget {
   final PurchaseEntry? existingEntry;
@@ -77,6 +78,25 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _invoiceNoNode.requestFocus();
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _updateEscBehavior();
+  }
+
+  void _updateEscBehavior() {
+    if (!mounted) return;
+    final route = ModalRoute.of(context);
+    if (route == null) return;
+
+    final hasProducts = _products.any((p) => p['product'] != null);
+    if (!hasProducts) {
+      shortcutService.registerDirectBackRoute(route);
+    } else {
+      shortcutService.unregisterDirectBackRoute(route);
+    }
   }
 
   void _loadExistingEntry(PurchaseEntry entry) {
@@ -371,6 +391,8 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
       _billDiscount = bDisc;
       _finalPayable = finalPay;
     });
+
+    _updateEscBehavior();
   }
 
   Future<void> _selectProductForEmptyRow(int index) async {

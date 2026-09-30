@@ -6,6 +6,7 @@ import '../../../models/purchase_entry.dart';
 import '../../../services/purchase_entry_service.dart';
 import '../../../widgets/app_drawer.dart';
 import '../../../widgets/custom_date_picker_field.dart';
+import '../../../services/shortcut_service.dart';
 
 class PurchaseEntryViewListScreen extends StatefulWidget {
   const PurchaseEntryViewListScreen({super.key});
@@ -30,6 +31,17 @@ class _PurchaseEntryViewListScreenState extends State<PurchaseEntryViewListScree
 
   DateTime? _fromDate = DateTime.now();
   DateTime? _toDate = DateTime.now();
+  
+  Route<dynamic>? _currentRoute;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _currentRoute = ModalRoute.of(context);
+    if (_currentRoute != null) {
+      shortcutService.registerDirectBackRoute(_currentRoute!);
+    }
+  }
 
   @override
   void initState() {
@@ -47,6 +59,9 @@ class _PurchaseEntryViewListScreenState extends State<PurchaseEntryViewListScree
 
   @override
   void dispose() {
+    if (_currentRoute != null) {
+      shortcutService.unregisterDirectBackRoute(_currentRoute!);
+    }
     _debounceTimer?.cancel();
     _searchController.dispose();
     _searchFocusNode.dispose();
