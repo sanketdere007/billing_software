@@ -26,6 +26,10 @@ class ProductListItem {
   final String prodUnitShortName;
   final String? prodCreatedDate;
   final String? prodModifiedDate;
+  final double prodLandingPrice;
+  final double prodPurchasePrice;
+  final double prodMRP;
+  final double prodSellingPrice;
   final String batchBarcode;
   final String batchEANCode;
   final double batchStock;
@@ -60,6 +64,10 @@ class ProductListItem {
     this.prodUnitShortName = '',
     this.prodCreatedDate,
     this.prodModifiedDate,
+    this.prodLandingPrice = 0.0,
+    this.prodPurchasePrice = 0.0,
+    this.prodMRP = 0.0,
+    this.prodSellingPrice = 0.0,
     this.batchBarcode = '',
     this.batchEANCode = '',
     this.batchStock = 0.0,
@@ -158,6 +166,10 @@ class ProductListItem {
           '',
       prodCreatedDate: json['prod_CreatedDate']?.toString(),
       prodModifiedDate: json['prod_ModifiedDate']?.toString(),
+      prodLandingPrice: double.tryParse(json['prod_LandingPrice']?.toString() ?? '0') ?? 0.0,
+      prodPurchasePrice: double.tryParse(json['prod_PurchasePrice']?.toString() ?? '0') ?? 0.0,
+      prodMRP: double.tryParse(json['prod_MRP']?.toString() ?? '0') ?? 0.0,
+      prodSellingPrice: double.tryParse(json['prod_SellingPrice']?.toString() ?? '0') ?? 0.0,
       batchBarcode: json['batch_Barcode']?.toString() ?? '',
       batchEANCode: json['batch_EANCode']?.toString() ?? '',
       batchStock: double.tryParse(json['batch_Stock']?.toString() ?? '0') ?? 0.0,
@@ -195,6 +207,10 @@ class ProductListItem {
       'prod_UnitShortName': prodUnitShortName,
       if (prodCreatedDate != null) 'prod_CreatedDate': prodCreatedDate,
       if (prodModifiedDate != null) 'prod_ModifiedDate': prodModifiedDate,
+      'prod_LandingPrice': prodLandingPrice,
+      'prod_PurchasePrice': prodPurchasePrice,
+      'prod_MRP': prodMRP,
+      'prod_SellingPrice': prodSellingPrice,
       'batch_Barcode': batchBarcode,
       'batch_EANCode': batchEANCode,
       'batch_Stock': batchStock,
@@ -231,6 +247,10 @@ class ProductListItem {
     String? prodUnitShortName,
     String? prodCreatedDate,
     String? prodModifiedDate,
+    double? prodLandingPrice,
+    double? prodPurchasePrice,
+    double? prodMRP,
+    double? prodSellingPrice,
     String? batchNumber,
   }) {
     return ProductListItem(
@@ -258,6 +278,10 @@ class ProductListItem {
       prodUnitShortName: prodUnitShortName ?? this.prodUnitShortName,
       prodCreatedDate: prodCreatedDate ?? this.prodCreatedDate,
       prodModifiedDate: prodModifiedDate ?? this.prodModifiedDate,
+      prodLandingPrice: prodLandingPrice ?? this.prodLandingPrice,
+      prodPurchasePrice: prodPurchasePrice ?? this.prodPurchasePrice,
+      prodMRP: prodMRP ?? this.prodMRP,
+      prodSellingPrice: prodSellingPrice ?? this.prodSellingPrice,
       batchNumber: batchNumber ?? this.batchNumber,
     );
   }

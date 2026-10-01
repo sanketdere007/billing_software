@@ -316,6 +316,15 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
         (p['rateController'] as TextEditingController).text = selectedProduct
             .batchSellingPrice
             .toString();
+
+        // Ensure default qty doesn't exceed available stock
+        double currentQty = (p['qty'] as num?)?.toDouble() ?? 1.0;
+        if (currentQty > selectedProduct.batchAvailableStock) {
+          p['qty'] = selectedProduct.batchAvailableStock;
+          (p['qtyController'] as TextEditingController).text = selectedProduct
+              .batchAvailableStock
+              .toString();
+        }
       });
       _calculateTotals();
 
@@ -460,6 +469,24 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
     if (hasZeroRate) {
       await showWarningDialog(context, 'Product rate cannot be 0');
       return;
+    }
+
+    if (_finalPayable <= 0.0) {
+      await showWarningDialog(context, 'Final payable amount cannot be zero.');
+      return;
+    }
+
+    // Final stock validation during Save
+    for (var p in validProducts) {
+      final BatchListItem prod = p['product'];
+      final double qty = (p['qty'] as num?)?.toDouble() ?? 0.0;
+      if (qty > prod.batchAvailableStock) {
+        await showWarningDialog(
+          context,
+          'Insufficient Stock for ${prod.prodName}. Available stock is ${prod.batchAvailableStock}, but you entered $qty.',
+        );
+        return;
+      }
     }
 
     if (!mounted) return;
@@ -1277,12 +1304,12 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                                                           height: 2,
                                                         ),
                                                         Text(
-                                                          'Unit: ${prod.unitName} | Unit Value: ${_unitValueFor(prod)}',
+                                                          'Unit Value : ${_unitValueFor(prod)} ${prod.unitName}',
                                                           style: TextStyle(
                                                             color: theme
                                                                 .colorScheme
                                                                 .onSurfaceVariant,
-                                                            fontSize: 11,
+                                                            fontSize: 14,
                                                           ),
                                                         ),
                                                       ],
@@ -1313,12 +1340,114 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                                       ],
                                       decoration: _gridInputDecoration(theme),
                                       onChanged: (val) {
-                                        p['qty'] = double.tryParse(val) ?? 0.0;
+                                        double newQty =
+                                            double.tryParse(val) ?? 0.0;
+                                        if (prod != null &&
+                                            newQty > prod.batchAvailableStock) {
+                                          double maxQty =
+                                              prod.batchAvailableStock;
+                                          double fallbackQty =
+                                              1.0; // User requested to show 1 qty if exceeded
+
+                                          // Schedule dialog and focus restoration
+                                          WidgetsBinding.instance
+                                              .addPostFrameCallback((_) async {
+                                                if (!mounted) return;
+
+                                                String newText = fallbackQty
+                                                    .toString();
+                                                if (newText.endsWith('.0')) {
+                                                  newText = newText.substring(
+                                                    0,
+                                                    newText.length - 2,
+                                                  );
+                                                }
+
+                                                (p['qtyController']
+                                                        as TextEditingController)
+                                                    .value = TextEditingValue(
+                                                  text: newText,
+                                                  selection:
+                                                      TextSelection.collapsed(
+                                                        offset: newText.length,
+                                                      ),
+                                                );
+
+                                                await showWarningDialog(
+                                                  context,
+                                                  'Insufficient Stock. Available stock is $maxQty, but you entered $newQty.',
+                                                );
+
+                                                if (mounted) {
+                                                  (p['qtyNode'] as FocusNode)
+                                                      .requestFocus();
+                                                }
+                                              });
+
+                                          p['qty'] = fallbackQty;
+                                          newQty = fallbackQty;
+                                        } else {
+                                          p['qty'] = newQty;
+                                        }
                                         _calculateTotals();
                                       },
-                                      onFieldSubmitted: (_) =>
+                                      onFieldSubmitted: (_) {
+                                        // Final validation on enter as a safety measure
+                                        double currentQty =
+                                            double.tryParse(
+                                              (p['qtyController']
+                                                      as TextEditingController)
+                                                  .text,
+                                            ) ??
+                                            0.0;
+                                        if (prod != null &&
+                                            currentQty >
+                                                prod.batchAvailableStock) {
+                                          double maxQty =
+                                              prod.batchAvailableStock;
+                                          double fallbackQty = 1.0;
+
+                                          WidgetsBinding.instance
+                                              .addPostFrameCallback((_) async {
+                                                if (!mounted) return;
+
+                                                String newText = fallbackQty
+                                                    .toString();
+                                                if (newText.endsWith('.0')) {
+                                                  newText = newText.substring(
+                                                    0,
+                                                    newText.length - 2,
+                                                  );
+                                                }
+
+                                                (p['qtyController']
+                                                        as TextEditingController)
+                                                    .value = TextEditingValue(
+                                                  text: newText,
+                                                  selection:
+                                                      TextSelection.collapsed(
+                                                        offset: newText.length,
+                                                      ),
+                                                );
+
+                                                await showWarningDialog(
+                                                  context,
+                                                  'Insufficient Stock. Available stock is $maxQty, but you entered $currentQty.',
+                                                );
+
+                                                if (mounted) {
+                                                  (p['qtyNode'] as FocusNode)
+                                                      .requestFocus();
+                                                }
+                                              });
+
+                                          p['qty'] = fallbackQty;
+                                          _calculateTotals();
+                                        } else {
                                           (p['rateNode'] as FocusNode)
-                                              .requestFocus(),
+                                              .requestFocus();
+                                        }
+                                      },
                                     ),
                                     colQty,
                                     padding: const EdgeInsets.symmetric(

@@ -419,21 +419,21 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
         final p = _products[index];
         p['product'] = selectedProduct;
         p['gstPct'] = selectedProduct.prodGSTPercent;
-        p['lc'] = selectedProduct.batchLandingPrice;
-        p['pc'] = selectedProduct.batchPurchasePrice;
-        p['mrp'] = selectedProduct.batchMRP;
-        p['sp'] = selectedProduct.batchSellingPrice;
+        p['lc'] = selectedProduct.prodLandingPrice;
+        p['pc'] = selectedProduct.prodPurchasePrice;
+        p['mrp'] = selectedProduct.prodMRP;
+        p['sp'] = selectedProduct.prodSellingPrice;
         (p['lcController'] as TextEditingController).text = selectedProduct
-            .batchLandingPrice
+            .prodLandingPrice
             .toStringAsFixed(2);
         (p['pcController'] as TextEditingController).text = selectedProduct
-            .batchPurchasePrice
+            .prodPurchasePrice
             .toStringAsFixed(2);
         (p['mrpController'] as TextEditingController).text = selectedProduct
-            .batchMRP
+            .prodMRP
             .toStringAsFixed(2);
         (p['spController'] as TextEditingController).text = selectedProduct
-            .batchSellingPrice
+            .prodSellingPrice
             .toStringAsFixed(2);
         // Keep existing values or reset if needed, currently keeping default 1.0 qty
       });
@@ -623,6 +623,8 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
 
       if (mounted) {
         await showSuccessDialog(context, response.message);
+        // Refresh products to ensure updated prices are available for the next entry
+        await _productService.getAllProducts();
         if (!mounted) return;
         _resetForm();
       }
@@ -1270,12 +1272,12 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                                                           height: 2,
                                                         ),
                                                         Text(
-                                                          'Code: ${prod.prodCode}  |  Unit: ${prod.unitWithValue}',
+                                                          'Unit Value : ${prod.prodUnitValue}${prod.prodUnitShortName}',
                                                           style: TextStyle(
                                                             color: theme
                                                                 .colorScheme
                                                                 .onSurfaceVariant,
-                                                            fontSize: 11,
+                                                            fontSize: 14,
                                                           ),
                                                         ),
                                                       ],

@@ -1110,12 +1110,12 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
                                                           height: 2,
                                                         ),
                                                         Text(
-                                                          'Unit: ${prod.unitName} | Unit Value: ${_unitValueFor(prod)}',
+                                                          'Unit Value : ${_unitValueFor(prod)} ${prod.unitName}',
                                                           style: TextStyle(
                                                             color: theme
                                                                 .colorScheme
                                                                 .onSurfaceVariant,
-                                                            fontSize: 11,
+                                                            fontSize: 14,
                                                           ),
                                                         ),
                                                       ],
