@@ -171,4 +171,41 @@ class SalesEntryService extends ChangeNotifier {
       throw ApiException(e is ApiException ? e.message : 'Error deleting sales entry: $e');
     }
   }
+
+  Future<List<Map<String, dynamic>>> getAllPendingAmount({
+    required int customerId,
+    int pageNumber = 1,
+    int pageSize = 20,
+  }) async {
+    try {
+      final queryParams = <String, String>{
+        'CustomerId': customerId.toString(),
+        'PageNumber': pageNumber.toString(),
+        'PageSize': pageSize.toString(),
+      };
+
+      final uri = Uri.parse(ApiConstants.baseUrl + ApiConstants.getAllPendingAmountEndpoint)
+          .replace(queryParameters: queryParams);
+
+      final dynamic response = await apiService.get(
+        uri.toString().replaceFirst(ApiConstants.baseUrl, ''),
+        requiresAuth: true,
+      );
+
+      if (response is! Map<String, dynamic>) {
+        throw ApiException('Invalid response format from server.');
+      }
+
+      if (response['status'] == true && response['data'] != null) {
+        if (response['data']['items'] != null) {
+          return List<Map<String, dynamic>>.from(response['data']['items']);
+        } else if (response['data'] is List) {
+          return List<Map<String, dynamic>>.from(response['data']);
+        }
+      }
+      return [];
+    } catch (e) {
+      throw ApiException('Error fetching pending amount: $e');
+    }
+  }
 }

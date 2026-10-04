@@ -7,6 +7,7 @@ import '../../services/report_excel_export_service.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/app_message_dialog.dart';
 import '../../widgets/direct_back_scope.dart';
+import 'customer_outstanding_detail_report_screen.dart';
 
 class CustomerOutstandingReportScreen extends StatefulWidget {
   const CustomerOutstandingReportScreen({super.key});
@@ -149,15 +150,24 @@ class _CustomerOutstandingReportScreenState extends State<CustomerOutstandingRep
 
     if (key == LogicalKeyboardKey.enter || key == LogicalKeyboardKey.numpadEnter) {
       if (_highlightedIndex >= 0 && _highlightedIndex < _reportData.length) {
-        // _navigateToPendingInvoice(_reportData[_highlightedIndex]);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Customer invoice details coming soon!')),
-        );
+        _navigateToDetail(_reportData[_highlightedIndex]);
         return KeyEventResult.handled;
       }
     }
 
     return KeyEventResult.ignored;
+  }
+
+  void _navigateToDetail(CustomerOutstandingReportItem item) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CustomerOutstandingDetailReportScreen(
+          customerId: item.customerId,
+          customerName: item.custName,
+        ),
+      ),
+    );
   }
 
   void _scrollToIndex(int index) {
@@ -534,9 +544,7 @@ class _CustomerOutstandingReportScreenState extends State<CustomerOutstandingRep
                           setState(() {
                             _highlightedIndex = index;
                           });
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Customer invoice details coming soon!')),
-                          );
+                          _navigateToDetail(item);
                         },
                         child: Container(
                           height: 53,
@@ -615,9 +623,7 @@ class _CustomerOutstandingReportScreenState extends State<CustomerOutstandingRep
               setState(() {
                 _highlightedIndex = index;
               });
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Customer invoice details coming soon!')),
-              );
+              _navigateToDetail(item);
             },
           ),
         );

@@ -45,8 +45,8 @@ class _SalesEntryListScreenState extends State<SalesEntryListScreen> {
     return _salesEntryService.entries.where((e) {
       final query = _searchQuery.toLowerCase();
       return e.invoiceNo.toLowerCase().contains(query) ||
-             e.customerName.toLowerCase().contains(query) ||
-             e.status.toLowerCase().contains(query);
+          e.customerName.toLowerCase().contains(query) ||
+          e.status.toLowerCase().contains(query);
     }).toList();
   }
 
@@ -72,7 +72,9 @@ class _SalesEntryListScreenState extends State<SalesEntryListScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     filled: true,
-                    fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                    fillColor: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest.withOpacity(0.5),
                     contentPadding: const EdgeInsets.symmetric(vertical: 0),
                   ),
                   onChanged: (value) {
@@ -86,7 +88,8 @@ class _SalesEntryListScreenState extends State<SalesEntryListScreen> {
               ElevatedButton.icon(
                 onPressed: () {
                   shortcutService.navigateToNamedScreen(
-                    AppRoutes.salesEntryAdd, // Ensure AppRoutes.salesEntryAdd exists
+                    AppRoutes
+                        .salesEntryAdd, // Ensure AppRoutes.salesEntryAdd exists
                     () => const AddSalesEntryScreen(),
                   );
                 },
@@ -103,21 +106,36 @@ class _SalesEntryListScreenState extends State<SalesEntryListScreen> {
                 const SizedBox(width: 16),
                 ToggleButtons(
                   isSelected: [
-                    (_selectedViewMode ?? (isDesktop ? ViewMode.table : ViewMode.grid)) == ViewMode.table,
-                    (_selectedViewMode ?? (isDesktop ? ViewMode.table : ViewMode.grid)) == ViewMode.grid,
-                    (_selectedViewMode ?? (isDesktop ? ViewMode.table : ViewMode.grid)) == ViewMode.list,
+                    (_selectedViewMode ??
+                            (isDesktop ? ViewMode.table : ViewMode.grid)) ==
+                        ViewMode.table,
+                    (_selectedViewMode ??
+                            (isDesktop ? ViewMode.table : ViewMode.grid)) ==
+                        ViewMode.grid,
+                    (_selectedViewMode ??
+                            (isDesktop ? ViewMode.table : ViewMode.grid)) ==
+                        ViewMode.list,
                   ],
                   onPressed: (index) {
                     setState(() {
-                      if (index == 0) _selectedViewMode = ViewMode.table;
-                      else if (index == 1) _selectedViewMode = ViewMode.grid;
-                      else _selectedViewMode = ViewMode.list;
+                      if (index == 0)
+                        _selectedViewMode = ViewMode.table;
+                      else if (index == 1)
+                        _selectedViewMode = ViewMode.grid;
+                      else
+                        _selectedViewMode = ViewMode.list;
                     });
                   },
                   borderRadius: BorderRadius.circular(12),
-                  constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
+                  constraints: const BoxConstraints(
+                    minHeight: 48,
+                    minWidth: 48,
+                  ),
                   children: const [
-                    Tooltip(message: 'Table View', child: Icon(Icons.table_chart_outlined)),
+                    Tooltip(
+                      message: 'Table View',
+                      child: Icon(Icons.table_chart_outlined),
+                    ),
                     Tooltip(message: 'Grid View', child: Icon(Icons.grid_view)),
                     Tooltip(message: 'List View', child: Icon(Icons.list)),
                   ],
@@ -128,8 +146,13 @@ class _SalesEntryListScreenState extends State<SalesEntryListScreen> {
                   icon: const Icon(Icons.filter_list),
                   label: const Text('Filter'),
                   style: OutlinedButton.styleFrom(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -138,17 +161,25 @@ class _SalesEntryListScreenState extends State<SalesEntryListScreen> {
                   icon: const Icon(Icons.download),
                   label: const Text('Export'),
                   style: OutlinedButton.styleFrom(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                   ),
                 ),
-              ]
+              ],
             ],
           ),
         ),
         if (isMobile)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 8.0,
+            ),
             child: Column(
               children: [
                 Row(
@@ -162,16 +193,28 @@ class _SalesEntryListScreenState extends State<SalesEntryListScreen> {
                       ],
                       onPressed: (index) {
                         setState(() {
-                          if (index == 0) _selectedViewMode = ViewMode.table;
-                          else if (index == 1) _selectedViewMode = ViewMode.grid;
-                          else _selectedViewMode = ViewMode.list;
+                          if (index == 0)
+                            _selectedViewMode = ViewMode.table;
+                          else if (index == 1)
+                            _selectedViewMode = ViewMode.grid;
+                          else
+                            _selectedViewMode = ViewMode.list;
                         });
                       },
                       borderRadius: BorderRadius.circular(12),
-                      constraints: const BoxConstraints(minHeight: 40, minWidth: 48),
+                      constraints: const BoxConstraints(
+                        minHeight: 40,
+                        minWidth: 48,
+                      ),
                       children: const [
-                        Tooltip(message: 'Table View', child: Icon(Icons.table_chart_outlined)),
-                        Tooltip(message: 'Grid View', child: Icon(Icons.grid_view)),
+                        Tooltip(
+                          message: 'Table View',
+                          child: Icon(Icons.table_chart_outlined),
+                        ),
+                        Tooltip(
+                          message: 'Grid View',
+                          child: Icon(Icons.grid_view),
+                        ),
                         Tooltip(message: 'List View', child: Icon(Icons.list)),
                       ],
                     ),
@@ -204,25 +247,35 @@ class _SalesEntryListScreenState extends State<SalesEntryListScreen> {
           child: LayoutBuilder(
             builder: (context, innerConstraints) {
               final entries = _filteredEntries;
-              
+
               if (entries.isEmpty) {
                 return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.point_of_sale, size: 64, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      Icon(
+                        Icons.point_of_sale,
+                        size: 64,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                       const SizedBox(height: 16),
                       Text(
                         'No sales entries found',
-                        style: TextStyle(fontSize: 18, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),
                 );
               }
 
-              final currentMode = _selectedViewMode ?? 
-                  (isDesktop ? ViewMode.table : (isTablet ? ViewMode.grid : ViewMode.list));
+              final currentMode =
+                  _selectedViewMode ??
+                  (isDesktop
+                      ? ViewMode.table
+                      : (isTablet ? ViewMode.grid : ViewMode.list));
 
               switch (currentMode) {
                 case ViewMode.table:
@@ -243,10 +296,7 @@ class _SalesEntryListScreenState extends State<SalesEntryListScreen> {
       return Scaffold(
         body: Row(
           children: [
-            const SizedBox(
-              width: 250,
-              child: AppDrawer(isPermanent: true),
-            ),
+            const SizedBox(width: 250, child: AppDrawer(isPermanent: true)),
             const VerticalDivider(width: 1, thickness: 1),
             Expanded(
               child: Scaffold(
@@ -289,7 +339,6 @@ class _SalesEntryListScreenState extends State<SalesEntryListScreen> {
     }
   }
 
-
   Widget _buildListView(List<SalesEntry> entries) {
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -299,7 +348,9 @@ class _SalesEntryListScreenState extends State<SalesEntryListScreen> {
         return Card(
           elevation: 2,
           margin: const EdgeInsets.only(bottom: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           child: ListTile(
             contentPadding: const EdgeInsets.all(16),
             title: Wrap(
@@ -308,11 +359,18 @@ class _SalesEntryListScreenState extends State<SalesEntryListScreen> {
               children: [
                 Text(
                   entry.invoiceNo,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
                 Text(
                   '₹${entry.grandTotal.toStringAsFixed(2)}',
-                  style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary, fontSize: 16),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary,
+                    fontSize: 16,
+                  ),
                 ),
               ],
             ),
@@ -322,9 +380,18 @@ class _SalesEntryListScreenState extends State<SalesEntryListScreen> {
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    Icon(Icons.person_outline, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                    Icon(
+                      Icons.person_outline,
+                      size: 16,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                     const SizedBox(width: 8),
-                    Text(entry.customerName, style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
+                    Text(
+                      entry.customerName,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 6),
@@ -333,13 +400,25 @@ class _SalesEntryListScreenState extends State<SalesEntryListScreen> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.calendar_today_outlined, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        Icon(
+                          Icons.calendar_today_outlined,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                         const SizedBox(width: 8),
-                        Text(_dateFormat.format(entry.invoiceDate), style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
+                        Text(
+                          _dateFormat.format(entry.invoiceDate),
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
                       ],
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: _getStatusColor(entry.status).shade100,
                         borderRadius: BorderRadius.circular(12),
@@ -380,7 +459,9 @@ class _SalesEntryListScreenState extends State<SalesEntryListScreen> {
         final entry = entries[index];
         return Card(
           elevation: 2,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -393,30 +474,58 @@ class _SalesEntryListScreenState extends State<SalesEntryListScreen> {
                     Expanded(
                       child: Text(
                         entry.invoiceNo,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     Text(
                       '₹${entry.grandTotal.toStringAsFixed(2)}',
-                      style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary, fontSize: 16),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                        fontSize: 16,
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Icon(Icons.person_outline, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                    Icon(
+                      Icons.person_outline,
+                      size: 16,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                     const SizedBox(width: 8),
-                    Expanded(child: Text(entry.customerName, overflow: TextOverflow.ellipsis, style: TextStyle(color: Theme.of(context).colorScheme.onSurface))),
+                    Expanded(
+                      child: Text(
+                        entry.customerName,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    Icon(Icons.calendar_today_outlined, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                    Icon(
+                      Icons.calendar_today_outlined,
+                      size: 16,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                     const SizedBox(width: 8),
-                    Text(_dateFormat.format(entry.invoiceDate), style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
+                    Text(
+                      _dateFormat.format(entry.invoiceDate),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
                   ],
                 ),
                 const Spacer(),
@@ -424,7 +533,10 @@ class _SalesEntryListScreenState extends State<SalesEntryListScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: _getStatusColor(entry.status).shade100,
                         borderRadius: BorderRadius.circular(12),
@@ -441,7 +553,11 @@ class _SalesEntryListScreenState extends State<SalesEntryListScreen> {
                     Row(
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.edit_outlined, size: 20, color: Colors.blue),
+                          icon: const Icon(
+                            Icons.edit_outlined,
+                            size: 20,
+                            color: Colors.blue,
+                          ),
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                           onPressed: () {},
@@ -449,7 +565,11 @@ class _SalesEntryListScreenState extends State<SalesEntryListScreen> {
                         ),
                         const SizedBox(width: 8),
                         IconButton(
-                          icon: const Icon(Icons.delete_outline, size: 20, color: Colors.red),
+                          icon: const Icon(
+                            Icons.delete_outline,
+                            size: 20,
+                            color: Colors.red,
+                          ),
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                           onPressed: () {},
@@ -469,10 +589,14 @@ class _SalesEntryListScreenState extends State<SalesEntryListScreen> {
 
   MaterialColor _getStatusColor(String status) {
     switch (status.toLowerCase()) {
-      case 'completed': return Colors.green;
-      case 'hold': return Colors.orange;
-      case 'cancelled': return Colors.red;
-      default: return Colors.grey;
+      case 'completed':
+        return Colors.green;
+      case 'hold':
+        return Colors.orange;
+      case 'cancelled':
+        return Colors.red;
+      default:
+        return Colors.grey;
     }
   }
 
@@ -485,82 +609,162 @@ class _SalesEntryListScreenState extends State<SalesEntryListScreen> {
             padding: const EdgeInsets.all(16.0),
             child: Card(
               elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
               clipBehavior: Clip.antiAlias,
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: ConstrainedBox(
-                  constraints: BoxConstraints(minWidth: constraints.maxWidth > 32 ? constraints.maxWidth - 32 : 0),
+                  constraints: BoxConstraints(
+                    minWidth: constraints.maxWidth > 32
+                        ? constraints.maxWidth - 32
+                        : 0,
+                  ),
                   child: DataTable(
-              headingRowColor: WidgetStateProperty.resolveWith(
-                  (states) => Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5)),
-              dataRowMaxHeight: 60,
-              columns: const [
-                DataColumn(label: Text('Invoice No', style: TextStyle(fontWeight: FontWeight.bold))),
-                DataColumn(label: Text('Date', style: TextStyle(fontWeight: FontWeight.bold))),
-                DataColumn(label: Text('Customer', style: TextStyle(fontWeight: FontWeight.bold))),
-                DataColumn(label: Text('Qty', style: TextStyle(fontWeight: FontWeight.bold))),
-                DataColumn(label: Text('Mode', style: TextStyle(fontWeight: FontWeight.bold))),
-                DataColumn(label: Text('Amount (₹)', style: TextStyle(fontWeight: FontWeight.bold))),
-                DataColumn(label: Text('Status', style: TextStyle(fontWeight: FontWeight.bold))),
-                DataColumn(label: Text('Actions', style: TextStyle(fontWeight: FontWeight.bold))),
-              ],
-              rows: entries.map((entry) {
-                return DataRow(
-                  cells: [
-                    DataCell(Text(entry.invoiceNo, style: const TextStyle(fontWeight: FontWeight.w500))),
-                    DataCell(Text(_dateFormat.format(entry.invoiceDate))),
-                    DataCell(Text(entry.customerName)),
-                    DataCell(Text(entry.totalQuantity.toStringAsFixed(2))),
-                    DataCell(Text(entry.payments.keys.join(', '))),
-                    DataCell(Text(entry.grandTotal.toStringAsFixed(2), style: const TextStyle(fontWeight: FontWeight.w600))),
-                    DataCell(
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: _getStatusColor(entry.status).shade100,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          entry.status,
-                          style: TextStyle(
-                            color: _getStatusColor(entry.status).shade700,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
+                    headingRowColor: WidgetStateProperty.resolveWith(
+                      (states) => Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                    ),
+                    dataRowMaxHeight: 60,
+                    columns: const [
+                      DataColumn(
+                        label: Text(
+                          'Invoice No',
+                          style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
-                    ),
-                    DataCell(
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.print_outlined, size: 20, color: Colors.blueGrey),
-                            onPressed: () {},
-                            tooltip: 'Print',
+                      DataColumn(
+                        label: Text(
+                          'Date',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          'Customer',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          'Qty',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          'Mode',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          'Amount (₹)',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          'Status',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          'Actions',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                    rows: entries.map((entry) {
+                      return DataRow(
+                        cells: [
+                          DataCell(
+                            Text(
+                              entry.invoiceNo,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.edit_outlined, size: 20, color: Colors.blue),
-                            onPressed: () {},
-                            tooltip: 'Edit',
+                          DataCell(Text(_dateFormat.format(entry.invoiceDate))),
+                          DataCell(Text(entry.customerName)),
+                          DataCell(
+                            Text(entry.totalQuantity.toStringAsFixed(2)),
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.delete_outline, size: 20, color: Colors.red),
-                            onPressed: () {},
-                            tooltip: 'Delete',
+                          DataCell(Text(entry.payments.keys.join(', '))),
+                          DataCell(
+                            Text(
+                              entry.grandTotal.toStringAsFixed(2),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          DataCell(
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _getStatusColor(entry.status).shade100,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                entry.status,
+                                style: TextStyle(
+                                  color: _getStatusColor(entry.status).shade700,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          DataCell(
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.print_outlined,
+                                    size: 20,
+                                    color: Colors.blueGrey,
+                                  ),
+                                  onPressed: () {},
+                                  tooltip: 'Print',
+                                ),
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.edit_outlined,
+                                    size: 20,
+                                    color: Colors.blue,
+                                  ),
+                                  onPressed: () {},
+                                  tooltip: 'Edit',
+                                ),
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.delete_outline,
+                                    size: 20,
+                                    color: Colors.red,
+                                  ),
+                                  onPressed: () {},
+                                  tooltip: 'Delete',
+                                ),
+                              ],
+                            ),
                           ),
                         ],
-                      ),
-                    ),
-                  ],
-                );
-              }).toList(),
-            ),
+                      );
+                    }).toList(),
                   ),
                 ),
               ),
             ),
+          ),
         );
       },
     );

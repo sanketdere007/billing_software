@@ -61,7 +61,7 @@ class ApiConstants {
   static const String getCustomerByIdEndpoint = '/api/Customer/GetCustomerById';
   static const String insertOrUpdateCustomerEndpoint =
       '/api/Customer/InsertorUpdateCustomer';
-  static const String importCustomerExcelEndpoint = 
+  static const String importCustomerExcelEndpoint =
       '/api/Customer/ImportCustomerExcel';
 
   // Product Endpoints
@@ -103,7 +103,6 @@ class ApiConstants {
   static const String getPurchaseDetailViewListEndpoint =
       '/api/PurchaseEntry/GetPurchaseDetailViewList';
 
-
   // Sales Entry Endpoints
   static const String insertOrUpdateSalesEntryEndpoint =
       '/api/SalesEntry/InsertOrUpdateSalesEntry';
@@ -119,7 +118,7 @@ class ApiConstants {
   // Sales Return Endpoints
   static const String insertOrUpdateSalesReturnEntryEndpoint =
       '/api/SalesReturnEntry/InsertOrUpdateSalesReturnEntry';
-  static const String getSalesReturnListEndpoint = 
+  static const String getSalesReturnListEndpoint =
       '/api/SalesReturnEntry/GetSalesReturnList';
   static const String deleteSalesReturnEntryEndpoint =
       '/api/SalesReturnEntry/DeleteSalesReturnEntry';
