@@ -209,16 +209,40 @@ class _PaymentModeDialogState extends State<PaymentModeDialog> {
 
   bool get _keyboardEnabled => PlatformHelper.isWindowsDesktopEffective;
 
+  void _updateCredit() {
+    if (!mounted) return;
+    double totalPaid = 0;
+    final creditIndex = _modes.indexOf(SalesPaymentMode.credit);
+    
+    for (var i = 0; i < _modes.length; i++) {
+      if (i == creditIndex) continue;
+      totalPaid += _parse(i);
+    }
+    
+    double creditAmount = widget.payableAmount - totalPaid;
+    if (creditAmount < 0) creditAmount = 0;
+    
+    final creditController = _controllers[creditIndex];
+    final newText = creditAmount > 0 ? creditAmount.toStringAsFixed(2) : '';
+    
+    if (creditController.text != newText) {
+      creditController.text = newText;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _controllers = List.generate(_modes.length, (index) {
       final controller = TextEditingController();
-      if (index == 0 && widget.payableAmount > 0) {
+      if (_modes[index] == SalesPaymentMode.credit && widget.payableAmount > 0) {
         controller.text = widget.payableAmount.toStringAsFixed(2);
       }
       controller.addListener(() {
         if (mounted) setState(() => _errorText = null);
+        if (_modes[index] != SalesPaymentMode.credit) {
+          _updateCredit();
+        }
       });
       return controller;
     });
@@ -1052,6 +1076,7 @@ class _PaymentModeDialogState extends State<PaymentModeDialog> {
 
   Widget _buildModeAmountField(int index, ThemeData theme) {
     final label = _modes[index];
+    final isCredit = label == SalesPaymentMode.credit;
     return FocusTraversalOrder(
       order: NumericFocusOrder(index.toDouble()),
       child: TextFormField(
@@ -1059,6 +1084,7 @@ class _PaymentModeDialogState extends State<PaymentModeDialog> {
         controller: _controllers[index],
         focusNode: _focusNodes[index],
         enabled: !_isSubmitting,
+        readOnly: isCredit,
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
         textInputAction: TextInputAction.next,
         onEditingComplete: () {},
@@ -1069,7 +1095,7 @@ class _PaymentModeDialogState extends State<PaymentModeDialog> {
           labelText: label,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           filled: true,
-          fillColor: theme.colorScheme.surface,
+          fillColor: isCredit ? theme.colorScheme.onSurface.withOpacity(0.05) : theme.colorScheme.surface,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
             vertical: 14,

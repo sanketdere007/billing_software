@@ -149,7 +149,7 @@ class InvoicePdfDataFactory {
         qty: detail.qty,
         scheme: detail.freeQty > 0 ? _qtyText(detail.freeQty) : '',
         discount: detail.discountAmount,
-        batch: '',
+        batch: batch?.batchNumber ?? '',
         expiry: '',
         mrp: mrp,
         rate: detail.rate,

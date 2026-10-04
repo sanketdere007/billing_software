@@ -17,7 +17,8 @@ class InvoicePdfGenerator {
 
   static const _columns = <_InvoiceColumn>[
     _InvoiceColumn('Sr. No.', 4.0, pw.Alignment.center),
-    _InvoiceColumn('Product Name', 32.2, pw.Alignment.centerLeft),
+    _InvoiceColumn('Product Name', 24.2, pw.Alignment.centerLeft),
+    _InvoiceColumn('Batch No', 8.0, pw.Alignment.centerLeft),
     _InvoiceColumn('Pack', 9.2, pw.Alignment.center),
     _InvoiceColumn('Qty', 6.0, pw.Alignment.centerRight),
     _InvoiceColumn('Disc', 6.0, pw.Alignment.centerRight),
@@ -236,6 +237,7 @@ class InvoicePdfGenerator {
     final values = <String>[
       serialNo.toString(),
       item.productName,
+      item.batch.isNotEmpty ? item.batch : '-',
       item.pack,
       _qty(item.qty),
       _optionalAmount(item.discount),

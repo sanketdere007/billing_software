@@ -198,8 +198,10 @@ class _CustomerOutstandingDetailReportScreenState
           _isLoading = false;
           _hasMoreData = data.length == _pageSize;
           if (_reportData.isNotEmpty) {
-            _highlightedIndex =
-                _highlightedIndex.clamp(0, _reportData.length - 1);
+            _highlightedIndex = _highlightedIndex.clamp(
+              0,
+              _reportData.length - 1,
+            );
           } else {
             _highlightedIndex = 0;
           }
@@ -218,8 +220,11 @@ class _CustomerOutstandingDetailReportScreenState
     }
   }
 
-  String _getString(Map<String, dynamic> item, List<String> keys,
-      [String defaultValue = '']) {
+  String _getString(
+    Map<String, dynamic> item,
+    List<String> keys, [
+    String defaultValue = '',
+  ]) {
     for (var key in keys) {
       // Try exact match first
       if (item.containsKey(key) && item[key] != null) {
@@ -236,8 +241,11 @@ class _CustomerOutstandingDetailReportScreenState
     return defaultValue;
   }
 
-  double _getDouble(Map<String, dynamic> item, List<String> keys,
-      [double defaultValue = 0.0]) {
+  double _getDouble(
+    Map<String, dynamic> item,
+    List<String> keys, [
+    double defaultValue = 0.0,
+  ]) {
     for (var key in keys) {
       if (item.containsKey(key) && item[key] != null) {
         return double.tryParse(item[key].toString()) ?? defaultValue;
@@ -276,7 +284,8 @@ class _CustomerOutstandingDetailReportScreenState
                       child: Scaffold(
                         appBar: AppBar(
                           title: Text(
-                              'Outstanding Details - ${widget.customerName}'),
+                            'Outstanding Details - ${widget.customerName}',
+                          ),
                           actions: [
                             IconButton(
                               icon: const Icon(Icons.refresh_rounded),
@@ -298,8 +307,10 @@ class _CustomerOutstandingDetailReportScreenState
 
             return Scaffold(
               appBar: AppBar(
-                title: Text('Details - ${widget.customerName}',
-                    style: const TextStyle(fontSize: 16)),
+                title: Text(
+                  'Details - ${widget.customerName}',
+                  style: const TextStyle(fontSize: 16),
+                ),
                 actions: [
                   IconButton(
                     icon: const Icon(Icons.refresh_rounded),
@@ -328,17 +339,23 @@ class _CustomerOutstandingDetailReportScreenState
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline_rounded,
-                size: 48, color: Colors.red),
+            const Icon(
+              Icons.error_outline_rounded,
+              size: 48,
+              color: Colors.red,
+            ),
             const SizedBox(height: 16),
-            Text('Failed to load report',
-                style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              'Failed to load report',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 8),
             Text(_errorMessage!),
             const SizedBox(height: 16),
             FilledButton(
-                onPressed: () => _fetchReport(refresh: true),
-                child: const Text('Retry')),
+              onPressed: () => _fetchReport(refresh: true),
+              child: const Text('Retry'),
+            ),
           ],
         ),
       );
@@ -346,7 +363,8 @@ class _CustomerOutstandingDetailReportScreenState
 
     if (_reportData.isEmpty) {
       return const Center(
-          child: Text('No outstanding records found for this customer.'));
+        child: Text('No outstanding records found for this customer.'),
+      );
     }
 
     return Column(
@@ -356,7 +374,6 @@ class _CustomerOutstandingDetailReportScreenState
           color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.15),
           child: Row(
             children: [
-
               const Spacer(),
               if (isDesktop)
                 Text(
@@ -386,61 +403,72 @@ class _CustomerOutstandingDetailReportScreenState
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 color: theme.colorScheme.surfaceVariant,
-                border: Border(
-                  bottom: BorderSide(color: theme.dividerColor),
-                ),
+                border: Border(bottom: BorderSide(color: theme.dividerColor)),
               ),
               child: Row(
                 children: [
                   SizedBox(
                     width: 50,
-                    child: Text('#',
-                        style: theme.textTheme.titleSmall
-                            ?.copyWith(fontWeight: FontWeight.bold)),
+                    child: Text(
+                      '#',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                   Expanded(
                     flex: 2,
-                    child: Text('Date',
-                        style: theme.textTheme.titleSmall
-                            ?.copyWith(fontWeight: FontWeight.bold)),
+                    child: Text(
+                      'Date',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                   Expanded(
                     flex: 2,
-                    child: Text('Invoice No',
-                        style: theme.textTheme.titleSmall
-                            ?.copyWith(fontWeight: FontWeight.bold)),
+                    child: Text(
+                      'Invoice No',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                  Expanded(
-                    flex: 3,
-                    child: Text('Customer Name',
-                        style: theme.textTheme.titleSmall
-                            ?.copyWith(fontWeight: FontWeight.bold)),
-                  ),
+
                   Expanded(
                     flex: 2,
                     child: Align(
                       alignment: Alignment.centerRight,
-                      child: Text('Total Amount',
-                          style: theme.textTheme.titleSmall
-                              ?.copyWith(fontWeight: FontWeight.bold)),
+                      child: Text(
+                        'Total Amount',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
                   Expanded(
                     flex: 2,
                     child: Align(
                       alignment: Alignment.centerRight,
-                      child: Text('Paid Amount',
-                          style: theme.textTheme.titleSmall
-                              ?.copyWith(fontWeight: FontWeight.bold)),
+                      child: Text(
+                        'Paid Amount',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
                   Expanded(
                     flex: 2,
                     child: Align(
                       alignment: Alignment.centerRight,
-                      child: Text('Pending Amount',
-                          style: theme.textTheme.titleSmall
-                              ?.copyWith(fontWeight: FontWeight.bold)),
+                      child: Text(
+                        'Pending Amount',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -465,29 +493,29 @@ class _CustomerOutstandingDetailReportScreenState
                   final invoiceNo = _getString(item, [
                     'invoiceNo',
                     'salesMaster_InvoiceNo',
-                    'SalesMaster_InvoiceNo'
+                    'SalesMaster_InvoiceNo',
                   ], 'N/A');
                   final dateStr = _getString(item, [
                     'invoiceDate',
                     'salesMaster_InvoiceDate',
                     'date',
-                    'Date'
+                    'Date',
                   ]);
                   final totalAmt = _getDouble(item, [
                     'netAmount',
                     'grandTotal',
                     'totalAmount',
-                    'salesMaster_GrandTotal'
+                    'salesMaster_GrandTotal',
                   ]);
                   final paidAmt = _getDouble(item, [
                     'paidAmount',
                     'salesMaster_PaidAmount',
-                    'receivedAmount'
+                    'receivedAmount',
                   ]);
                   final pendingAmt = _getDouble(item, [
                     'balanceAmount',
                     'pendingAmount',
-                    'salesMaster_BalanceAmount'
+                    'salesMaster_BalanceAmount',
                   ]);
 
                   final dateFormat = DateFormat('dd/MM/yyyy');
@@ -507,21 +535,27 @@ class _CustomerOutstandingDetailReportScreenState
                     child: Container(
                       height: 60,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? theme.colorScheme.primaryContainer
-                                .withOpacity(0.5)
+                            ? theme.colorScheme.primaryContainer.withOpacity(
+                                0.5,
+                              )
                             : (index.isEven
-                                ? theme.colorScheme.surfaceVariant
-                                    .withOpacity(0.3)
-                                : Colors.transparent),
+                                  ? theme.colorScheme.surfaceVariant
+                                        .withOpacity(0.3)
+                                  : Colors.transparent),
                         border: Border(
                           bottom: BorderSide(
-                              color: theme.dividerColor.withOpacity(0.5)),
+                            color: theme.dividerColor.withOpacity(0.5),
+                          ),
                           left: isSelected
                               ? BorderSide(
-                                  color: theme.colorScheme.primary, width: 4)
+                                  color: theme.colorScheme.primary,
+                                  width: 4,
+                                )
                               : BorderSide.none,
                         ),
                       ),
@@ -573,18 +607,14 @@ class _CustomerOutstandingDetailReportScreenState
                             flex: 2,
                             child: Align(
                               alignment: Alignment.centerRight,
-                              child: Text(
-                                totalAmt.toStringAsFixed(2),
-                              ),
+                              child: Text(totalAmt.toStringAsFixed(2)),
                             ),
                           ),
                           Expanded(
                             flex: 2,
                             child: Align(
                               alignment: Alignment.centerRight,
-                              child: Text(
-                                paidAmt.toStringAsFixed(2),
-                              ),
+                              child: Text(paidAmt.toStringAsFixed(2)),
                             ),
                           ),
                           Expanded(
@@ -629,20 +659,33 @@ class _CustomerOutstandingDetailReportScreenState
         final item = _reportData[index];
         final isSelected = index == _highlightedIndex;
 
-        final invoiceNo = _getString(item,
-            ['invoiceNo', 'salesMaster_InvoiceNo', 'SalesMaster_InvoiceNo'], 'N/A');
-        final dateStr = _getString(
-            item, ['invoiceDate', 'salesMaster_InvoiceDate', 'date', 'Date']);
+        final invoiceNo = _getString(item, [
+          'invoiceNo',
+          'salesMaster_InvoiceNo',
+          'SalesMaster_InvoiceNo',
+        ], 'N/A');
+        final dateStr = _getString(item, [
+          'invoiceDate',
+          'salesMaster_InvoiceDate',
+          'date',
+          'Date',
+        ]);
         final totalAmt = _getDouble(item, [
           'netAmount',
           'grandTotal',
           'totalAmount',
-          'salesMaster_GrandTotal'
+          'salesMaster_GrandTotal',
         ]);
-        final paidAmt = _getDouble(
-            item, ['paidAmount', 'salesMaster_PaidAmount', 'receivedAmount']);
-        final pendingAmt = _getDouble(
-            item, ['balanceAmount', 'pendingAmount', 'salesMaster_BalanceAmount']);
+        final paidAmt = _getDouble(item, [
+          'paidAmount',
+          'salesMaster_PaidAmount',
+          'receivedAmount',
+        ]);
+        final pendingAmt = _getDouble(item, [
+          'balanceAmount',
+          'pendingAmount',
+          'salesMaster_BalanceAmount',
+        ]);
 
         final dateFormat = DateFormat('dd/MM/yyyy');
         DateTime parsedDate;
@@ -658,14 +701,19 @@ class _CustomerOutstandingDetailReportScreenState
               ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3)
               : null,
           child: ListTile(
-            title: Text('Invoice: $invoiceNo',
-                style: const TextStyle(fontWeight: FontWeight.bold)),
+            title: Text(
+              'Invoice: $invoiceNo',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                    'Date: ${dateStr.isNotEmpty ? dateFormat.format(parsedDate) : ''}'),
-                Text('Total: ${totalAmt.toStringAsFixed(2)} | Paid: ${paidAmt.toStringAsFixed(2)}'),
+                  'Date: ${dateStr.isNotEmpty ? dateFormat.format(parsedDate) : ''}',
+                ),
+                Text(
+                  'Total: ${totalAmt.toStringAsFixed(2)} | Paid: ${paidAmt.toStringAsFixed(2)}',
+                ),
                 Text(
                   'Pending: ${pendingAmt.toStringAsFixed(2)}',
                   style: const TextStyle(
