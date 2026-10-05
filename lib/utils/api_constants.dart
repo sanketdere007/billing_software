@@ -23,6 +23,8 @@ class ApiConstants {
       '/api/Supplier/GetSupplierOutstandingReport';
   static const String getSupplierPendingInvoiceEndpoint =
       '/api/Supplier/GetSupplierPendingInvoice';
+  static const String getOutstandingReceivableReportEndpoint = 
+      '/api/Report/OutstandingReceivableReport';
 
   // Category Endpoints
   static const String getAllCategoriesEndpoint =

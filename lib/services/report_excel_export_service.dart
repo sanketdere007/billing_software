@@ -2,6 +2,7 @@ import '../models/collection_report.dart';
 import '../models/customer_reports.dart';
 import '../models/supplier_reports.dart';
 import '../models/current_stock.dart';
+import '../models/outstanding_receivable_report.dart';
 import 'excel_export_helper.dart';
 
 class ReportExcelExportService {
@@ -74,6 +75,78 @@ class ReportExcelExportService {
             ExcelExportHelper.formatAmount(items[i].totalOutstanding),
           ],
       ],
+    );
+  }
+
+  static Future<ExcelExportResult> exportOutstandingReceivable(
+    OutstandingReceivableReportData data,
+  ) {
+    final rows = <List<String>>[];
+    
+    // Group invoices by customer
+    final invoicesByCustomer = <int, List<OutstandingReceivableInvoiceDetail>>{};
+    for (final inv in data.invoiceDetails) {
+      invoicesByCustomer.putIfAbsent(inv.custId, () => []).add(inv);
+    }
+
+    for (final partyTotal in data.partyTotals) {
+      // Party Header Row
+      rows.add([
+        '', partyTotal.custName, '', '', '', ''
+      ]);
+
+      // Invoices
+      final invoices = invoicesByCustomer[partyTotal.custId] ?? [];
+      for (int i = 0; i < invoices.length; i++) {
+        final inv = invoices[i];
+        rows.add([
+          '${i + 1}',
+          ExcelExportHelper.formatDate(inv.salesMasterInvoiceDate),
+          inv.salesMasterInvoiceNo,
+          ExcelExportHelper.formatAmount(inv.billAmount),
+          ExcelExportHelper.formatAmount(inv.balanceAmount),
+          inv.daysOutstanding.toString(),
+        ]);
+      }
+
+      // Party Total Row
+      rows.add([
+        '',
+        'Party Total :',
+        '',
+        ExcelExportHelper.formatAmount(partyTotal.totalBillAmount),
+        ExcelExportHelper.formatAmount(partyTotal.totalBalanceAmount),
+        ''
+      ]);
+      
+      // Empty row
+      rows.add(['', '', '', '', '', '']);
+    }
+
+    if (data.grandTotal != null) {
+      rows.add([
+        '',
+        'Total',
+        '',
+        ExcelExportHelper.formatAmount(data.grandTotal!.grandTotalBillAmount),
+        ExcelExportHelper.formatAmount(data.grandTotal!.grandTotalBalanceAmount),
+        ''
+      ]);
+    }
+
+    return ExcelExportHelper.exportSheet(
+      filePrefix: 'Outstanding_Receivable_Report',
+      sheetName: 'Outstanding Receivable',
+      emptyMessage: 'No outstanding receivable records available to export.',
+      columns: const [
+        ExcelColumn('#', align: ExcelCellAlign.center, type: ExcelCellType.number),
+        ExcelColumn('Date'),
+        ExcelColumn('Bill No.'),
+        ExcelColumn('Bill Amt', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn('Bal. Amt', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn('Days', align: ExcelCellAlign.right, type: ExcelCellType.number),
+      ],
+      rows: rows,
     );
   }
 
