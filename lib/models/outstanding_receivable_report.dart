@@ -19,6 +19,8 @@ class OutstandingReceivableInvoiceDetail {
   final double balanceAmount;
   final int daysOutstanding;
   final String rowType;
+  final double billWiseDiscountPercentage;
+  final double billWiseDiscountAmount;
 
   OutstandingReceivableInvoiceDetail({
     required this.custId,
@@ -41,6 +43,8 @@ class OutstandingReceivableInvoiceDetail {
     required this.balanceAmount,
     required this.daysOutstanding,
     required this.rowType,
+    this.billWiseDiscountPercentage = 0.0,
+    this.billWiseDiscountAmount = 0.0,
   });
 
   factory OutstandingReceivableInvoiceDetail.fromJson(Map<String, dynamic> json) {
@@ -67,6 +71,8 @@ class OutstandingReceivableInvoiceDetail {
       balanceAmount: (json['balanceAmount'] ?? 0).toDouble(),
       daysOutstanding: json['daysOutstanding'] ?? 0,
       rowType: json['rowType'] ?? '',
+      billWiseDiscountPercentage: (json['billWiseDiscountPercentage'] ?? json['billWiseDiscountPerecentage'] ?? 0).toDouble(),
+      billWiseDiscountAmount: (json['billWiseDiscountAmount'] ?? 0).toDouble(),
     );
   }
 }

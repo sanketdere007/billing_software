@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../models/outstanding_receivable_report.dart';
 import '../../services/report_service.dart';
 import '../../services/report_excel_export_service.dart';
@@ -9,6 +10,7 @@ import '../../widgets/custom_date_picker_field.dart';
 import 'package:intl/intl.dart';
 
 import '../../widgets/direct_back_scope.dart';
+import 'sales_bill_detail_screen.dart';
 
 class OutstandingReceivableReportScreen extends StatefulWidget {
   const OutstandingReceivableReportScreen({super.key});
@@ -21,10 +23,12 @@ class OutstandingReceivableReportScreen extends StatefulWidget {
 class _OutstandingReceivableReportScreenState
     extends State<OutstandingReceivableReportScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
   Timer? _debounce;
 
   bool _isLoading = false;
   bool _isExporting = false;
+  int _selectedIndex = -1;
 
   DateTime _fromDate = DateTime(DateTime.now().year, DateTime.now().month, 1);
   DateTime _toDate = DateTime.now();
@@ -35,14 +39,57 @@ class _OutstandingReceivableReportScreenState
   @override
   void initState() {
     super.initState();
+    _focusNode.requestFocus();
     _fetchReport();
   }
 
   @override
   void dispose() {
+    _focusNode.dispose();
     _searchController.dispose();
     _debounce?.cancel();
     super.dispose();
+  }
+
+  void _handleKeyEvent(KeyEvent event) {
+    if (event is KeyDownEvent) {
+      if (_reportData == null || _reportData!.invoiceDetails.isEmpty) return;
+
+      if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+        setState(() {
+          if (_selectedIndex < _reportData!.invoiceDetails.length - 1) {
+            _selectedIndex++;
+          }
+        });
+      } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+        setState(() {
+          if (_selectedIndex > 0) {
+            _selectedIndex--;
+          }
+        });
+      } else if (event.logicalKey == LogicalKeyboardKey.enter) {
+        if (_selectedIndex >= 0 && _selectedIndex < _reportData!.invoiceDetails.length) {
+          final inv = _reportData!.invoiceDetails[_selectedIndex];
+          _navigateToDetailScreen(inv);
+        }
+      }
+    }
+  }
+
+  void _navigateToDetailScreen(OutstandingReceivableInvoiceDetail inv) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SalesBillDetailScreen(
+          salesMasterId: inv.salesMasterId,
+          invoiceNo: inv.salesMasterInvoiceNo,
+          customerName: inv.custName,
+          billWiseDiscountPercentage: inv.billWiseDiscountPercentage,
+          billWiseDiscountAmount: inv.billWiseDiscountAmount,
+          billAmount: inv.billAmount,
+        ),
+      ),
+    );
   }
 
   void _onSearchChanged(String query) {
@@ -158,66 +205,83 @@ class _OutstandingReceivableReportScreenState
   @override
   Widget build(BuildContext context) {
     return DirectBackScope(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-        final isDesktop = constraints.maxWidth >= 800;
+      child: Focus(
+        focusNode: _focusNode,
+        onKeyEvent: (node, event) {
+          if (event is KeyDownEvent) {
+            if (event.logicalKey == LogicalKeyboardKey.arrowDown || 
+                event.logicalKey == LogicalKeyboardKey.arrowUp ||
+                event.logicalKey == LogicalKeyboardKey.enter) {
+              _handleKeyEvent(event);
+              return KeyEventResult.handled;
+            }
+          }
+          return KeyEventResult.ignored;
+        },
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isDesktop = constraints.maxWidth >= 800;
 
-        if (isDesktop) {
-          return Scaffold(
-            body: Row(
-              children: [
-                const SizedBox(width: 250, child: AppDrawer(isPermanent: true)),
-                const VerticalDivider(width: 1, thickness: 1),
-                Expanded(
-                  child: Scaffold(
-                    appBar: AppBar(
-                      title: const Text('Outstanding Receivable Report'),
-                      actions: [
-                        IconButton(
-                          icon: const Icon(Icons.refresh_rounded),
-                          tooltip: 'Refresh',
-                          onPressed: _isLoading ? null : _fetchReport,
+            if (isDesktop) {
+              return Scaffold(
+                body: Row(
+                  children: [
+                    const SizedBox(
+                      width: 250,
+                      child: AppDrawer(isPermanent: true),
+                    ),
+                    const VerticalDivider(width: 1, thickness: 1),
+                    Expanded(
+                      child: Scaffold(
+                        appBar: AppBar(
+                          title: const Text('Outstanding Receivable Report'),
+                          actions: [
+                            IconButton(
+                              icon: const Icon(Icons.refresh_rounded),
+                              tooltip: 'Refresh',
+                              onPressed: _isLoading ? null : _fetchReport,
+                            ),
+                            const SizedBox(width: 8),
+                            ..._exportActions(isDesktop: true),
+                            const SizedBox(width: 8),
+                          ],
                         ),
-                        const SizedBox(width: 8),
-                        ..._exportActions(isDesktop: true),
-                        const SizedBox(width: 8),
-                      ],
+                        body: Column(
+                          children: [
+                            _buildFilters(isDesktop: true),
+                            Expanded(child: _buildBodyContent()),
+                          ],
+                        ),
+                      ),
                     ),
-                    body: Column(
-                      children: [
-                        _buildFilters(isDesktop: true),
-                        Expanded(child: _buildBodyContent()),
-                      ],
-                    ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
-          );
-        }
+              );
+            }
 
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Outstanding Receivable'),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.refresh_rounded),
-                tooltip: 'Refresh',
-                onPressed: _isLoading ? null : _fetchReport,
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('Outstanding Receivable'),
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.refresh_rounded),
+                    tooltip: 'Refresh',
+                    onPressed: _isLoading ? null : _fetchReport,
+                  ),
+                  ..._exportActions(isDesktop: false),
+                ],
               ),
-              ..._exportActions(isDesktop: false),
-            ],
-          ),
-          drawer: const AppDrawer(isPermanent: false),
-          body: Column(
-            children: [
-              _buildFilters(isDesktop: false),
-              Expanded(child: _buildBodyContent()),
-            ],
-          ),
-        );
-      },
-    ),
+              drawer: const AppDrawer(isPermanent: false),
+              body: Column(
+                children: [
+                  _buildFilters(isDesktop: false),
+                  Expanded(child: _buildBodyContent()),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 
@@ -381,6 +445,22 @@ class _OutstandingReceivableReportScreenState
                     ),
                   ),
                   Expanded(
+                    flex: 1,
+                    child: Text(
+                      'Dis%',
+                      textAlign: TextAlign.right,
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      'Dis Amt',
+                      textAlign: TextAlign.right,
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  Expanded(
                     flex: 2,
                     child: Text(
                       'Bal. Amt',
@@ -450,51 +530,80 @@ class _OutstandingReceivableReportScreenState
   }
 
   Widget _buildInvoiceRow(OutstandingReceivableInvoiceDetail inv, int index) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: Theme.of(
-              context,
-            ).colorScheme.outlineVariant.withOpacity(0.3),
+    final flatIndex = _reportData!.invoiceDetails.indexOf(inv);
+    final isSelected = _selectedIndex == flatIndex;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedIndex = flatIndex;
+          _focusNode.requestFocus();
+        });
+        _navigateToDetailScreen(inv);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.5)
+              : null,
+          border: Border(
+            bottom: BorderSide(
+              color: Theme.of(
+                context,
+              ).colorScheme.outlineVariant.withOpacity(0.3),
+            ),
           ),
         ),
-      ),
-      child: Row(
-        children: [
-          SizedBox(width: 50, child: Text('${index + 1}')),
-          Expanded(
-            flex: 2,
-            child: Text(
-              inv.salesMasterInvoiceDate != null
-                  ? DateFormat('dd/MM/yyyy').format(inv.salesMasterInvoiceDate!)
-                  : '',
+        child: Row(
+          children: [
+            SizedBox(width: 50, child: Text('${index + 1}')),
+            Expanded(
+              flex: 2,
+              child: Text(
+                inv.salesMasterInvoiceDate != null
+                    ? DateFormat('dd/MM/yyyy').format(inv.salesMasterInvoiceDate!)
+                    : '',
+              ),
             ),
-          ),
-          Expanded(flex: 2, child: Text(inv.salesMasterInvoiceNo)),
-          Expanded(
-            flex: 2,
-            child: Text(
-              inv.billAmount.toStringAsFixed(2),
-              textAlign: TextAlign.right,
+            Expanded(flex: 2, child: Text(inv.salesMasterInvoiceNo)),
+            Expanded(
+              flex: 2,
+              child: Text(
+                inv.billAmount.toStringAsFixed(2),
+                textAlign: TextAlign.right,
+              ),
             ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Text(
-              inv.balanceAmount.toStringAsFixed(2),
-              textAlign: TextAlign.right,
+            Expanded(
+              flex: 1,
+              child: Text(
+                inv.billWiseDiscountPercentage.toStringAsFixed(2),
+                textAlign: TextAlign.right,
+              ),
             ),
-          ),
-          Expanded(
-            flex: 1,
-            child: Text(
-              inv.daysOutstanding.toString(),
-              textAlign: TextAlign.right,
+            Expanded(
+              flex: 2,
+              child: Text(
+                inv.billWiseDiscountAmount.toStringAsFixed(2),
+                textAlign: TextAlign.right,
+              ),
             ),
-          ),
-        ],
+            Expanded(
+              flex: 2,
+              child: Text(
+                inv.balanceAmount.toStringAsFixed(2),
+                textAlign: TextAlign.right,
+              ),
+            ),
+            Expanded(
+              flex: 1,
+              child: Text(
+                inv.daysOutstanding.toString(),
+                textAlign: TextAlign.right,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -530,6 +639,8 @@ class _OutstandingReceivableReportScreenState
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
+              const Expanded(flex: 1, child: SizedBox()), // Empty space for Dis%
+              const Expanded(flex: 2, child: SizedBox()), // Empty space for Dis Amt
               Expanded(
                 flex: 2,
                 child: Text(
@@ -541,7 +652,7 @@ class _OutstandingReceivableReportScreenState
               const Expanded(flex: 1, child: SizedBox()),
             ],
           ),
-          SizedBox(height: 10,),
+          SizedBox(height: 10),
         ],
       ),
     );
@@ -569,6 +680,8 @@ class _OutstandingReceivableReportScreenState
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
           ),
+          const Expanded(flex: 1, child: SizedBox()), // Empty space for Dis%
+          const Expanded(flex: 2, child: SizedBox()), // Empty space for Dis Amt
           Expanded(
             flex: 2,
             child: Text(
