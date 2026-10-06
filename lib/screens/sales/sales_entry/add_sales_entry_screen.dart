@@ -60,6 +60,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
   // Focus Nodes for Main Fields
   final _invoiceDateNode = FocusNode();
   final _customerNode = FocusNode();
+  final ScrollController _scrollController = ScrollController();
 
   final _billDiscountPctController = TextEditingController(text: '0');
   final _billDiscountController = TextEditingController(text: '0');
@@ -151,6 +152,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _invoiceDateNode.dispose();
     _customerNode.dispose();
     _billDiscountPctController.dispose();
@@ -307,7 +309,8 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
 
     final selectedProduct = await showDialog<BatchListItem>(
       context: context,
-      builder: (context) => BatchSelectionDialog(productId: selectedProductItem.prodId),
+      builder: (context) =>
+          BatchSelectionDialog(productId: selectedProductItem.prodId),
     );
 
     if (selectedProduct != null) {
@@ -345,6 +348,11 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
               .batchAvailableStock
               .toString();
         }
+
+        // Add a new empty row immediately if we just populated the last row
+        if (index == _products.length - 1) {
+          _addNewEmptyRow();
+        }
       });
       _calculateTotals();
 
@@ -352,6 +360,14 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           (_products[index]['qtyNode'] as FocusNode).requestFocus();
+          if (index == _products.length - 2 && _scrollController.hasClients) {
+            // A new row was just added, scroll to it if necessary
+            _scrollController.animateTo(
+              _scrollController.position.maxScrollExtent,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+            );
+          }
         }
       });
     } else {
@@ -896,7 +912,15 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
         (key == LogicalKeyboardKey.enter ||
             key == LogicalKeyboardKey.numpadEnter ||
             key == LogicalKeyboardKey.space)) {
-      _selectProductForEmptyRow(index);
+      if (p['product'] != null &&
+          (key == LogicalKeyboardKey.enter ||
+              key == LogicalKeyboardKey.numpadEnter)) {
+        // If product is already selected, Enter moves to Qty field
+        (p['qtyNode'] as FocusNode).requestFocus();
+      } else {
+        // If empty row or Space key, open selection dialog
+        _selectProductForEmptyRow(index);
+      }
       return KeyEventResult.handled;
     }
 
@@ -1155,6 +1179,8 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                     // Scrollable Data Rows
                     Expanded(
                       child: ListView.separated(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.only(bottom: 80),
                         itemCount: _products.length,
                         separatorBuilder: (context, index) => Divider(
                           height: 1,
@@ -1247,10 +1273,16 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                                             context,
                                           ).hasFocus;
                                           return InkWell(
-                                            onTap: () =>
+                                            onTap: () {
+                                              if (p['product'] != null) {
+                                                (p['qtyNode'] as FocusNode)
+                                                    .requestFocus();
+                                              } else {
                                                 _selectProductForEmptyRow(
                                                   index,
-                                                ),
+                                                );
+                                              }
+                                            },
                                             borderRadius: BorderRadius.circular(
                                               6,
                                             ),
@@ -1508,21 +1540,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                                           (p['discPctNode'] as FocusNode)
                                               .requestFocus();
                                         } else {
-                                          if (index == _products.length - 1) {
-                                            setState(() {
-                                              _addNewEmptyRow();
-                                            });
-                                            WidgetsBinding.instance
-                                                .addPostFrameCallback((_) {
-                                                  if (mounted) {
-                                                    final newNode =
-                                                        _products
-                                                                .last['productNode']
-                                                            as FocusNode;
-                                                    newNode.requestFocus();
-                                                  }
-                                                });
-                                          } else {
+                                          if (index + 1 < _products.length) {
                                             (_products[index + 1]['productNode']
                                                     as FocusNode)
                                                 .requestFocus();
@@ -1605,24 +1623,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                                         _calculateTotals();
                                       },
                                       onFieldSubmitted: (_) {
-                                        // If this is the last row, add a new empty row
-                                        if (index == _products.length - 1) {
-                                          setState(() {
-                                            _addNewEmptyRow();
-                                          });
-                                          // Wait for UI to build new row, then focus it
-                                          WidgetsBinding.instance
-                                              .addPostFrameCallback((_) {
-                                                if (mounted) {
-                                                  final newNode =
-                                                      _products
-                                                              .last['productNode']
-                                                          as FocusNode;
-                                                  newNode.requestFocus();
-                                                }
-                                              });
-                                        } else {
-                                          // Otherwise focus next row's product node
+                                        if (index + 1 < _products.length) {
                                           (_products[index + 1]['productNode']
                                                   as FocusNode)
                                               .requestFocus();
