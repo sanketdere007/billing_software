@@ -4,7 +4,9 @@ import '../../../models/batch.dart';
 import '../../../services/batch_service.dart';
 
 class BatchSelectionDialog extends StatefulWidget {
-  const BatchSelectionDialog({super.key});
+  final int? productId;
+
+  const BatchSelectionDialog({super.key, this.productId});
 
   @override
   State<BatchSelectionDialog> createState() => _BatchSelectionDialogState();
@@ -25,6 +27,16 @@ class _BatchSelectionDialogState extends State<BatchSelectionDialog> {
     _searchFocusNode.onKeyEvent = _handleKeyEvent;
 
     batchService.addListener(_onBatchServiceChanged);
+
+    if (widget.productId != null) {
+      batchService.getAllBatches(productId: widget.productId).then((_) {
+        if (mounted) {
+          setState(() {
+            _filteredBatches = batchService.batches;
+          });
+        }
+      });
+    }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -66,7 +78,7 @@ class _BatchSelectionDialogState extends State<BatchSelectionDialog> {
   void _scrollToIndex(int index) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_scrollController.hasClients) return;
-      const double itemHeight = 56.0;
+      const double itemHeight = 72.0;
       final targetOffset = index * itemHeight;
       final currentOffset = _scrollController.offset;
       final viewportHeight = _scrollController.position.viewportDimension;
@@ -277,7 +289,7 @@ class _BatchSelectionDialogState extends State<BatchSelectionDialog> {
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            'No products found.',
+                            'No batches found.',
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
@@ -313,7 +325,7 @@ class _BatchSelectionDialogState extends State<BatchSelectionDialog> {
                             },
                             borderRadius: BorderRadius.circular(8),
                             child: Container(
-                              height: 56,
+                              height: 75,
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(8),
                                 color: isSelected
@@ -366,7 +378,7 @@ class _BatchSelectionDialogState extends State<BatchSelectionDialog> {
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                         Text(
-                                          'Batch: ${batch.batchNumber}  |  Stock: ${batch.batchAvailableStock}',
+                                          'Batch: ${batch.batchNumber}  |  Stock: ${batch.batchAvailableStock}\nMRP: ₹${batch.batchMRP}  |  Selling Price: ₹${batch.batchSellingPrice}',
                                           style: theme.textTheme.bodySmall
                                               ?.copyWith(
                                                 color: isSelected
@@ -377,9 +389,9 @@ class _BatchSelectionDialogState extends State<BatchSelectionDialog> {
                                                     : theme
                                                           .colorScheme
                                                           .onSurfaceVariant,
-                                                fontSize: 12,
+                                                fontSize: 14,
                                               ),
-                                          maxLines: 1,
+                                          maxLines: 2,
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                       ],

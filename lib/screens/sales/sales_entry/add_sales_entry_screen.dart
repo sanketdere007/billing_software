@@ -16,6 +16,8 @@ import '../../../widgets/app_drawer.dart';
 import '../../../widgets/app_message_dialog.dart';
 import '../../../widgets/customer_dropdown.dart';
 import 'batch_selection_dialog.dart';
+import '../../../models/product.dart';
+import '../../purchases/purchase_entry/product_selection_dialog.dart';
 import '../../../widgets/save_clear_shortcuts.dart';
 import '../../../services/invoice_pdf_data_factory.dart';
 import '../../../services/shortcut_service.dart';
@@ -286,9 +288,26 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
   }
 
   Future<void> _selectProductForEmptyRow(int index) async {
+    final selectedProductItem = await showDialog<ProductListItem>(
+      context: context,
+      builder: (context) => const ProductSelectionDialog(),
+    );
+
+    if (selectedProductItem == null) {
+      // Returned without selection, re-focus product node
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          (_products[index]['productNode'] as FocusNode).requestFocus();
+        }
+      });
+      return;
+    }
+
+    if (!mounted) return;
+
     final selectedProduct = await showDialog<BatchListItem>(
       context: context,
-      builder: (context) => const BatchSelectionDialog(),
+      builder: (context) => BatchSelectionDialog(productId: selectedProductItem.prodId),
     );
 
     if (selectedProduct != null) {
@@ -313,6 +332,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
         p['product'] = selectedProduct;
         p['gstPct'] = gstPct;
         p['rate'] = selectedProduct.batchSellingPrice;
+        p['mrp'] = selectedProduct.batchMRP;
         (p['rateController'] as TextEditingController).text = selectedProduct
             .batchSellingPrice
             .toString();
@@ -585,6 +605,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
         final BatchListItem prod = p['product'];
         final double qty = (p['qty'] as num?)?.toDouble() ?? 0;
         final double rate = (p['rate'] as num?)?.toDouble() ?? 0;
+        final double mrp = (p['mrp'] as num?)?.toDouble() ?? rate;
         final double discAmt = (p['discAmt'] as num?)?.toDouble() ?? 0;
         final double gstPct = (p['gstPct'] as num?)?.toDouble() ?? 0;
         final double gstAmt = (p['gstAmt'] as num?)?.toDouble() ?? 0;
@@ -617,7 +638,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
           qty: qty,
           freeQty: 0,
           totalQty: qty,
-          mrp: rate,
+          mrp: mrp,
           sellingPrice: rate,
           rate: rate,
           discountPercentage: discPct,

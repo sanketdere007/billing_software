@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/direct_back_scope.dart';
 
 class SalesBillDetailScreen extends StatefulWidget {
   final int salesMasterId;
@@ -29,6 +30,7 @@ class _SalesBillDetailScreenState extends State<SalesBillDetailScreen> {
   List<dynamic> _details = [];
   Map<String, dynamic>? _master;
   String? _errorMessage;
+  int _highlightedIndex = 0;
 
   final columns = [
     {
@@ -223,9 +225,10 @@ class _SalesBillDetailScreenState extends State<SalesBillDetailScreen> {
   Widget build(BuildContext context) {
     final titleText = '${widget.invoiceNo} - ${widget.customerName}';
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isDesktop = constraints.maxWidth >= 800;
+    return DirectBackScope(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isDesktop = constraints.maxWidth >= 800;
 
         if (isDesktop) {
           return Scaffold(
@@ -268,6 +271,7 @@ class _SalesBillDetailScreenState extends State<SalesBillDetailScreen> {
           body: _buildBody(),
         );
       },
+    ),
     );
   }
 
@@ -415,7 +419,7 @@ class _SalesBillDetailScreenState extends State<SalesBillDetailScreen> {
         // Header
         Container(
           height: 48,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           decoration: BoxDecoration(
             color: Theme.of(
               context,
@@ -436,21 +440,33 @@ class _SalesBillDetailScreenState extends State<SalesBillDetailScreen> {
               final item = _details[index];
               if (item is! Map) return ListTile(title: Text(item.toString()));
 
-              return Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.outlineVariant.withOpacity(0.3),
+              final isSelected = index == _highlightedIndex;
+
+              return InkWell(
+                onTap: () {
+                  setState(() {
+                    _highlightedIndex = index;
+                  });
+                },
+                child: Container(
+                  height: 53,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.primaryContainer.withOpacity(
+                            0.3,
+                          )
+                        : null,
+                    border: Border(
+                      bottom: BorderSide(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.outlineVariant.withOpacity(0.3),
+                      ),
                     ),
                   ),
+                  child: buildRow(index, item, false),
                 ),
-                child: buildRow(index, item, false),
               );
             },
           ),
