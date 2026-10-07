@@ -127,6 +127,10 @@ class ApiConstants {
   static const String getSalesReturnDetailListEndpoint =
       '/api/SalesReturnEntry/GetSalesReturnEntryDetailList';
 
+  // Purchase Return Endpoints
+  static const String insertOrUpdatePurchaseReturnEntryEndpoint =
+      '/api/PurchaseReturnEntry/InsertOrUpdatePurchaseReturnEntry';
+
   // Payment Endpoints
   static const String insertOrUpdatePaymentEndpoint =
       '/api/Payment/InsertOrUpdatePayment';

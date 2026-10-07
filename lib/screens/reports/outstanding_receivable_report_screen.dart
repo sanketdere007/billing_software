@@ -445,22 +445,6 @@ class _OutstandingReceivableReportScreenState
                     ),
                   ),
                   Expanded(
-                    flex: 1,
-                    child: Text(
-                      'Dis%',
-                      textAlign: TextAlign.right,
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      'Dis Amt',
-                      textAlign: TextAlign.right,
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  Expanded(
                     flex: 2,
                     child: Text(
                       'Bal. Amt',
@@ -575,20 +559,6 @@ class _OutstandingReceivableReportScreenState
               ),
             ),
             Expanded(
-              flex: 1,
-              child: Text(
-                inv.billWiseDiscountPercentage.toStringAsFixed(2),
-                textAlign: TextAlign.right,
-              ),
-            ),
-            Expanded(
-              flex: 2,
-              child: Text(
-                inv.billWiseDiscountAmount.toStringAsFixed(2),
-                textAlign: TextAlign.right,
-              ),
-            ),
-            Expanded(
               flex: 2,
               child: Text(
                 inv.balanceAmount.toStringAsFixed(2),
@@ -639,8 +609,6 @@ class _OutstandingReceivableReportScreenState
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
-              const Expanded(flex: 1, child: SizedBox()), // Empty space for Dis%
-              const Expanded(flex: 2, child: SizedBox()), // Empty space for Dis Amt
               Expanded(
                 flex: 2,
                 child: Text(
@@ -680,8 +648,6 @@ class _OutstandingReceivableReportScreenState
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
           ),
-          const Expanded(flex: 1, child: SizedBox()), // Empty space for Dis%
-          const Expanded(flex: 2, child: SizedBox()), // Empty space for Dis Amt
           Expanded(
             flex: 2,
             child: Text(

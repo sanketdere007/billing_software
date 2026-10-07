@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../models/purchase_return.dart';
+import '../utils/api_constants.dart';
+import 'api_service.dart';
 
 class PurchaseReturnService extends ChangeNotifier {
   static final PurchaseReturnService _instance = PurchaseReturnService._internal();
@@ -55,5 +57,37 @@ class PurchaseReturnService extends ChangeNotifier {
     await Future.delayed(const Duration(milliseconds: 300));
     _returns.removeWhere((r) => r.id == id);
     notifyListeners();
+  }
+
+  Future<PurchaseReturnUpsertResponse> insertOrUpdatePurchaseReturnEntry(
+    PurchaseReturnUpsertRequest request,
+  ) async {
+    try {
+      final dynamic response = await apiService.post(
+        ApiConstants.insertOrUpdatePurchaseReturnEntryEndpoint,
+        body: request.toJson(),
+        requiresAuth: true,
+      );
+
+      if (response is! Map<String, dynamic>) {
+        throw ApiException('Invalid response format from server.');
+      }
+
+      final upsertResponse = PurchaseReturnUpsertResponse.fromJson(response);
+
+      if (upsertResponse.status ||
+          (upsertResponse.data != null && upsertResponse.data!.status)) {
+        return upsertResponse;
+      } else {
+        final msg = upsertResponse.message.isNotEmpty
+            ? upsertResponse.message
+            : (upsertResponse.data?.message ?? 'Failed to save purchase return entry.');
+        throw ApiException(msg);
+      }
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException('Error saving purchase return entry: $e');
+    }
   }
 }
