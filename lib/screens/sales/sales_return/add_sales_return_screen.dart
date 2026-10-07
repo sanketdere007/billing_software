@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../../../models/batch.dart';
+import '../../../models/product.dart';
 import '../../../models/sales_return.dart';
 import '../../../models/customer.dart';
 import '../../../models/company.dart';
@@ -17,6 +18,7 @@ import '../../../widgets/app_drawer.dart';
 import '../../../widgets/app_message_dialog.dart';
 import '../../../widgets/customer_dropdown.dart';
 import '../sales_entry/batch_selection_dialog.dart';
+import '../../purchases/purchase_entry/product_selection_dialog.dart';
 import '../../../widgets/save_clear_shortcuts.dart';
 import '../../../services/invoice_pdf_data_factory.dart';
 import '../../../services/shortcut_service.dart';
@@ -73,6 +75,7 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
   final DateFormat _dateFormat = DateFormat('yyyy-MM-dd');
 
   final List<Map<String, dynamic>> _products = [];
+  final ScrollController _listScrollController = ScrollController();
 
   double _totalQuantity = 0.0;
   double _grossTotal = 0.0;
@@ -167,6 +170,7 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
       (p['discPctNode'] as FocusNode).dispose();
       (p['discNode'] as FocusNode).dispose();
     }
+    _listScrollController.dispose();
     super.dispose();
   }
 
@@ -281,9 +285,26 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
   }
 
   Future<void> _selectProductForEmptyRow(int index) async {
+    final selectedProductItem = await showDialog<ProductListItem>(
+      context: context,
+      builder: (context) => const ProductSelectionDialog(),
+    );
+
+    if (selectedProductItem == null) {
+      // Returned without selection, re-focus product node
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          (_products[index]['productNode'] as FocusNode).requestFocus();
+        }
+      });
+      return;
+    }
+
+    if (!mounted) return;
+
     final selectedProduct = await showDialog<BatchListItem>(
       context: context,
-      builder: (context) => const BatchSelectionDialog(),
+      builder: (context) => BatchSelectionDialog(productId: selectedProductItem.prodId),
     );
 
     if (selectedProduct != null) {
@@ -314,12 +335,37 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
       });
       _calculateTotals();
 
-      // Auto-focus quantity field of this row
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          (_products[index]['qtyNode'] as FocusNode).requestFocus();
-        }
-      });
+      // Check if we just filled the last row
+      if (index == _products.length - 1) {
+        setState(() {
+          _addNewEmptyRow();
+        });
+        
+        // Focus the quantity field of the CURRENT row first.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            (_products[index]['qtyNode'] as FocusNode).requestFocus();
+
+            // Then scroll to make the new empty row visible after a short delay
+            Future.delayed(const Duration(milliseconds: 50), () {
+              if (mounted && _listScrollController.hasClients) {
+                _listScrollController.animateTo(
+                  _listScrollController.position.maxScrollExtent,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOut,
+                );
+              }
+            });
+          }
+        });
+      } else {
+        // Auto-focus quantity field of this row
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            (_products[index]['qtyNode'] as FocusNode).requestFocus();
+          }
+        });
+      }
     } else {
       // Returned without selection, re-focus product node
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -690,7 +736,11 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
         (key == LogicalKeyboardKey.enter ||
             key == LogicalKeyboardKey.numpadEnter ||
             key == LogicalKeyboardKey.space)) {
-      _selectProductForEmptyRow(index);
+      if (p['product'] != null) {
+        (p['qtyNode'] as FocusNode).requestFocus();
+      } else {
+        _selectProductForEmptyRow(index);
+      }
       return KeyEventResult.handled;
     }
 
@@ -940,6 +990,7 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
                     const Divider(height: 1),
                     Expanded(
                       child: ListView.separated(
+                        controller: _listScrollController,
                         itemCount: _products.length,
                         separatorBuilder: (context, index) => Divider(
                           height: 1,
@@ -1032,10 +1083,13 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
                                             context,
                                           ).hasFocus;
                                           return InkWell(
-                                            onTap: () =>
-                                                _selectProductForEmptyRow(
-                                                  index,
-                                                ),
+                                            onTap: () {
+                                              if (p['product'] != null) {
+                                                (p['qtyNode'] as FocusNode).requestFocus();
+                                              } else {
+                                                _selectProductForEmptyRow(index);
+                                              }
+                                            },
                                             borderRadius: BorderRadius.circular(
                                               6,
                                             ),
@@ -1191,24 +1245,8 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
                                           (p['discPctNode'] as FocusNode)
                                               .requestFocus();
                                         } else {
-                                          if (index == _products.length - 1) {
-                                            setState(() {
-                                              _addNewEmptyRow();
-                                            });
-                                            WidgetsBinding.instance
-                                                .addPostFrameCallback((_) {
-                                                  if (mounted) {
-                                                    final newNode =
-                                                        _products
-                                                                .last['productNode']
-                                                            as FocusNode;
-                                                    newNode.requestFocus();
-                                                  }
-                                                });
-                                          } else {
-                                            (_products[index + 1]['productNode']
-                                                    as FocusNode)
-                                                .requestFocus();
+                                          if (index < _products.length - 1) {
+                                            (_products[index + 1]['productNode'] as FocusNode).requestFocus();
                                           }
                                         }
                                       },
@@ -1287,24 +1325,8 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
                                         _calculateTotals();
                                       },
                                       onFieldSubmitted: (_) {
-                                        if (index == _products.length - 1) {
-                                          setState(() {
-                                            _addNewEmptyRow();
-                                        });
-                                          WidgetsBinding.instance
-                                              .addPostFrameCallback((_) {
-                                                if (mounted) {
-                                                  final newNode =
-                                                      _products
-                                                              .last['productNode']
-                                                          as FocusNode;
-                                                  newNode.requestFocus();
-                                                }
-                                              });
-                                        } else {
-                                          (_products[index + 1]['productNode']
-                                                  as FocusNode)
-                                              .requestFocus();
+                                        if (index < _products.length - 1) {
+                                          (_products[index + 1]['productNode'] as FocusNode).requestFocus();
                                         }
                                       },
                                     ),
