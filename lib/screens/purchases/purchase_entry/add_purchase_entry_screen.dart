@@ -34,10 +34,12 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
   final _supplierNode = FocusNode();
   final FocusNode _supplierFocusNode = FocusNode();
   final ScrollController _horizontalScrollController = ScrollController();
+  final ScrollController _verticalScrollController = ScrollController();
 
   final _invoiceNoController = TextEditingController();
   final _invoiceAmountController = TextEditingController();
   final _billDiscountController = TextEditingController(text: '0');
+  final _billDiscountPercentController = TextEditingController(text: '0');
   DateTime _selectedDate = DateTime(
     DateTime.now().year,
     DateTime.now().month,
@@ -195,7 +197,8 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
         _selectedDate = DateTime.now();
       }
       _selectedSupplier = master.supplierId;
-      _billDiscountController.text = master.discountAmount.toStringAsFixed(2);
+      _billDiscountController.text = master.billWiseDiscountAmount.toStringAsFixed(2);
+      _billDiscountPercentController.text = master.billWiseDiscountPercentage.toStringAsFixed(2);
       _invoiceAmountController.text = master.netAmount.toStringAsFixed(2);
 
       for (var d in details) {
@@ -310,6 +313,18 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
     });
   }
 
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _verticalScrollController.hasClients) {
+        _verticalScrollController.animateTo(
+          _verticalScrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
   @override
   void dispose() {
     _invoiceNoNode.dispose();
@@ -318,10 +333,12 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
     _supplierNode.dispose();
     _supplierFocusNode.dispose();
     _horizontalScrollController.dispose();
+    _verticalScrollController.dispose();
 
     _invoiceNoController.dispose();
     _invoiceAmountController.dispose();
     _billDiscountController.dispose();
+    _billDiscountPercentController.dispose();
 
     for (var p in _products) {
       (p['batchNoController'] as TextEditingController).dispose();
@@ -438,6 +455,13 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
         // Keep existing values or reset if needed, currently keeping default 1.0 qty
       });
       _calculateTotals();
+
+      if (index == _products.length - 1) {
+        setState(() {
+          _addNewEmptyRow();
+        });
+        _scrollToBottom();
+      }
 
       // Auto-focus batchNo field of this row
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -588,6 +612,8 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
         createdBy: empId,
         modifiedBy: empId,
         ledgerId: ledgerId,
+        billWiseDiscountPercentage: double.tryParse(_billDiscountPercentController.text) ?? 0.0,
+        billWiseDiscountAmount: double.tryParse(_billDiscountController.text) ?? 0.0,
       );
 
       final detailData = validProducts.map((p) {
@@ -646,6 +672,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
       _invoiceNoController.clear();
       _invoiceAmountController.clear();
       _billDiscountController.text = '0';
+      _billDiscountPercentController.text = '0';
       _selectedSupplier = null;
 
       // Clear and re-init products
@@ -715,7 +742,11 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
         (key == LogicalKeyboardKey.enter ||
             key == LogicalKeyboardKey.numpadEnter ||
             key == LogicalKeyboardKey.space)) {
-      _selectProductForEmptyRow(index);
+      if (p['product'] != null) {
+        (p['batchNoNode'] as FocusNode).requestFocus();
+      } else {
+        _selectProductForEmptyRow(index);
+      }
       return KeyEventResult.handled;
     }
 
@@ -744,6 +775,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
             setState(() {
               _addNewEmptyRow();
             });
+            _scrollToBottom();
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) {
                 final newNode = _products.last['productNode'] as FocusNode;
@@ -763,6 +795,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
           setState(() {
             _addNewEmptyRow();
           });
+          _scrollToBottom();
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
               final newNode = _products.last['productNode'] as FocusNode;
@@ -1080,6 +1113,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                     // Scrollable Data Rows
                     Expanded(
                       child: ListView.separated(
+                        controller: _verticalScrollController,
                         itemCount: _products.length,
                         separatorBuilder: (context, index) => Divider(
                           height: 1,
@@ -1194,10 +1228,13 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                                             context,
                                           ).hasFocus;
                                           return InkWell(
-                                            onTap: () =>
-                                                _selectProductForEmptyRow(
-                                                  index,
-                                                ),
+                                            onTap: () {
+                                              if (isEmptyRow) {
+                                                _selectProductForEmptyRow(index);
+                                              } else {
+                                                (p['batchNoNode'] as FocusNode).requestFocus();
+                                              }
+                                            },
                                             borderRadius: BorderRadius.circular(
                                               6,
                                             ),
@@ -1483,6 +1520,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                                             setState(() {
                                               _addNewEmptyRow();
                                             });
+                                            _scrollToBottom();
                                             WidgetsBinding.instance
                                                 .addPostFrameCallback((_) {
                                                   if (mounted) {
@@ -1605,6 +1643,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                                           setState(() {
                                             _addNewEmptyRow();
                                           });
+                                          _scrollToBottom();
                                           // Wait for UI to build new row, then focus it
                                           WidgetsBinding.instance
                                               .addPostFrameCallback((_) {
@@ -1894,6 +1933,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                               setState(() {
                                 _addNewEmptyRow();
                               });
+                              _scrollToBottom();
                             }
                             WidgetsBinding.instance.addPostFrameCallback((_) {
                               if (mounted) {
@@ -1964,7 +2004,31 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                         '₹${_totalGST.toStringAsFixed(2)}',
                       ),
                       SizedBox(
-                        width: 150,
+                        width: 100,
+                        child: TextFormField(
+                          controller: _billDiscountPercentController,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                              RegExp(r'^\d+\.?\d*'),
+                            ),
+                          ],
+                          decoration: const InputDecoration(
+                            labelText: 'Dis%',
+                            border: OutlineInputBorder(),
+                            isDense: true,
+                            suffixText: '%',
+                          ),
+                          onChanged: (val) {
+                            double pct = double.tryParse(val) ?? 0.0;
+                            double subTotal = _grossTotal - _totalProductDiscount + _totalGST;
+                            double amt = (subTotal * pct) / 100;
+                            _billDiscountController.text = amt.toStringAsFixed(2);
+                          },
+                        ),
+                      ),
+                      SizedBox(
+                        width: 120,
                         child: TextFormField(
                           controller: _billDiscountController,
                           keyboardType: TextInputType.number,
@@ -1974,13 +2038,24 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                             ),
                           ],
                           decoration: const InputDecoration(
-                            labelText: 'Bill Discount',
+                            labelText: 'Disc Amt',
                             border: OutlineInputBorder(),
                             isDense: true,
                             prefixText: '₹ ',
                           ),
+                          onChanged: (val) {
+                            double amt = double.tryParse(val) ?? 0.0;
+                            double subTotal = _grossTotal - _totalProductDiscount + _totalGST;
+                            if (subTotal > 0) {
+                              double pct = (amt / subTotal) * 100;
+                              _billDiscountPercentController.text = pct.toStringAsFixed(2);
+                            } else {
+                              _billDiscountPercentController.text = '0.0';
+                            }
+                          },
                         ),
                       ),
+
                     ],
                   ),
                 ),

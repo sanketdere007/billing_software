@@ -103,6 +103,8 @@ class PurchaseEntryMasterData {
   final int createdBy;
   final int modifiedBy;
   final int ledgerId;
+  final double billWiseDiscountPercentage;
+  final double billWiseDiscountAmount;
 
   PurchaseEntryMasterData({
     this.compId = 0,
@@ -122,6 +124,8 @@ class PurchaseEntryMasterData {
     this.createdBy = 0,
     this.modifiedBy = 0,
     this.ledgerId = 0,
+    this.billWiseDiscountPercentage = 0.0,
+    this.billWiseDiscountAmount = 0.0,
   });
 
   Map<String, dynamic> toJson() {
@@ -143,6 +147,8 @@ class PurchaseEntryMasterData {
       "purchaseMaster_CreatedBy": createdBy,
       "purchaseMaster_ModifiedBy": modifiedBy,
       "purchaseMaster_LedgerId": ledgerId,
+      "purchaseMaster_BillWiseDiscountPercentage": billWiseDiscountPercentage,
+      "purchaseMaster_BillWiseDiscountAmount": billWiseDiscountAmount,
     };
   }
 }
@@ -276,6 +282,8 @@ class PurchaseMasterViewItem {
   final String invoiceDate;
   final double subTotal;
   final double discountAmount;
+  final double billWiseDiscountPercentage;
+  final double billWiseDiscountAmount;
   final double gstAmount;
   final double otherCharges;
   final double netAmount;
@@ -299,6 +307,8 @@ class PurchaseMasterViewItem {
     required this.invoiceDate,
     required this.subTotal,
     required this.discountAmount,
+    required this.billWiseDiscountPercentage,
+    required this.billWiseDiscountAmount,
     required this.gstAmount,
     required this.otherCharges,
     required this.netAmount,
@@ -324,6 +334,8 @@ class PurchaseMasterViewItem {
       invoiceDate: json['purchaseMaster_InvoiceDate'] ?? '',
       subTotal: (json['purchaseMaster_SubTotal'] ?? 0.0).toDouble(),
       discountAmount: (json['purchaseMaster_DiscountAmount'] ?? 0.0).toDouble(),
+      billWiseDiscountPercentage: (json['purchaseMaster_BillWiseDiscountPercentage'] ?? 0.0).toDouble(),
+      billWiseDiscountAmount: (json['purchaseMaster_BillWiseDiscountAmount'] ?? 0.0).toDouble(),
       gstAmount: (json['purchaseMaster_GSTAmount'] ?? 0.0).toDouble(),
       otherCharges: (json['purchaseMaster_OtherCharges'] ?? 0.0).toDouble(),
       netAmount: (json['purchaseMaster_NetAmount'] ?? 0.0).toDouble(),
