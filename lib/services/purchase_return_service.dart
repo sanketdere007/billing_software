@@ -90,4 +90,84 @@ class PurchaseReturnService extends ChangeNotifier {
       throw ApiException('Error saving purchase return entry: $e');
     }
   }
+
+  Future<PurchaseReturnMasterViewResponse> getPurchaseReturnMasterViewList({
+    required int compId,
+    required int branchId,
+    int purchaseReturnMasterId = 0,
+    int supplierId = 0,
+    String search = "",
+    required String fromDate,
+    required String toDate,
+    int page = 1,
+    int pageSize = 10,
+  }) async {
+    try {
+      final requestBody = {
+        "compId": compId,
+        "branchId": branchId,
+        "purchaseReturnMaster_Id": purchaseReturnMasterId,
+        "supplierId": supplierId,
+        "search": search,
+        "fromDate": fromDate,
+        "toDate": toDate,
+        "page": page,
+        "pageSize": pageSize
+      };
+
+      final dynamic response = await apiService.post(
+        ApiConstants.getPurchaseReturnMasterViewListEndpoint,
+        body: requestBody,
+        requiresAuth: true,
+      );
+
+      if (response is! Map<String, dynamic>) {
+        throw ApiException('Invalid response format from server.');
+      }
+
+      final masterResponse = PurchaseReturnMasterViewResponse.fromJson(response);
+
+      if (masterResponse.status) {
+        return masterResponse;
+      } else {
+        throw ApiException(masterResponse.message.isNotEmpty ? masterResponse.message : 'Failed to fetch purchase return master list.');
+      }
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException('Error fetching purchase return master list: $e');
+    }
+  }
+
+  Future<List<PurchaseReturnDetailViewItem>> getPurchaseReturnDetailViewList(int masterId, {int compId = 1, int branchId = 1}) async {
+    try {
+      final requestBody = {
+        "purchaseReturnMaster_Id": masterId,
+        "compId": compId,
+        "branchId": branchId,
+      };
+
+      final dynamic response = await apiService.post(
+        ApiConstants.getPurchaseReturnDetailViewListEndpoint,
+        body: requestBody,
+        requiresAuth: true,
+      );
+
+      if (response is! Map<String, dynamic>) {
+        throw ApiException('Invalid response format from server.');
+      }
+
+      final detailResponse = PurchaseReturnDetailViewResponse.fromJson(response);
+
+      if (detailResponse.status) {
+        return detailResponse.data;
+      } else {
+        throw ApiException(detailResponse.message.isNotEmpty ? detailResponse.message : 'Failed to fetch purchase return details.');
+      }
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException('Error fetching purchase return detail list: $e');
+    }
+  }
 }

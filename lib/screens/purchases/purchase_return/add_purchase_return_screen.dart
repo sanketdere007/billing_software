@@ -21,6 +21,7 @@ import '../../purchases/purchase_entry/product_selection_dialog.dart';
 import '../../../widgets/save_clear_shortcuts.dart';
 import '../../../services/shortcut_service.dart';
 import 'purchase_return_list_screen.dart';
+import 'purchase_return_view_list_screen.dart';
 
 class PurchasePersistResult {
   final PurchaseReturnUpsertResponse purchaseResponse;
@@ -46,7 +47,8 @@ class AddPurchaseReturnScreen extends StatefulWidget {
   const AddPurchaseReturnScreen({super.key});
 
   @override
-  State<AddPurchaseReturnScreen> createState() => _AddPurchaseReturnScreenState();
+  State<AddPurchaseReturnScreen> createState() =>
+      _AddPurchaseReturnScreenState();
 }
 
 class _AddPurchaseReturnScreenState extends State<AddPurchaseReturnScreen> {
@@ -192,7 +194,8 @@ class _AddPurchaseReturnScreenState extends State<AddPurchaseReturnScreen> {
         p['discAmt'] = disc;
         final amtStr = disc.toStringAsFixed(2).replaceAll(RegExp(r'\.00$'), '');
         if ((p['discAmtController'] as TextEditingController).text != amtStr &&
-            (p['discAmtController'] as TextEditingController).text != disc.toString()) {
+            (p['discAmtController'] as TextEditingController).text !=
+                disc.toString()) {
           (p['discAmtController'] as TextEditingController).text = amtStr;
         }
       } else {
@@ -200,9 +203,13 @@ class _AddPurchaseReturnScreenState extends State<AddPurchaseReturnScreen> {
         if (gross > 0) {
           double pct = (disc / gross) * 100;
           p['discPct'] = pct;
-          final pctStr = pct.toStringAsFixed(2).replaceAll(RegExp(r'\.00$'), '');
-          if ((p['discPctController'] as TextEditingController).text != pctStr &&
-              (p['discPctController'] as TextEditingController).text != pct.toString()) {
+          final pctStr = pct
+              .toStringAsFixed(2)
+              .replaceAll(RegExp(r'\.00$'), '');
+          if ((p['discPctController'] as TextEditingController).text !=
+                  pctStr &&
+              (p['discPctController'] as TextEditingController).text !=
+                  pct.toString()) {
             (p['discPctController'] as TextEditingController).text = pctStr;
           }
         } else {
@@ -298,7 +305,8 @@ class _AddPurchaseReturnScreenState extends State<AddPurchaseReturnScreen> {
 
     final selectedProduct = await showDialog<BatchListItem>(
       context: context,
-      builder: (context) => BatchSelectionDialog(productId: selectedProductItem.prodId),
+      builder: (context) =>
+          BatchSelectionDialog(productId: selectedProductItem.prodId),
     );
 
     if (selectedProduct != null) {
@@ -332,7 +340,7 @@ class _AddPurchaseReturnScreenState extends State<AddPurchaseReturnScreen> {
         setState(() {
           _addNewEmptyRow();
         });
-        
+
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
             (_products[index]['qtyNode'] as FocusNode).requestFocus();
@@ -440,7 +448,10 @@ class _AddPurchaseReturnScreenState extends State<AddPurchaseReturnScreen> {
     });
   }
 
-  bool _isInterstatePurchase(CompanyListItem? company, SupplierListItem? supplier) {
+  bool _isInterstatePurchase(
+    CompanyListItem? company,
+    SupplierListItem? supplier,
+  ) {
     final companyGst = (company?.compGSTNo ?? '').trim().toUpperCase();
     final supplierGst = (supplier?.suppGSTNo ?? '').trim().toUpperCase();
     if (companyGst.length >= 2 && supplierGst.length >= 2) {
@@ -458,7 +469,10 @@ class _AddPurchaseReturnScreenState extends State<AddPurchaseReturnScreen> {
 
   Future<void> _saveEntry() async {
     if (_isViewMode) {
-      await showWarningDialog(context, 'Cannot save in view mode. Please click Clear to start a new entry.');
+      await showWarningDialog(
+        context,
+        'Cannot save in view mode. Please click Clear to start a new entry.',
+      );
       return;
     }
     if (_isLoading) return;
@@ -504,7 +518,10 @@ class _AddPurchaseReturnScreenState extends State<AddPurchaseReturnScreen> {
 
       if (!mounted) return;
       _resetForm();
-      await showSuccessDialog(context, 'Purchase Return saved successfully.\nReturn No: ${result.purchaseResponse.data?.returnNo ?? ''}');
+      await showSuccessDialog(
+        context,
+        'Purchase Return saved successfully.\nReturn No: ${result.purchaseResponse.data?.returnNo ?? ''}',
+      );
     } catch (e) {
       if (mounted) {
         await showErrorDialog(context, 'Error after saving: $e');
@@ -552,7 +569,9 @@ class _AddPurchaseReturnScreenState extends State<AddPurchaseReturnScreen> {
         final double gstAmt = (p['gstAmt'] as num?)?.toDouble() ?? 0;
         final double net = (p['net'] as num?)?.toDouble() ?? 0;
         final double gross = qty * rate;
-        final double discPct = (p['discPct'] as num?)?.toDouble() ?? (gross > 0 ? (discAmt / gross) * 100 : 0);
+        final double discPct =
+            (p['discPct'] as num?)?.toDouble() ??
+            (gross > 0 ? (discAmt / gross) * 100 : 0);
 
         return PurchaseReturnDetailData(
           productId: prod.batchProductId,
@@ -583,8 +602,10 @@ class _AddPurchaseReturnScreenState extends State<AddPurchaseReturnScreen> {
         returnDate: _selectedDate.toIso8601String(),
         subTotal: _grossTotal,
         discountAmount: _totalProductDiscount,
-        billWiseDiscountPercentage: double.tryParse(_billDiscountPctController.text) ?? 0.0,
-        billWiseDiscountAmount: double.tryParse(_billDiscountController.text) ?? 0.0,
+        billWiseDiscountPercentage:
+            double.tryParse(_billDiscountPctController.text) ?? 0.0,
+        billWiseDiscountAmount:
+            double.tryParse(_billDiscountController.text) ?? 0.0,
         gstAmount: _totalGST,
         otherCharges: 0,
         netAmount: _finalPayable,
@@ -601,9 +622,8 @@ class _AddPurchaseReturnScreenState extends State<AddPurchaseReturnScreen> {
         detailData: detailData,
       );
 
-      final response = await PurchaseReturnService().insertOrUpdatePurchaseReturnEntry(
-        request,
-      );
+      final response = await PurchaseReturnService()
+          .insertOrUpdatePurchaseReturnEntry(request);
       final productRows = validProducts
           .map((p) => Map<String, dynamic>.from(p))
           .toList();
@@ -654,12 +674,108 @@ class _AddPurchaseReturnScreenState extends State<AddPurchaseReturnScreen> {
       );
       _calculateTotals();
     });
-    
+
     _batchService.getAllBatches();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _supplierNode.requestFocus();
     });
+  }
+
+  Future<void> _loadMasterAndDetails(
+    PurchaseReturnMasterViewItem master,
+  ) async {
+    setState(() {
+      _isLoading = true;
+      _isViewMode = true;
+      _products.clear();
+    });
+
+    try {
+      final details = await PurchaseReturnService()
+          .getPurchaseReturnDetailViewList(master.purchaseReturnMasterId);
+
+      setState(() {
+        _selectedDate = DateTime.parse(master.returnDate);
+        _selectedSupplier = master.supplierId;
+        _billDiscountPctController.text = master.billWiseDiscountPercentage
+            .toString();
+        _billDiscountController.text = master.billWiseDiscountAmount.toString();
+
+        if (details.isEmpty) {
+          _addNewEmptyRow();
+        } else {
+          for (var detail in details) {
+            final batch = BatchListItem(
+              batchId: detail.batchId,
+              batchProductId: detail.productId,
+              prodName: detail.productName,
+              prodCode: detail.productCode,
+              unitName: '',
+              prodUnitValue: 1.0,
+              batchCompId: detail.compId,
+              compName: '',
+              batchBranchId: detail.branchId,
+              branchName: '',
+              batchStock: detail.batchStock,
+              batchAvailableStock: detail.batchAvailableStock,
+              batchLandingPrice: detail.landingPrice,
+              batchPurchasePrice: detail.purchasePrice,
+              batchMRP: detail.mrp,
+              batchSellingPrice: detail.sellingPrice,
+              prodGSTPercent: detail.gstPercent,
+              batchNumber: detail.batchNumber,
+            );
+
+            _products.add({
+              'product': batch,
+              'qty': detail.qty,
+              'rate': detail.purchasePrice,
+              'discPct': detail.discountPercent,
+              'discAmt': detail.discountAmount,
+              'gstPct': detail.gstPercent,
+              'gross': detail.qty * detail.purchasePrice,
+              'discounted':
+                  (detail.qty * detail.purchasePrice) - detail.discountAmount,
+              'gstAmt': detail.gstAmount,
+              'net': detail.totalAmount,
+              'qtyController': TextEditingController(
+                text: detail.qty.toString(),
+              ),
+              'rateController': TextEditingController(
+                text: detail.purchasePrice.toString(),
+              ),
+              'discPctController': TextEditingController(
+                text: detail.discountPercent.toString(),
+              ),
+              'discAmtController': TextEditingController(
+                text: detail.discountAmount.toString(),
+              ),
+              'productNode': FocusNode(),
+              'qtyNode': FocusNode(),
+              'rateNode': FocusNode(),
+              'discPctNode': FocusNode(),
+              'discNode': FocusNode(),
+            });
+          }
+        }
+      });
+      _calculateTotals();
+    } catch (e) {
+      if (mounted) {
+        await showErrorDialog(
+          context,
+          'Error loading purchase return details: $e',
+        );
+        _resetForm();
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   KeyEventResult _handleGridKeyEvent(
@@ -1041,9 +1157,12 @@ class _AddPurchaseReturnScreenState extends State<AddPurchaseReturnScreen> {
                                           return InkWell(
                                             onTap: () {
                                               if (p['product'] != null) {
-                                                (p['qtyNode'] as FocusNode).requestFocus();
+                                                (p['qtyNode'] as FocusNode)
+                                                    .requestFocus();
                                               } else {
-                                                _selectProductForEmptyRow(index);
+                                                _selectProductForEmptyRow(
+                                                  index,
+                                                );
                                               }
                                             },
                                             borderRadius: BorderRadius.circular(
@@ -1202,7 +1321,9 @@ class _AddPurchaseReturnScreenState extends State<AddPurchaseReturnScreen> {
                                               .requestFocus();
                                         } else {
                                           if (index < _products.length - 1) {
-                                            (_products[index + 1]['productNode'] as FocusNode).requestFocus();
+                                            (_products[index + 1]['productNode']
+                                                    as FocusNode)
+                                                .requestFocus();
                                           }
                                         }
                                       },
@@ -1250,7 +1371,8 @@ class _AddPurchaseReturnScreenState extends State<AddPurchaseReturnScreen> {
                                         _calculateTotals();
                                       },
                                       onFieldSubmitted: (_) {
-                                        (p['discNode'] as FocusNode).requestFocus();
+                                        (p['discNode'] as FocusNode)
+                                            .requestFocus();
                                       },
                                     ),
                                     colDiscPct,
@@ -1282,7 +1404,9 @@ class _AddPurchaseReturnScreenState extends State<AddPurchaseReturnScreen> {
                                       },
                                       onFieldSubmitted: (_) {
                                         if (index < _products.length - 1) {
-                                          (_products[index + 1]['productNode'] as FocusNode).requestFocus();
+                                          (_products[index + 1]['productNode']
+                                                  as FocusNode)
+                                              .requestFocus();
                                         }
                                       },
                                     ),
@@ -1297,9 +1421,9 @@ class _AddPurchaseReturnScreenState extends State<AddPurchaseReturnScreen> {
                                       isEmptyRow
                                           ? '-'
                                           : ((p['gstPct'] as num?)
-                                                      ?.toDouble() ??
-                                                  0)
-                                              .toStringAsFixed(2),
+                                                        ?.toDouble() ??
+                                                    0)
+                                                .toStringAsFixed(2),
                                       style: TextStyle(
                                         color: isEmptyRow
                                             ? theme.hintColor
@@ -1314,9 +1438,9 @@ class _AddPurchaseReturnScreenState extends State<AddPurchaseReturnScreen> {
                                       isEmptyRow
                                           ? '-'
                                           : ((p['gstAmt'] as num?)
-                                                      ?.toDouble() ??
-                                                  0)
-                                              .toStringAsFixed(2),
+                                                        ?.toDouble() ??
+                                                    0)
+                                                .toStringAsFixed(2),
                                       style: TextStyle(
                                         color: isEmptyRow
                                             ? theme.hintColor
@@ -1642,23 +1766,24 @@ class _AddPurchaseReturnScreenState extends State<AddPurchaseReturnScreen> {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                            Padding(
-                              padding: const EdgeInsets.only(right: 12.0),
-                              child: SizedBox(
-                                height: 40,
-                                child: OutlinedButton(
-                                  onPressed: _resetForm,
-                                  style: OutlinedButton.styleFrom(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ), child: const Text(
+                          Padding(
+                            padding: const EdgeInsets.only(right: 12.0),
+                            child: SizedBox(
+                              height: 40,
+                              child: OutlinedButton(
+                                onPressed: _resetForm,
+                                style: OutlinedButton.styleFrom(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                child: const Text(
                                   'Clear (F10)',
                                   style: TextStyle(fontSize: 16),
                                 ),
-                                ),
                               ),
                             ),
+                          ),
                           SizedBox(
                             width: 140,
                             height: 40,
@@ -1741,9 +1866,15 @@ class _AddPurchaseReturnScreenState extends State<AddPurchaseReturnScreen> {
   }
 
   Future<void> _openPurchaseReturnView() async {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const PurchaseReturnListScreen()),
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const PurchaseReturnViewListScreen(),
+      ),
     );
+
+    if (result != null && result is PurchaseReturnMasterViewItem) {
+      _loadMasterAndDetails(result);
+    }
   }
 
   Widget _buildSummaryItem(String label, String value) {

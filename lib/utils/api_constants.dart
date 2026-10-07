@@ -130,6 +130,10 @@ class ApiConstants {
   // Purchase Return Endpoints
   static const String insertOrUpdatePurchaseReturnEntryEndpoint =
       '/api/PurchaseReturnEntry/InsertOrUpdatePurchaseReturnEntry';
+  static const String getPurchaseReturnMasterViewListEndpoint =
+      '/api/PurchaseReturnEntry/GetPurchaseReturnMasterViewList';
+  static const String getPurchaseReturnDetailViewListEndpoint =
+      '/api/PurchaseReturnEntry/GetPurchaseReturnDetailViewList';
 
   // Payment Endpoints
   static const String insertOrUpdatePaymentEndpoint =
