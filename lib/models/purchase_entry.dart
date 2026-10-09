@@ -212,20 +212,157 @@ class PurchaseEntryDetailData {
   }
 }
 
-class PurchaseEntryUpsertRequest {
-  final PurchaseEntryMasterData masterData;
-  final List<PurchaseEntryDetailData> detailData;
+class PurchaseEntryPaymentData {
+  final int paymentMasterId;
+  final int compId;
+  final int branchId;
+  final int supplierId;
+  final int customerId;
+  final String paymentNo;
+  final String paymentDate;
+  final String type;
+  final double totalAmount;
+  final int invoiceId;
+  final String invoiceNo;
+  final String invoiceDate;
+  final int accountId;
+  final double cashAmount;
+  final double upiAmount;
+  final double chequeAmount;
+  final double bankAmount;
+  final double cardAmount;
+  final double otherAmount;
+  final String cashRemark;
+  final String upiTransactionNo;
+  final String upiReferenceNo;
+  final String chequeNo;
+  final String? chequeDate;
+  final String chequeBankName;
+  final String chequeBranchName;
+  final String bankTransferType;
+  final String bankName;
+  final String bankAccountNo;
+  final String bankTransactionNo;
+  final String bankReferenceNo;
+  final String? bankDate;
+  final String otherPaymentType;
+  final String otherReferenceNo;
+  final String? otherDate;
+  final String otherRemark;
+  final String remark;
+  final String status;
+  final int createdBy;
+  final int modifiedBy;
 
-  PurchaseEntryUpsertRequest({
-    required this.masterData,
-    required this.detailData,
+  PurchaseEntryPaymentData({
+    this.paymentMasterId = 0,
+    this.compId = 0,
+    this.branchId = 0,
+    this.supplierId = 0,
+    this.customerId = 0,
+    this.paymentNo = '',
+    required this.paymentDate,
+    this.type = 'Purchase',
+    this.totalAmount = 0,
+    this.invoiceId = 0,
+    this.invoiceNo = '',
+    required this.invoiceDate,
+    this.accountId = 0,
+    this.cashAmount = 0,
+    this.upiAmount = 0,
+    this.chequeAmount = 0,
+    this.bankAmount = 0,
+    this.cardAmount = 0,
+    this.otherAmount = 0,
+    this.cashRemark = '',
+    this.upiTransactionNo = '',
+    this.upiReferenceNo = '',
+    this.chequeNo = '',
+    this.chequeDate,
+    this.chequeBankName = '',
+    this.chequeBranchName = '',
+    this.bankTransferType = '',
+    this.bankName = '',
+    this.bankAccountNo = '',
+    this.bankTransactionNo = '',
+    this.bankReferenceNo = '',
+    this.bankDate,
+    this.otherPaymentType = '',
+    this.otherReferenceNo = '',
+    this.otherDate,
+    this.otherRemark = '',
+    this.remark = '',
+    this.status = 'Completed',
+    this.createdBy = 0,
+    this.modifiedBy = 0,
   });
 
   Map<String, dynamic> toJson() {
     return {
+      "paymentMaster_Id": paymentMasterId,
+      "paymentMaster_CompId": compId,
+      "paymentMaster_BranchId": branchId,
+      "paymentMaster_SupplierId": supplierId,
+      "paymentMaster_CustomerId": customerId,
+      "paymentMaster_PaymentNo": paymentNo,
+      "paymentMaster_PaymentDate": paymentDate,
+      "paymentMaster_Type": type,
+      "paymentMaster_TotalAmount": totalAmount,
+      "paymentMaster_InvoiceId": invoiceId,
+      "paymentMaster_InvoiceNo": invoiceNo,
+      "paymentMaster_InvoiceDate": invoiceDate,
+      "paymentMaster_AccountId": accountId,
+      "paymentMaster_CashAmount": cashAmount,
+      "paymentMaster_UPIAmount": upiAmount,
+      "paymentMaster_ChequeAmount": chequeAmount,
+      "paymentMaster_BankAmount": bankAmount,
+      "paymentMaster_CardAmount": cardAmount,
+      "paymentMaster_OtherAmount": otherAmount,
+      "paymentMaster_CashRemark": cashRemark,
+      "paymentMaster_UPITransactionNo": upiTransactionNo,
+      "paymentMaster_UPIReferenceNo": upiReferenceNo,
+      "paymentMaster_ChequeNo": chequeNo,
+      "paymentMaster_ChequeDate": chequeDate,
+      "paymentMaster_ChequeBankName": chequeBankName,
+      "paymentMaster_ChequeBranchName": chequeBranchName,
+      "paymentMaster_BankTransferType": bankTransferType,
+      "paymentMaster_BankName": bankName,
+      "paymentMaster_BankAccountNo": bankAccountNo,
+      "paymentMaster_BankTransactionNo": bankTransactionNo,
+      "paymentMaster_BankReferenceNo": bankReferenceNo,
+      "paymentMaster_BankDate": bankDate,
+      "paymentMaster_OtherPaymentType": otherPaymentType,
+      "paymentMaster_OtherReferenceNo": otherReferenceNo,
+      "paymentMaster_OtherDate": otherDate,
+      "paymentMaster_OtherRemark": otherRemark,
+      "paymentMaster_Remark": remark,
+      "paymentMaster_Status": status,
+      "paymentMaster_CreatedBy": createdBy,
+      "paymentMaster_ModifiedBy": modifiedBy,
+    };
+  }
+}
+
+class PurchaseEntryUpsertRequest {
+  final PurchaseEntryMasterData masterData;
+  final List<PurchaseEntryDetailData> detailData;
+  final PurchaseEntryPaymentData? paymentData;
+
+  PurchaseEntryUpsertRequest({
+    required this.masterData,
+    required this.detailData,
+    this.paymentData,
+  });
+
+  Map<String, dynamic> toJson() {
+    final map = {
       "masterData": masterData.toJson(),
       "detailData": detailData.map((e) => e.toJson()).toList(),
     };
+    if (paymentData != null) {
+      map["paymentData"] = paymentData!.toJson();
+    }
+    return map;
   }
 }
 

@@ -15,6 +15,7 @@ import 'purchase_entry_view_list_screen.dart';
 import 'product_selection_dialog.dart';
 import '../../../widgets/save_clear_shortcuts.dart';
 import '../../../services/shortcut_service.dart';
+import '../../sales/sales_entry/payment_mode_dialog.dart';
 
 class AddPurchaseEntryScreen extends StatefulWidget {
   final PurchaseEntry? existingEntry;
@@ -579,6 +580,37 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
     });
 
     try {
+      final payment = await showPaymentModeDialog(
+        context,
+        payableAmount: _finalPayable,
+        onConfirm: (details) async {
+          try {
+            await _persistPurchaseEntry(details);
+            return true;
+          } catch (e) {
+            if (mounted) {
+              await showErrorDialog(context, e.toString());
+            }
+            return false;
+          }
+        },
+      );
+
+      if (payment == null) return;
+    } catch (e) {
+      if (mounted) {
+        await showErrorDialog(context, e.toString());
+      }
+    }
+  }
+
+  Future<void> _persistPurchaseEntry(SalesPaymentDetails payment) async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final validProducts = _products.where((p) => p['product'] != null).toList();
       final user = await sessionService.getUserData();
       int compId = sessionService.selectedCompId ?? 1;
       int branchId = sessionService.selectedBranchId ?? 1;
@@ -593,6 +625,9 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
       } catch (e) {
         // ignore
       }
+      
+      final paidAmount = payment.paidAmountFor(_finalPayable);
+      final balanceAmount = payment.balanceAmountFor(_finalPayable);
 
       final masterData = PurchaseEntryMasterData(
         compId: compId,
@@ -605,10 +640,10 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
         gstAmount: _totalGST,
         otherCharges: 0,
         netAmount: _finalPayable,
-        paidAmount: 0,
-        balanceAmount: _finalPayable,
+        paidAmount: paidAmount,
+        balanceAmount: balanceAmount,
         status: 'Completed',
-        remark: '',
+        remark: payment.remark,
         createdBy: empId,
         modifiedBy: empId,
         ledgerId: ledgerId,
@@ -638,9 +673,53 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
         );
       }).toList();
 
+      final paymentData = PurchaseEntryPaymentData(
+        paymentMasterId: 0,
+        compId: compId,
+        branchId: branchId,
+        supplierId: _selectedSupplier!,
+        customerId: 0, // This is purchase so customer is 0
+        paymentNo: '',
+        paymentDate: _selectedDate.toIso8601String(),
+        type: 'Purchase Entry',
+        totalAmount: paidAmount,
+        invoiceId: 0,
+        invoiceNo: _invoiceNoController.text.trim(),
+        invoiceDate: _selectedDate.toIso8601String(),
+        accountId: ledgerId,
+        cashAmount: payment.cashAmount,
+        upiAmount: payment.upiAmount,
+        chequeAmount: payment.chequeAmount,
+        bankAmount: payment.bankAmount,
+        cardAmount: payment.cardAmount,
+        otherAmount: payment.otherAmount,
+        cashRemark: payment.cashRemark,
+        upiTransactionNo: payment.upiTransactionNo,
+        upiReferenceNo: payment.upiReferenceNo,
+        chequeNo: payment.chequeNo,
+        chequeDate: payment.chequeDate?.toIso8601String(),
+        chequeBankName: '',
+        chequeBranchName: '',
+        bankTransferType: payment.neftType,
+        bankName: payment.bankName,
+        bankAccountNo: '',
+        bankTransactionNo: payment.bankReferenceNo,
+        bankReferenceNo: payment.neftReferenceNo,
+        bankDate: null,
+        otherPaymentType: payment.otherPaymentType,
+        otherReferenceNo: payment.otherReferenceNo,
+        otherDate: payment.otherDate?.toIso8601String(),
+        otherRemark: payment.otherRemark,
+        remark: payment.remark,
+        status: 'Completed',
+        createdBy: empId,
+        modifiedBy: empId,
+      );
+
       final request = PurchaseEntryUpsertRequest(
         masterData: masterData,
         detailData: detailData,
+        paymentData: paymentData,
       );
 
       final response = await PurchaseEntryService().insertOrUpdatePurchaseEntry(

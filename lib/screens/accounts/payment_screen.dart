@@ -22,7 +22,7 @@ class PaymentMasterScreen extends StatefulWidget {
 }
 
 class _PaymentMasterScreenState extends State<PaymentMasterScreen> {
-  static const String _paymentType = 'Bill';
+
 
   final _formKey = GlobalKey<FormState>();
   final DateFormat _dateFormat = DateFormat('dd/MM/yyyy');
@@ -423,7 +423,7 @@ class _PaymentMasterScreenState extends State<PaymentMasterScreen> {
         branchId: sessionService.selectedBranchId ?? 0,
         paymentNo: '',
         paymentDate: _paymentDate.toIso8601String(),
-        type: _paymentType,
+        type: 'Purchase Entry',
         totalAmount: _totalAmount,
         invoiceId: _selectedInvoice?.purchaseMasterId ?? 0,
         invoiceNo: _invoiceNoController.text.trim(),
@@ -459,7 +459,7 @@ class _PaymentMasterScreenState extends State<PaymentMasterScreen> {
             : null,
         otherRemark: _otherRemarksController.text.trim(),
         remark: _remarksController.text.trim(),
-        status: 'Active',
+        status: 'Completed',
         createdBy: empId,
         modifiedBy: empId,
       );

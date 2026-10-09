@@ -54,6 +54,7 @@ import '../widgets/support_info_footer.dart';
 import '../screens/reports/supplier_outstanding_report_screen.dart';
 import '../screens/reports/customer_outstanding_report_screen.dart';
 import '../screens/reports/collection_report_screen.dart';
+import '../screens/reports/payment_entry_report_screen.dart';
 import '../screens/reports/current_stock_report_screen.dart';
 import '../screens/reports/customer_list_report_screen.dart';
 import '../screens/reports/product_wise_sales_report_screen.dart';
@@ -1306,6 +1307,20 @@ class _AppDrawerState extends State<AppDrawer> {
                           MaterialPageRoute(
                             builder: (context) =>
                                 const CollectionReportScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _buildDrawerItem(
+                      context: context,
+                      icon: Icons.payment_rounded,
+                      iconColor: _getIconColor(context, Colors.indigo),
+                      title: 'Payment Entry Report',
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const PaymentEntryReportScreen(),
                           ),
                         );
                       },
