@@ -503,24 +503,20 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
     if (!mounted) return;
 
     SalePersistResult? savedResult;
-    final payment = await showPaymentModeDialog(
-      context,
-      payableAmount: _finalPayable,
-      onConfirm: (details) async {
-        try {
-          savedResult = await _persistSalesReturn(details);
-          return true;
-        } catch (e) {
-          if (mounted) {
-            await showErrorDialog(context, e.toString());
-          }
-          return false;
-        }
-      },
-    );
+    try {
+      final details = SalesPaymentDetails(
+        mode: 'Cash',
+        amount: _finalPayable,
+      );
+      savedResult = await _persistSalesReturn(details);
+    } catch (e) {
+      if (mounted) {
+        await showErrorDialog(context, e.toString());
+      }
+      return;
+    }
 
-    final result = savedResult;
-    if (payment == null || result == null || !mounted) return;
+    if (savedResult == null || !mounted) return;
 
     try {
       if (mounted) {

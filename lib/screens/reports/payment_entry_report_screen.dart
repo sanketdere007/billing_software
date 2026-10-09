@@ -483,20 +483,7 @@ class _PaymentEntryReportScreenState extends State<PaymentEntryReportScreen> {
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
-                  Expanded(
-                    flex: 3,
-                    child: Text(
-                      'Type',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      'Modes',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
+
                   Expanded(
                     flex: 2,
                     child: Text(
@@ -578,14 +565,7 @@ class _PaymentEntryReportScreenState extends State<PaymentEntryReportScreen> {
                               ),
                             ),
                           ),
-                          Expanded(
-                            flex: 3,
-                            child: Text(item.paymentMasterType),
-                          ),
-                          Expanded(
-                            flex: 2,
-                            child: Text(item.paymentModes),
-                          ),
+
                           Expanded(
                             flex: 2,
                             child: Text(
@@ -672,23 +652,6 @@ class _PaymentEntryReportScreenState extends State<PaymentEntryReportScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'Type',
-                            style: TextStyle(fontSize: 12, color: Colors.grey),
-                          ),
-                          Text(
-                            item.paymentMasterType,
-                            style: const TextStyle(fontWeight: FontWeight.w500),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
                             'Amount',
                             style: TextStyle(fontSize: 12, color: Colors.grey),
                           ),
@@ -703,11 +666,6 @@ class _PaymentEntryReportScreenState extends State<PaymentEntryReportScreen> {
                       ),
                     ),
                   ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Modes: ${item.paymentModes}',
-                  style: const TextStyle(fontSize: 13),
                 ),
               ],
             ),
