@@ -927,17 +927,11 @@ class _ProductListScreenState extends State<ProductListScreen> {
             child: Row(
               children: [
                 _buildHeaderCell('#', width: 50, alignment: Alignment.center),
-                _buildHeaderCell('Code', width: 100),
                 _buildHeaderCell('Product Name', flex: 3),
                 _buildHeaderCell('Category', flex: 2),
                 _buildHeaderCell('Subcategory', flex: 2),
                 _buildHeaderCell('Brand', flex: 2),
                 _buildHeaderCell('Unit', flex: 1),
-                _buildHeaderCell(
-                  'Status',
-                  width: 100,
-                  alignment: Alignment.center,
-                ),
                 _buildHeaderCell(
                   'Actions',
                   width: 120,
@@ -1009,35 +1003,6 @@ class _ProductListScreenState extends State<ProductListScreen> {
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: theme.hintColor,
                                 fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        // Code
-                        SizedBox(
-                          width: 100,
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 3,
-                              ),
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.surfaceVariant
-                                    .withOpacity(0.5),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                product.prodCode.isNotEmpty
-                                    ? product.prodCode
-                                    : 'P-${product.prodId}',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: 'monospace',
-                                ),
                               ),
                             ),
                           ),
@@ -1129,21 +1094,14 @@ class _ProductListScreenState extends State<ProductListScreen> {
                           child: Text(
                             product.unitWithValue,
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: product.prodUnitName.isNotEmpty ||
+                              color: product.prodUnitShortName.isNotEmpty ||
+                                      product.prodUnitName.isNotEmpty ||
                                       product.prodUnitValue != 0
                                   ? null
                                   : theme.hintColor,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-
-                        // Status Badge
-                        SizedBox(
-                          width: 100,
-                          child: Center(
-                            child: _buildStatusBadge(product.prodIsActive),
                           ),
                         ),
 

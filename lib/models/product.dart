@@ -88,16 +88,27 @@ class ProductListItem {
     if (prodUnitValue.truncateToDouble() == prodUnitValue) {
       return prodUnitValue.toStringAsFixed(0);
     }
-    return prodUnitValue.toStringAsFixed(2);
+    final fixed = prodUnitValue.toStringAsFixed(2);
+    if (fixed.contains('.')) {
+      final trimmed = fixed.replaceAll(RegExp(r'0+$'), '').replaceAll(RegExp(r'\.$'), '');
+      return trimmed;
+    }
+    return fixed;
   }
 
   String get unitWithValue {
-    final unit = prodUnitName.isNotEmpty
-        ? prodUnitName
-        : prodUnitShortName;
-    if (unit.isEmpty) return formattedUnitValue;
-    return '$unit ($formattedUnitValue)';
+    final shortName = prodUnitShortName.trim().isNotEmpty
+        ? prodUnitShortName.trim()
+        : prodUnitName.trim();
+    if (prodUnitValue <= 0) {
+      return shortName.isNotEmpty ? shortName : '—';
+    }
+    final valueStr = formattedUnitValue;
+    if (shortName.isEmpty) return valueStr;
+    return '$valueStr$shortName';
   }
+
+  String get unitValueWithShortName => unitWithValue;
 
   factory ProductListItem.fromJson(Map<String, dynamic> json) {
     return ProductListItem(
@@ -161,7 +172,12 @@ class ProductListItem {
           _firstJsonValue(json, const [
             'prod_UnitShortName',
             'Prod_UnitShortName',
+            'prod_unitShortName',
             'unit_ShortName',
+            'Unit_ShortName',
+            'unit_shortName',
+            'unitShortName',
+            'UnitShortName',
           ])?.toString() ??
           '',
       prodCreatedDate: json['prod_CreatedDate']?.toString(),

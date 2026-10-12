@@ -139,10 +139,7 @@ class InvoicePdfGenerator {
           pw.SizedBox(height: 6),
           pw.Text(
             invoice.invoiceNo,
-            style: pw.TextStyle(
-              fontSize: 12,
-              fontWeight: pw.FontWeight.bold,
-            ),
+            style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold),
           ),
           pw.SizedBox(height: 8),
           _kv('Date', invoice.date, size: _bodySize),
@@ -162,10 +159,7 @@ class InvoicePdfGenerator {
         children: [
           pw.Text(
             customer.name,
-            style: pw.TextStyle(
-              fontSize: 10,
-              fontWeight: pw.FontWeight.bold,
-            ),
+            style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
           ),
           pw.SizedBox(height: 3),
           pw.Text(
@@ -227,7 +221,10 @@ class InvoicePdfGenerator {
               bold: true,
               fontSize: _tinySize,
               showRightBorder: i != _columns.length - 1,
-              padding: const pw.EdgeInsets.symmetric(horizontal: 1.5, vertical: 3),
+              padding: const pw.EdgeInsets.symmetric(
+                horizontal: 1.5,
+                vertical: 3,
+              ),
             ),
         ],
       ),
@@ -251,9 +248,7 @@ class InvoicePdfGenerator {
 
     return pw.Container(
       decoration: const pw.BoxDecoration(
-        border: pw.Border(
-          bottom: pw.BorderSide(color: _border, width: 0.35),
-        ),
+        border: pw.Border(bottom: pw.BorderSide(color: _border, width: 0.35)),
       ),
       child: pw.Row(
         children: [
@@ -264,7 +259,10 @@ class InvoicePdfGenerator {
               align: _columns[i].align,
               fontSize: _smallSize,
               showRightBorder: i != _columns.length - 1,
-              padding: const pw.EdgeInsets.symmetric(horizontal: 1.5, vertical: 3),
+              padding: const pw.EdgeInsets.symmetric(
+                horizontal: 1.5,
+                vertical: 3,
+              ),
             ),
         ],
       ),
@@ -464,7 +462,7 @@ class InvoicePdfGenerator {
           _rupeeIcon(),
           pw.Text(
             formattedNumber,
-            style: const pw.TextStyle(
+            style: pw.TextStyle(
               fontSize: _bodySize,
               fontWeight: pw.FontWeight.bold,
             ),
@@ -538,7 +536,8 @@ class InvoicePdfGenerator {
           pw.Text(':  ', style: style),
           pw.SizedBox(
             width: 62,
-            child: customValueWidget ??
+            child:
+                customValueWidget ??
                 pw.Text(value, style: style, textAlign: pw.TextAlign.right),
           ),
         ],
