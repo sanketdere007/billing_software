@@ -27,6 +27,8 @@ class ApiConstants {
       '/api/Report/OutstandingReceivableReport';
   static const String getBatchWiseStockReportEndpoint =
       '/api/Report/BatchWiseStockReport';
+  static const String getCustomerWiseSalesReportEndpoint =
+      '/api/Report/CustomerWiseSalesReport';
 
   // Category Endpoints
   static const String getAllCategoriesEndpoint =

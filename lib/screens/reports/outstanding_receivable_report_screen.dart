@@ -32,6 +32,7 @@ class _OutstandingReceivableReportScreenState
 
   DateTime _fromDate = DateTime(DateTime.now().year, DateTime.now().month, 1);
   DateTime _toDate = DateTime.now();
+  bool _onlyOutstanding = false;
 
   OutstandingReceivableReportData? _reportData;
   String? _errorMessage;
@@ -111,6 +112,7 @@ class _OutstandingReceivableReportScreenState
         fromDate: _fromDate.toIso8601String(),
         toDate: _toDate.toIso8601String(),
         search: _searchController.text,
+        onlyOutstanding: _onlyOutstanding,
       );
 
       if (mounted) {
@@ -286,72 +288,178 @@ class _OutstandingReceivableReportScreenState
   }
 
   Widget _buildFilters({required bool isDesktop}) {
+    if (isDesktop) {
+      return Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            Expanded(
+              flex: 2,
+              child: TextField(
+                controller: _searchController,
+                decoration: const InputDecoration(
+                  labelText: 'Search',
+                  border: OutlineInputBorder(),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                ),
+                onChanged: _onSearchChanged,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: CustomDatePickerField(
+                labelText: 'From Date',
+                initialDate: _fromDate,
+                lastDate: DateTime.now().add(const Duration(days: 3650)),
+                onDateSelected: (date) {
+                  if (date.isAfter(_toDate)) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('From Date cannot be later than To Date.'),
+                      ),
+                    );
+                  } else {
+                    setState(() {
+                      _fromDate = date;
+                    });
+                    _fetchReport();
+                  }
+                },
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: CustomDatePickerField(
+                labelText: 'To Date',
+                initialDate: _toDate,
+                lastDate: DateTime.now().add(const Duration(days: 3650)),
+                onDateSelected: (date) {
+                  if (date.isBefore(_fromDate)) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'To Date cannot be earlier than From Date.',
+                        ),
+                      ),
+                    );
+                  } else {
+                    setState(() {
+                      _toDate = date;
+                    });
+                    _fetchReport();
+                  }
+                },
+              ),
+            ),
+            const SizedBox(width: 16),
+            FilterChip(
+              label: const Text('Only Outstanding'),
+              selected: _onlyOutstanding,
+              avatar: Icon(
+                _onlyOutstanding
+                    ? Icons.check_circle_rounded
+                    : Icons.account_balance_wallet_outlined,
+                size: 18,
+              ),
+              onSelected: (selected) {
+                setState(() {
+                  _onlyOutstanding = selected;
+                });
+                _fetchReport();
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
     return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Row(
+      padding: const EdgeInsets.all(12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            flex: 2,
-            child: TextField(
-              controller: _searchController,
-              decoration: const InputDecoration(
-                labelText: 'Search',
-                border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
+          TextField(
+            controller: _searchController,
+            decoration: const InputDecoration(
+              labelText: 'Search',
+              border: OutlineInputBorder(),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 8,
+              ),
+            ),
+            onChanged: _onSearchChanged,
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: CustomDatePickerField(
+                  labelText: 'From Date',
+                  initialDate: _fromDate,
+                  lastDate: DateTime.now().add(const Duration(days: 3650)),
+                  onDateSelected: (date) {
+                    if (date.isAfter(_toDate)) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('From Date cannot be later than To Date.'),
+                        ),
+                      );
+                    } else {
+                      setState(() {
+                        _fromDate = date;
+                      });
+                      _fetchReport();
+                    }
+                  },
                 ),
               ),
-              onChanged: _onSearchChanged,
-            ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: CustomDatePickerField(
+                  labelText: 'To Date',
+                  initialDate: _toDate,
+                  lastDate: DateTime.now().add(const Duration(days: 3650)),
+                  onDateSelected: (date) {
+                    if (date.isBefore(_fromDate)) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'To Date cannot be earlier than From Date.',
+                          ),
+                        ),
+                      );
+                    } else {
+                      setState(() {
+                        _toDate = date;
+                      });
+                      _fetchReport();
+                    }
+                  },
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: CustomDatePickerField(
-              labelText: 'From Date',
-              initialDate: _fromDate,
-              lastDate: DateTime.now().add(const Duration(days: 3650)),
-              onDateSelected: (date) {
-                if (date.isAfter(_toDate)) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('From Date cannot be later than To Date.'),
-                    ),
-                  );
-                } else {
-                  setState(() {
-                    _fromDate = date;
-                  });
-                  _fetchReport();
-                }
-              },
+          const SizedBox(height: 12),
+          FilterChip(
+            label: const Text('Only Outstanding'),
+            selected: _onlyOutstanding,
+            avatar: Icon(
+              _onlyOutstanding
+                  ? Icons.check_circle_rounded
+                  : Icons.account_balance_wallet_outlined,
+              size: 18,
             ),
+            onSelected: (selected) {
+              setState(() {
+                _onlyOutstanding = selected;
+              });
+              _fetchReport();
+            },
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: CustomDatePickerField(
-              labelText: 'To Date',
-              initialDate: _toDate,
-              lastDate: DateTime.now().add(const Duration(days: 3650)),
-              onDateSelected: (date) {
-                if (date.isBefore(_fromDate)) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'To Date cannot be earlier than From Date.',
-                      ),
-                    ),
-                  );
-                } else {
-                  setState(() {
-                    _toDate = date;
-                  });
-                  _fetchReport();
-                }
-              },
-            ),
-          ),
-          const SizedBox(width: 8),
         ],
       ),
     );
@@ -387,8 +495,12 @@ class _OutstandingReceivableReportScreenState
     }
 
     if (_reportData == null || _reportData!.partyTotals.isEmpty) {
-      return const Center(
-        child: Text('No outstanding receivable records found.'),
+      return Center(
+        child: Text(
+          _onlyOutstanding
+              ? 'No outstanding receivable records found.'
+              : 'No records found.',
+        ),
       );
     }
 

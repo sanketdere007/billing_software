@@ -4,6 +4,7 @@ import '../models/supplier_reports.dart';
 import '../models/current_stock.dart';
 import '../models/outstanding_receivable_report.dart';
 import '../models/batch_wise_stock_report.dart';
+import '../models/customer_wise_sales_report.dart';
 import 'excel_export_helper.dart';
 
 class ReportExcelExportService {
@@ -291,6 +292,61 @@ class ReportExcelExportService {
             ExcelExportHelper.formatAmount(items[i].batchPurchasePrice),
             ExcelExportHelper.formatAmount(items[i].batchMrp),
             ExcelExportHelper.formatAmount(items[i].batchSellingPrice),
+          ],
+      ],
+    );
+  }
+
+  static Future<ExcelExportResult> exportCustomerWiseSalesReport(
+    List<CustomerWiseSalesReportItem> items,
+  ) {
+    return ExcelExportHelper.exportSheet(
+      filePrefix: 'Customer_Wise_Sales_Report',
+      sheetName: 'Customer Wise Sales',
+      emptyMessage: 'No customer sales records available to export.',
+      columns: const [
+        ExcelColumn('Sr. No.', align: ExcelCellAlign.center, type: ExcelCellType.number),
+        ExcelColumn('Invoice Date', align: ExcelCellAlign.center),
+        ExcelColumn('Customer Name'),
+        ExcelColumn('Mobile', align: ExcelCellAlign.center),
+        ExcelColumn('Billing Address'),
+        ExcelColumn('GST No', align: ExcelCellAlign.center),
+        ExcelColumn('Total Qty', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn('Sub Total', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn('Item Discount', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn('Bill Discount', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn('CGST', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn('SGST', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn('IGST', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn('Round Off', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn('Total Sales', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn('Received', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn('Outstanding', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn('First Sale Date', align: ExcelCellAlign.center),
+        ExcelColumn('Last Sale Date', align: ExcelCellAlign.center),
+      ],
+      rows: [
+        for (int i = 0; i < items.length; i++)
+          [
+            '${i + 1}',
+            ExcelExportHelper.formatDate(items[i].salesMasterInvoiceDate ?? items[i].lastSaleDate),
+            items[i].customerName,
+            items[i].mobileNo,
+            items[i].billingAddress,
+            items[i].gstNo,
+            ExcelExportHelper.formatAmount(items[i].totalQty),
+            ExcelExportHelper.formatAmount(items[i].subTotal),
+            ExcelExportHelper.formatAmount(items[i].itemDiscount),
+            ExcelExportHelper.formatAmount(items[i].billWiseDiscount),
+            ExcelExportHelper.formatAmount(items[i].totalCGST),
+            ExcelExportHelper.formatAmount(items[i].totalSGST),
+            ExcelExportHelper.formatAmount(items[i].totalIGST),
+            ExcelExportHelper.formatAmount(items[i].totalRoundOff),
+            ExcelExportHelper.formatAmount(items[i].totalSales),
+            ExcelExportHelper.formatAmount(items[i].totalReceived),
+            ExcelExportHelper.formatAmount(items[i].totalOutstanding),
+            ExcelExportHelper.formatDate(items[i].firstSaleDate),
+            ExcelExportHelper.formatDate(items[i].lastSaleDate),
           ],
       ],
     );

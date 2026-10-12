@@ -60,6 +60,7 @@ import '../screens/reports/batch_wise_stock_report_screen.dart';
 import '../screens/reports/customer_list_report_screen.dart';
 import '../screens/reports/product_wise_sales_report_screen.dart';
 import '../screens/reports/outstanding_receivable_report_screen.dart';
+import '../screens/reports/customer_wise_sales_report_screen.dart';
 import '../screens/pdf/pdf_preview_screen.dart';
 
 class AppDrawer extends StatefulWidget {
@@ -1378,6 +1379,20 @@ class _AppDrawerState extends State<AppDrawer> {
                           MaterialPageRoute(
                             builder: (context) =>
                                 const ProductWiseSalesReportScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _buildDrawerItem(
+                      context: context,
+                      icon: Icons.assignment_ind_rounded,
+                      iconColor: _getIconColor(context, Colors.indigo),
+                      title: 'Customer Wise Sales',
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const CustomerWiseSalesReportScreen(),
                           ),
                         );
                       },

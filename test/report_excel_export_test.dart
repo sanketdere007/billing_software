@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:archive/archive.dart';
 import 'package:billing_software/models/collection_report.dart';
 import 'package:billing_software/models/customer_reports.dart';
+import 'package:billing_software/models/customer_wise_sales_report.dart';
 import 'package:billing_software/models/supplier_reports.dart';
 import 'package:billing_software/services/excel_export_helper.dart';
 import 'package:billing_software/services/report_excel_export_service.dart';
@@ -32,13 +33,16 @@ void main() {
     final supplier = await ReportExcelExportService.exportSupplierOutstanding([]);
     final customer = await ReportExcelExportService.exportCustomerOutstanding([]);
     final collection = await ReportExcelExportService.exportCollectionReport([]);
+    final customerSales = await ReportExcelExportService.exportCustomerWiseSalesReport([]);
 
     expect(supplier.success, isFalse);
     expect(customer.success, isFalse);
     expect(collection.success, isFalse);
+    expect(customerSales.success, isFalse);
     expect(supplier.message, contains('No supplier outstanding'));
     expect(customer.message, contains('No customer outstanding'));
     expect(collection.message, contains('No collection records'));
+    expect(customerSales.message, contains('No customer sales records'));
   });
 
   test('report models can be mapped into export rows', () {
@@ -137,5 +141,37 @@ void main() {
     expect(customer.custName, 'Customer Two');
     expect(collection.receiptMasterReceiptNo, 'RCP-3');
     expect(collection.totalAmount, 1000);
+
+    final customerSalesItem = CustomerWiseSalesReportItem(
+      srNo: 1,
+      compId: 1,
+      branchId: 1,
+      customerId: 10,
+      ledgerId: 20,
+      customerName: 'Acme Corp',
+      mobileNo: '9876543210',
+      billingAddress: 'Main Street 123',
+      gstNo: '27AAAAA0000A1Z5',
+      totalInvoices: 5,
+      totalQty: 25.0,
+      subTotal: 5000.0,
+      itemDiscount: 100.0,
+      billWiseDiscount: 50.0,
+      totalCGST: 225.0,
+      totalSGST: 225.0,
+      totalIGST: 0.0,
+      totalCESS: 0.0,
+      totalRoundOff: 0.0,
+      totalSales: 5300.0,
+      totalReceived: 3000.0,
+      totalOutstanding: 2300.0,
+      firstSaleDate: DateTime(2026, 1, 1),
+      lastSaleDate: DateTime(2026, 10, 10),
+    );
+
+    expect(customerSalesItem.customerName, 'Acme Corp');
+    expect(customerSalesItem.totalInvoices, 5);
+    expect(customerSalesItem.totalSales, 5300.0);
+    expect(customerSalesItem.totalOutstanding, 2300.0);
   });
 }
