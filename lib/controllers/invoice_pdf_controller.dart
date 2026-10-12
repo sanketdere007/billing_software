@@ -22,7 +22,10 @@ class InvoicePdfController {
 
   /// Builds the PDF from already-mapped [InvoicePdfData].
   /// The generator does not fetch APIs or contain hardcoded records.
-  Future<Uint8List> generateFromData(InvoicePdfData data) async {
+  Future<Uint8List> generateFromData(
+    InvoicePdfData data, {
+    String? customFileName,
+  }) async {
     isLoading = true;
     errorMessage = null;
     try {
@@ -30,7 +33,13 @@ class InvoicePdfController {
           ? data.invoice.invoiceNo.trim()
           : 'invoice';
       final safeNo = rawNo.replaceAll(RegExp(r'[\\/:*?"<>|]'), '-');
-      fileName = 'Invoice_$safeNo.pdf';
+      if (customFileName != null && customFileName.trim().isNotEmpty) {
+        fileName = customFileName.trim();
+      } else if (safeNo.toLowerCase().startsWith('inv')) {
+        fileName = '$safeNo.pdf';
+      } else {
+        fileName = 'Invoice_$safeNo.pdf';
+      }
       pdfBytes = await _generator.generate(data);
       return pdfBytes!;
     } catch (e) {

@@ -7,6 +7,9 @@ import '../models/invoice_pdf_data.dart';
 import '../models/login_response.dart';
 import '../models/sales_entry.dart';
 import '../screens/sales/sales_entry/payment_mode_dialog.dart';
+import 'batch_service.dart';
+import 'company_service.dart';
+import 'customer_service.dart';
 import 'product_service.dart';
 
 /// Maps saved Sales Entry + Receipt Entry data into [InvoicePdfData].
@@ -74,6 +77,116 @@ class InvoicePdfDataFactory {
     );
   }
 
+  /// Maps fetched sales master and detail records (from GET APIs) into [InvoicePdfData].
+  /// Uses the exact same PDF mapping, formatting, and calculation logic as [fromSavedSale].
+  static InvoicePdfData fromMasterAndDetails({
+    required SalesMasterData master,
+    required List<SalesDetailData> details,
+    CustomerListItem? customer,
+    CompanyListItem? company,
+    UserData? user,
+    String? companyNameFallback,
+  }) {
+    final detailData = details.map((d) => SalesEntryDetailData.fromRaw(d.raw)).toList();
+    final masterData = SalesEntryMasterData.fromRaw(master.raw, details: detailData);
+
+    CustomerListItem? effectiveCustomer = customer;
+    if (effectiveCustomer == null && masterData.customerId > 0) {
+      try {
+        effectiveCustomer = customerService.customers.firstWhere(
+          (c) => c.custId == masterData.customerId,
+        );
+      } catch (_) {}
+    }
+
+    final effectiveCompany = company ??
+        (masterData.compId > 0
+            ? companyService.getCompanyById(masterData.compId)
+            : null);
+
+    final invoiceNo = master.raw['salesMaster_InvoiceNo']?.toString().trim() ??
+        master.raw['invoiceNo']?.toString().trim() ??
+        '';
+    final salesMasterId = masterData.salesMasterId;
+    final invoiceDate = DateTime.tryParse(masterData.invoiceDate) ?? DateTime.now();
+    final now = DateTime.now();
+
+    final amountsMap = <String, double>{
+      if (masterData.cashAmount > 0) SalesPaymentMode.cash: masterData.cashAmount,
+      if (masterData.upiAmount > 0) SalesPaymentMode.upi: masterData.upiAmount,
+      if (masterData.cardAmount > 0) SalesPaymentMode.card: masterData.cardAmount,
+      if (masterData.chequeAmount > 0) SalesPaymentMode.cheque: masterData.chequeAmount,
+      if (masterData.bankAmount > 0) SalesPaymentMode.bank: masterData.bankAmount,
+      if (masterData.otherAmount > 0) SalesPaymentMode.other: masterData.otherAmount,
+      if (masterData.creditAmount > 0) SalesPaymentMode.credit: masterData.creditAmount,
+    };
+    if (amountsMap.isEmpty) {
+      if (masterData.paidAmount > 0) {
+        amountsMap[SalesPaymentMode.cash] = masterData.paidAmount;
+      } else if (masterData.balanceAmount > 0) {
+        amountsMap[SalesPaymentMode.credit] = masterData.balanceAmount;
+      }
+    }
+
+    final payment = SalesPaymentDetails(
+      amounts: amountsMap,
+      chequeNo: masterData.chequeNo,
+      chequeDate: masterData.chequeDate != null ? DateTime.tryParse(masterData.chequeDate!) : null,
+      bankName: masterData.bankName,
+      bankReferenceNo: masterData.bankReferenceNo,
+      neftType: masterData.neftType,
+      neftReferenceNo: masterData.neftReferenceNo,
+      otherType: masterData.otherPaymentType,
+      otherReferenceNo: masterData.otherReferenceNo,
+      otherDate: masterData.otherDate != null ? DateTime.tryParse(masterData.otherDate!) : null,
+      otherRemark: masterData.otherRemark,
+    );
+
+    final previousBalance = double.tryParse(
+      (master.raw['salesMaster_PreviousBalance'] ?? master.raw['previousBalance'] ?? 0).toString(),
+    ) ?? 0.0;
+
+    return InvoicePdfData(
+      company: _company(effectiveCompany, companyNameFallback ?? master.raw['comp_Name']?.toString()),
+      invoice: InvoiceMeta(
+        invoiceNo: invoiceNo,
+        date: _dateFormat.format(invoiceDate),
+        time: _timeFormat.format(now),
+        salesman: master.raw['salesman']?.toString() ?? master.raw['emp_Name']?.toString() ?? '',
+        pageNo: 1,
+        pageCount: 1,
+        title: 'TAX INVOICE',
+      ),
+      customer: _customer(effectiveCustomer, masterData),
+      items: _items(detailData, const []),
+      previousBalance: previousBalance,
+      bank: InvoiceBankDetails(
+        name: payment.bankName.isNotEmpty ? payment.bankName : masterData.bankName,
+        branch: '',
+        ifsc: '',
+        accountNo: '',
+      ),
+      amountInWords: '',
+      remark: _remark(
+        master: masterData,
+        payment: payment,
+        salesMasterId: salesMasterId,
+      ),
+      gstSlabs: _gstSlabs(detailData),
+      gross: masterData.subTotal,
+      addAmount: 0,
+      lessAmount: masterData.totalDiscount,
+      gstTotal: masterData.totalCGST + masterData.totalSGST + masterData.totalIGST,
+      netAmount: masterData.grandTotal,
+      jurisdiction: effectiveCompany?.compCity.trim() ?? '',
+      stateName: (effectiveCompany?.compState ?? '').trim().toUpperCase(),
+      stateCode: _stateCode(effectiveCompany?.compGSTNo),
+      softwareCredit: '',
+      printedBy: (user?.firstAndLastName ?? user?.empUserName ?? '').trim(),
+      errorsAndOmissionsExcepted: true,
+    );
+  }
+
   static InvoiceCompany _company(CompanyListItem? company, String? fallbackName) {
     if (company == null) {
       return InvoiceCompany(name: (fallbackName ?? '').trim());
@@ -131,15 +244,25 @@ class InvoicePdfDataFactory {
       final hsn = detail.hsnCode.isNotEmpty
           ? detail.hsnCode
           : (product?.prodHSNCode ?? '');
-      final unitShortName = product?.prodUnitShortName ?? '';
+      final unitShortName = detail.unitName.isNotEmpty
+          ? detail.unitName
+          : (product?.prodUnitShortName ?? '');
       final unitValueText =
           product?.formattedUnitValue ?? batch?.formattedUnitValue ?? '0';
       final pack = [
         unitValueText,
         if (unitShortName.isNotEmpty) unitShortName
-      ].join(' ');
-      final companyCode = batch?.prodCode ?? product?.prodCode ?? '';
-      final mrp = (batch != null && batch.batchMRP > 0) ? batch.batchMRP : detail.mrp;
+      ].where((s) => s.isNotEmpty).join(' ').trim();
+      final companyCode = detail.prodCode.isNotEmpty
+          ? detail.prodCode
+          : (batch?.prodCode ?? product?.prodCode ?? '');
+      final mrp = (batch != null && batch.batchMRP > 0)
+          ? batch.batchMRP
+          : (detail.mrp > 0 ? detail.mrp : detail.rate);
+      final batchNumber = detail.batchNumber.isNotEmpty
+          ? detail.batchNumber
+          : (batch?.batchNumber ?? '');
+      final expiry = detail.expiry.isNotEmpty ? detail.expiry : '';
 
       return InvoiceLineItem(
         companyCode: companyCode,
@@ -149,8 +272,8 @@ class InvoicePdfDataFactory {
         qty: detail.qty,
         scheme: detail.freeQty > 0 ? _qtyText(detail.freeQty) : '',
         discount: detail.discountAmount,
-        batch: batch?.batchNumber ?? '',
-        expiry: '',
+        batch: batchNumber,
+        expiry: expiry,
         mrp: mrp,
         rate: detail.rate,
         gstPercent: detail.gstPercentage,
@@ -169,6 +292,13 @@ class InvoicePdfDataFactory {
       if (product is BatchListItem && product.batchId == detail.batchId) {
         return product;
       }
+    }
+    if (detail.batchId > 0) {
+      try {
+        return batchService.batches.firstWhere(
+          (b) => b.batchId == detail.batchId,
+        );
+      } catch (_) {}
     }
     return null;
   }
