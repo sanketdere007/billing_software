@@ -24,6 +24,7 @@ import '../../../services/invoice_pdf_data_factory.dart';
 import '../../../services/shortcut_service.dart';
 import '../../pdf/pdf_preview_screen.dart';
 import '../sales_entry/payment_mode_dialog.dart';
+import '../../../widgets/transaction_date_picker_field.dart';
 
 class SalePersistResult {
   final SalesReturnUpsertResponse salesResponse;
@@ -72,7 +73,7 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
     DateTime.now().day,
   );
   int? _selectedCustomer;
-  final DateFormat _dateFormat = DateFormat('yyyy-MM-dd');
+  final DateFormat _dateFormat = DateFormat('yyyy/MM/dd');
 
   final List<Map<String, dynamic>> _products = [];
   final ScrollController _listScrollController = ScrollController();
@@ -1486,46 +1487,22 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
                     ),
                     SizedBox(
                       width: isMobile ? double.infinity : 220,
-                      child: Focus(
+                      child: TransactionDatePickerField(
+                        selectedDate: _selectedDate,
                         focusNode: _invoiceDateNode,
-                        onKeyEvent: (node, event) {
-                          if (event is KeyDownEvent &&
-                              (event.logicalKey == LogicalKeyboardKey.enter ||
-                                  event.logicalKey ==
-                                      LogicalKeyboardKey.numpadEnter ||
-                                  event.logicalKey ==
-                                      LogicalKeyboardKey.space)) {
-                            _selectDate(context);
-                            return KeyEventResult.handled;
-                          }
-                          return KeyEventResult.ignored;
+                        labelText: 'Return Date',
+                        restrictFutureDates: true,
+                        onDateSelected: (newDate) {
+                          setState(() {
+                            _selectedDate = newDate;
+                          });
                         },
-                        child: Builder(
-                          builder: (context) {
-                            final isFocused = Focus.of(context).hasFocus;
-                            return InkWell(
-                              onTap: () => _selectDate(context),
-                              borderRadius: BorderRadius.circular(4),
-                              child: InputDecorator(
-                                isFocused: isFocused,
-                                decoration: InputDecoration(
-                                  labelText: 'Return Date',
-                                  border: const OutlineInputBorder(),
-                                  prefixIcon: const Icon(Icons.calendar_today),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.primary,
-                                      width: 2.0,
-                                    ),
-                                  ),
-                                ),
-                                child: Text(_dateFormat.format(_selectedDate)),
-                              ),
-                            );
-                          },
-                        ),
+                        onNextFocus: () {
+                          if (mounted && _products.isNotEmpty) {
+                            (_products.first['productNode'] as FocusNode)
+                                .requestFocus();
+                          }
+                        },
                       ),
                     ),
                   ],
