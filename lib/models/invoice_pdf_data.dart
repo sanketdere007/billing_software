@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 /// Invoice data used exclusively by the PDF generator.
 ///
 /// This is the contract for future API integration. Populate it from an API
@@ -8,6 +10,7 @@ class InvoicePdfData {
   final InvoiceCustomer customer;
   final List<InvoiceLineItem> items;
   final double previousBalance;
+  final double balanceDue;
   final InvoiceBankDetails bank;
   final String amountInWords;
   final String remark;
@@ -30,6 +33,7 @@ class InvoicePdfData {
     required this.customer,
     required this.items,
     this.previousBalance = 0,
+    this.balanceDue = 0,
     required this.bank,
     this.amountInWords = '',
     this.remark = '',
@@ -65,6 +69,15 @@ class InvoicePdfData {
       previousBalance: _toDouble(
         json['previousBalance'] ?? json['prevBal'] ?? json['prevBalance'],
       ),
+      balanceDue: _toDouble(
+        json['balanceDue'] ??
+            json['balanceAmount'] ??
+            json['creditAmount'] ??
+            json['salesMaster_CreditAmt'] ??
+            json['salesMaster_BalanceAmount'] ??
+            json['creditAmt'] ??
+            json['balance'],
+      ),
       bank: InvoiceBankDetails.fromJson(_asMap(json['bank'])),
       amountInWords: _str(
         json['amountInWords'] ?? json['inWords'] ?? json['amountInWord'],
@@ -97,6 +110,7 @@ class InvoicePdfData {
       'customer': customer.toJson(),
       'items': items.map((e) => e.toJson()).toList(),
       'previousBalance': previousBalance,
+      'balanceDue': balanceDue,
       'bank': bank.toJson(),
       'amountInWords': amountInWords,
       'remark': remark,
@@ -113,6 +127,62 @@ class InvoicePdfData {
       'printedBy': printedBy,
       'errorsAndOmissionsExcepted': errorsAndOmissionsExcepted,
     };
+  }
+
+  bool get isBalanceZero => balanceDue.abs() < 0.001;
+
+  String get formattedBalanceDue {
+    if (isBalanceZero) return 'NIL';
+    return '₹${NumberFormat('#,##,##0.00', 'en_IN').format(balanceDue)}';
+  }
+
+  InvoicePdfData copyWith({
+    InvoiceCompany? company,
+    InvoiceMeta? invoice,
+    InvoiceCustomer? customer,
+    List<InvoiceLineItem>? items,
+    double? previousBalance,
+    double? balanceDue,
+    InvoiceBankDetails? bank,
+    String? amountInWords,
+    String? remark,
+    List<InvoiceGstSlab>? gstSlabs,
+    double? gross,
+    double? addAmount,
+    double? lessAmount,
+    double? gstTotal,
+    double? netAmount,
+    String? jurisdiction,
+    String? stateName,
+    String? stateCode,
+    String? softwareCredit,
+    String? printedBy,
+    bool? errorsAndOmissionsExcepted,
+  }) {
+    return InvoicePdfData(
+      company: company ?? this.company,
+      invoice: invoice ?? this.invoice,
+      customer: customer ?? this.customer,
+      items: items ?? this.items,
+      previousBalance: previousBalance ?? this.previousBalance,
+      balanceDue: balanceDue ?? this.balanceDue,
+      bank: bank ?? this.bank,
+      amountInWords: amountInWords ?? this.amountInWords,
+      remark: remark ?? this.remark,
+      gstSlabs: gstSlabs ?? this.gstSlabs,
+      gross: gross ?? this.gross,
+      addAmount: addAmount ?? this.addAmount,
+      lessAmount: lessAmount ?? this.lessAmount,
+      gstTotal: gstTotal ?? this.gstTotal,
+      netAmount: netAmount ?? this.netAmount,
+      jurisdiction: jurisdiction ?? this.jurisdiction,
+      stateName: stateName ?? this.stateName,
+      stateCode: stateCode ?? this.stateCode,
+      softwareCredit: softwareCredit ?? this.softwareCredit,
+      printedBy: printedBy ?? this.printedBy,
+      errorsAndOmissionsExcepted:
+          errorsAndOmissionsExcepted ?? this.errorsAndOmissionsExcepted,
+    );
   }
 
   String get resolvedAmountInWords {

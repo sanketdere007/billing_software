@@ -96,6 +96,8 @@ void main() {
     expect(data.company.name, 'Test Pharma');
     expect(data.remark, contains('Sales Ref: 7788'));
     expect(data.remark, contains('Cash: 500.00'));
+    expect(data.balanceDue, 0.0);
+    expect(data.formattedBalanceDue, 'NIL');
     expect(data.invoice.invoiceNo, isNot('2627CCB10497'));
     expect(data.company.name, isNot('PASHUSEVA AUSHADHALAYA'));
   });
@@ -179,5 +181,112 @@ void main() {
     expect(data.company.name, 'Test Pharma');
     expect(data.remark, contains('Sales Ref: 7788'));
     expect(data.remark, contains('Cash: 500.00'));
+    expect(data.balanceDue, 0.0);
+    expect(data.formattedBalanceDue, 'NIL');
+  });
+
+  test('formats zero balance as NIL and non-zero balances as formatted currency', () {
+    final zeroInvoice = InvoicePdfData.fromJson({
+      'company': {'name': 'Test Co'},
+      'invoice': {'invoiceNo': 'INV-1'},
+      'customer': {'name': 'Customer 1'},
+      'items': [],
+      'bank': {},
+      'salesMaster_CreditAmt': 0.00,
+    });
+    expect(zeroInvoice.balanceDue, 0.0);
+    expect(zeroInvoice.isBalanceZero, isTrue);
+    expect(zeroInvoice.formattedBalanceDue, 'NIL');
+
+    final creditInvoice500 = InvoicePdfData.fromJson({
+      'company': {'name': 'Test Co'},
+      'invoice': {'invoiceNo': 'INV-2'},
+      'customer': {'name': 'Customer 2'},
+      'items': [],
+      'bank': {},
+      'salesMaster_CreditAmt': 500.00,
+    });
+    expect(creditInvoice500.balanceDue, 500.0);
+    expect(creditInvoice500.isBalanceZero, isFalse);
+    expect(creditInvoice500.formattedBalanceDue, '₹500.00');
+
+    final creditInvoice1250 = InvoicePdfData.fromJson({
+      'company': {'name': 'Test Co'},
+      'invoice': {'invoiceNo': 'INV-3'},
+      'customer': {'name': 'Customer 3'},
+      'items': [],
+      'bank': {},
+      'salesMaster_CreditAmt': 1250.50,
+    });
+    expect(creditInvoice1250.balanceDue, 1250.50);
+    expect(creditInvoice1250.isBalanceZero, isFalse);
+    expect(creditInvoice1250.formattedBalanceDue, '₹1,250.50');
+  });
+
+  test('maps credit amount correctly in fromSavedSale with credit balance', () {
+    final master = SalesEntryMasterData(
+      customerId: 11,
+      invoiceDate: DateTime(2026, 9, 3).toIso8601String(),
+      subTotal: 1000,
+      totalDiscount: 0,
+      totalCGST: 0,
+      totalSGST: 0,
+      grandTotal: 1000,
+      paidAmount: 500,
+      balanceAmount: 500,
+      cashAmount: 500,
+      creditAmount: 500,
+      billingName: 'Ramesh Patil',
+    );
+
+    final data = InvoicePdfDataFactory.fromSavedSale(
+      salesResponse: SalesEntryUpsertResponse(
+        status: true,
+        message: 'Saved',
+        data: SalesEntryUpsertResponseData(
+          status: true,
+          message: 'Saved',
+          salesMasterId: 9900,
+          salesMasterInvoiceNo: 'INV-9900',
+        ),
+      ),
+      master: master,
+      details: const [],
+      productRows: const [],
+      payment: SalesPaymentDetails(
+        amounts: {
+          SalesPaymentMode.cash: 500,
+          SalesPaymentMode.credit: 500,
+        },
+      ),
+      invoiceDate: DateTime(2026, 9, 3),
+    );
+
+    expect(data.balanceDue, 500.0);
+    expect(data.isBalanceZero, isFalse);
+    expect(data.formattedBalanceDue, '₹500.00');
+  });
+
+  test('maps credit amount in fromMasterAndDetails with credit balance', () {
+    final master = SalesMasterData({
+      'salesMaster_Id': 8899,
+      'salesMaster_InvoiceNo': 'INV-8899',
+      'salesMaster_InvoiceDate': '2026-09-03T10:30:00',
+      'salesMaster_CustomerId': 11,
+      'salesMaster_GrandTotal': 2000.0,
+      'salesMaster_PaidAmount': 749.50,
+      'salesMaster_CreditAmt': 1250.50,
+      'salesMaster_BalanceAmount': 1250.50,
+      'salesMaster_BillingName': 'Ramesh Patil',
+    });
+
+    final data = InvoicePdfDataFactory.fromMasterAndDetails(
+      master: master,
+      details: const [],
+    );
+
+    expect(data.balanceDue, 1250.50);
+    expect(data.isBalanceZero, isFalse);
+    expect(data.formattedBalanceDue, '₹1,250.50');
   });
 }

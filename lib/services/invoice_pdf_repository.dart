@@ -70,6 +70,7 @@ class InvoicePdfRepository {
       },
     ],
     'previousBalance': 20005.00,
+    'balanceDue': 0.0,
     'bank': {
       'name': 'AXIS BANK',
       'branch': 'MANCHAR',

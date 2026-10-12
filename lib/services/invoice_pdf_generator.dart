@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
@@ -417,7 +418,9 @@ class InvoicePdfGenerator {
             ),
             child: _totalRow('Net Amount', _amount(data.netAmount), bold: true),
           ),
-          pw.SizedBox(height: 16),
+          pw.SizedBox(height: 2),
+          _balanceRow(data.balanceDue),
+          pw.SizedBox(height: 8),
           pw.Align(
             alignment: pw.Alignment.centerRight,
             child: pw.Text(
@@ -442,7 +445,87 @@ class InvoicePdfGenerator {
     );
   }
 
-  pw.Widget _totalRow(String label, String value, {bool bold = false}) {
+  pw.Widget _balanceRow(double balance) {
+    final isNil = balance.abs() < 0.001;
+    if (isNil) {
+      return _totalRow('Balance Due', 'NIL', bold: true);
+    }
+
+    final formattedNumber = _formatCurrency(balance);
+    return _totalRow(
+      'Balance Due',
+      'Rs. $formattedNumber',
+      bold: true,
+      customValueWidget: pw.Row(
+        mainAxisSize: pw.MainAxisSize.min,
+        mainAxisAlignment: pw.MainAxisAlignment.end,
+        crossAxisAlignment: pw.CrossAxisAlignment.center,
+        children: [
+          _rupeeIcon(),
+          pw.Text(
+            formattedNumber,
+            style: const pw.TextStyle(
+              fontSize: _bodySize,
+              fontWeight: pw.FontWeight.bold,
+            ),
+            textAlign: pw.TextAlign.right,
+          ),
+        ],
+      ),
+    );
+  }
+
+  pw.Widget _rupeeIcon() {
+    return pw.Container(
+      width: 4.8,
+      height: 7.0,
+      margin: const pw.EdgeInsets.only(right: 1),
+      child: pw.CustomPaint(
+        size: const PdfPoint(4.8, 7.0),
+        painter: (PdfGraphics canvas, PdfPoint size) {
+          canvas
+            ..setColor(PdfColors.black)
+            ..setLineWidth(0.7)
+            ..setLineCap(PdfLineCap.round)
+            ..setLineJoin(PdfLineJoin.round)
+            // Top horizontal bar
+            ..drawLine(0.4, 6.4, 4.4, 6.4)
+            ..strokePath()
+            // Second horizontal bar
+            ..drawLine(0.4, 4.4, 3.8, 4.4)
+            ..strokePath()
+            // Vertical stem & upper curve
+            ..moveTo(1.4, 6.4)
+            ..lineTo(1.4, 3.2)
+            ..strokePath()
+            ..moveTo(1.4, 6.0)
+            ..curveTo(3.8, 6.0, 3.8, 4.2, 1.4, 4.2)
+            ..strokePath()
+            // Slanted leg
+            ..moveTo(1.4, 3.5)
+            ..lineTo(4.4, 0.6)
+            ..strokePath();
+        },
+      ),
+    );
+  }
+
+  static String formatBalanceDue(double balance) {
+    if (balance.abs() < 0.001) return 'NIL';
+    return '₹${_formatCurrency(balance)}';
+  }
+
+  static String _formatCurrency(double value) {
+    final formatter = NumberFormat('#,##,##0.00', 'en_IN');
+    return formatter.format(value);
+  }
+
+  pw.Widget _totalRow(
+    String label,
+    String value, {
+    bool bold = false,
+    pw.Widget? customValueWidget,
+  }) {
     final style = pw.TextStyle(
       fontSize: _bodySize,
       fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal,
@@ -455,7 +538,8 @@ class InvoicePdfGenerator {
           pw.Text(':  ', style: style),
           pw.SizedBox(
             width: 62,
-            child: pw.Text(value, style: style, textAlign: pw.TextAlign.right),
+            child: customValueWidget ??
+                pw.Text(value, style: style, textAlign: pw.TextAlign.right),
           ),
         ],
       ),

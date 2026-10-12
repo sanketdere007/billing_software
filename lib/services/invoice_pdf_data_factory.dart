@@ -33,6 +33,11 @@ class InvoicePdfDataFactory {
     final invoiceNo = salesResponse.data?.salesMasterInvoiceNo.trim() ?? '';
     final salesMasterId = salesResponse.data?.salesMasterId ?? master.salesMasterId;
     final now = DateTime.now();
+    final effectiveBalance = payment.creditAmount > 0
+        ? payment.creditAmount
+        : (master.creditAmount > 0
+            ? master.creditAmount
+            : master.balanceAmount);
 
     return InvoicePdfData(
       company: _company(company, companyNameFallback),
@@ -48,6 +53,7 @@ class InvoicePdfDataFactory {
       customer: _customer(customer, master),
       items: _items(details, productRows),
       previousBalance: 0,
+      balanceDue: effectiveBalance,
       bank: InvoiceBankDetails(
         name: payment.bankName.isNotEmpty
             ? payment.bankName
@@ -145,6 +151,19 @@ class InvoicePdfDataFactory {
     final previousBalance = double.tryParse(
       (master.raw['salesMaster_PreviousBalance'] ?? master.raw['previousBalance'] ?? 0).toString(),
     ) ?? 0.0;
+    final effectiveBalance = masterData.creditAmount > 0
+        ? masterData.creditAmount
+        : (masterData.balanceAmount > 0
+            ? masterData.balanceAmount
+            : double.tryParse(
+                    (master.raw['salesMaster_CreditAmt'] ??
+                            master.raw['creditAmount'] ??
+                            master.raw['salesMaster_BalanceAmount'] ??
+                            master.raw['balanceAmount'] ??
+                            0)
+                        .toString(),
+                  ) ??
+                  0.0);
 
     return InvoicePdfData(
       company: _company(effectiveCompany, companyNameFallback ?? master.raw['comp_Name']?.toString()),
@@ -160,6 +179,7 @@ class InvoicePdfDataFactory {
       customer: _customer(effectiveCustomer, masterData),
       items: _items(detailData, const []),
       previousBalance: previousBalance,
+      balanceDue: effectiveBalance,
       bank: InvoiceBankDetails(
         name: payment.bankName.isNotEmpty ? payment.bankName : masterData.bankName,
         branch: '',
