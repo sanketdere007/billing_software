@@ -9,6 +9,7 @@ import '../../services/api_service.dart';
 import '../../utils/api_constants.dart';
 
 import '../../services/session_service.dart';
+import '../../services/customer_service.dart';
 import '../../models/customer.dart';
 import '../../models/receipt_pdf_data.dart';
 import '../../models/invoice_pdf_data.dart' show IndianCurrencyWords;
@@ -95,6 +96,7 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
   dynamic _selectedInvoice;
   bool _isLoadingInvoices = false;
   CustomerListItem? _selectedCustomer;
+  double _customerPendingAmount = 0.0;
 
   static const List<String> _bankTransferTypes = [
     'NEFT',
@@ -103,12 +105,45 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
     'Fund Transfer',
   ];
 
+  double _getInvoiceBalance(dynamic invoice) {
+    if (invoice == null) return 0.0;
+    if (invoice is Map) {
+      for (final key in [
+        'salesMaster_BalanceAmount',
+        'SalesMaster_BalanceAmount',
+        'balanceAmount',
+        'BalanceAmount',
+        'pendingAmount',
+        'PendingAmount',
+        'salesMaster_PendingAmount',
+      ]) {
+        if (invoice.containsKey(key) && invoice[key] != null) {
+          final val = double.tryParse(invoice[key].toString());
+          if (val != null) return val;
+        }
+      }
+    }
+    return 0.0;
+  }
+
+  double get _pendingAmount {
+    if (_selectedInvoice != null) {
+      return _getInvoiceBalance(_selectedInvoice);
+    }
+    return _customerPendingAmount;
+  }
+
+  bool get _isAmountExceedingPending =>
+      _selectedAccountId != null &&
+      ((_totalAmount * 100).round() > (_pendingAmount * 100).round());
+
   Future<void> _fetchPendingInvoices(int customerId) async {
     setState(() {
       _isLoadingInvoices = true;
       _pendingInvoices = [];
       _selectedInvoice = null;
       _invoiceNoController.clear();
+      _customerPendingAmount = 0.0;
     });
 
     try {
@@ -126,11 +161,46 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
         },
       );
       if (response != null && response['status'] == true && response['data'] != null) {
-        if (response['data']['items'] != null) {
+        List<dynamic> items = [];
+        if (response['data']['items'] != null && response['data']['items'] is List) {
+          items = response['data']['items'];
+        } else if (response['data'] is List) {
+          items = response['data'];
+        }
+
+        double totalPending = 0.0;
+        for (final item in items) {
+          totalPending += _getInvoiceBalance(item);
+        }
+
+        if (mounted) {
           setState(() {
-            _pendingInvoices = response['data']['items'];
+            _pendingInvoices = items;
+            _customerPendingAmount = totalPending;
           });
         }
+      }
+
+      // Check customer outstanding summary as verification or fallback
+      try {
+        final outstandingReport = await customerService.getCustomerOutstandingReport(
+          customerId: customerId,
+          compId: compId,
+          branchId: branchId,
+        );
+        if (outstandingReport.isNotEmpty && mounted) {
+          final custItem = outstandingReport.firstWhere(
+            (item) => item.customerId == customerId,
+            orElse: () => outstandingReport.first,
+          );
+          if (custItem.totalOutstanding > 0 && _customerPendingAmount <= 0) {
+            setState(() {
+              _customerPendingAmount = custItem.totalOutstanding;
+            });
+          }
+        }
+      } catch (e) {
+        debugPrint('Note: Error fetching customer outstanding summary: $e');
       }
     } catch (e) {
       debugPrint('Error fetching pending invoices: $e');
@@ -362,17 +432,16 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
       _selectedBankTransferType = null;
       _selectedAccountId = null;
       _selectedLedgerId = null;
+      _selectedCustomer = null;
       _selectedInvoice = null;
       _pendingInvoices = [];
+      _customerPendingAmount = 0.0;
     });
     WidgetsBinding.instance.addPostFrameCallback((_) => _focusCustomer());
   }
 
   Future<void> _saveReceipt() async {
     FocusScope.of(context).unfocus();
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
 
     if (_selectedAccountId == null || _selectedAccountId! <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -382,9 +451,40 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
       return;
     }
 
+    if (_isLoadingInvoices) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please wait while customer pending balance is being fetched...')),
+      );
+      return;
+    }
+
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
     if (_totalAmount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Enter at least one receipt mode amount')),
+      );
+      _cashAmountNode.requestFocus();
+      return;
+    }
+
+    if (_isAmountExceedingPending) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error_outline, color: Colors.white, size: 20),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Text('Receipt amount cannot be greater than the pending amount.'),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+        ),
       );
       _cashAmountNode.requestFocus();
       return;
@@ -663,11 +763,62 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
                     setState(() {
                       _pendingInvoices = [];
                       _selectedInvoice = null;
+                      _customerPendingAmount = 0.0;
                       _invoiceNoController.clear();
                     });
                   }
                 },
               ),
+              if (_selectedCustomer != null) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withOpacity(0.06),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: theme.colorScheme.primary.withOpacity(0.2)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.account_balance_wallet_outlined, size: 18, color: theme.colorScheme.primary),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Customer Pending Amount: ',
+                        style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                      _isLoadingInvoices
+                          ? const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Text(
+                              '₹${_customerPendingAmount.toStringAsFixed(2)}',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.primary,
+                              ),
+                            ),
+                      const Spacer(),
+                      if (_selectedInvoice != null)
+                        Text(
+                          'Invoice: ₹${_getInvoiceBalance(_selectedInvoice).toStringAsFixed(2)}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: theme.colorScheme.secondary,
+                          ),
+                        )
+                      else if (_pendingInvoices.isNotEmpty)
+                        Text(
+                          '${_pendingInvoices.length} pending ${_pendingInvoices.length == 1 ? "invoice" : "invoices"}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: 16),
               _responsiveRow(isDesktop, [
                 _buildDateField(
@@ -686,19 +837,33 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
                         focusNode: _invoiceNoNode,
                         decoration: _inputDecoration('Select Invoice No', theme).copyWith(
                           prefixIcon: const Icon(Icons.receipt_long, size: 20),
+                          suffixIcon: _selectedInvoice != null
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear, size: 18),
+                                  tooltip: 'Clear selected invoice',
+                                  onPressed: () {
+                                    setState(() {
+                                      _selectedInvoice = null;
+                                      _invoiceNoController.clear();
+                                    });
+                                  },
+                                )
+                              : null,
                         ),
                         items: _pendingInvoices.map((invoice) {
+                          final invNo = (invoice['salesMaster_InvoiceNo'] ?? invoice['invoiceNo'] ?? 'Invoice').toString();
+                          final bal = _getInvoiceBalance(invoice);
                           return DropdownMenuItem<dynamic>(
                             value: invoice,
-                            child: Text('${invoice['salesMaster_InvoiceNo']} - ₹${invoice['salesMaster_BalanceAmount']}'),
+                            child: Text('$invNo - ₹${bal.toStringAsFixed(2)}'),
                           );
                         }).toList(),
                         onChanged: (val) {
                           setState(() {
                             _selectedInvoice = val;
                             if (val != null) {
-                              _invoiceNoController.text = val['salesMaster_InvoiceNo']?.toString() ?? '';
-                              _cashAmountController.text = val['salesMaster_BalanceAmount']?.toString() ?? '0';
+                              _invoiceNoController.text = (val['salesMaster_InvoiceNo'] ?? val['invoiceNo'])?.toString() ?? '';
+                              _cashAmountController.text = _getInvoiceBalance(val).toStringAsFixed(2);
                             } else {
                               _invoiceNoController.clear();
                               _cashAmountController.clear();
@@ -714,6 +879,47 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
                 Icons.account_balance_wallet_outlined,
               ),
               _buildBreakupAmounts(theme, isDesktop),
+              if (_isAmountExceedingPending) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.red.shade400),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.error_outline, color: Colors.red.shade700, size: 20),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Receipt amount cannot be greater than the pending amount.',
+                              style: TextStyle(
+                                color: Colors.red.shade900,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Entered: ₹${_totalAmount.toStringAsFixed(2)}  |  Pending: ₹${_pendingAmount.toStringAsFixed(2)}  |  Excess: ₹${(_totalAmount - _pendingAmount).toStringAsFixed(2)}',
+                              style: TextStyle(
+                                color: Colors.red.shade800,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: 12),
               _buildTotalSummary(theme),
               if (_cashAmount > 0) ...[
@@ -1003,6 +1209,9 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
     FocusNode focusNode,
     ThemeData theme,
   ) {
+    final amt = _parseAmount(controller);
+    final hasError = _isAmountExceedingPending && amt > 0;
+
     return TextFormField(
       controller: controller,
       focusNode: focusNode,
@@ -1014,35 +1223,118 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
       decoration: _inputDecoration(
         label,
         theme,
-      ).copyWith(prefixIcon: const Icon(Icons.currency_rupee, size: 18)),
+      ).copyWith(
+        prefixIcon: Icon(
+          Icons.currency_rupee,
+          size: 18,
+          color: hasError ? theme.colorScheme.error : null,
+        ),
+        enabledBorder: hasError
+            ? OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: theme.colorScheme.error, width: 1.5),
+              )
+            : null,
+        focusedBorder: hasError
+            ? OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: theme.colorScheme.error, width: 2.0),
+              )
+            : null,
+      ),
       onEditingComplete: () => _focusNext(focusNode),
     );
   }
 
   Widget _buildTotalSummary(ThemeData theme) {
+    final hasPending = _selectedAccountId != null && _selectedAccountId! > 0;
+    final isExceeded = _isAmountExceedingPending;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: theme.colorScheme.primary.withOpacity(0.08),
+        color: isExceeded
+            ? Colors.red.shade50
+            : theme.colorScheme.primary.withOpacity(0.08),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: theme.colorScheme.primary.withOpacity(0.3)),
+        border: Border.all(
+          color: isExceeded
+              ? Colors.red.shade400
+              : theme.colorScheme.primary.withOpacity(0.3),
+        ),
       ),
-      child: Row(
+      child: Column(
         children: [
-          Text(
-            'Total Amount',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+          Row(
+            children: [
+              Text(
+                'Total Receipt Amount',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: isExceeded ? Colors.red.shade900 : null,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '₹${_totalAmount.toStringAsFixed(2)}',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: isExceeded ? Colors.red.shade700 : theme.colorScheme.primary,
+                ),
+              ),
+            ],
           ),
-          const Spacer(),
-          Text(
-            '₹${_totalAmount.toStringAsFixed(2)}',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.primary,
+          if (hasPending) ...[
+            const SizedBox(height: 6),
+            Divider(
+              height: 1,
+              color: isExceeded ? Colors.red.shade200 : theme.dividerColor.withOpacity(0.3),
             ),
-          ),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Text(
+                  _selectedInvoice != null
+                      ? 'Invoice Pending Amount'
+                      : 'Customer Pending Amount',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: isExceeded ? Colors.red.shade800 : theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '₹${_pendingAmount.toStringAsFixed(2)}',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: isExceeded ? Colors.red.shade800 : theme.colorScheme.onSurface,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Text(
+                  isExceeded ? 'Exceeds By' : 'Remaining Balance',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: isExceeded ? Colors.red.shade700 : theme.colorScheme.onSurfaceVariant,
+                    fontWeight: isExceeded ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  isExceeded
+                      ? '+₹${(_totalAmount - _pendingAmount).toStringAsFixed(2)}'
+                      : '₹${(_pendingAmount - _totalAmount).toStringAsFixed(2)}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: isExceeded ? Colors.red.shade700 : Colors.green.shade700,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
