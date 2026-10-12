@@ -3,6 +3,7 @@ import '../models/customer_reports.dart';
 import '../models/supplier_reports.dart';
 import '../models/current_stock.dart';
 import '../models/outstanding_receivable_report.dart';
+import '../models/batch_wise_stock_report.dart';
 import 'excel_export_helper.dart';
 
 class ReportExcelExportService {
@@ -247,6 +248,49 @@ class ReportExcelExportService {
             ExcelExportHelper.formatAmount(items[i].unitValue),
             ExcelExportHelper.formatAmount(items[i].availableStock),
             ExcelExportHelper.formatAmount(items[i].sellingPrice),
+          ],
+      ],
+    );
+  }
+
+  static Future<ExcelExportResult> exportBatchWiseStock(
+    List<BatchWiseStockItem> items,
+  ) {
+    return ExcelExportHelper.exportSheet(
+      filePrefix: 'Batch_Wise_Stock_Report',
+      sheetName: 'Batch Stock',
+      emptyMessage: 'No batch stock records available to export.',
+      columns: const [
+        ExcelColumn('Sr. No.', align: ExcelCellAlign.center, type: ExcelCellType.number),
+        ExcelColumn('Product Name'),
+        ExcelColumn('Batch No', align: ExcelCellAlign.center),
+        ExcelColumn('Barcode', align: ExcelCellAlign.center),
+        ExcelColumn('EAN Code', align: ExcelCellAlign.center),
+        ExcelColumn('Unit', align: ExcelCellAlign.center),
+        ExcelColumn('Unit Value', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn('Total Stock', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn('Available Stock', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn('Landing Price', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn('Purchase Price', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn('MRP', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn('Selling Price', align: ExcelCellAlign.right, type: ExcelCellType.number),
+      ],
+      rows: [
+        for (int i = 0; i < items.length; i++)
+          [
+            '${i + 1}',
+            items[i].prodName,
+            items[i].batchNumber,
+            items[i].batchBarcode,
+            items[i].batchEanCode,
+            items[i].unitShortName,
+            ExcelExportHelper.formatAmount(items[i].prodUnitValue),
+            ExcelExportHelper.formatAmount(items[i].batchStock),
+            ExcelExportHelper.formatAmount(items[i].batchAvailableStock),
+            ExcelExportHelper.formatAmount(items[i].batchLandingPrice),
+            ExcelExportHelper.formatAmount(items[i].batchPurchasePrice),
+            ExcelExportHelper.formatAmount(items[i].batchMrp),
+            ExcelExportHelper.formatAmount(items[i].batchSellingPrice),
           ],
       ],
     );

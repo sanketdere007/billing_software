@@ -56,6 +56,7 @@ import '../screens/reports/customer_outstanding_report_screen.dart';
 import '../screens/reports/collection_report_screen.dart';
 import '../screens/reports/payment_entry_report_screen.dart';
 import '../screens/reports/current_stock_report_screen.dart';
+import '../screens/reports/batch_wise_stock_report_screen.dart';
 import '../screens/reports/customer_list_report_screen.dart';
 import '../screens/reports/product_wise_sales_report_screen.dart';
 import '../screens/reports/outstanding_receivable_report_screen.dart';
@@ -1335,6 +1336,20 @@ class _AppDrawerState extends State<AppDrawer> {
                           MaterialPageRoute(
                             builder: (context) =>
                                 const CurrentStockReportScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _buildDrawerItem(
+                      context: context,
+                      icon: Icons.layers_rounded,
+                      iconColor: _getIconColor(context, Colors.indigo),
+                      title: 'Batch Wise Stock',
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const BatchWiseStockReportScreen(),
                           ),
                         );
                       },
