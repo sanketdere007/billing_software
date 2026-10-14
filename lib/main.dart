@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:billing_software/constants/app_constants.dart';
 import 'package:billing_software/screens/splash_screen.dart';
 import 'package:billing_software/services/theme_provider.dart';
 import 'package:billing_software/services/shortcut_service.dart';
@@ -21,7 +22,8 @@ class MyApp extends StatelessWidget {
           navigatorKey: shortcutService.navigatorKey,
           navigatorObservers: [shortcutService.routeObserver],
           debugShowCheckedModeBanner: false,
-          title: 'Billing Software',
+          title: AppConstants.appName,
+          onGenerateTitle: (context) => AppConstants.appName,
           themeMode: themeProvider.themeMode,
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(

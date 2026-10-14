@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../constants/app_constants.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/direct_back_scope.dart';
 
@@ -76,7 +77,7 @@ class HelpSupportScreen extends StatelessWidget {
                     icon: Icons.bug_report,
                     color: Colors.red,
                     onTap: () => _launchUrl(
-                      'mailto:sankysoft@gmail.com?subject=Bug Report - Billing Software',
+                      'mailto:sankysoft@gmail.com?subject=Bug Report - ${AppConstants.appName}',
                     ),
                   ),
                   _buildSupportCard(

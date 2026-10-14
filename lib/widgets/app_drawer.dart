@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../constants/app_constants.dart';
 import '../models/login_response.dart';
 import 'package:billing_software/services/auth_service.dart';
 import 'package:billing_software/services/session_service.dart';
@@ -1457,6 +1458,25 @@ class _AppDrawerState extends State<AppDrawer> {
             title: 'Logout',
             shortcutKey: 'Ctrl+Shift+L',
             onTap: () => shortcutService.triggerLogout(context),
+          ),
+          SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 12.0, top: 4.0),
+              child: Center(
+                child: Text(
+                  AppConstants.versionDisplay,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey.shade500
+                        : Colors.grey.shade600,
+                    letterSpacing: 0.4,
+                  ),
+                ),
+              ),
+            ),
           ),
           // const SupportInfoFooter(isCompact: true),
         ],

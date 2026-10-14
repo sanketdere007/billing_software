@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../constants/app_constants.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/direct_back_scope.dart';
 
@@ -61,7 +62,7 @@ class AboutScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Version 1.0.0',
+                    AppConstants.versionDisplay,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       color: Colors.grey.shade500,
                     ),

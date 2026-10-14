@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../constants/app_constants.dart';
 
 class SupportInfoFooter extends StatelessWidget {
   final bool isCompact;
@@ -66,7 +67,7 @@ class SupportInfoFooter extends StatelessWidget {
                 Icon(Icons.info_outline, size: 16, color: textColor),
                 const SizedBox(width: 8),
                 Text(
-                  'Version: 1.0.0',
+                  AppConstants.versionDisplay,
                   style: TextStyle(color: textColor, fontSize: 12),
                 ),
               ],
