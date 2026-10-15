@@ -544,19 +544,19 @@ class _AppDrawerState extends State<AppDrawer> {
                     );
                   },
                 ),
-                // _buildDrawerItem(
-                //   context: context,
-                //   icon: Icons.mail_outline_rounded,
-                //   iconColor: _getIconColor(context, Colors.red),
-                //   title: 'Send Mail',
-                //   onTap: () {
-                //     Navigator.of(context).push(
-                //       MaterialPageRoute(
-                //         builder: (context) => const SendMailScreen(),
-                //       ),
-                //     );
-                //   },
-                // ),
+                _buildDrawerItem(
+                  context: context,
+                  icon: Icons.mail_outline_rounded,
+                  iconColor: _getIconColor(context, Colors.red),
+                  title: 'Send Mail',
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const SendMailScreen(),
+                      ),
+                    );
+                  },
+                ),
                 // _buildDrawerItem(
                 //   context: context,
                 //   icon: Icons.picture_as_pdf_rounded,
@@ -1272,6 +1272,7 @@ class _AppDrawerState extends State<AppDrawer> {
                         );
                       },
                     ),
+
                     // _buildDrawerItem(
                     //   context: context,
                     //   icon: Icons.pie_chart_rounded,
@@ -1286,6 +1287,21 @@ class _AppDrawerState extends State<AppDrawer> {
                     //     );
                     //   },
                     // ),
+                    _buildDrawerItem(
+                      context: context,
+                      icon: Icons.assignment_ind_rounded,
+                      iconColor: _getIconColor(context, Colors.indigo),
+                      title: 'Customer Wise Sales',
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const CustomerWiseSalesReportScreen(),
+                          ),
+                        );
+                      },
+                    ),
+
                     _buildDrawerItem(
                       context: context,
                       icon: Icons.receipt_long_rounded,
@@ -1380,20 +1396,6 @@ class _AppDrawerState extends State<AppDrawer> {
                           MaterialPageRoute(
                             builder: (context) =>
                                 const ProductWiseSalesReportScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                    _buildDrawerItem(
-                      context: context,
-                      icon: Icons.assignment_ind_rounded,
-                      iconColor: _getIconColor(context, Colors.indigo),
-                      title: 'Customer Wise Sales',
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const CustomerWiseSalesReportScreen(),
                           ),
                         );
                       },

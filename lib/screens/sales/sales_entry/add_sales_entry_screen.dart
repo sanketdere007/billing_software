@@ -87,9 +87,47 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
 
   bool _isLoading = false;
   bool _isViewMode = false;
+  bool _isMinQtyDialogShowing = false;
 
   final CustomerService _customerService = CustomerService();
   final BatchService _batchService = batchService;
+
+  double _resolveMinSaleQty(BatchListItem batch) {
+    if (batch.prodMinSaleQty > 0) {
+      return batch.prodMinSaleQty;
+    }
+    final cached = productService.getProductByIdFromCache(batch.batchProductId);
+    if (cached != null && cached.prodMinSaleQty > 0) {
+      return cached.prodMinSaleQty;
+    }
+    return 1.0;
+  }
+
+  String _formatQty(double value) {
+    if (value.truncateToDouble() == value) {
+      return value.toInt().toString();
+    }
+    return value.toString();
+  }
+
+  Future<void> _showMinSaleQtyWarning(
+    double minSaleQty,
+    FocusNode focusNode,
+  ) async {
+    if (_isMinQtyDialogShowing || !mounted) return;
+    _isMinQtyDialogShowing = true;
+    try {
+      await showWarningDialog(
+        context,
+        'Minimum sales quantity for this product is ${_formatQty(minSaleQty)}. You cannot sell less than the minimum allowed quantity.',
+      );
+      if (mounted) {
+        focusNode.requestFocus();
+      }
+    } finally {
+      _isMinQtyDialogShowing = false;
+    }
+  }
 
   @override
   void initState() {
@@ -128,9 +166,12 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
   }
 
   void _addNewEmptyRow() {
-    _products.add({
+    final qtyController = TextEditingController(text: '1.0');
+    final qtyNode = FocusNode();
+    final rowMap = <String, dynamic>{
       'product': null, // null indicates empty row
       'qty': 1.0,
+      'minSaleQty': 1.0,
       'rate': 0.0,
       'discPct': 0.0,
       'discAmt': 0.0,
@@ -139,16 +180,39 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
       'discounted': 0.0,
       'gstAmt': 0.0,
       'net': 0.0,
-      'qtyController': TextEditingController(text: '1.0'),
+      'qtyController': qtyController,
       'rateController': TextEditingController(text: '0.0'),
       'discPctController': TextEditingController(text: '0'),
       'discAmtController': TextEditingController(text: '0.0'),
       'productNode': FocusNode(),
-      'qtyNode': FocusNode(),
+      'qtyNode': qtyNode,
       'rateNode': FocusNode(),
       'discPctNode': FocusNode(),
       'discNode': FocusNode(),
+    };
+
+    qtyNode.addListener(() {
+      if (!qtyNode.hasFocus && mounted && !_isLoading && !_isViewMode) {
+        final BatchListItem? prod = rowMap['product'];
+        if (prod == null) return;
+        final double minSaleQty =
+            (rowMap['minSaleQty'] as num?)?.toDouble() ??
+            _resolveMinSaleQty(prod);
+        final double currentQty = (rowMap['qty'] as num?)?.toDouble() ?? 0.0;
+        if (currentQty < minSaleQty) {
+          final formattedMin = _formatQty(minSaleQty);
+          qtyController.value = TextEditingValue(
+            text: formattedMin,
+            selection: TextSelection.collapsed(offset: formattedMin.length),
+          );
+          rowMap['qty'] = minSaleQty;
+          _calculateTotals();
+          _showMinSaleQtyWarning(minSaleQty, qtyNode);
+        }
+      }
     });
+
+    _products.add(rowMap);
   }
 
   @override
@@ -325,6 +389,28 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
       if (exists) {
         if (!mounted) return;
         await showWarningDialog(context, 'This batch number is already added.');
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            (_products[index]['productNode'] as FocusNode).requestFocus();
+          }
+        });
+        return;
+      }
+
+      final double minSaleQty = _resolveMinSaleQty(selectedProduct);
+
+      // Validate available stock against minimum sales quantity
+      if (selectedProduct.batchAvailableStock < minSaleQty) {
+        if (!mounted) return;
+        await showWarningDialog(
+          context,
+          'Cannot add product. Available stock is ${_formatQty(selectedProduct.batchAvailableStock)}, but minimum sales quantity is ${_formatQty(minSaleQty)}.',
+        );
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            (_products[index]['productNode'] as FocusNode).requestFocus();
+          }
+        });
         return;
       }
 
@@ -334,6 +420,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
       setState(() {
         final p = _products[index];
         p['product'] = selectedProduct;
+        p['minSaleQty'] = minSaleQty;
         p['gstPct'] = gstPct;
         p['rate'] = selectedProduct.batchSellingPrice;
         p['mrp'] = selectedProduct.batchMRP;
@@ -341,14 +428,20 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
             .batchSellingPrice
             .toString();
 
-        // Ensure default qty doesn't exceed available stock
+        // Ensure default qty is at least minSaleQty and does not exceed available stock
         double currentQty = (p['qty'] as num?)?.toDouble() ?? 1.0;
-        if (currentQty > selectedProduct.batchAvailableStock) {
-          p['qty'] = selectedProduct.batchAvailableStock;
-          (p['qtyController'] as TextEditingController).text = selectedProduct
-              .batchAvailableStock
-              .toString();
+        if (currentQty < minSaleQty) {
+          currentQty = minSaleQty;
         }
+        if (currentQty > selectedProduct.batchAvailableStock &&
+            selectedProduct.batchAvailableStock > 0) {
+          currentQty = selectedProduct.batchAvailableStock;
+        }
+
+        p['qty'] = currentQty;
+        (p['qtyController'] as TextEditingController).text = _formatQty(
+          currentQty,
+        );
 
         // Add a new empty row immediately if we just populated the last row
         if (index == _products.length - 1) {
@@ -414,6 +507,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
       setState(() {
         p['product'] = null;
         p['qty'] = 1.0;
+        p['minSaleQty'] = 1.0;
         p['rate'] = 0.0;
         p['discPct'] = 0.0;
         p['discAmt'] = 0.0;
@@ -511,6 +605,33 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
     if (_finalPayable <= 0.0) {
       await showWarningDialog(context, 'Final payable amount cannot be zero.');
       return;
+    }
+
+    // Min sales quantity validation during Save
+    for (var p in validProducts) {
+      final BatchListItem prod = p['product'];
+      final double qty = (p['qty'] as num?)?.toDouble() ?? 0.0;
+      final double minSaleQty =
+          (p['minSaleQty'] as num?)?.toDouble() ?? _resolveMinSaleQty(prod);
+      if (prod.batchAvailableStock < minSaleQty) {
+        (p['qtyNode'] as FocusNode).requestFocus();
+        await showWarningDialog(
+          context,
+          'Cannot sell ${prod.prodName}. Available stock is ${_formatQty(prod.batchAvailableStock)}, but minimum sales quantity is ${_formatQty(minSaleQty)}.',
+        );
+        return;
+      }
+      if (qty < minSaleQty) {
+        final formattedMin = _formatQty(minSaleQty);
+        (p['qtyController'] as TextEditingController).value = TextEditingValue(
+          text: formattedMin,
+          selection: TextSelection.collapsed(offset: formattedMin.length),
+        );
+        p['qty'] = minSaleQty;
+        _calculateTotals();
+        await _showMinSaleQtyWarning(minSaleQty, p['qtyNode'] as FocusNode);
+        return;
+      }
     }
 
     // Final stock validation during Save
@@ -856,10 +977,12 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
       for (var p in _products) {
         (p['qtyController'] as TextEditingController).dispose();
         (p['rateController'] as TextEditingController).dispose();
+        (p['discPctController'] as TextEditingController).dispose();
         (p['discAmtController'] as TextEditingController).dispose();
         (p['productNode'] as FocusNode).dispose();
         (p['qtyNode'] as FocusNode).dispose();
         (p['rateNode'] as FocusNode).dispose();
+        (p['discPctNode'] as FocusNode).dispose();
         (p['discNode'] as FocusNode).dispose();
       }
       _products.clear();
@@ -935,6 +1058,26 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
 
     // 3. Down Arrow
     if (key == LogicalKeyboardKey.arrowDown) {
+      if (fieldName == 'qty') {
+        final prod = p['product'] as BatchListItem?;
+        if (prod != null) {
+          final double minSaleQty =
+              (p['minSaleQty'] as num?)?.toDouble() ?? _resolveMinSaleQty(prod);
+          final double currentQty = (p['qty'] as num?)?.toDouble() ?? 0.0;
+          if (currentQty < minSaleQty) {
+            final formattedMin = _formatQty(minSaleQty);
+            (p['qtyController'] as TextEditingController)
+                .value = TextEditingValue(
+              text: formattedMin,
+              selection: TextSelection.collapsed(offset: formattedMin.length),
+            );
+            p['qty'] = minSaleQty;
+            _calculateTotals();
+            _showMinSaleQtyWarning(minSaleQty, p['qtyNode'] as FocusNode);
+            return KeyEventResult.handled;
+          }
+        }
+      }
       if (index < _products.length - 1) {
         (_products[index + 1]['${fieldName}Node'] as FocusNode).requestFocus();
         return KeyEventResult.handled;
@@ -1002,6 +1145,24 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
           return KeyEventResult.handled;
         }
       } else if (fieldName == 'qty') {
+        final prod = p['product'] as BatchListItem?;
+        if (prod != null) {
+          final double minSaleQty =
+              (p['minSaleQty'] as num?)?.toDouble() ?? _resolveMinSaleQty(prod);
+          final double currentQty = (p['qty'] as num?)?.toDouble() ?? 0.0;
+          if (currentQty < minSaleQty) {
+            final formattedMin = _formatQty(minSaleQty);
+            (p['qtyController'] as TextEditingController)
+                .value = TextEditingValue(
+              text: formattedMin,
+              selection: TextSelection.collapsed(offset: formattedMin.length),
+            );
+            p['qty'] = minSaleQty;
+            _calculateTotals();
+            _showMinSaleQtyWarning(minSaleQty, p['qtyNode'] as FocusNode);
+            return KeyEventResult.handled;
+          }
+        }
         (p['rateNode'] as FocusNode).requestFocus();
         return KeyEventResult.handled;
       } else if (fieldName == 'rate') {
@@ -1384,7 +1545,10 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                                       controller: p['qtyController'],
                                       focusNode: p['qtyNode'],
                                       enabled: !isEmptyRow,
-                                      keyboardType: TextInputType.number,
+                                      keyboardType:
+                                          const TextInputType.numberWithOptions(
+                                            decimal: true,
+                                          ),
                                       textAlign: TextAlign.right,
                                       textInputAction: TextInputAction.next,
                                       inputFormatters: [
@@ -1445,7 +1609,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                                         }
                                         _calculateTotals();
                                       },
-                                      onFieldSubmitted: (_) {
+                                      onFieldSubmitted: (_) async {
                                         // Final validation on enter as a safety measure
                                         double currentQty =
                                             double.tryParse(
@@ -1498,6 +1662,33 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                                           p['qty'] = fallbackQty;
                                           _calculateTotals();
                                         } else {
+                                          final double minSaleQty =
+                                              (p['minSaleQty'] as num?)
+                                                  ?.toDouble() ??
+                                              _resolveMinSaleQty(prod!);
+                                          if (currentQty < minSaleQty) {
+                                            final formattedMin = _formatQty(
+                                              minSaleQty,
+                                            );
+                                            (p['qtyController']
+                                                    as TextEditingController)
+                                                .value = TextEditingValue(
+                                              text: formattedMin,
+                                              selection:
+                                                  TextSelection.collapsed(
+                                                    offset: formattedMin.length,
+                                                  ),
+                                            );
+                                            p['qty'] = minSaleQty;
+                                            _calculateTotals();
+
+                                            await _showMinSaleQtyWarning(
+                                              minSaleQty,
+                                              p['qtyNode'] as FocusNode,
+                                            );
+                                            return;
+                                          }
+
                                           (p['rateNode'] as FocusNode)
                                               .requestFocus();
                                         }

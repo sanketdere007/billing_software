@@ -20,6 +20,7 @@ class BatchListItem {
   final String batchEANCode;
   final bool batchIsActive;
   final String batchNumber;
+  final double prodMinSaleQty;
 
   BatchListItem({
     required this.batchId,
@@ -43,6 +44,7 @@ class BatchListItem {
     this.batchEANCode = '',
     this.batchIsActive = true,
     this.batchNumber = '',
+    this.prodMinSaleQty = 1.0,
   });
 
   factory BatchListItem.fromJson(Map<String, dynamic> json) {
@@ -62,6 +64,21 @@ class BatchListItem {
           'UnitValue',
         ]),
       ),
+      prodMinSaleQty: _parseBatchDouble(
+        _firstBatchJsonValue(json, const [
+          'prod_MinSaleQty',
+          'Prod_MinSaleQty',
+          'prodMinSaleQty',
+        ]),
+      ) > 0
+          ? _parseBatchDouble(
+              _firstBatchJsonValue(json, const [
+                'prod_MinSaleQty',
+                'Prod_MinSaleQty',
+                'prodMinSaleQty',
+              ]),
+            )
+          : 1.0,
       batchCompId: int.tryParse(json['batch_CompId']?.toString() ?? '0') ?? 0,
       compName: json['comp_Name']?.toString() ?? '',
       batchBranchId:

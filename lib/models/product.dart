@@ -38,6 +38,7 @@ class ProductListItem {
   final double batchMRP;
   final double batchSellingPrice;
   final String batchNumber;
+  final double prodMinSaleQty;
 
   ProductListItem({
     required this.prodId,
@@ -52,6 +53,7 @@ class ProductListItem {
     this.prodHSNCode = '',
     this.prodGSTPercent = 0.0,
     this.prodUnitValue = 0.0,
+    this.prodMinSaleQty = 1.0,
     this.prodIsActive = true,
     this.prodCreatedBy = 0,
     this.prodModifiedBy = 0,
@@ -110,6 +112,19 @@ class ProductListItem {
 
   String get unitValueWithShortName => unitWithValue;
 
+  String get formattedMinSaleQty {
+    final qty = prodMinSaleQty > 0 ? prodMinSaleQty : 1.0;
+    if (qty.truncateToDouble() == qty) {
+      return qty.toStringAsFixed(0);
+    }
+    final fixed = qty.toStringAsFixed(2);
+    if (fixed.contains('.')) {
+      final trimmed = fixed.replaceAll(RegExp(r'0+$'), '').replaceAll(RegExp(r'\.$'), '');
+      return trimmed;
+    }
+    return fixed;
+  }
+
   factory ProductListItem.fromJson(Map<String, dynamic> json) {
     return ProductListItem(
       prodId: _parseInt(json['prod_Id']),
@@ -149,6 +164,21 @@ class ProductListItem {
           'UnitValue',
         ]),
       ),
+      prodMinSaleQty: _parseDouble(
+        _firstJsonValue(json, const [
+          'prod_MinSaleQty',
+          'Prod_MinSaleQty',
+          'prodMinSaleQty',
+        ]),
+      ) > 0
+          ? _parseDouble(
+              _firstJsonValue(json, const [
+                'prod_MinSaleQty',
+                'Prod_MinSaleQty',
+                'prodMinSaleQty',
+              ]),
+            )
+          : 1.0,
       prodIsActive: json['prod_IsActive'] == true ||
           json['prod_IsActive'] == 'true' ||
           json['prod_IsActive'] == 1 ||
@@ -211,6 +241,7 @@ class ProductListItem {
       'prod_HSNCode': prodHSNCode,
       'prod_GSTPercent': prodGSTPercent,
       'prod_UnitValue': prodUnitValue,
+      'prod_MinSaleQty': prodMinSaleQty,
       'prod_IsActive': prodIsActive,
       'prod_CreatedBy': prodCreatedBy,
       'prod_ModifiedBy': prodModifiedBy,
@@ -251,6 +282,7 @@ class ProductListItem {
     String? prodHSNCode,
     double? prodGSTPercent,
     double? prodUnitValue,
+    double? prodMinSaleQty,
     bool? prodIsActive,
     int? prodCreatedBy,
     int? prodModifiedBy,
@@ -282,6 +314,7 @@ class ProductListItem {
       prodHSNCode: prodHSNCode ?? this.prodHSNCode,
       prodGSTPercent: prodGSTPercent ?? this.prodGSTPercent,
       prodUnitValue: prodUnitValue ?? this.prodUnitValue,
+      prodMinSaleQty: prodMinSaleQty ?? this.prodMinSaleQty,
       prodIsActive: prodIsActive ?? this.prodIsActive,
       prodCreatedBy: prodCreatedBy ?? this.prodCreatedBy,
       prodModifiedBy: prodModifiedBy ?? this.prodModifiedBy,
@@ -389,6 +422,7 @@ class ProductUpsertRequest {
   final String prodHSNCode;
   final double prodGSTPercent;
   final double prodUnitValue;
+  final double prodMinSaleQty;
   final bool prodIsActive;
   final int prodCreatedBy;
   final int prodModifiedBy;
@@ -414,6 +448,7 @@ class ProductUpsertRequest {
     this.prodHSNCode = '',
     this.prodGSTPercent = 0.0,
     this.prodUnitValue = 0.0,
+    this.prodMinSaleQty = 1.0,
     this.prodIsActive = true,
     this.prodCreatedBy = 0,
     this.prodModifiedBy = 0,
@@ -441,6 +476,8 @@ class ProductUpsertRequest {
       'prod_HSNCode': prodHSNCode.trim(),
       'prod_GSTPercent': prodGSTPercent,
       'prod_UnitValue': prodUnitValue,
+      'prod_MinSaleQty': prodMinSaleQty,
+      'Prod_MinSaleQty': prodMinSaleQty,
       'prod_IsActive': prodIsActive,
       'prod_CreatedBy': prodCreatedBy,
       'prod_ModifiedBy': prodModifiedBy,

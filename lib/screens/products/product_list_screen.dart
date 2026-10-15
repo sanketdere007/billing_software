@@ -932,6 +932,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                 _buildHeaderCell('Subcategory', flex: 2),
                 _buildHeaderCell('Brand', flex: 2),
                 _buildHeaderCell('Unit', flex: 1),
+                _buildHeaderCell('Min Sales Qty', width: 110),
                 _buildHeaderCell(
                   'Actions',
                   width: 120,
@@ -1100,6 +1101,17 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                   ? null
                                   : theme.hintColor,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+
+                        // Min Sales Qty
+                        SizedBox(
+                          width: 110,
+                          child: Text(
+                            product.formattedMinSaleQty,
+                            style: theme.textTheme.bodyMedium,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -1341,7 +1353,22 @@ class _ProductListScreenState extends State<ProductListScreen> {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 6),
                   ],
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.shopping_basket_outlined,
+                        size: 16,
+                        color: Colors.grey,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Min Sales Qty: ${product.formattedMinSaleQty}',
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                    ],
+                  ),
 
                   // Action Buttons
                   const SizedBox(height: 10),
@@ -1539,19 +1566,14 @@ class _ProductDetailsDialogState extends State<_ProductDetailsDialog> {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildDetailTile(
-                            'Unit Value',
-                            _product.formattedUnitValue,
-                          ),
-                        ),
+                        const Expanded(child: SizedBox.shrink()),
                       ],
                     ),
                     const SizedBox(height: 16),
 
                     // Categorization Section
                     _buildSectionHeader(
-                      'Categorization',
+                      'Categorization & Units',
                       Icons.category_outlined,
                     ),
                     const SizedBox(height: 10),
@@ -1593,6 +1615,23 @@ class _ProductDetailsDialogState extends State<_ProductDetailsDialog> {
                             _product.prodUnitName.isNotEmpty
                                 ? _product.prodUnitName
                                 : '—',
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildDetailTile(
+                            'Unit Value',
+                            _product.formattedUnitValue,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildDetailTile(
+                            'Min Sales Qty',
+                            _product.formattedMinSaleQty,
                           ),
                         ),
                       ],

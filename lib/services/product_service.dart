@@ -159,6 +159,7 @@ class ProductService extends ChangeNotifier {
       prodHSNCode: request.prodHSNCode,
       prodGSTPercent: request.prodGSTPercent,
       prodUnitValue: request.prodUnitValue,
+      prodMinSaleQty: request.prodMinSaleQty,
       prodIsActive: request.prodIsActive,
       prodCreatedBy: createdBy,
       prodModifiedBy: modifiedBy,
@@ -169,6 +170,7 @@ class ProductService extends ChangeNotifier {
       batchPurchasePrice: request.batchPurchasePrice,
       batchMRP: request.batchMRP,
       batchSellingPrice: request.batchSellingPrice,
+      batchNumber: request.batchNumber,
     );
 
     debugPrint(

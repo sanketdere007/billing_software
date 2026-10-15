@@ -40,6 +40,9 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
   final TextEditingController _unitValueController = TextEditingController(
     text: '0',
   );
+  final TextEditingController _minSaleQtyController = TextEditingController(
+    text: '1',
+  );
 
   final TextEditingController _batchBarcodeController = TextEditingController();
   final TextEditingController _batchEANCodeController = TextEditingController();
@@ -65,6 +68,7 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
   final FocusNode _brandFocusNode = FocusNode();
   final FocusNode _unitFocusNode = FocusNode();
   final FocusNode _unitValueFocusNode = FocusNode();
+  final FocusNode _minSaleQtyFocusNode = FocusNode();
   final FocusNode _hsnFocusNode = FocusNode();
   final FocusNode _gstFocusNode = FocusNode();
   final FocusNode _saveButtonFocusNode = FocusNode();
@@ -113,6 +117,7 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
     _codeController.dispose();
     _hsnController.dispose();
     _unitValueController.dispose();
+    _minSaleQtyController.dispose();
 
     _nameFocusNode.dispose();
     _codeFocusNode.dispose();
@@ -121,6 +126,7 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
     _brandFocusNode.dispose();
     _unitFocusNode.dispose();
     _unitValueFocusNode.dispose();
+    _minSaleQtyFocusNode.dispose();
     _hsnFocusNode.dispose();
     _gstFocusNode.dispose();
     _saveButtonFocusNode.dispose();
@@ -196,6 +202,9 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
     _codeController.text = product.prodCode;
     _hsnController.text = product.prodHSNCode;
     _unitValueController.text = _formatDecimal(product.prodUnitValue);
+    _minSaleQtyController.text = _formatDecimal(
+      product.prodMinSaleQty > 0 ? product.prodMinSaleQty : 1.0,
+    );
 
     _batchBarcodeController.text = product.batchBarcode;
     _batchEANCodeController.text = product.batchEANCode;
@@ -312,6 +321,8 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
         prodHSNCode: _hsnController.text.trim(),
         prodGSTPercent: _selectedGstPercent,
         prodUnitValue: double.tryParse(_unitValueController.text.trim()) ?? 0.0,
+        prodMinSaleQty:
+            double.tryParse(_minSaleQtyController.text.trim()) ?? 1.0,
         prodIsActive: _isActive,
         prodBranchId:
             (isEditing &&
@@ -379,6 +390,8 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
         _hsnController.clear();
         _unitValueController.clear();
         _unitValueController.text = '0';
+        _minSaleQtyController.clear();
+        _minSaleQtyController.text = '1';
         _batchBarcodeController.clear();
         _batchEANCodeController.clear();
         _batchNumberController.clear();
@@ -432,6 +445,8 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
           _hsnController.clear();
           _unitValueController.clear();
           _unitValueController.text = '0';
+          _minSaleQtyController.clear();
+          _minSaleQtyController.text = '1';
           _batchBarcodeController.clear();
           _batchEANCodeController.clear();
           _batchNumberController.clear();
@@ -621,7 +636,7 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
                     children: [
                       Expanded(child: _buildUnitValueField()),
                       const SizedBox(width: 16),
-                      const Spacer(),
+                      Expanded(child: _buildMinSaleQtyField()),
                     ],
                   ),
                 ] else ...[
@@ -634,6 +649,8 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
                   _buildUnitDropdown(),
                   const SizedBox(height: 14),
                   _buildUnitValueField(),
+                  const SizedBox(height: 14),
+                  _buildMinSaleQtyField(),
                 ],
               ],
             ),
@@ -1095,7 +1112,7 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
       inputFormatters: [
         FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d*')),
       ],
-      onFieldSubmitted: (_) => _hsnFocusNode.requestFocus(),
+      onFieldSubmitted: (_) => _minSaleQtyFocusNode.requestFocus(),
       decoration: InputDecoration(
         labelText: 'Unit Value',
         hintText: 'Enter Unit Value',
@@ -1108,6 +1125,35 @@ class _ProductMasterScreenState extends State<ProductMasterScreen> {
         }
         if (double.tryParse(val) == null) {
           return 'Please enter valid number';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildMinSaleQtyField() {
+    return TextFormField(
+      controller: _minSaleQtyController,
+      focusNode: _minSaleQtyFocusNode,
+      textInputAction: TextInputAction.next,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      inputFormatters: [
+        FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d*')),
+      ],
+      onFieldSubmitted: (_) => _hsnFocusNode.requestFocus(),
+      decoration: InputDecoration(
+        labelText: 'Min Sales Qty',
+        hintText: 'Enter Min Sales Qty',
+        prefixIcon: const Icon(Icons.shopping_basket_outlined, size: 20),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      validator: (val) {
+        if (val == null || val.trim().isEmpty) {
+          return 'Please enter min sales quantity';
+        }
+        final parsed = double.tryParse(val.trim());
+        if (parsed == null || parsed <= 0) {
+          return 'Please enter a valid quantity greater than 0';
         }
         return null;
       },

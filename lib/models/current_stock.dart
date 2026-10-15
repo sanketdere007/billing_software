@@ -23,6 +23,7 @@ class CurrentStock {
   final DateTime? createdDate;
   final DateTime? modifiedDate;
   final String batchNumber;
+  final double prodMinSaleQty;
 
   CurrentStock({
     required this.compId,
@@ -49,6 +50,7 @@ class CurrentStock {
     this.createdDate,
     this.modifiedDate,
     this.batchNumber = '',
+    this.prodMinSaleQty = 1.0,
   });
 
   factory CurrentStock.fromJson(Map<String, dynamic> json) {
@@ -59,6 +61,12 @@ class CurrentStock {
       productName: json['prod_Name']?.toString() ?? json['productName']?.toString() ?? json['ProductName']?.toString() ?? '',
       unitId: int.tryParse(json['prod_UnitId']?.toString() ?? '0') ?? 0,
       unitValue: double.tryParse(json['prod_UnitValue']?.toString() ?? '0') ?? 0.0,
+      prodMinSaleQty: double.tryParse(
+            json['prod_MinSaleQty']?.toString() ??
+                json['Prod_MinSaleQty']?.toString() ??
+                '1',
+          ) ??
+          1.0,
       unitName: json['unitName']?.toString() ?? '',
       unitShortName: json['unitShortName']?.toString() ?? '',
       brandId: int.tryParse(json['prod_BrandId']?.toString() ?? '0') ?? 0,
