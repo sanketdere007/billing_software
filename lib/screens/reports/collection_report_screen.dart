@@ -152,11 +152,24 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
   }
 
   KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
-    if (event is! KeyDownEvent || _reportData.isEmpty) {
+    if (event is! KeyDownEvent) {
       return KeyEventResult.ignored;
     }
 
     final key = event.logicalKey;
+
+    // ESC always navigates directly back — regardless of data state.
+    if (key == LogicalKeyboardKey.escape) {
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
+      return KeyEventResult.handled;
+    }
+
+    // Arrow-key navigation only works when report data is loaded.
+    if (_reportData.isEmpty) {
+      return KeyEventResult.ignored;
+    }
 
     if (key == LogicalKeyboardKey.arrowDown) {
       setState(() {
@@ -184,13 +197,6 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
       });
       _scrollToIndex(_highlightedIndex);
       return KeyEventResult.handled;
-    }
-
-    if (key == LogicalKeyboardKey.escape) {
-      if (_highlightedIndex >= 0 && _highlightedIndex < _reportData.length) {
-        _deleteReceipt(_reportData[_highlightedIndex]);
-        return KeyEventResult.handled;
-      }
     }
 
     return KeyEventResult.ignored;
