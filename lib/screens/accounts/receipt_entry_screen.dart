@@ -574,6 +574,15 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
             response['receiptMaster_ReceiptNo']?.toString() ??
             'N/A';
 
+        if (_selectedCustomer == null && _selectedAccountId != null && _selectedAccountId! > 0) {
+          _selectedCustomer = customerService.getCustomerByIdFromCache(_selectedAccountId!);
+          if (_selectedCustomer == null) {
+            try {
+              _selectedCustomer = await customerService.getCustomerById(_selectedAccountId!);
+            } catch (_) {}
+          }
+        }
+
         final pdfData = ReceiptPdfData(
           companyName: sessionService.selectedCompName ?? 'Company Name',
           branchName: sessionService.selectedBranchName ?? '',
@@ -740,6 +749,7 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
               ),
               CustomerDropdown(
                 selectedCustomerId: _selectedAccountId,
+                selectedCustomer: _selectedCustomer,
                 isRequired: true,
                 autofocus: true,
                 focusNode: _customerNode,

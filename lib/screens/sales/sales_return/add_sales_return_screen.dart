@@ -73,6 +73,7 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
     DateTime.now().day,
   );
   int? _selectedCustomer;
+  CustomerListItem? _selectedCustomerItem;
   final DateFormat _dateFormat = DateFormat('yyyy/MM/dd');
 
   final List<Map<String, dynamic>> _products = [];
@@ -559,13 +560,27 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
       int branchId = sessionService.selectedBranchId ?? 1;
       int empId = user?.empId ?? 1;
 
-      CustomerListItem? customer;
-      try {
-        customer = _customerService.customers.firstWhere(
-          (c) => c.custId == _selectedCustomer,
-        );
-      } catch (_) {
-        customer = null;
+      // Use the stored customer object directly — avoids stale cache lookups
+      // that fail when the customer was loaded from a paginated page > 1.
+      CustomerListItem? customer = _selectedCustomerItem;
+      if (customer == null && _selectedCustomer != null) {
+        customer = _customerService.getCustomerByIdFromCache(_selectedCustomer!);
+        if (customer == null) {
+          try {
+            customer = _customerService.customers.firstWhere(
+              (c) => c.custId == _selectedCustomer,
+            );
+          } catch (_) {
+            customer = null;
+          }
+        }
+        if (customer == null) {
+          try {
+            customer = await _customerService.getCustomerById(_selectedCustomer!);
+          } catch (_) {
+            customer = null;
+          }
+        }
       }
 
       final company = companyService.getCompanyById(compId);
@@ -672,6 +687,7 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
       _billDiscountController.text = '0';
       _billDiscountPctController.text = '0';
       _selectedCustomer = null;
+      _selectedCustomerItem = null;
 
       for (var p in _products) {
         (p['qtyController'] as TextEditingController).dispose();
@@ -1477,10 +1493,12 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
                         focusNode: _customerNode,
                         nextFocusNode: _invoiceDateNode,
                         selectedCustomerId: _selectedCustomer,
+                        selectedCustomer: _selectedCustomerItem,
                         isRequired: true,
                         onChanged: (val) {
                           setState(() {
                             _selectedCustomer = val?.custId;
+                            _selectedCustomerItem = val;
                           });
                         },
                       ),
@@ -1786,6 +1804,18 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
       setState(() {
         _isViewMode = true;
         _selectedCustomer = master.raw['salesReturnMaster_CustomerId'];
+        if (_selectedCustomer != null && _selectedCustomer! > 0) {
+          _selectedCustomerItem = _customerService.getCustomerByIdFromCache(_selectedCustomer!);
+          if (_selectedCustomerItem == null) {
+            _customerService.getCustomerById(_selectedCustomer!).then((c) {
+              if (mounted && c != null) {
+                setState(() => _selectedCustomerItem = c);
+              }
+            }).catchError((_) {});
+          }
+        } else {
+          _selectedCustomerItem = null;
+        }
         if (master.raw['salesReturnMaster_Date'] != null) {
           final dateStr = master.raw['salesReturnMaster_Date'].toString();
           _selectedDate = DateTime.tryParse(dateStr) ?? _selectedDate;

@@ -8,6 +8,7 @@ import '../services/customer_service.dart';
 /// Supports search dialog, and keyboard navigation.
 class CustomerDropdown extends StatefulWidget {
   final int? selectedCustomerId;
+  final CustomerListItem? selectedCustomer;
   final ValueChanged<CustomerListItem?>? onChanged;
   final String? Function(CustomerListItem?)? validator;
   final String labelText;
@@ -26,6 +27,7 @@ class CustomerDropdown extends StatefulWidget {
   const CustomerDropdown({
     super.key,
     this.selectedCustomerId,
+    this.selectedCustomer,
     this.onChanged,
     this.validator,
     this.labelText = 'Customer',
@@ -77,7 +79,11 @@ class _CustomerDropdownState extends State<CustomerDropdown> {
       _focusNode.addListener(_onFocusChanged);
     }
 
-    if (oldWidget.selectedCustomerId != widget.selectedCustomerId) {
+    if (oldWidget.selectedCustomer != widget.selectedCustomer && widget.selectedCustomer != null) {
+      _selectedCustomer = widget.selectedCustomer;
+      _addToAvailable(widget.selectedCustomer!);
+    } else if (oldWidget.selectedCustomerId != widget.selectedCustomerId ||
+        (widget.selectedCustomerId != null && _selectedCustomer?.custId != widget.selectedCustomerId)) {
       _syncSelectedCustomer();
     }
   }
@@ -106,45 +112,112 @@ class _CustomerDropdownState extends State<CustomerDropdown> {
     }
   }
 
-  void _syncSelectedCustomer() {
-    if (widget.selectedCustomerId == null || widget.selectedCustomerId! <= 0) {
-      _selectedCustomer = null;
+  void _addToAvailable(CustomerListItem customer) {
+    if (customer.custId <= 0) return;
+    final idx = _availableCustomers.indexWhere((c) => c.custId == customer.custId);
+    if (idx != -1) {
+      _availableCustomers[idx] = customer;
     } else {
-      _selectedCustomer = _availableCustomers.firstWhere(
-        (c) => c.custId == widget.selectedCustomerId,
-        orElse: () => _customerService.customers.firstWhere(
-          (c) => c.custId == widget.selectedCustomerId,
-          orElse: () => CustomerListItem(
-            custId: widget.selectedCustomerId!,
-            custCode: '',
-            custName: 'Customer #${widget.selectedCustomerId}',
-            custCompanyName: '',
-            custMobileNo: '',
-            custAlternateMobileNo: '',
-            custEmail: '',
-            custGSTNo: '',
-            custPANNo: '',
-            custAddress: '',
-            custAreaId: 0,
-            custCityId: 0,
-            custStateId: 0,
-            custPincode: '',
-            custCountry: '',
-            custBranchId: 0,
-            custCompId: 0,
-            custIsActive: true,
-            custCreatedBy: 0,
-            custModifiedBy: 0,
-          ),
-        ),
-      );
+      _availableCustomers.add(customer);
     }
+  }
+
+  void _syncSelectedCustomer() {
+    if (widget.selectedCustomer != null) {
+      _selectedCustomer = widget.selectedCustomer;
+      _addToAvailable(widget.selectedCustomer!);
+      return;
+    }
+
+    final id = widget.selectedCustomerId;
+    if (id == null || id <= 0) {
+      _selectedCustomer = null;
+      return;
+    }
+
+    // 1. If currently selected customer already matches the target ID and has valid details, retain it!
+    if (_selectedCustomer != null &&
+        _selectedCustomer!.custId == id &&
+        !_selectedCustomer!.custName.startsWith('Customer #')) {
+      _addToAvailable(_selectedCustomer!);
+      return;
+    }
+
+    // 2. Search in _availableCustomers
+    final fromAvailable = _availableCustomers.where((c) => c.custId == id);
+    if (fromAvailable.isNotEmpty) {
+      _selectedCustomer = fromAvailable.first;
+      return;
+    }
+
+    // 3. Search in CustomerService cache
+    final fromCache = _customerService.getCustomerByIdFromCache(id);
+    if (fromCache != null) {
+      _selectedCustomer = fromCache;
+      _addToAvailable(fromCache);
+      return;
+    }
+
+    // 4. Search in CustomerService customers list
+    try {
+      final fromList = _customerService.customers.firstWhere((c) => c.custId == id);
+      _selectedCustomer = fromList;
+      _addToAvailable(fromList);
+      return;
+    } catch (_) {}
+
+    // 5. Asynchronously fetch full customer by ID so all fields are properly bound
+    _customerService.getCustomerById(id).then((customer) {
+      if (mounted && customer != null && (widget.selectedCustomerId == id || widget.selectedCustomer?.custId == id)) {
+        setState(() {
+          _selectedCustomer = customer;
+          _addToAvailable(customer);
+        });
+      }
+    }).catchError((_) {});
+
+    // Fallback temporary display while fetching
+    _selectedCustomer = CustomerListItem(
+      custId: id,
+      custCode: '',
+      custName: 'Customer #$id',
+      custCompanyName: '',
+      custMobileNo: '',
+      custAlternateMobileNo: '',
+      custEmail: '',
+      custGSTNo: '',
+      custPANNo: '',
+      custAddress: '',
+      custAreaId: 0,
+      custCityId: 0,
+      custStateId: 0,
+      custPincode: '',
+      custCountry: '',
+      custBranchId: 0,
+      custCompId: 0,
+      custIsActive: true,
+      custCreatedBy: 0,
+      custModifiedBy: 0,
+    );
   }
 
   Future<void> _loadCustomers({bool force = false}) async {
     if (!mounted) return;
     
+    if (widget.selectedCustomer != null) {
+      _selectedCustomer = widget.selectedCustomer;
+      _addToAvailable(widget.selectedCustomer!);
+      return;
+    }
+
     if (widget.selectedCustomerId != null && widget.selectedCustomerId! > 0) {
+      final cached = _customerService.getCustomerByIdFromCache(widget.selectedCustomerId!);
+      if (cached != null) {
+        _availableCustomers = [cached];
+        _syncSelectedCustomer();
+        return;
+      }
+
       setState(() {
         _isLoading = true;
         _error = null;
@@ -193,6 +266,10 @@ class _CustomerDropdownState extends State<CustomerDropdown> {
     if (picked != null) {
       final CustomerListItem? effectiveCustomer =
           (picked.custId == -1 || picked.custName == '__ALL_CUSTOMERS__') ? null : picked;
+      if (effectiveCustomer != null) {
+        _addToAvailable(effectiveCustomer);
+        _customerService.cacheCustomer(effectiveCustomer);
+      }
       setState(() {
         _selectedCustomer = effectiveCustomer;
       });
@@ -640,6 +717,7 @@ class _CustomerSearchDialogState extends State<_CustomerSearchDialog> {
       );
 
       if (mounted) {
+        _customerService.cacheCustomers(customers);
         setState(() {
           if (_currentPage == 1) {
             _filteredCustomers = customers;
@@ -652,7 +730,11 @@ class _CustomerSearchDialogState extends State<_CustomerSearchDialog> {
               }
             }
           } else {
-            _filteredCustomers.addAll(customers);
+            for (final c in customers) {
+              if (!_filteredCustomers.any((existing) => existing.custId == c.custId)) {
+                _filteredCustomers.add(c);
+              }
+            }
           }
           _currentPage++;
           _hasMore = customers.length == _pageSize;

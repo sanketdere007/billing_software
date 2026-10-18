@@ -123,9 +123,19 @@ class CustomerService extends ChangeNotifier {
         fetchedCustomers = [];
       }
 
-      // Only update cache if we are fetching all customers without pagination
+      // Update cache: if fetching all customers without pagination, replace full list;
+      // otherwise, add/merge fetched customers into cache so paginated/scrolled customers are accessible everywhere.
       if (pageNumber == null && pageSize == null) {
         _customers = fetchedCustomers;
+      } else {
+        for (final cust in fetchedCustomers) {
+          final idx = _customers.indexWhere((c) => c.custId == cust.custId);
+          if (idx != -1) {
+            _customers[idx] = cust;
+          } else {
+            _customers.add(cust);
+          }
+        }
       }
 
       _errorMessage = null;
@@ -507,6 +517,24 @@ class CustomerService extends ChangeNotifier {
       return _customers.firstWhere((c) => c.custMobileNo.trim() == trimmed);
     } catch (_) {
       return null;
+    }
+  }
+
+  /// Cache a single customer into local in-memory cache
+  void cacheCustomer(CustomerListItem customer) {
+    if (customer.custId <= 0) return;
+    final idx = _customers.indexWhere((c) => c.custId == customer.custId);
+    if (idx != -1) {
+      _customers[idx] = customer;
+    } else {
+      _customers.add(customer);
+    }
+  }
+
+  /// Cache multiple customers into local in-memory cache
+  void cacheCustomers(Iterable<CustomerListItem> customers) {
+    for (final c in customers) {
+      cacheCustomer(c);
     }
   }
 
