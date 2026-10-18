@@ -9,7 +9,7 @@ class DashboardCharts extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         bool isDesktop = constraints.maxWidth >= 1000;
-        
+
         return Column(
           children: [
             if (isDesktop)
@@ -49,7 +49,7 @@ class DashboardCharts extends StatelessWidget {
 
   Widget _buildChartContainer(BuildContext context, String title, Widget chart, {double height = 300}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Container(
       height: height,
       padding: const EdgeInsets.all(20),

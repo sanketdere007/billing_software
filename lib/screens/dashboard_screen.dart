@@ -268,7 +268,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     const SizedBox(height: 32),
                     
                     // User requested to hide these sections for this session
-                    // const DashboardCharts(),
+                    const DashboardCharts(),
                     // const SizedBox(height: 32),
                     
                     // const DashboardSections(),
