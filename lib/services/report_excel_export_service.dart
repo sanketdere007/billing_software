@@ -5,6 +5,7 @@ import '../models/current_stock.dart';
 import '../models/outstanding_receivable_report.dart';
 import '../models/batch_wise_stock_report.dart';
 import '../models/customer_wise_sales_report.dart';
+import '../models/customer_wise_sales_return_report.dart';
 import 'excel_export_helper.dart';
 
 class ReportExcelExportService {
@@ -145,6 +146,101 @@ class ReportExcelExportService {
         ExcelColumn('Date'),
         ExcelColumn('Bill No.'),
         ExcelColumn('Bill Amt', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn('Bal. Amt', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn('Days', align: ExcelCellAlign.right, type: ExcelCellType.number),
+      ],
+      rows: rows,
+    );
+  }
+
+  static Future<ExcelExportResult> exportCustomerWiseSalesReturn(
+    CustomerWiseSalesReturnReportData data,
+  ) {
+    final rows = <List<String>>[];
+
+    final statementByCustomer = <int, List<CustomerWiseSalesReturnStatement>>{};
+    for (final item in data.statement) {
+      statementByCustomer.putIfAbsent(item.customerId, () => []).add(item);
+    }
+
+    if (data.partyTotals.isNotEmpty) {
+      for (final partyTotal in data.partyTotals) {
+        final partyDisplayName = partyTotal.customerCode.isNotEmpty
+            ? '${partyTotal.customerName} (${partyTotal.customerCode})'
+            : partyTotal.customerName;
+        rows.add([
+          '',
+          partyDisplayName,
+          '',
+          '',
+          '',
+          '',
+          '',
+        ]);
+
+        final invoices = statementByCustomer[partyTotal.customerId] ?? [];
+        for (int i = 0; i < invoices.length; i++) {
+          final inv = invoices[i];
+          rows.add([
+            '${i + 1}',
+            ExcelExportHelper.formatDate(inv.returnDate),
+            inv.billNo,
+            ExcelExportHelper.formatAmount(inv.billAmount),
+            ExcelExportHelper.formatAmount(inv.paidAmount),
+            ExcelExportHelper.formatAmount(inv.balanceAmount),
+            inv.days.toString(),
+          ]);
+        }
+
+        rows.add([
+          '',
+          'Party Total :',
+          '',
+          ExcelExportHelper.formatAmount(partyTotal.totalBillAmount),
+          ExcelExportHelper.formatAmount(partyTotal.totalPaidAmount),
+          ExcelExportHelper.formatAmount(partyTotal.totalBalanceAmount),
+          '',
+        ]);
+
+        rows.add(['', '', '', '', '', '', '']);
+      }
+    } else {
+      int i = 0;
+      for (final inv in data.statement) {
+        rows.add([
+          '${++i}',
+          ExcelExportHelper.formatDate(inv.returnDate),
+          inv.billNo,
+          ExcelExportHelper.formatAmount(inv.billAmount),
+          ExcelExportHelper.formatAmount(inv.paidAmount),
+          ExcelExportHelper.formatAmount(inv.balanceAmount),
+          inv.days.toString(),
+        ]);
+      }
+    }
+
+    if (data.grandTotal != null) {
+      rows.add([
+        '',
+        'Total',
+        '',
+        ExcelExportHelper.formatAmount(data.grandTotal!.grandTotalBillAmount),
+        ExcelExportHelper.formatAmount(data.grandTotal!.grandTotalPaidAmount),
+        ExcelExportHelper.formatAmount(data.grandTotal!.grandTotalBalanceAmount),
+        '',
+      ]);
+    }
+
+    return ExcelExportHelper.exportSheet(
+      filePrefix: 'Customer_Wise_Sales_Return_Report',
+      sheetName: 'Customer Wise Sales Return',
+      emptyMessage: 'No sales return records available to export.',
+      columns: const [
+        ExcelColumn('#', align: ExcelCellAlign.center, type: ExcelCellType.number),
+        ExcelColumn('Date'),
+        ExcelColumn('Bill No.'),
+        ExcelColumn('Bill Amt', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn('Paid Amt', align: ExcelCellAlign.right, type: ExcelCellType.number),
         ExcelColumn('Bal. Amt', align: ExcelCellAlign.right, type: ExcelCellType.number),
         ExcelColumn('Days', align: ExcelCellAlign.right, type: ExcelCellType.number),
       ],

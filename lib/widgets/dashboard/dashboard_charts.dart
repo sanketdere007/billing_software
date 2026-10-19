@@ -31,9 +31,15 @@ class DashboardCharts extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(flex: 1, child: _buildMonthlySalesVsPurchaseChart(context)),
+                  Expanded(
+                    flex: 1,
+                    child: _buildMonthlySalesVsPurchaseChart(context),
+                  ),
                   const SizedBox(width: 24),
-                  Expanded(flex: 1, child: _buildTopSellingProductsChart(context)),
+                  Expanded(
+                    flex: 1,
+                    child: _buildTopSellingProductsChart(context),
+                  ),
                 ],
               )
             else ...[
@@ -47,7 +53,12 @@ class DashboardCharts extends StatelessWidget {
     );
   }
 
-  Widget _buildChartContainer(BuildContext context, String title, Widget chart, {double height = 300}) {
+  Widget _buildChartContainer(
+    BuildContext context,
+    String title,
+    Widget chart, {
+    double height = 300,
+  }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
@@ -58,7 +69,9 @@ class DashboardCharts extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.black.withOpacity(0.3) : Colors.grey.withOpacity(0.1),
+            color: isDark
+                ? Colors.black.withOpacity(0.3)
+                : Colors.grey.withOpacity(0.1),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -87,24 +100,37 @@ class DashboardCharts extends StatelessWidget {
           gridData: FlGridData(
             show: true,
             drawVerticalLine: false,
-            getDrawingHorizontalLine: (value) => FlLine(
-              color: Colors.grey.withOpacity(0.2),
-              strokeWidth: 1,
-            ),
+            getDrawingHorizontalLine: (value) =>
+                FlLine(color: Colors.grey.withOpacity(0.2), strokeWidth: 1),
           ),
           titlesData: FlTitlesData(
             show: true,
-            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            topTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
             bottomTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
                 getTitlesWidget: (value, meta) {
-                  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                  const days = [
+                    'Mon',
+                    'Tue',
+                    'Wed',
+                    'Thu',
+                    'Fri',
+                    'Sat',
+                    'Sun',
+                  ];
                   if (value.toInt() >= 0 && value.toInt() < days.length) {
                     return Padding(
                       padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(days[value.toInt()], style: const TextStyle(fontSize: 12)),
+                      child: Text(
+                        days[value.toInt()],
+                        style: const TextStyle(fontSize: 12),
+                      ),
                     );
                   }
                   return const Text('');
@@ -154,21 +180,33 @@ class DashboardCharts extends StatelessWidget {
               value: 60,
               title: '60%',
               radius: 50,
-              titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+              titleStyle: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
             PieChartSectionData(
               color: Colors.orange,
               value: 30,
               title: '30%',
               radius: 50,
-              titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+              titleStyle: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
             PieChartSectionData(
               color: Colors.red,
               value: 10,
               title: '10%',
               radius: 50,
-              titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+              titleStyle: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
           ],
         ),
@@ -195,24 +233,31 @@ class DashboardCharts extends StatelessWidget {
                   if (value.toInt() >= 0 && value.toInt() < titles.length) {
                     return Padding(
                       padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(titles[value.toInt()], style: const TextStyle(fontSize: 12)),
+                      child: Text(
+                        titles[value.toInt()],
+                        style: const TextStyle(fontSize: 12),
+                      ),
                     );
                   }
                   return const Text('');
                 },
               ),
             ),
-            leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            leftTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            topTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            rightTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
           ),
           gridData: FlGridData(
             show: true,
             drawVerticalLine: false,
-            getDrawingHorizontalLine: (value) => FlLine(
-              color: Colors.grey.withOpacity(0.2),
-              strokeWidth: 1,
-            ),
+            getDrawingHorizontalLine: (value) =>
+                FlLine(color: Colors.grey.withOpacity(0.2), strokeWidth: 1),
           ),
           borderData: FlBorderData(show: false),
           barGroups: [
@@ -263,20 +308,35 @@ class DashboardCharts extends StatelessWidget {
               sideTitles: SideTitles(
                 showTitles: true,
                 getTitlesWidget: (double value, TitleMeta meta) {
-                  const titles = ['Prod A', 'Prod B', 'Prod C', 'Prod D', 'Prod E'];
+                  const titles = [
+                    'Prod A',
+                    'Prod B',
+                    'Prod C',
+                    'Prod D',
+                    'Prod E',
+                  ];
                   if (value.toInt() >= 0 && value.toInt() < titles.length) {
                     return Padding(
                       padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(titles[value.toInt()], style: const TextStyle(fontSize: 10)),
+                      child: Text(
+                        titles[value.toInt()],
+                        style: const TextStyle(fontSize: 10),
+                      ),
                     );
                   }
                   return const Text('');
                 },
               ),
             ),
-            leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            leftTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            topTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            rightTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
           ),
           gridData: FlGridData(show: false),
           borderData: FlBorderData(show: false),

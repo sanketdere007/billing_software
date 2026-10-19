@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../models/outstanding_receivable_report.dart';
+import '../models/customer_wise_sales_return_report.dart';
 import '../utils/api_constants.dart';
 import 'api_service.dart';
 import 'session_service.dart';
@@ -62,6 +63,62 @@ class ReportService {
       rethrow;
     } catch (e) {
       throw ApiException('Error fetching outstanding receivable report: $e');
+    }
+  }
+
+  Future<CustomerWiseSalesReturnReportResponse> getCustomerWiseSalesReturnReport({
+    int? compId,
+    int? branchId,
+    String? fromDate,
+    String? toDate,
+    int? customerId,
+    String? search,
+    bool? onlyOutstanding,
+    int? pageNumber,
+    int? pageSize,
+  }) async {
+    final effectiveCompId = compId ?? sessionService.selectedCompId ?? 1;
+    final effectiveBranchId = branchId ?? sessionService.selectedBranchId ?? 1;
+
+    final Map<String, String> queryParameters = {
+      'CompId': effectiveCompId.toString(),
+      'BranchId': effectiveBranchId.toString(),
+    };
+
+    if (fromDate != null && fromDate.isNotEmpty) queryParameters['FromDate'] = fromDate;
+    if (toDate != null && toDate.isNotEmpty) queryParameters['ToDate'] = toDate;
+    if (customerId != null && customerId > 0) queryParameters['CustomerId'] = customerId.toString();
+    if (search != null && search.trim().isNotEmpty) queryParameters['Search'] = search.trim();
+    if (onlyOutstanding != null) queryParameters['OnlyOutstanding'] = onlyOutstanding.toString();
+    if (pageNumber != null && pageNumber > 0) queryParameters['PageNumber'] = pageNumber.toString();
+    if (pageSize != null && pageSize > 0) queryParameters['PageSize'] = pageSize.toString();
+
+    debugPrint('📊 [ReportService.getCustomerWiseSalesReturnReport] Requesting with: $queryParameters');
+
+    try {
+      final dynamic response = await apiService.get(
+        ApiConstants.getCustomerWiseSalesReturnReportEndpoint,
+        queryParameters: queryParameters,
+        requiresAuth: true,
+      );
+
+      if (response is Map<String, dynamic>) {
+        final reportResponse = CustomerWiseSalesReturnReportResponse.fromJson(response);
+        if (reportResponse.status) {
+          return reportResponse;
+        } else {
+          throw ApiException(
+            reportResponse.message.isNotEmpty
+                ? reportResponse.message
+                : (reportResponse.error ?? 'Failed to fetch customer wise sales return report'),
+          );
+        }
+      }
+      throw ApiException('Invalid response format');
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException('Error fetching customer wise sales return report: $e');
     }
   }
 }
