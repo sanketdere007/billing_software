@@ -97,6 +97,10 @@ class ApiConstants {
   static const String createDatabaseBackupEndpoint =
       '/api/DatabaseBackup/CreateDatabaseBackup';
 
+  // Dashboard Endpoints
+  static const String getDashboardSummaryEndpoint = '/api/Dashboard/GetSummary';
+  static const String getDashboardChartsEndpoint = '/api/Dashboard/GetCharts';
+
   // Company Endpoints
   static const String getAllCompaniesEndpoint = '/api/Company/GetAllCompanies';
 

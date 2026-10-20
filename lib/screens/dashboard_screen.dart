@@ -7,6 +7,7 @@ import '../widgets/dashboard/dashboard_charts.dart';
 import '../widgets/dashboard/dashboard_sections.dart';
 import '../services/api_service.dart';
 import '../services/session_service.dart';
+import '../utils/api_constants.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -16,6 +17,8 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  final GlobalKey<DashboardChartsState> _dashboardChartsKey =
+      GlobalKey<DashboardChartsState>();
   Map<String, dynamic>? _summaryData;
   bool _isLoading = true;
   DateTime _fromDate = DateTime.now();
@@ -30,33 +33,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _fetchDashboardSummary() async {
     if (!mounted) return;
     setState(() => _isLoading = true);
-    
+
     try {
       final compId = sessionService.selectedCompId ?? 0;
-      
+
       // We set fromDate to the start of the day and toDate to the end of the day
       DateTime fromDateApi = DateTime(
         _fromDate.year,
         _fromDate.month,
         _fromDate.day,
       );
-      
+
       DateTime toDateApi = DateTime(
         _toDate.year,
         _toDate.month,
         _toDate.day,
-        23, 59, 59, 999
+        23,
+        59,
+        59,
+        999,
       );
-      
+
       final queryParameters = {
         'CompId': compId.toString(),
         'FromDate': fromDateApi.toIso8601String(),
         'ToDate': toDateApi.toIso8601String(),
         'LowStockQty': '10',
       };
-      
-      final response = await apiService.get('api/Dashboard/GetSummary', queryParameters: queryParameters);
-      
+
+      final response = await apiService.get(
+        ApiConstants.getDashboardSummaryEndpoint,
+        queryParameters: queryParameters,
+      );
+
       if (mounted && response != null && response['status'] == true) {
         setState(() {
           _summaryData = response['data'];
@@ -72,7 +81,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _handleRefresh() async {
-    await _fetchDashboardSummary();
+    await Future.wait([
+      _fetchDashboardSummary(),
+      _dashboardChartsKey.currentState?.fetchChartsData() ?? Future.value(),
+    ]);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Dashboard refreshed successfully!')),
@@ -92,10 +104,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           return Scaffold(
             body: Row(
               children: [
-                const SizedBox(
-                  width: 250,
-                  child: AppDrawer(isPermanent: true),
-                ),
+                const SizedBox(width: 250, child: AppDrawer(isPermanent: true)),
                 const VerticalDivider(width: 1, thickness: 1),
                 Expanded(
                   child: Scaffold(
@@ -106,7 +115,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           child: SizedBox(
                             width: 140,
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8.0,
+                              ),
                               child: CustomDatePickerField(
                                 initialDate: _fromDate,
                                 lastDate: DateTime.now(),
@@ -114,7 +125,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 onDateSelected: (date) {
                                   if (date.isAfter(_toDate)) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('From Date cannot be greater than To Date.')),
+                                      const SnackBar(
+                                        content: Text(
+                                          'From Date cannot be greater than To Date.',
+                                        ),
+                                      ),
                                     );
                                     return;
                                   }
@@ -132,7 +147,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           child: SizedBox(
                             width: 140,
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8.0,
+                              ),
                               child: CustomDatePickerField(
                                 initialDate: _toDate,
                                 lastDate: DateTime.now(),
@@ -140,7 +157,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 onDateSelected: (date) {
                                   if (date.isBefore(_fromDate)) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('To Date cannot be smaller than From Date.')),
+                                      const SnackBar(
+                                        content: Text(
+                                          'To Date cannot be smaller than From Date.',
+                                        ),
+                                      ),
                                     );
                                     return;
                                   }
@@ -188,7 +209,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         onDateSelected: (date) {
                           if (date.isAfter(_toDate)) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('From Date cannot be greater than To Date.')),
+                              const SnackBar(
+                                content: Text(
+                                  'From Date cannot be greater than To Date.',
+                                ),
+                              ),
                             );
                             return;
                           }
@@ -214,7 +239,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         onDateSelected: (date) {
                           if (date.isBefore(_fromDate)) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('To Date cannot be smaller than From Date.')),
+                              const SnackBar(
+                                content: Text(
+                                  'To Date cannot be smaller than From Date.',
+                                ),
+                              ),
                             );
                             return;
                           }
@@ -242,7 +271,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildDashboardContent(BuildContext context, bool isDesktop, bool isDark) {
+  Widget _buildDashboardContent(
+    BuildContext context,
+    bool isDesktop,
+    bool isDark,
+  ) {
     return Container(
       color: Theme.of(context).scaffoldBackgroundColor,
       child: Column(
@@ -260,17 +293,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     // Hiding quick action section as requested
                     // const QuickActions(),
                     // const SizedBox(height: 32),
-                    
                     SummaryCards(
                       summaryData: _summaryData,
                       isLoading: _isLoading,
                     ),
                     const SizedBox(height: 32),
-                    
-                    // User requested to hide these sections for this session
-                    const DashboardCharts(),
+
+                    DashboardCharts(
+                      key: _dashboardChartsKey,
+                      fromDate: _fromDate,
+                      toDate: _toDate,
+                    ),
                     // const SizedBox(height: 32),
-                    
+
                     // const DashboardSections(),
                     // const SizedBox(height: 32),
                   ],
