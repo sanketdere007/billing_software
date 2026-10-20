@@ -1,22 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'dashboard_shimmer.dart';
 
 class SummaryCards extends StatelessWidget {
   final Map<String, dynamic>? summaryData;
   final bool isLoading;
+  final String? errorMessage;
+  final VoidCallback? onRetry;
 
   const SummaryCards({
     super.key,
     this.summaryData,
     this.isLoading = false,
+    this.errorMessage,
+    this.onRetry,
   });
 
   @override
   Widget build(BuildContext context) {
+    // 1. Loading State: Display smooth Shimmer Skeleton UI matching 8 cards layout
     if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const SummaryCardsSkeleton();
     }
 
+    // 2. Error State: Display user-friendly error card with retry option instead of infinite shimmer
+    if (errorMessage != null && summaryData == null) {
+      return _buildErrorState(context);
+    }
+
+    // 3. Empty State: When no summary data exists or is returned null
+    if (summaryData == null) {
+      return _buildEmptyState(context);
+    }
+
+    // 4. Success State: Display actual dashboard summary cards
     return LayoutBuilder(
       builder: (context, constraints) {
         int crossAxisCount = 2;
@@ -31,13 +48,17 @@ class SummaryCards extends StatelessWidget {
         }
 
         final double totalSales = (summaryData?['totalSales'] ?? 0).toDouble();
-        final double totalPurchase = (summaryData?['totalPurchase'] ?? 0).toDouble();
+        final double totalPurchase = (summaryData?['totalPurchase'] ?? 0)
+            .toDouble();
         final double collection = (summaryData?['collection'] ?? 0).toDouble();
-        final double pendingAmount = (summaryData?['pendingAmount'] ?? 0).toDouble();
-        
+        final double pendingAmount = (summaryData?['pendingAmount'] ?? 0)
+            .toDouble();
+
         final int totalProducts = (summaryData?['totalProducts'] ?? 0).toInt();
-        final int lowStockProducts = (summaryData?['lowStockProducts'] ?? 0).toInt();
-        final int outOfStockProducts = (summaryData?['outOfStockProducts'] ?? 0).toInt();
+        final int lowStockProducts = (summaryData?['lowStockProducts'] ?? 0)
+            .toInt();
+        final int outOfStockProducts = (summaryData?['outOfStockProducts'] ?? 0)
+            .toInt();
         final int totalOrders = (summaryData?['totalSalesOrders'] ?? 0).toInt();
 
         return GridView.count(
@@ -115,6 +136,119 @@ class SummaryCards extends StatelessWidget {
     );
   }
 
+  Widget _buildErrorState(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withOpacity(0.3)
+                : Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.cloud_off_rounded, size: 44, color: Colors.red.shade400),
+          const SizedBox(height: 12),
+          Text(
+            'Unable to load summary metrics',
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            errorMessage ??
+                'An error occurred while loading dashboard metrics.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 13, color: Theme.of(context).hintColor),
+          ),
+          if (onRetry != null) ...[
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh, size: 18),
+              label: const Text('Retry'),
+              style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withOpacity(0.3)
+                : Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.analytics_outlined,
+            size: 44,
+            color: Colors.grey.withOpacity(0.5),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'No summary metrics available',
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'No transactions or inventory data recorded for the selected date range.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 13, color: Theme.of(context).hintColor),
+          ),
+          if (onRetry != null) ...[
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh, size: 18),
+              label: const Text('Refresh'),
+              style: OutlinedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _buildKpiCard(
     BuildContext context,
     String title,
@@ -170,7 +304,7 @@ class SummaryCards extends StatelessWidget {
       padding: const EdgeInsets.all(8.0),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
             color: isDark

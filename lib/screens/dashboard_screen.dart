@@ -21,6 +21,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       GlobalKey<DashboardChartsState>();
   Map<String, dynamic>? _summaryData;
   bool _isLoading = true;
+  String? _summaryError;
   DateTime _fromDate = DateTime.now();
   DateTime _toDate = DateTime.now();
 
@@ -32,7 +33,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _fetchDashboardSummary() async {
     if (!mounted) return;
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _summaryError = null;
+    });
 
     try {
       final compId = sessionService.selectedCompId ?? 0;
@@ -66,13 +70,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
         queryParameters: queryParameters,
       );
 
-      if (mounted && response != null && response['status'] == true) {
-        setState(() {
-          _summaryData = response['data'];
-        });
+      if (mounted) {
+        if (response != null && response['status'] == true) {
+          setState(() {
+            _summaryData = response['data'] is Map<String, dynamic>
+                ? response['data']
+                : null;
+            _summaryError = null;
+          });
+        } else {
+          setState(() {
+            _summaryError = response?['message']?.toString() ??
+                'Failed to load dashboard summary';
+          });
+        }
       }
     } catch (e) {
       debugPrint('Error fetching dashboard summary: $e');
+      if (mounted) {
+        setState(() {
+          _summaryError = 'Unable to connect to server. Please try again.';
+        });
+      }
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -296,6 +315,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     SummaryCards(
                       summaryData: _summaryData,
                       isLoading: _isLoading,
+                      errorMessage: _summaryError,
+                      onRetry: _fetchDashboardSummary,
                     ),
                     const SizedBox(height: 32),
 

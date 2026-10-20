@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import '../../models/dashboard_charts_model.dart';
 import '../../services/dashboard_service.dart';
+import 'dashboard_shimmer.dart';
 
 class DashboardCharts extends StatefulWidget {
   final DateTime? fromDate;
@@ -96,10 +97,22 @@ class DashboardChartsState extends State<DashboardCharts> {
 
   @override
   Widget build(BuildContext context) {
+    // 1. Error State: Show user-friendly error message with retry
     if (_errorMessage != null && _chartsData == null) {
       return _buildErrorState(context);
     }
 
+    // 2. Initial Loading State: Display full shimmer skeleton
+    if (_isLoading && _chartsData == null) {
+      return const DashboardChartsSkeleton();
+    }
+
+    // 3. Empty State: When no chart data is available
+    if (_chartsData == null && !_isLoading) {
+      return _buildOverallEmptyState(context);
+    }
+
+    // 4. Success / Refresh State: Display charts layout (with shimmer inside containers if refreshing)
     return LayoutBuilder(
       builder: (context, constraints) {
         final bool isDesktop = constraints.maxWidth >= 1000;
@@ -112,13 +125,13 @@ class DashboardChartsState extends State<DashboardCharts> {
                 children: [
                   Expanded(flex: 2, child: _buildSalesTrendChart(context)),
                   const SizedBox(width: 24),
-                  Expanded(flex: 1, child: _buildCollectionDonutChart(context)),
+                  // Expanded(flex: 1, child: _buildCollectionDonutChart(context)),
                 ],
               )
             else ...[
               _buildSalesTrendChart(context),
               const SizedBox(height: 24),
-              _buildCollectionDonutChart(context),
+             // _buildCollectionDonutChart(context),
             ],
             const SizedBox(height: 24),
             if (isDesktop)
@@ -208,12 +221,74 @@ class DashboardChartsState extends State<DashboardCharts> {
     );
   }
 
+  Widget _buildOverallEmptyState(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withOpacity(0.3)
+                : Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.bar_chart_rounded,
+              size: 48,
+              color: Colors.grey.withOpacity(0.5),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'No chart data available',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'No sales or product trends recorded for the selected period.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13,
+                color: Theme.of(context).hintColor,
+              ),
+            ),
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: fetchChartsData,
+              icon: const Icon(Icons.refresh, size: 18),
+              label: const Text('Refresh'),
+              style: OutlinedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildChartContainer(
     BuildContext context,
     String title,
     Widget chart, {
     double height = 320,
     Widget? trailing,
+    ChartSkeletonType skeletonType = ChartSkeletonType.bar,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -252,9 +327,7 @@ class DashboardChartsState extends State<DashboardCharts> {
           const SizedBox(height: 20),
           Expanded(
             child: _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(strokeWidth: 2.5),
-                  )
+                ? Shimmer(child: ChartGraphicSkeleton(type: skeletonType))
                 : chart,
           ),
         ],
@@ -294,6 +367,7 @@ class DashboardChartsState extends State<DashboardCharts> {
           'No sales trend data available for this range',
           Icons.show_chart_rounded,
         ),
+        skeletonType: ChartSkeletonType.line,
       );
     }
 
@@ -316,14 +390,6 @@ class DashboardChartsState extends State<DashboardCharts> {
     return _buildChartContainer(
       context,
       'Daily Sales Trend',
-      trailing: Text(
-        'Total: ${_formatCompactCurrency(totalSales)}',
-        style: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: Colors.green,
-        ),
-      ),
       LineChart(
         LineChartData(
           gridData: FlGridData(
@@ -471,6 +537,15 @@ class DashboardChartsState extends State<DashboardCharts> {
               ),
             ),
           ],
+        ),
+      ),
+      skeletonType: ChartSkeletonType.line,
+      trailing: Text(
+        'Total: ${_formatCompactCurrency(totalSales)}',
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: Colors.green,
         ),
       ),
     );
@@ -648,6 +723,7 @@ class DashboardChartsState extends State<DashboardCharts> {
           'No monthly sales vs purchase data available',
           Icons.bar_chart_rounded,
         ),
+        skeletonType: ChartSkeletonType.bar,
       );
     }
 
@@ -684,14 +760,6 @@ class DashboardChartsState extends State<DashboardCharts> {
     return _buildChartContainer(
       context,
       'Monthly Sales vs Purchase',
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildBadge(const Color(0xFF10B981), 'Sales'),
-          const SizedBox(width: 8),
-          _buildBadge(const Color(0xFF3B82F6), 'Purchase'),
-        ],
-      ),
       BarChart(
         BarChartData(
           alignment: BarChartAlignment.spaceAround,
@@ -798,6 +866,15 @@ class DashboardChartsState extends State<DashboardCharts> {
           barGroups: barGroups,
         ),
       ),
+      skeletonType: ChartSkeletonType.bar,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildBadge(const Color(0xFF10B981), 'Sales'),
+          const SizedBox(width: 8),
+          _buildBadge(const Color(0xFF3B82F6), 'Purchase'),
+        ],
+      ),
     );
   }
 
@@ -816,6 +893,7 @@ class DashboardChartsState extends State<DashboardCharts> {
           'No top selling products data available',
           Icons.inventory_2_outlined,
         ),
+        skeletonType: ChartSkeletonType.bar,
       );
     }
 
@@ -845,21 +923,6 @@ class DashboardChartsState extends State<DashboardCharts> {
     return _buildChartContainer(
       context,
       'Top Selling Products',
-      trailing: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-        decoration: BoxDecoration(
-          color: Colors.blue.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: const Text(
-          'By Quantity',
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: Colors.blue,
-          ),
-        ),
-      ),
       BarChart(
         BarChartData(
           alignment: BarChartAlignment.spaceAround,
@@ -975,6 +1038,22 @@ class DashboardChartsState extends State<DashboardCharts> {
             ),
           ),
           barGroups: barGroups,
+        ),
+      ),
+      skeletonType: ChartSkeletonType.bar,
+      trailing: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: Colors.blue.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Text(
+          'By Quantity',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: Colors.blue,
+          ),
         ),
       ),
     );
