@@ -33,6 +33,7 @@ class AppRoutes {
   static const String about = '/about';
   static const String helpSupport = '/help-support';
   static const String pdfPreview = '/pdf-preview';
+  static const String reports = '/reports';
   static const String customerWiseSalesReturnReport =
       '/reports/customer-wise-sales-return';
 }
@@ -177,6 +178,9 @@ class ShortcutService {
     'support',
     AppRoutes.pdfPreview,
     'pdf-preview',
+    AppRoutes.reports,
+    '/reports',
+    'reports',
   };
 
   final Set<Route<dynamic>> _directBackRouteInstances = <Route<dynamic>>{};

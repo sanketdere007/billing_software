@@ -64,6 +64,7 @@ import '../screens/reports/outstanding_receivable_report_screen.dart';
 import '../screens/reports/customer_wise_sales_report_screen.dart';
 import '../screens/reports/product_wise_sales_return_report_screen.dart';
 import '../screens/reports/customer_wise_sales_return_report_screen.dart';
+import '../screens/reports/reports_screen.dart';
 import '../screens/pdf/pdf_preview_screen.dart';
 
 class AppDrawer extends StatefulWidget {
@@ -85,6 +86,11 @@ class _AppDrawerState extends State<AppDrawer> {
   static bool _isPurchaseMenuExpanded = false;
   static bool _isAccountMenuExpanded = false;
   static bool _isReportsMenuExpanded = false;
+  static bool _isSalesReportsExpanded = false;
+  static bool _isPurchaseReportsExpanded = false;
+  static bool _isAccountReportsExpanded = false;
+  static bool _isStockReportsExpanded = false;
+  static bool _isOtherReportsExpanded = false;
 
   @override
   void initState() {
@@ -1262,176 +1268,296 @@ class _AppDrawerState extends State<AppDrawer> {
                   children: [
                     _buildDrawerItem(
                       context: context,
-                      icon: Icons.pie_chart_rounded,
+                      icon: Icons.dashboard_customize_rounded,
                       iconColor: _getIconColor(context, Colors.indigo),
-                      title: 'Supplier Outstanding',
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const SupplierOutstandingReportScreen(),
-                          ),
-                        );
-                      },
-                    ),
-
-                    // _buildDrawerItem(
-                    //   context: context,
-                    //   icon: Icons.pie_chart_rounded,
-                    //   iconColor: _getIconColor(context, Colors.indigo),
-                    //   title: 'Customer Outstanding',
-                    //   onTap: () {
-                    //     Navigator.of(context).push(
-                    //       MaterialPageRoute(
-                    //         builder: (context) =>
-                    //             const CustomerOutstandingReportScreen(),
-                    //       ),
-                    //     );
-                    //   },
-                    // ),
-                    _buildDrawerItem(
-                      context: context,
-                      icon: Icons.assignment_ind_rounded,
-                      iconColor: _getIconColor(context, Colors.indigo),
-                      title: 'Customer Wise Sales',
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const CustomerWiseSalesReportScreen(),
-                          ),
-                        );
-                      },
-                    ),
-
-                    _buildDrawerItem(
-                      context: context,
-                      icon: Icons.receipt_long_rounded,
-                      iconColor: _getIconColor(context, Colors.indigo),
-                      title: 'Customer Outstanding',
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const OutstandingReceivableReportScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                    _buildDrawerItem(
-                      context: context,
-                      icon: Icons.receipt_long_rounded,
-                      iconColor: _getIconColor(context, Colors.indigo),
-                      title: 'Collection Report',
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const CollectionReportScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                    _buildDrawerItem(
-                      context: context,
-                      icon: Icons.payment_rounded,
-                      iconColor: _getIconColor(context, Colors.indigo),
-                      title: 'Payment Entry Report',
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const PaymentEntryReportScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                    _buildDrawerItem(
-                      context: context,
-                      icon: Icons.inventory_2_rounded,
-                      iconColor: _getIconColor(context, Colors.indigo),
-                      title: 'Current Stock',
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const CurrentStockReportScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                    _buildDrawerItem(
-                      context: context,
-                      icon: Icons.layers_rounded,
-                      iconColor: _getIconColor(context, Colors.indigo),
-                      title: 'Batch Wise Stock',
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const BatchWiseStockReportScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                    _buildDrawerItem(
-                      context: context,
-                      icon: Icons.people_alt_rounded,
-                      iconColor: _getIconColor(context, Colors.indigo),
-                      title: 'Customer List',
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const CustomerListReportScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                    _buildDrawerItem(
-                      context: context,
-                      icon: Icons.shopping_bag_rounded,
-                      iconColor: _getIconColor(context, Colors.indigo),
-                      title: 'Product Wise Sales',
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const ProductWiseSalesReportScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                    _buildDrawerItem(
-                      context: context,
-                      icon: Icons.assignment_return_rounded,
-                      iconColor: _getIconColor(context, Colors.indigo),
-                      title: 'Product Wise Sales Return',
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const ProductWiseSalesReturnReportScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                    _buildDrawerItem(
-                      context: context,
-                      icon: Icons.assignment_return_outlined,
-                      iconColor: _getIconColor(context, Colors.indigo),
-                      title: 'Customer Wise Sales Return',
+                      title: 'Reports Overview',
                       onTap: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
                             settings: const RouteSettings(
-                              name: AppRoutes.customerWiseSalesReturnReport,
+                              name: AppRoutes.reports,
                             ),
-                            builder: (context) =>
-                                const CustomerWiseSalesReturnReportScreen(),
+                            builder: (context) => const ReportsScreen(),
                           ),
                         );
                       },
+                    ),
+
+                    // 1. Sales Reports
+                    Padding(
+                      padding: const EdgeInsets.only(left: 14.0),
+                      child: ExpansionTile(
+                        initiallyExpanded: _isSalesReportsExpanded,
+                        onExpansionChanged: (expanded) {
+                          _isSalesReportsExpanded = expanded;
+                        },
+                        leading: Icon(
+                          Icons.point_of_sale_rounded,
+                          color: _getIconColor(context, Colors.cyan),
+                        ),
+                        title: Text(
+                          'Sales Reports',
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
+                        children: [
+                          _buildDrawerItem(
+                            context: context,
+                            icon: Icons.assignment_ind_rounded,
+                            iconColor: _getIconColor(context, Colors.cyan),
+                            title: 'Customer Wise Sales',
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const CustomerWiseSalesReportScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                          _buildDrawerItem(
+                            context: context,
+                            icon: Icons.shopping_bag_rounded,
+                            iconColor: _getIconColor(context, Colors.cyan),
+                            title: 'Product Wise Sales',
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const ProductWiseSalesReportScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                          _buildDrawerItem(
+                            context: context,
+                            icon: Icons.assignment_return_outlined,
+                            iconColor: _getIconColor(context, Colors.cyan),
+                            title: 'Customer Wise Sales Return',
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  settings: const RouteSettings(
+                                    name: AppRoutes.customerWiseSalesReturnReport,
+                                  ),
+                                  builder: (context) =>
+                                      const CustomerWiseSalesReturnReportScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                          _buildDrawerItem(
+                            context: context,
+                            icon: Icons.assignment_return_rounded,
+                            iconColor: _getIconColor(context, Colors.cyan),
+                            title: 'Product Wise Sales Return',
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const ProductWiseSalesReturnReportScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // 2. Purchase Reports
+                    Padding(
+                      padding: const EdgeInsets.only(left: 14.0),
+                      child: ExpansionTile(
+                        initiallyExpanded: _isPurchaseReportsExpanded,
+                        onExpansionChanged: (expanded) {
+                          _isPurchaseReportsExpanded = expanded;
+                        },
+                        leading: Icon(
+                          Icons.shopping_cart_checkout_rounded,
+                          color: _getIconColor(context, Colors.indigo),
+                        ),
+                        title: Text(
+                          'Purchase Reports',
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
+                        children: [
+                          _buildDrawerItem(
+                            context: context,
+                            icon: Icons.pie_chart_rounded,
+                            iconColor: _getIconColor(context, Colors.indigo),
+                            title: 'Supplier Outstanding',
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const SupplierOutstandingReportScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // 3. Account Reports
+                    Padding(
+                      padding: const EdgeInsets.only(left: 14.0),
+                      child: ExpansionTile(
+                        initiallyExpanded: _isAccountReportsExpanded,
+                        onExpansionChanged: (expanded) {
+                          _isAccountReportsExpanded = expanded;
+                        },
+                        leading: Icon(
+                          Icons.account_balance_wallet_rounded,
+                          color: _getIconColor(context, Colors.orange),
+                        ),
+                        title: Text(
+                          'Account Reports',
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
+                        children: [
+                          _buildDrawerItem(
+                            context: context,
+                            icon: Icons.receipt_long_rounded,
+                            iconColor: _getIconColor(context, Colors.orange),
+                            title: 'Customer Outstanding',
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const OutstandingReceivableReportScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                          _buildDrawerItem(
+                            context: context,
+                            icon: Icons.receipt_long_rounded,
+                            iconColor: _getIconColor(context, Colors.orange),
+                            title: 'Collection Report',
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const CollectionReportScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                          _buildDrawerItem(
+                            context: context,
+                            icon: Icons.payment_rounded,
+                            iconColor: _getIconColor(context, Colors.orange),
+                            title: 'Payment Entry Report',
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const PaymentEntryReportScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // 4. Stock Reports
+                    Padding(
+                      padding: const EdgeInsets.only(left: 14.0),
+                      child: ExpansionTile(
+                        initiallyExpanded: _isStockReportsExpanded,
+                        onExpansionChanged: (expanded) {
+                          _isStockReportsExpanded = expanded;
+                        },
+                        leading: Icon(
+                          Icons.inventory_2_rounded,
+                          color: _getIconColor(context, Colors.teal),
+                        ),
+                        title: Text(
+                          'Stock Reports',
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
+                        children: [
+                          _buildDrawerItem(
+                            context: context,
+                            icon: Icons.inventory_2_rounded,
+                            iconColor: _getIconColor(context, Colors.teal),
+                            title: 'Current Stock',
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const CurrentStockReportScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                          _buildDrawerItem(
+                            context: context,
+                            icon: Icons.layers_rounded,
+                            iconColor: _getIconColor(context, Colors.teal),
+                            title: 'Batch Wise Stock',
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const BatchWiseStockReportScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // 5. Other Reports
+                    Padding(
+                      padding: const EdgeInsets.only(left: 14.0),
+                      child: ExpansionTile(
+                        initiallyExpanded: _isOtherReportsExpanded,
+                        onExpansionChanged: (expanded) {
+                          _isOtherReportsExpanded = expanded;
+                        },
+                        leading: Icon(
+                          Icons.folder_shared_rounded,
+                          color: _getIconColor(context, Colors.blueGrey),
+                        ),
+                        title: Text(
+                          'Other Reports',
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
+                        children: [
+                          _buildDrawerItem(
+                            context: context,
+                            icon: Icons.people_alt_rounded,
+                            iconColor: _getIconColor(context, Colors.blueGrey),
+                            title: 'Customer List',
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const CustomerListReportScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),

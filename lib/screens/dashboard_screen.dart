@@ -22,7 +22,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Map<String, dynamic>? _summaryData;
   bool _isLoading = true;
   String? _summaryError;
-  DateTime _fromDate = DateTime.now();
+  DateTime _fromDate = DateTime(
+    DateTime.now().year,
+    DateTime.now().month,
+    DateTime.now().day,
+  ).subtract(Duration(days: DateTime.now().weekday - 1));
   DateTime _toDate = DateTime.now();
 
   @override
@@ -80,7 +84,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           });
         } else {
           setState(() {
-            _summaryError = response?['message']?.toString() ??
+            _summaryError =
+                response?['message']?.toString() ??
                 'Failed to load dashboard summary';
           });
         }

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../screens/reports/reports_screen.dart';
+import '../../services/shortcut_service.dart';
 
 class QuickActions extends StatelessWidget {
   const QuickActions({super.key});
@@ -25,7 +27,20 @@ class QuickActions extends StatelessWidget {
               _buildActionCard(context, 'Add Product', Icons.add_box, Colors.green),
               _buildActionCard(context, 'Receive Payment', Icons.payments, Colors.teal),
               _buildActionCard(context, 'Pay Supplier', Icons.outbox, Colors.red),
-              _buildActionCard(context, 'View Reports', Icons.bar_chart, Colors.indigo),
+              _buildActionCard(
+                context,
+                'View Reports',
+                Icons.bar_chart,
+                Colors.indigo,
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      settings: const RouteSettings(name: AppRoutes.reports),
+                      builder: (context) => const ReportsScreen(),
+                    ),
+                  );
+                },
+              ),
             ],
           ),
         ),
@@ -34,13 +49,13 @@ class QuickActions extends StatelessWidget {
   }
 
   Widget _buildActionCard(
-      BuildContext context, String title, IconData icon, MaterialColor color) {
+      BuildContext context, String title, IconData icon, MaterialColor color, {VoidCallback? onTap}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Padding(
       padding: const EdgeInsets.only(right: 16.0),
       child: InkWell(
-        onTap: () {
+        onTap: onTap ?? () {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Navigating to $title...')),
           );
