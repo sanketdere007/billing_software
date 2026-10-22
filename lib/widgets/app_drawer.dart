@@ -53,6 +53,7 @@ import '../screens/about_screen.dart';
 import '../screens/help_support_screen.dart';
 import '../widgets/support_info_footer.dart';
 import '../screens/reports/supplier_outstanding_report_screen.dart';
+import '../screens/reports/product_wise_purchase_report_screen.dart';
 import '../screens/reports/customer_outstanding_report_screen.dart';
 import '../screens/reports/collection_report_screen.dart';
 import '../screens/reports/payment_entry_report_screen.dart';
@@ -1396,6 +1397,23 @@ class _AppDrawerState extends State<AppDrawer> {
                                 MaterialPageRoute(
                                   builder: (context) =>
                                       const SupplierOutstandingReportScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                          _buildDrawerItem(
+                            context: context,
+                            icon: Icons.inventory_2_rounded,
+                            iconColor: _getIconColor(context, Colors.indigo),
+                            title: 'Product Wise Purchase',
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  settings: const RouteSettings(
+                                    name: AppRoutes.productWisePurchaseReport,
+                                  ),
+                                  builder: (context) =>
+                                      const ProductWisePurchaseReportScreen(),
                                 ),
                               );
                             },

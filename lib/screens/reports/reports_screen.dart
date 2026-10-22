@@ -3,6 +3,7 @@ import '../../services/shortcut_service.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/direct_back_scope.dart';
 import 'supplier_outstanding_report_screen.dart';
+import 'product_wise_purchase_report_screen.dart';
 import 'customer_wise_sales_report_screen.dart';
 import 'outstanding_receivable_report_screen.dart';
 import 'collection_report_screen.dart';
@@ -117,6 +118,15 @@ class _ReportsScreenState extends State<ReportsScreen> {
               icon: Icons.pie_chart_rounded,
               color: Colors.indigo,
               screenBuilder: () => const SupplierOutstandingReportScreen(),
+            ),
+            ReportItem(
+              title: 'Product Wise Purchase',
+              description:
+                  'Product purchase totals, quantities, GST, discounts & invoice records.',
+              icon: Icons.inventory_2_rounded,
+              color: Colors.indigo,
+              routeName: AppRoutes.productWisePurchaseReport,
+              screenBuilder: () => const ProductWisePurchaseReportScreen(),
             ),
           ],
         ),

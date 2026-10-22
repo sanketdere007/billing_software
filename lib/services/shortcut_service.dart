@@ -34,6 +34,8 @@ class AppRoutes {
   static const String helpSupport = '/help-support';
   static const String pdfPreview = '/pdf-preview';
   static const String reports = '/reports';
+  static const String productWisePurchaseReport =
+      '/reports/product-wise-purchase';
   static const String customerWiseSalesReturnReport =
       '/reports/customer-wise-sales-return';
 }

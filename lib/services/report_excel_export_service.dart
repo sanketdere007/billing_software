@@ -6,6 +6,7 @@ import '../models/outstanding_receivable_report.dart';
 import '../models/batch_wise_stock_report.dart';
 import '../models/customer_wise_sales_report.dart';
 import '../models/customer_wise_sales_return_report.dart';
+import '../models/product_wise_purchase_report.dart';
 import 'excel_export_helper.dart';
 
 class ReportExcelExportService {
@@ -443,6 +444,31 @@ class ReportExcelExportService {
             ExcelExportHelper.formatAmount(items[i].totalOutstanding),
             ExcelExportHelper.formatDate(items[i].firstSaleDate),
             ExcelExportHelper.formatDate(items[i].lastSaleDate),
+          ],
+      ],
+    );
+  }
+
+  static Future<ExcelExportResult> exportProductWisePurchaseReport(
+    List<ProductWisePurchaseItem> items,
+  ) {
+    return ExcelExportHelper.exportSheet(
+      filePrefix: 'Product_Wise_Purchase_Report',
+      sheetName: 'Product Purchase',
+      emptyMessage: 'No purchase records available to export.',
+      columns: const [
+        ExcelColumn('Sr. No.', align: ExcelCellAlign.center, type: ExcelCellType.number),
+        ExcelColumn('Product Name'),
+        ExcelColumn('Purchase Qty', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn('Purchase Amount', align: ExcelCellAlign.right, type: ExcelCellType.number),
+      ],
+      rows: [
+        for (int i = 0; i < items.length; i++)
+          [
+            '${i + 1}',
+            items[i].productName,
+            ExcelExportHelper.formatAmount(items[i].totalPurchaseQty),
+            ExcelExportHelper.formatAmount(items[i].totalPurchaseAmount),
           ],
       ],
     );

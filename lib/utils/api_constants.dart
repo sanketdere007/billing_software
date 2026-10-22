@@ -31,6 +31,8 @@ class ApiConstants {
       '/api/Report/CustomerWiseSalesReport';
   static const String getCustomerWiseSalesReturnReportEndpoint =
       '/api/Report/CustomerWiseSalesReturnReport';
+  static const String getProductWisePurchaseReportEndpoint =
+      '/api/Report/ProductWisePurchaseReport';
 
   // Category Endpoints
   static const String getAllCategoriesEndpoint =
