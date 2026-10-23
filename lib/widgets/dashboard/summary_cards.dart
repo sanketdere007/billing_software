@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../app_drawer.dart';
+import '../../screens/reports/low_stock_report_screen.dart';
+import '../../screens/reports/customer_wise_sales_report_screen.dart';
+import '../../screens/reports/collection_report_screen.dart';
+import '../../screens/reports/outstanding_receivable_report_screen.dart';
+import '../../services/shortcut_service.dart';
 import 'dashboard_shimmer.dart';
 
 class SummaryCards extends StatelessWidget {
@@ -7,6 +13,10 @@ class SummaryCards extends StatelessWidget {
   final bool isLoading;
   final String? errorMessage;
   final VoidCallback? onRetry;
+  final VoidCallback? onLowStockTap;
+  final VoidCallback? onSalesTap;
+  final VoidCallback? onCollectionTap;
+  final VoidCallback? onPendingAmountTap;
 
   const SummaryCards({
     super.key,
@@ -14,6 +24,10 @@ class SummaryCards extends StatelessWidget {
     this.isLoading = false,
     this.errorMessage,
     this.onRetry,
+    this.onLowStockTap,
+    this.onSalesTap,
+    this.onCollectionTap,
+    this.onPendingAmountTap,
   });
 
   @override
@@ -76,6 +90,19 @@ class SummaryCards extends StatelessWidget {
               Icons.trending_up,
               Colors.green,
               true,
+              onTap: onSalesTap ??
+                  () {
+                    AppDrawer.openSalesReports();
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        settings: const RouteSettings(
+                          name: AppRoutes.customerWiseSalesReport,
+                        ),
+                        builder: (context) =>
+                            const CustomerWiseSalesReportScreen(),
+                      ),
+                    );
+                  },
             ),
             _buildKpiCard(
               context,
@@ -92,6 +119,18 @@ class SummaryCards extends StatelessWidget {
               Icons.account_balance_wallet,
               Colors.teal,
               true,
+              onTap: onCollectionTap ??
+                  () {
+                    AppDrawer.openAccountReports();
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        settings: const RouteSettings(
+                          name: AppRoutes.collectionReport,
+                        ),
+                        builder: (context) => const CollectionReportScreen(),
+                      ),
+                    );
+                  },
             ),
             _buildKpiCard(
               context,
@@ -100,6 +139,19 @@ class SummaryCards extends StatelessWidget {
               Icons.hourglass_empty,
               Colors.orange,
               false,
+              onTap: onPendingAmountTap ??
+                  () {
+                    AppDrawer.openAccountReports();
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        settings: const RouteSettings(
+                          name: AppRoutes.outstandingReceivableReport,
+                        ),
+                        builder: (context) =>
+                            const OutstandingReceivableReportScreen(),
+                      ),
+                    );
+                  },
             ),
 
             _buildCountCard(
@@ -115,6 +167,18 @@ class SummaryCards extends StatelessWidget {
               lowStockProducts,
               Icons.warning_amber,
               Colors.orange,
+              onTap: onLowStockTap ??
+                  () {
+                    AppDrawer.openStockReports();
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        settings: const RouteSettings(
+                          name: AppRoutes.lowStockReport,
+                        ),
+                        builder: (context) => const LowStockReportScreen(),
+                      ),
+                    );
+                  },
             ),
             _buildCountCard(
               context,
@@ -255,8 +319,9 @@ class SummaryCards extends StatelessWidget {
     double amount,
     IconData icon,
     MaterialColor color,
-    bool isPositive,
-  ) {
+    bool isPositive, {
+    VoidCallback? onTap,
+  }) {
     final currencyFormatter = NumberFormat.currency(
       symbol: '₹',
       decimalDigits: 2,
@@ -269,6 +334,7 @@ class SummaryCards extends StatelessWidget {
       color,
       trendIcon: isPositive ? Icons.arrow_upward : Icons.arrow_downward,
       trendColor: isPositive ? Colors.green : Colors.red,
+      onTap: onTap,
     );
   }
 
@@ -277,8 +343,9 @@ class SummaryCards extends StatelessWidget {
     String title,
     int count,
     IconData icon,
-    MaterialColor color,
-  ) {
+    MaterialColor color, {
+    VoidCallback? onTap,
+  }) {
     final numberFormatter = NumberFormat.decimalPattern();
     return _buildCardBase(
       context,
@@ -286,6 +353,7 @@ class SummaryCards extends StatelessWidget {
       numberFormatter.format(count),
       icon,
       color,
+      onTap: onTap,
     );
   }
 
@@ -297,11 +365,11 @@ class SummaryCards extends StatelessWidget {
     MaterialColor color, {
     IconData? trendIcon,
     Color? trendColor,
+    VoidCallback? onTap,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Container(
-      padding: const EdgeInsets.all(8.0),
+    final cardWidget = Container(
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
@@ -315,69 +383,94 @@ class SummaryCards extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: isDark ? color.shade900.withOpacity(0.4) : color.shade50,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              icon,
-              color: isDark ? color.shade200 : color.shade700,
-              size: MediaQuery.of(context).size.width > 600 ? 28 : 20,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onTap,
+          mouseCursor: onTap != null
+              ? SystemMouseCursors.click
+              : SystemMouseCursors.basic,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
               children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withOpacity(0.6),
-                    fontWeight: FontWeight.w500,
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color:
+                        isDark ? color.shade900.withOpacity(0.4) : color.shade50,
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  child: Icon(
+                    icon,
+                    color: isDark ? color.shade200 : color.shade700,
+                    size: MediaQuery.of(context).size.width > 600 ? 28 : 20,
+                  ),
                 ),
-                const SizedBox(height: 8),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Flexible(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          value,
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withOpacity(0.6),
+                          fontWeight: FontWeight.w500,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    if (trendIcon != null) ...[
-                      const SizedBox(width: 4),
-                      if (MediaQuery.of(context).size.width > 600)
-                        const Spacer(),
-                      Icon(trendIcon, size: 16, color: trendColor),
+                      const SizedBox(height: 8),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Flexible(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                value,
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color:
+                                      Theme.of(context).colorScheme.onSurface,
+                                ),
+                              ),
+                            ),
+                          ),
+                          if (trendIcon != null) ...[
+                            const SizedBox(width: 4),
+                            if (MediaQuery.of(context).size.width > 600)
+                              const Spacer(),
+                            Icon(trendIcon, size: 16, color: trendColor),
+                          ],
+                        ],
+                      ),
                     ],
-                  ],
+                  ),
                 ),
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
+
+    if (onTap != null) {
+      return Tooltip(
+        message: 'Open $title',
+        waitDuration: const Duration(milliseconds: 400),
+        child: cardWidget,
+      );
+    }
+
+    return cardWidget;
   }
 }

@@ -75,6 +75,24 @@ class AppDrawer extends StatefulWidget {
 
   const AppDrawer({super.key, this.isPermanent = false});
 
+  /// Expands Reports and Sales Reports in the drawer
+  static void openSalesReports() {
+    _AppDrawerState._isReportsMenuExpanded = true;
+    _AppDrawerState._isSalesReportsExpanded = true;
+  }
+
+  /// Expands Reports and Account Reports in the drawer
+  static void openAccountReports() {
+    _AppDrawerState._isReportsMenuExpanded = true;
+    _AppDrawerState._isAccountReportsExpanded = true;
+  }
+
+  /// Expands Reports and Stock Reports in the drawer
+  static void openStockReports() {
+    _AppDrawerState._isReportsMenuExpanded = true;
+    _AppDrawerState._isStockReportsExpanded = true;
+  }
+
   @override
   State<AppDrawer> createState() => _AppDrawerState();
 }
@@ -1269,22 +1287,22 @@ class _AppDrawerState extends State<AppDrawer> {
                     ),
                   ),
                   children: [
-                    _buildDrawerItem(
-                      context: context,
-                      icon: Icons.dashboard_customize_rounded,
-                      iconColor: _getIconColor(context, Colors.indigo),
-                      title: 'Reports Overview',
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            settings: const RouteSettings(
-                              name: AppRoutes.reports,
-                            ),
-                            builder: (context) => const ReportsScreen(),
-                          ),
-                        );
-                      },
-                    ),
+                    // _buildDrawerItem(
+                    //   context: context,
+                    //   icon: Icons.dashboard_customize_rounded,
+                    //   iconColor: _getIconColor(context, Colors.indigo),
+                    //   title: 'Reports Overview',
+                    //   onTap: () {
+                    //     Navigator.of(context).push(
+                    //       MaterialPageRoute(
+                    //         settings: const RouteSettings(
+                    //           name: AppRoutes.reports,
+                    //         ),
+                    //         builder: (context) => const ReportsScreen(),
+                    //       ),
+                    //     );
+                    //   },
+                    // ),
 
                     // 1. Sales Reports
                     Padding(
@@ -1343,7 +1361,8 @@ class _AppDrawerState extends State<AppDrawer> {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
                                   settings: const RouteSettings(
-                                    name: AppRoutes.customerWiseSalesReturnReport,
+                                    name:
+                                        AppRoutes.customerWiseSalesReturnReport,
                                   ),
                                   builder: (context) =>
                                       const CustomerWiseSalesReturnReportScreen(),

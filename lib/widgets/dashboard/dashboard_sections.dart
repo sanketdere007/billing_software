@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../app_drawer.dart';
+import '../../screens/reports/low_stock_report_screen.dart';
+import '../../services/shortcut_service.dart';
 
 class DashboardSections extends StatelessWidget {
   const DashboardSections({super.key});
@@ -31,9 +34,14 @@ class DashboardSections extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionContainer(BuildContext context, String title, Widget content) {
+  Widget _buildSectionContainer(
+    BuildContext context,
+    String title,
+    Widget content, {
+    VoidCallback? onViewAll,
+  }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -41,7 +49,9 @@ class DashboardSections extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.black.withOpacity(0.3) : Colors.grey.withOpacity(0.1),
+            color: isDark
+                ? Colors.black.withOpacity(0.3)
+                : Colors.grey.withOpacity(0.1),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -55,12 +65,14 @@ class DashboardSections extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
-              TextButton(
-                onPressed: () {},
-                child: const Text('View All'),
-              ),
+              if (onViewAll != null)
+                TextButton(
+                  onPressed: onViewAll,
+                  child: const Text('View All'),
+                ),
             ],
           ),
           const SizedBox(height: 16),
@@ -115,6 +127,15 @@ class DashboardSections extends StatelessWidget {
     return _buildSectionContainer(
       context,
       'Low Stock Alerts',
+      onViewAll: () {
+        AppDrawer.openStockReports();
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            settings: const RouteSettings(name: AppRoutes.lowStockReport),
+            builder: (context) => const LowStockReportScreen(),
+          ),
+        );
+      },
       ListView.separated(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
