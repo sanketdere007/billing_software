@@ -59,6 +59,8 @@ import '../screens/reports/collection_report_screen.dart';
 import '../screens/reports/payment_entry_report_screen.dart';
 import '../screens/reports/current_stock_report_screen.dart';
 import '../screens/reports/batch_wise_stock_report_screen.dart';
+import '../screens/reports/stock_ledger_report_screen.dart';
+import '../screens/reports/low_stock_report_screen.dart';
 import '../screens/reports/customer_list_report_screen.dart';
 import '../screens/reports/product_wise_sales_report_screen.dart';
 import '../screens/reports/outstanding_receivable_report_screen.dart';
@@ -1532,6 +1534,40 @@ class _AppDrawerState extends State<AppDrawer> {
                                 MaterialPageRoute(
                                   builder: (context) =>
                                       const BatchWiseStockReportScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                          // _buildDrawerItem(
+                          //   context: context,
+                          //   icon: Icons.history_edu_rounded,
+                          //   iconColor: _getIconColor(context, Colors.teal),
+                          //   title: 'Stock Ledger Report',
+                          //   onTap: () {
+                          //     Navigator.of(context).push(
+                          //       MaterialPageRoute(
+                          //         settings: const RouteSettings(
+                          //           name: AppRoutes.stockLedgerReport,
+                          //         ),
+                          //         builder: (context) =>
+                          //             const StockLedgerReportScreen(),
+                          //       ),
+                          //     );
+                          //   },
+                          // ),
+                          _buildDrawerItem(
+                            context: context,
+                            icon: Icons.production_quantity_limits_rounded,
+                            iconColor: _getIconColor(context, Colors.teal),
+                            title: 'Low Stock Report',
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  settings: const RouteSettings(
+                                    name: AppRoutes.lowStockReport,
+                                  ),
+                                  builder: (context) =>
+                                      const LowStockReportScreen(),
                                 ),
                               );
                             },

@@ -10,6 +10,8 @@ import 'collection_report_screen.dart';
 import 'payment_entry_report_screen.dart';
 import 'current_stock_report_screen.dart';
 import 'batch_wise_stock_report_screen.dart';
+import 'stock_ledger_report_screen.dart';
+import 'low_stock_report_screen.dart';
 import 'customer_list_report_screen.dart';
 import 'product_wise_sales_report_screen.dart';
 import 'product_wise_sales_return_report_screen.dart';
@@ -183,6 +185,24 @@ class _ReportsScreenState extends State<ReportsScreen> {
               icon: Icons.layers_rounded,
               color: Colors.teal,
               screenBuilder: () => const BatchWiseStockReportScreen(),
+            ),
+            ReportItem(
+              title: 'Stock Ledger Report',
+              description:
+                  'Detailed audit trail of stock movements, adjustments, purchases and sales.',
+              icon: Icons.history_edu_rounded,
+              color: Colors.teal,
+              routeName: AppRoutes.stockLedgerReport,
+              screenBuilder: () => const StockLedgerReportScreen(),
+            ),
+            ReportItem(
+              title: 'Low Stock Report',
+              description:
+                  'Reorder level alerts, stock shortage, and inventory falling below minimum thresholds.',
+              icon: Icons.production_quantity_limits_rounded,
+              color: Colors.teal,
+              routeName: AppRoutes.lowStockReport,
+              screenBuilder: () => const LowStockReportScreen(),
             ),
           ],
         ),

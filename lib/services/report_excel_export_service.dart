@@ -7,6 +7,8 @@ import '../models/batch_wise_stock_report.dart';
 import '../models/customer_wise_sales_report.dart';
 import '../models/customer_wise_sales_return_report.dart';
 import '../models/product_wise_purchase_report.dart';
+import '../models/stock_ledger_report.dart';
+import '../models/low_stock_report.dart';
 import 'excel_export_helper.dart';
 
 class ReportExcelExportService {
@@ -469,6 +471,78 @@ class ReportExcelExportService {
             items[i].productName,
             ExcelExportHelper.formatAmount(items[i].totalPurchaseQty),
             ExcelExportHelper.formatAmount(items[i].totalPurchaseAmount),
+          ],
+      ],
+    );
+  }
+
+  static Future<ExcelExportResult> exportStockLedger(
+    List<StockLedgerItem> items,
+  ) {
+    return ExcelExportHelper.exportSheet(
+      filePrefix: 'Stock_Ledger_Report',
+      sheetName: 'Stock Ledger',
+      emptyMessage: 'No stock ledger records available to export.',
+      columns: const [
+        ExcelColumn('Sr. No.', align: ExcelCellAlign.center, type: ExcelCellType.number),
+        ExcelColumn('Date', align: ExcelCellAlign.center),
+        ExcelColumn('Product Name'),
+        ExcelColumn('Batch No.', align: ExcelCellAlign.center),
+        ExcelColumn('Transaction Type', align: ExcelCellAlign.center),
+        ExcelColumn('Type', align: ExcelCellAlign.center),
+        ExcelColumn('Ref No.', align: ExcelCellAlign.center),
+        ExcelColumn('Quantity', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn('Before Stock', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn('After Stock', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn('Physical Stock', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn('Adjustment Qty', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn('Remark'),
+      ],
+      rows: [
+        for (int i = 0; i < items.length; i++)
+          [
+            '${i + 1}',
+            ExcelExportHelper.formatDate(items[i].stockLedgerDate),
+            items[i].prodName,
+            items[i].batchNumber,
+            items[i].stockLedgerTransactionType,
+            items[i].stockLedgerType,
+            items[i].stockLedgerReferenceNo,
+            ExcelExportHelper.formatAmount(items[i].quantity),
+            ExcelExportHelper.formatAmount(items[i].beforeStock),
+            ExcelExportHelper.formatAmount(items[i].afterStock),
+            ExcelExportHelper.formatAmount(items[i].physicalStock),
+            ExcelExportHelper.formatAmount(items[i].adjustmentQty),
+            items[i].stockLedgerRemark,
+          ],
+      ],
+    );
+  }
+
+  static Future<ExcelExportResult> exportLowStock(
+    List<LowStockItem> items,
+  ) {
+    return ExcelExportHelper.exportSheet(
+      filePrefix: 'Low_Stock_Report',
+      sheetName: 'Low Stock',
+      emptyMessage: 'No low stock records available to export.',
+      columns: const [
+        ExcelColumn('Sr. No.', align: ExcelCellAlign.center, type: ExcelCellType.number),
+        ExcelColumn('Product Name'),
+        ExcelColumn('Unit', align: ExcelCellAlign.center),
+        ExcelColumn('Unit Value', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn('Available Stock', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn('Status', align: ExcelCellAlign.center),
+      ],
+      rows: [
+        for (int i = 0; i < items.length; i++)
+          [
+            '${i + 1}',
+            items[i].productName,
+            items[i].unitShortName,
+            ExcelExportHelper.formatAmount(items[i].unitValue),
+            ExcelExportHelper.formatAmount(items[i].availableStock),
+            items[i].availableStock <= 0 ? 'OUT OF STOCK' : 'LOW STOCK',
           ],
       ],
     );
