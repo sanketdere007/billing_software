@@ -1539,7 +1539,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                                                           height: 2,
                                                         ),
                                                         Text(
-                                                          'Unit Value : ${_unitValueFor(prod)} ${prod.unitName}',
+                                                          'Stock : ${prod.batchAvailableStock} Unit Value : ${_unitValueFor(prod)} ${prod.unitName}',
                                                           style: TextStyle(
                                                             color: theme
                                                                 .colorScheme
