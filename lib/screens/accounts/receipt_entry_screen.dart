@@ -5,6 +5,7 @@ import '../../widgets/app_drawer.dart';
 import '../../widgets/direct_back_scope.dart';
 import '../../widgets/save_clear_shortcuts.dart';
 import '../../widgets/customer_dropdown.dart';
+import '../../widgets/transaction_date_picker_field.dart';
 import '../../services/api_service.dart';
 import '../../utils/api_constants.dart';
 
@@ -831,12 +832,18 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
               ],
               const SizedBox(height: 16),
               _responsiveRow(isDesktop, [
-                _buildDateField(
-                  theme: theme,
-                  label: 'Receipt Date *',
-                  date: _receiptDate,
-                  node: _receiptDateNode,
-                  onPicked: (date) => setState(() => _receiptDate = date),
+                TransactionDatePickerField(
+                  selectedDate: _receiptDate,
+                  focusNode: _receiptDateNode,
+                  nextFocusNode: _invoiceNoNode,
+                  labelText: 'Receipt Date\nyyyy/MM/dd',
+                  restrictFutureDates: true,
+                  onDateSelected: (newDate) {
+                    setState(() {
+                      _receiptDate = newDate;
+                    });
+                  },
+                  onNextFocus: () => _focusNext(_receiptDateNode),
                 ),
                 _isLoadingInvoices
                     ? const Center(

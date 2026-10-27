@@ -13,6 +13,7 @@ import '../../widgets/direct_back_scope.dart';
 import '../../widgets/save_clear_shortcuts.dart';
 import '../../widgets/supplier_dropdown.dart';
 import '../../widgets/invoice_dropdown.dart';
+import '../../widgets/transaction_date_picker_field.dart';
 
 class PaymentMasterScreen extends StatefulWidget {
   const PaymentMasterScreen({super.key});
@@ -656,12 +657,18 @@ class _PaymentMasterScreenState extends State<PaymentMasterScreen> {
               ),
               const SizedBox(height: 16),
               _responsiveRow(isDesktop, [
-                _buildDateField(
-                  theme: theme,
-                  label: 'Payment Date *',
-                  date: _paymentDate,
-                  node: _paymentDateNode,
-                  onPicked: (date) => setState(() => _paymentDate = date),
+                TransactionDatePickerField(
+                  selectedDate: _paymentDate,
+                  focusNode: _paymentDateNode,
+                  nextFocusNode: _invoiceNoNode,
+                  labelText: 'Payment Date\nyyyy/MM/dd',
+                  restrictFutureDates: true,
+                  onDateSelected: (newDate) {
+                    setState(() {
+                      _paymentDate = newDate;
+                    });
+                  },
+                  onNextFocus: () => _focusNext(_paymentDateNode),
                 ),
                 _buildInvoiceDropdown(theme),
               ]),
