@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import '../../models/dashboard_charts_model.dart';
 import '../../services/dashboard_service.dart';
+import '../../utils/chart_scale_utils.dart';
 import 'dashboard_shimmer.dart';
 
 class DashboardCharts extends StatefulWidget {
@@ -32,9 +33,8 @@ class DashboardChartsState extends State<DashboardCharts> {
     symbol: '₹',
     decimalDigits: 2,
   );
-  final NumberFormat _compactNumberFormat = NumberFormat.compact();
   String _formatCompactCurrency(num value) =>
-      '₹${_compactNumberFormat.format(value)}';
+      ChartScaleUtils.formatIndianCompactCurrency(value);
 
   static const List<Color> _chartPalette = [
     Color(0xFF10B981), // Emerald
@@ -382,8 +382,9 @@ class DashboardChartsState extends State<DashboardCharts> {
       spots.add(FlSpot(i.toDouble(), amt));
     }
 
-    final double effectiveMaxY = maxSales > 0 ? maxSales * 1.2 : 100;
-    final int interval = trendList.length > 7
+    // Dynamically calculate readable Y-axis scale (maxY, interval, reservedSize)
+    final scale = ChartScaleUtils.calculateYAxisScale(maxSales);
+    final int xInterval = trendList.length > 7
         ? (trendList.length / 5).ceil()
         : 1;
 
@@ -395,6 +396,7 @@ class DashboardChartsState extends State<DashboardCharts> {
           gridData: FlGridData(
             show: true,
             drawVerticalLine: false,
+            horizontalInterval: scale.interval,
             getDrawingHorizontalLine: (value) =>
                 FlLine(color: Colors.grey.withOpacity(0.15), strokeWidth: 1),
           ),
@@ -409,14 +411,29 @@ class DashboardChartsState extends State<DashboardCharts> {
             leftTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
-                reservedSize: 42,
+                reservedSize: scale.reservedSize,
+                interval: scale.interval,
+                minIncluded: false,
+                maxIncluded: true,
                 getTitlesWidget: (value, meta) {
-                  if (value == 0) return const Text('');
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 4.0),
+                  if (value <= 0) return const SizedBox.shrink();
+                  if (value > scale.maxY + 1e-5) return const SizedBox.shrink();
+
+                  return SideTitleWidget(
+                    meta: meta,
+                    space: 6,
+                    fitInside: SideTitleFitInsideData.fromTitleMeta(
+                      meta,
+                      enabled: true,
+                      distanceFromEdge: 2,
+                    ),
                     child: Text(
                       _formatCompactCurrency(value),
-                      style: const TextStyle(fontSize: 10, color: Colors.grey),
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey,
+                      ),
                       textAlign: TextAlign.right,
                     ),
                   );
@@ -430,7 +447,7 @@ class DashboardChartsState extends State<DashboardCharts> {
                 getTitlesWidget: (value, meta) {
                   final int index = value.toInt();
                   if (index >= 0 && index < trendList.length) {
-                    if (index % interval != 0 &&
+                    if (index % xInterval != 0 &&
                         index != trendList.length - 1) {
                       return const SizedBox.shrink();
                     }
@@ -441,8 +458,9 @@ class DashboardChartsState extends State<DashboardCharts> {
                     } else if (label.length > 3) {
                       label = label.substring(0, 3);
                     }
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
+                    return SideTitleWidget(
+                      meta: meta,
+                      space: 6,
                       child: Text(
                         label,
                         style: const TextStyle(
@@ -460,7 +478,7 @@ class DashboardChartsState extends State<DashboardCharts> {
           minX: 0,
           maxX: max(0, (trendList.length - 1).toDouble()),
           minY: 0,
-          maxY: effectiveMaxY,
+          maxY: scale.maxY,
           borderData: FlBorderData(show: false),
           lineTouchData: LineTouchData(
             enabled: true,

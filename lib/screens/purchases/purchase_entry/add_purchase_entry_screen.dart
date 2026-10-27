@@ -1921,7 +1921,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
                       selectedDate: _selectedDate,
                       focusNode: _invoiceDateNode,
                       nextFocusNode: _supplierNode,
-                      labelText: 'Invoice Date',
+                      labelText: 'Invoice Date\nyyyy/MM/dd',
                       restrictFutureDates: true,
                       onDateSelected: (newDate) {
                         setState(() {

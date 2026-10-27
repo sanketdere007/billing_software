@@ -1573,7 +1573,7 @@ class _AddPurchaseReturnScreenState extends State<AddPurchaseReturnScreen> {
                       child: TransactionDatePickerField(
                         selectedDate: _selectedDate,
                         focusNode: _invoiceDateNode,
-                        labelText: 'Return Date',
+                        labelText: 'Return Date\nyyyy/MM/dd',
                         restrictFutureDates: true,
                         onDateSelected: (newDate) {
                           setState(() {

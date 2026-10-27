@@ -2007,7 +2007,7 @@ class _AddSalesEntryScreenState extends State<AddSalesEntryScreen> {
                       child: TransactionDatePickerField(
                         selectedDate: _selectedDate,
                         focusNode: _invoiceDateNode,
-                        labelText: 'Invoice Date',
+                        labelText: 'Invoice Date\nyyyy/MM/dd',
                         restrictFutureDates: true,
                         onDateSelected: (newDate) {
                           setState(() {
