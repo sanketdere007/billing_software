@@ -302,31 +302,31 @@ class PurchaseReturnMasterViewItem {
 
   factory PurchaseReturnMasterViewItem.fromJson(Map<String, dynamic> json) {
     return PurchaseReturnMasterViewItem(
-      purchaseReturnMasterId: json['purchaseReturnMaster_Id'] ?? 0,
-      compId: json['purchaseReturnMaster_CompId'] ?? 0,
-      branchId: json['purchaseReturnMaster_BranchId'] ?? 0,
-      supplierId: json['purchaseReturnMaster_SupplierId'] ?? 0,
-      supplierCode: json['supplierCode'] ?? '',
-      supplierMobile: json['supplierMobile'] ?? '',
-      ledgerId: json['purchaseReturnMaster_LedgerId'] ?? 0,
-      ledgerName: json['ledgerName'] ?? '',
-      returnNo: json['purchaseReturnMaster_ReturnNo'] ?? '',
-      returnDate: json['purchaseReturnMaster_ReturnDate'] ?? '',
-      subTotal: (json['purchaseReturnMaster_SubTotal'] ?? 0.0).toDouble(),
-      discountAmount: (json['purchaseReturnMaster_DiscountAmount'] ?? 0.0).toDouble(),
-      billWiseDiscountPercentage: (json['purchaseReturnMaster_BillWiseDiscountPercentage'] ?? 0.0).toDouble(),
-      billWiseDiscountAmount: (json['purchaseReturnMaster_BillWiseDiscountAmount'] ?? 0.0).toDouble(),
-      gstAmount: (json['purchaseReturnMaster_GSTAmount'] ?? 0.0).toDouble(),
-      otherCharges: (json['purchaseReturnMaster_OtherCharges'] ?? 0.0).toDouble(),
-      netAmount: (json['purchaseReturnMaster_NetAmount'] ?? 0.0).toDouble(),
-      refundAmount: (json['purchaseReturnMaster_RefundAmount'] ?? 0.0).toDouble(),
-      balanceAmount: (json['purchaseReturnMaster_BalanceAmount'] ?? 0.0).toDouble(),
-      status: json['purchaseReturnMaster_Status'] ?? '',
-      remark: json['purchaseReturnMaster_Remark'] ?? '',
-      createdBy: json['purchaseReturnMaster_CreatedBy'] ?? 0,
-      createdDate: json['purchaseReturnMaster_CreatedDate'] ?? '',
-      modifiedBy: json['purchaseReturnMaster_ModifiedBy'] ?? 0,
-      modifiedDate: json['purchaseReturnMaster_ModifiedDate'] ?? '',
+      purchaseReturnMasterId: json['purchaseReturnMaster_Id'] ?? json['purchaseReturnMasterId'] ?? 0,
+      compId: json['purchaseReturnMaster_CompId'] ?? json['compId'] ?? 0,
+      branchId: json['purchaseReturnMaster_BranchId'] ?? json['branchId'] ?? 0,
+      supplierId: json['purchaseReturnMaster_SupplierId'] ?? json['supplierId'] ?? 0,
+      supplierCode: json['supplierCode'] ?? json['suppCode'] ?? '',
+      supplierMobile: json['supplierMobile'] ?? json['suppMobileNo'] ?? '',
+      ledgerId: json['purchaseReturnMaster_LedgerId'] ?? json['ledgerId'] ?? 0,
+      ledgerName: json['ledgerName'] ?? json['supplierName'] ?? json['suppName'] ?? '',
+      returnNo: json['purchaseReturnMaster_ReturnNo'] ?? json['returnNo'] ?? '',
+      returnDate: json['purchaseReturnMaster_ReturnDate'] ?? json['returnDate'] ?? '',
+      subTotal: (json['purchaseReturnMaster_SubTotal'] ?? json['subTotal'] ?? 0.0).toDouble(),
+      discountAmount: (json['purchaseReturnMaster_DiscountAmount'] ?? json['discountAmount'] ?? 0.0).toDouble(),
+      billWiseDiscountPercentage: (json['purchaseReturnMaster_BillWiseDiscountPercentage'] ?? json['billWiseDiscountPercentage'] ?? 0.0).toDouble(),
+      billWiseDiscountAmount: (json['purchaseReturnMaster_BillWiseDiscountAmount'] ?? json['billWiseDiscountAmount'] ?? 0.0).toDouble(),
+      gstAmount: (json['purchaseReturnMaster_GSTAmount'] ?? json['gstAmount'] ?? 0.0).toDouble(),
+      otherCharges: (json['purchaseReturnMaster_OtherCharges'] ?? json['otherCharges'] ?? 0.0).toDouble(),
+      netAmount: (json['purchaseReturnMaster_NetAmount'] ?? json['netAmount'] ?? 0.0).toDouble(),
+      refundAmount: (json['purchaseReturnMaster_RefundAmount'] ?? json['refundAmount'] ?? 0.0).toDouble(),
+      balanceAmount: (json['purchaseReturnMaster_BalanceAmount'] ?? json['balanceAmount'] ?? 0.0).toDouble(),
+      status: json['purchaseReturnMaster_Status'] ?? json['status'] ?? '',
+      remark: json['purchaseReturnMaster_Remark'] ?? json['remark'] ?? '',
+      createdBy: json['purchaseReturnMaster_CreatedBy'] ?? json['createdBy'] ?? 0,
+      createdDate: json['purchaseReturnMaster_CreatedDate'] ?? json['createdDate'] ?? '',
+      modifiedBy: json['purchaseReturnMaster_ModifiedBy'] ?? json['modifiedBy'] ?? 0,
+      modifiedDate: json['purchaseReturnMaster_ModifiedDate'] ?? json['modifiedDate'] ?? '',
       totalRecords: json['totalRecords'] ?? 0,
     );
   }
@@ -372,10 +372,25 @@ class PurchaseReturnMasterViewResponse {
   });
 
   factory PurchaseReturnMasterViewResponse.fromJson(Map<String, dynamic> json) {
+    PurchaseReturnMasterViewResponseData? dataObj;
+    if (json['data'] is Map<String, dynamic>) {
+      dataObj = PurchaseReturnMasterViewResponseData.fromJson(json['data']);
+    } else if (json['data'] is List) {
+      final list = (json['data'] as List)
+          .map((e) => PurchaseReturnMasterViewItem.fromJson(e as Map<String, dynamic>))
+          .toList();
+      dataObj = PurchaseReturnMasterViewResponseData(
+        items: list,
+        totalRecords: list.length,
+        totalPages: 1,
+        currentPage: 1,
+        pageSize: list.length,
+      );
+    }
     return PurchaseReturnMasterViewResponse(
-      status: json['status'] ?? false,
+      status: json['status'] ?? true,
       message: json['message'] ?? '',
-      data: json['data'] != null ? PurchaseReturnMasterViewResponseData.fromJson(json['data']) : null,
+      data: dataObj,
       error: json['error'],
     );
   }
@@ -438,31 +453,31 @@ class PurchaseReturnDetailViewItem {
 
   factory PurchaseReturnDetailViewItem.fromJson(Map<String, dynamic> json) {
     return PurchaseReturnDetailViewItem(
-      purchaseReturnDetailId: json['purchaseReturnDetail_Id'] ?? 0,
-      purchaseReturnDetailMasterId: json['purchaseReturnDetail_MasterId'] ?? 0,
-      compId: json['purchaseReturnDetail_CompId'] ?? 0,
-      branchId: json['purchaseReturnDetail_BranchId'] ?? 0,
-      productId: json['purchaseReturnDetail_ProductId'] ?? 0,
-      productCode: json['productCode'] ?? '',
-      productName: json['productName'] ?? '',
-      batchId: json['purchaseReturnDetail_BatchId'] ?? 0,
-      batchNumber: json['batchNumber'] ?? '',
+      purchaseReturnDetailId: json['purchaseReturnDetail_Id'] ?? json['purchaseReturnDetailId'] ?? json['id'] ?? 0,
+      purchaseReturnDetailMasterId: json['purchaseReturnDetail_MasterId'] ?? json['purchaseReturnDetailMasterId'] ?? json['masterId'] ?? 0,
+      compId: json['purchaseReturnDetail_CompId'] ?? json['compId'] ?? 0,
+      branchId: json['purchaseReturnDetail_BranchId'] ?? json['branchId'] ?? 0,
+      productId: json['purchaseReturnDetail_ProductId'] ?? json['productId'] ?? 0,
+      productCode: json['productCode'] ?? json['prodCode'] ?? '',
+      productName: json['productName'] ?? json['prodName'] ?? '',
+      batchId: json['purchaseReturnDetail_BatchId'] ?? json['batchId'] ?? 0,
+      batchNumber: json['batchNumber'] ?? json['batchNo'] ?? '',
       batchStock: (json['batchStock'] ?? 0.0).toDouble(),
       batchAvailableStock: (json['batchAvailableStock'] ?? 0.0).toDouble(),
-      qty: (json['purchaseReturnDetail_Qty'] ?? 0.0).toDouble(),
-      landingPrice: (json['purchaseReturnDetail_LandingPrice'] ?? 0.0).toDouble(),
-      purchasePrice: (json['purchaseReturnDetail_PurchasePrice'] ?? 0.0).toDouble(),
-      mrp: (json['purchaseReturnDetail_MRP'] ?? 0.0).toDouble(),
-      sellingPrice: (json['purchaseReturnDetail_SellingPrice'] ?? 0.0).toDouble(),
-      discountPercent: (json['purchaseReturnDetail_DiscountPercent'] ?? 0.0).toDouble(),
-      discountAmount: (json['purchaseReturnDetail_DiscountAmount'] ?? 0.0).toDouble(),
-      gstPercent: (json['purchaseReturnDetail_GSTPercent'] ?? 0.0).toDouble(),
-      gstAmount: (json['purchaseReturnDetail_GSTAmount'] ?? 0.0).toDouble(),
-      totalAmount: (json['purchaseReturnDetail_TotalAmount'] ?? 0.0).toDouble(),
-      createdBy: json['purchaseReturnDetail_CreatedBy'] ?? 0,
-      createdDate: json['purchaseReturnDetail_CreatedDate'] ?? '',
-      modifiedBy: json['purchaseReturnDetail_ModifiedBy'] ?? 0,
-      modifiedDate: json['purchaseReturnDetail_ModifiedDate'] ?? '',
+      qty: (json['purchaseReturnDetail_Qty'] ?? json['qty'] ?? json['quantity'] ?? 0.0).toDouble(),
+      landingPrice: (json['purchaseReturnDetail_LandingPrice'] ?? json['landingPrice'] ?? 0.0).toDouble(),
+      purchasePrice: (json['purchaseReturnDetail_PurchasePrice'] ?? json['purchasePrice'] ?? json['price'] ?? 0.0).toDouble(),
+      mrp: (json['purchaseReturnDetail_MRP'] ?? json['mrp'] ?? 0.0).toDouble(),
+      sellingPrice: (json['purchaseReturnDetail_SellingPrice'] ?? json['sellingPrice'] ?? 0.0).toDouble(),
+      discountPercent: (json['purchaseReturnDetail_DiscountPercent'] ?? json['discountPercent'] ?? json['discountPercentage'] ?? 0.0).toDouble(),
+      discountAmount: (json['purchaseReturnDetail_DiscountAmount'] ?? json['discountAmount'] ?? 0.0).toDouble(),
+      gstPercent: (json['purchaseReturnDetail_GSTPercent'] ?? json['gstPercent'] ?? json['gstPercentage'] ?? 0.0).toDouble(),
+      gstAmount: (json['purchaseReturnDetail_GSTAmount'] ?? json['gstAmount'] ?? 0.0).toDouble(),
+      totalAmount: (json['purchaseReturnDetail_TotalAmount'] ?? json['totalAmount'] ?? json['netAmount'] ?? 0.0).toDouble(),
+      createdBy: json['purchaseReturnDetail_CreatedBy'] ?? json['createdBy'] ?? 0,
+      createdDate: json['purchaseReturnDetail_CreatedDate'] ?? json['createdDate'] ?? '',
+      modifiedBy: json['purchaseReturnDetail_ModifiedBy'] ?? json['modifiedBy'] ?? 0,
+      modifiedDate: json['purchaseReturnDetail_ModifiedDate'] ?? json['modifiedDate'] ?? '',
     );
   }
 }
@@ -481,10 +496,26 @@ class PurchaseReturnDetailViewResponse {
   });
 
   factory PurchaseReturnDetailViewResponse.fromJson(Map<String, dynamic> json) {
+    List rawList = [];
+    if (json['data'] is List) {
+      rawList = json['data'] as List;
+    } else if (json['data'] is Map<String, dynamic>) {
+      if (json['data']['items'] is List) {
+        rawList = json['data']['items'] as List;
+      } else if (json['data']['details'] is List) {
+        rawList = json['data']['details'] as List;
+      } else {
+        rawList = [json['data']];
+      }
+    } else if (json['items'] is List) {
+      rawList = json['items'] as List;
+    }
     return PurchaseReturnDetailViewResponse(
-      status: json['status'] ?? false,
+      status: json['status'] ?? true,
       message: json['message'] ?? '',
-      data: (json['data'] as List?)?.map((e) => PurchaseReturnDetailViewItem.fromJson(e)).toList() ?? [],
+      data: rawList
+          .map((e) => PurchaseReturnDetailViewItem.fromJson(e as Map<String, dynamic>))
+          .toList(),
       error: json['error'],
     );
   }

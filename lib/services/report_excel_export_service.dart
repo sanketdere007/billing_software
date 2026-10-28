@@ -9,6 +9,8 @@ import '../models/customer_wise_sales_return_report.dart';
 import '../models/product_wise_purchase_report.dart';
 import '../models/stock_ledger_report.dart';
 import '../models/low_stock_report.dart';
+import '../models/purchase_return.dart';
+import '../models/purchase_entry.dart';
 import 'excel_export_helper.dart';
 
 class ReportExcelExportService {
@@ -20,17 +22,37 @@ class ReportExcelExportService {
       sheetName: 'Supplier Outstanding',
       emptyMessage: 'No supplier outstanding records available to export.',
       columns: const [
-        ExcelColumn('Sr. No.', align: ExcelCellAlign.center, type: ExcelCellType.number),
+        ExcelColumn(
+          'Sr. No.',
+          align: ExcelCellAlign.center,
+          type: ExcelCellType.number,
+        ),
         ExcelColumn('Supplier Code', align: ExcelCellAlign.center),
         ExcelColumn('Supplier Name'),
         ExcelColumn('Company Name'),
         ExcelColumn('Mobile', align: ExcelCellAlign.center),
         ExcelColumn('City'),
         ExcelColumn('State'),
-        ExcelColumn('Purchase Count', align: ExcelCellAlign.center, type: ExcelCellType.number),
-        ExcelColumn('Purchase Amt', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('Paid Amt', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('Outstanding', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn(
+          'Purchase Count',
+          align: ExcelCellAlign.center,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Purchase Amt',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Paid Amt',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Outstanding',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
         ExcelColumn('Status', align: ExcelCellAlign.center),
       ],
       rows: [
@@ -61,13 +83,29 @@ class ReportExcelExportService {
       sheetName: 'Customer Outstanding',
       emptyMessage: 'No customer outstanding records available to export.',
       columns: const [
-        ExcelColumn('Sr. No.', align: ExcelCellAlign.center, type: ExcelCellType.number),
+        ExcelColumn(
+          'Sr. No.',
+          align: ExcelCellAlign.center,
+          type: ExcelCellType.number,
+        ),
         ExcelColumn('Customer Code', align: ExcelCellAlign.center),
         ExcelColumn('Customer Name'),
         ExcelColumn('Mobile', align: ExcelCellAlign.center),
-        ExcelColumn('Invoice Amt', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('Paid Amt', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('Outstanding', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn(
+          'Invoice Amt',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Paid Amt',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Outstanding',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
       ],
       rows: [
         for (int i = 0; i < items.length; i++)
@@ -88,18 +126,17 @@ class ReportExcelExportService {
     OutstandingReceivableReportData data,
   ) {
     final rows = <List<String>>[];
-    
+
     // Group invoices by customer
-    final invoicesByCustomer = <int, List<OutstandingReceivableInvoiceDetail>>{};
+    final invoicesByCustomer =
+        <int, List<OutstandingReceivableInvoiceDetail>>{};
     for (final inv in data.invoiceDetails) {
       invoicesByCustomer.putIfAbsent(inv.custId, () => []).add(inv);
     }
 
     for (final partyTotal in data.partyTotals) {
       // Party Header Row
-      rows.add([
-        '', partyTotal.custName, '', '', '', ''
-      ]);
+      rows.add(['', partyTotal.custName, '', '', '', '']);
 
       // Invoices
       final invoices = invoicesByCustomer[partyTotal.custId] ?? [];
@@ -122,9 +159,9 @@ class ReportExcelExportService {
         '',
         ExcelExportHelper.formatAmount(partyTotal.totalBillAmount),
         ExcelExportHelper.formatAmount(partyTotal.totalBalanceAmount),
-        ''
+        '',
       ]);
-      
+
       // Empty row
       rows.add(['', '', '', '', '', '']);
     }
@@ -135,8 +172,10 @@ class ReportExcelExportService {
         'Total',
         '',
         ExcelExportHelper.formatAmount(data.grandTotal!.grandTotalBillAmount),
-        ExcelExportHelper.formatAmount(data.grandTotal!.grandTotalBalanceAmount),
-        ''
+        ExcelExportHelper.formatAmount(
+          data.grandTotal!.grandTotalBalanceAmount,
+        ),
+        '',
       ]);
     }
 
@@ -145,12 +184,28 @@ class ReportExcelExportService {
       sheetName: 'Outstanding Receivable',
       emptyMessage: 'No outstanding receivable records available to export.',
       columns: const [
-        ExcelColumn('#', align: ExcelCellAlign.center, type: ExcelCellType.number),
+        ExcelColumn(
+          '#',
+          align: ExcelCellAlign.center,
+          type: ExcelCellType.number,
+        ),
         ExcelColumn('Date'),
         ExcelColumn('Bill No.'),
-        ExcelColumn('Bill Amt', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('Bal. Amt', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('Days', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn(
+          'Bill Amt',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Bal. Amt',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Days',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
       ],
       rows: rows,
     );
@@ -171,15 +226,7 @@ class ReportExcelExportService {
         final partyDisplayName = partyTotal.customerCode.isNotEmpty
             ? '${partyTotal.customerName} (${partyTotal.customerCode})'
             : partyTotal.customerName;
-        rows.add([
-          '',
-          partyDisplayName,
-          '',
-          '',
-          '',
-          '',
-          '',
-        ]);
+        rows.add(['', partyDisplayName, '', '', '', '', '']);
 
         final invoices = statementByCustomer[partyTotal.customerId] ?? [];
         for (int i = 0; i < invoices.length; i++) {
@@ -229,7 +276,9 @@ class ReportExcelExportService {
         '',
         ExcelExportHelper.formatAmount(data.grandTotal!.grandTotalBillAmount),
         ExcelExportHelper.formatAmount(data.grandTotal!.grandTotalPaidAmount),
-        ExcelExportHelper.formatAmount(data.grandTotal!.grandTotalBalanceAmount),
+        ExcelExportHelper.formatAmount(
+          data.grandTotal!.grandTotalBalanceAmount,
+        ),
         '',
       ]);
     }
@@ -239,13 +288,33 @@ class ReportExcelExportService {
       sheetName: 'Customer Wise Sales Return',
       emptyMessage: 'No sales return records available to export.',
       columns: const [
-        ExcelColumn('#', align: ExcelCellAlign.center, type: ExcelCellType.number),
+        ExcelColumn(
+          '#',
+          align: ExcelCellAlign.center,
+          type: ExcelCellType.number,
+        ),
         ExcelColumn('Date'),
         ExcelColumn('Bill No.'),
-        ExcelColumn('Bill Amt', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('Paid Amt', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('Bal. Amt', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('Days', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn(
+          'Bill Amt',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Paid Amt',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Bal. Amt',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Days',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
       ],
       rows: rows,
     );
@@ -259,20 +328,52 @@ class ReportExcelExportService {
       sheetName: 'Collection Report',
       emptyMessage: 'No collection records available to export.',
       columns: const [
-        ExcelColumn('Sr. No.', align: ExcelCellAlign.center, type: ExcelCellType.number),
+        ExcelColumn(
+          'Sr. No.',
+          align: ExcelCellAlign.center,
+          type: ExcelCellType.number,
+        ),
         ExcelColumn('Date', align: ExcelCellAlign.center),
         ExcelColumn('Receipt No', align: ExcelCellAlign.center),
         ExcelColumn('Customer Code', align: ExcelCellAlign.center),
         ExcelColumn('Customer'),
         ExcelColumn('Mobile', align: ExcelCellAlign.center),
         ExcelColumn('Mode', align: ExcelCellAlign.center),
-        ExcelColumn('Amount', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('Cash', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('UPI', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('Cheque', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('Bank', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('Card', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('Other', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn(
+          'Amount',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Cash',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'UPI',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Cheque',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Bank',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Card',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Other',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
         ExcelColumn('Cheque No'),
         ExcelColumn('Bank Name'),
         ExcelColumn('Bank Reference'),
@@ -328,14 +429,30 @@ class ReportExcelExportService {
       sheetName: 'Current Stock',
       emptyMessage: 'No current stock records available to export.',
       columns: const [
-        ExcelColumn('Sr. No.', align: ExcelCellAlign.center, type: ExcelCellType.number),
+        ExcelColumn(
+          'Sr. No.',
+          align: ExcelCellAlign.center,
+          type: ExcelCellType.number,
+        ),
         ExcelColumn('Product Name'),
         ExcelColumn('Brand Name'),
         ExcelColumn('Category Name'),
         ExcelColumn('Unit'),
-        ExcelColumn('Unit Value', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('Available Stock', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('Selling Price', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn(
+          'Unit Value',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Available Stock',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Selling Price',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
       ],
       rows: [
         for (int i = 0; i < items.length; i++)
@@ -361,19 +478,51 @@ class ReportExcelExportService {
       sheetName: 'Batch Stock',
       emptyMessage: 'No batch stock records available to export.',
       columns: const [
-        ExcelColumn('Sr. No.', align: ExcelCellAlign.center, type: ExcelCellType.number),
+        ExcelColumn(
+          'Sr. No.',
+          align: ExcelCellAlign.center,
+          type: ExcelCellType.number,
+        ),
         ExcelColumn('Product Name'),
         ExcelColumn('Batch No', align: ExcelCellAlign.center),
         ExcelColumn('Barcode', align: ExcelCellAlign.center),
         ExcelColumn('EAN Code', align: ExcelCellAlign.center),
         ExcelColumn('Unit', align: ExcelCellAlign.center),
-        ExcelColumn('Unit Value', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('Total Stock', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('Available Stock', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('Landing Price', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('Purchase Price', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('MRP', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('Selling Price', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn(
+          'Unit Value',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Total Stock',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Available Stock',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Landing Price',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Purchase Price',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'MRP',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Selling Price',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
       ],
       rows: [
         for (int i = 0; i < items.length; i++)
@@ -404,23 +553,71 @@ class ReportExcelExportService {
       sheetName: 'Customer Wise Sales',
       emptyMessage: 'No customer sales records available to export.',
       columns: const [
-        ExcelColumn('Sr. No.', align: ExcelCellAlign.center, type: ExcelCellType.number),
+        ExcelColumn(
+          'Sr. No.',
+          align: ExcelCellAlign.center,
+          type: ExcelCellType.number,
+        ),
         ExcelColumn('Invoice Date', align: ExcelCellAlign.center),
         ExcelColumn('Customer Name'),
         ExcelColumn('Mobile', align: ExcelCellAlign.center),
         ExcelColumn('Billing Address'),
         ExcelColumn('GST No', align: ExcelCellAlign.center),
-        ExcelColumn('Total Qty', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('Sub Total', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('Item Discount', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('Bill Discount', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('CGST', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('SGST', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('IGST', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('Round Off', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('Total Sales', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('Received', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('Outstanding', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn(
+          'Total Qty',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Sub Total',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Item Discount',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Bill Discount',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'CGST',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'SGST',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'IGST',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Round Off',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Total Sales',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Received',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Outstanding',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
         ExcelColumn('First Sale Date', align: ExcelCellAlign.center),
         ExcelColumn('Last Sale Date', align: ExcelCellAlign.center),
       ],
@@ -428,7 +625,9 @@ class ReportExcelExportService {
         for (int i = 0; i < items.length; i++)
           [
             '${i + 1}',
-            ExcelExportHelper.formatDate(items[i].salesMasterInvoiceDate ?? items[i].lastSaleDate),
+            ExcelExportHelper.formatDate(
+              items[i].salesMasterInvoiceDate ?? items[i].lastSaleDate,
+            ),
             items[i].customerName,
             items[i].mobileNo,
             items[i].billingAddress,
@@ -459,10 +658,22 @@ class ReportExcelExportService {
       sheetName: 'Product Purchase',
       emptyMessage: 'No purchase records available to export.',
       columns: const [
-        ExcelColumn('Sr. No.', align: ExcelCellAlign.center, type: ExcelCellType.number),
+        ExcelColumn(
+          'Sr. No.',
+          align: ExcelCellAlign.center,
+          type: ExcelCellType.number,
+        ),
         ExcelColumn('Product Name'),
-        ExcelColumn('Purchase Qty', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('Purchase Amount', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn(
+          'Purchase Qty',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Purchase Amount',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
       ],
       rows: [
         for (int i = 0; i < items.length; i++)
@@ -484,18 +695,42 @@ class ReportExcelExportService {
       sheetName: 'Stock Ledger',
       emptyMessage: 'No stock ledger records available to export.',
       columns: const [
-        ExcelColumn('Sr. No.', align: ExcelCellAlign.center, type: ExcelCellType.number),
+        ExcelColumn(
+          'Sr. No.',
+          align: ExcelCellAlign.center,
+          type: ExcelCellType.number,
+        ),
         ExcelColumn('Date', align: ExcelCellAlign.center),
         ExcelColumn('Product Name'),
         ExcelColumn('Batch No.', align: ExcelCellAlign.center),
         ExcelColumn('Transaction Type', align: ExcelCellAlign.center),
         ExcelColumn('Type', align: ExcelCellAlign.center),
         ExcelColumn('Ref No.', align: ExcelCellAlign.center),
-        ExcelColumn('Quantity', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('Before Stock', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('After Stock', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('Physical Stock', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('Adjustment Qty', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn(
+          'Quantity',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Before Stock',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'After Stock',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Physical Stock',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Adjustment Qty',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
         ExcelColumn('Remark'),
       ],
       rows: [
@@ -519,19 +754,29 @@ class ReportExcelExportService {
     );
   }
 
-  static Future<ExcelExportResult> exportLowStock(
-    List<LowStockItem> items,
-  ) {
+  static Future<ExcelExportResult> exportLowStock(List<LowStockItem> items) {
     return ExcelExportHelper.exportSheet(
       filePrefix: 'Low_Stock_Report',
       sheetName: 'Low Stock',
       emptyMessage: 'No low stock records available to export.',
       columns: const [
-        ExcelColumn('Sr. No.', align: ExcelCellAlign.center, type: ExcelCellType.number),
+        ExcelColumn(
+          'Sr. No.',
+          align: ExcelCellAlign.center,
+          type: ExcelCellType.number,
+        ),
         ExcelColumn('Product Name'),
         ExcelColumn('Unit', align: ExcelCellAlign.center),
-        ExcelColumn('Unit Value', align: ExcelCellAlign.right, type: ExcelCellType.number),
-        ExcelColumn('Available Stock', align: ExcelCellAlign.right, type: ExcelCellType.number),
+        ExcelColumn(
+          'Unit Value',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Available Stock',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
         ExcelColumn('Status', align: ExcelCellAlign.center),
       ],
       rows: [
@@ -543,6 +788,328 @@ class ReportExcelExportService {
             ExcelExportHelper.formatAmount(items[i].unitValue),
             ExcelExportHelper.formatAmount(items[i].availableStock),
             items[i].availableStock <= 0 ? 'OUT OF STOCK' : 'LOW STOCK',
+          ],
+      ],
+    );
+  }
+
+  static Future<ExcelExportResult> exportPurchaseReturnMasterReport(
+    List<PurchaseReturnMasterViewItem> items,
+  ) {
+    return ExcelExportHelper.exportSheet(
+      filePrefix: 'Purchase_Return_Report',
+      sheetName: 'Purchase Returns',
+      emptyMessage: 'No purchase return records available to export.',
+      columns: const [
+        ExcelColumn(
+          'Sr. No.',
+          align: ExcelCellAlign.center,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn('Return Date', align: ExcelCellAlign.center),
+        ExcelColumn('Return No.', align: ExcelCellAlign.center),
+        ExcelColumn('Supplier Name'),
+        ExcelColumn('Supplier Code', align: ExcelCellAlign.center),
+        ExcelColumn('Mobile', align: ExcelCellAlign.center),
+        ExcelColumn(
+          'Sub Total',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Discount Amt',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'GST Amt',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Net Amt',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Refund Amt',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Balance Amt',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn('Status', align: ExcelCellAlign.center),
+      ],
+      rows: [
+        for (int i = 0; i < items.length; i++)
+          [
+            '${i + 1}',
+            DateTime.tryParse(items[i].returnDate) != null
+                ? ExcelExportHelper.formatDate(
+                    DateTime.tryParse(items[i].returnDate),
+                  )
+                : items[i].returnDate,
+            items[i].returnNo,
+            items[i].ledgerName.isNotEmpty ? items[i].ledgerName : '-',
+            items[i].supplierCode,
+            items[i].supplierMobile,
+            ExcelExportHelper.formatAmount(items[i].subTotal),
+            ExcelExportHelper.formatAmount(items[i].discountAmount),
+            ExcelExportHelper.formatAmount(items[i].gstAmount),
+            ExcelExportHelper.formatAmount(items[i].netAmount),
+            ExcelExportHelper.formatAmount(items[i].refundAmount),
+            ExcelExportHelper.formatAmount(items[i].balanceAmount),
+            items[i].status.isNotEmpty ? items[i].status : '-',
+          ],
+      ],
+    );
+  }
+
+  static Future<ExcelExportResult> exportPurchaseMasterReport(
+    List<PurchaseMasterViewItem> items,
+  ) {
+    return ExcelExportHelper.exportSheet(
+      filePrefix: 'Purchase_Entry_Report',
+      sheetName: 'Purchase Invoices',
+      emptyMessage: 'No purchase invoice records available to export.',
+      columns: const [
+        ExcelColumn(
+          'Sr. No.',
+          align: ExcelCellAlign.center,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn('Invoice Date', align: ExcelCellAlign.center),
+        ExcelColumn('Invoice No.', align: ExcelCellAlign.center),
+        ExcelColumn('Supplier Name'),
+        ExcelColumn('Mobile', align: ExcelCellAlign.center),
+        ExcelColumn(
+          'Sub Total',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Discount Amt',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'GST Amt',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Net Amt',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Paid Amt',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Balance Amt',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn('Status', align: ExcelCellAlign.center),
+      ],
+      rows: [
+        for (int i = 0; i < items.length; i++)
+          [
+            '${i + 1}',
+            DateTime.tryParse(items[i].invoiceDate) != null
+                ? ExcelExportHelper.formatDate(
+                    DateTime.tryParse(items[i].invoiceDate),
+                  )
+                : items[i].invoiceDate,
+            items[i].invoiceNo,
+            items[i].suppName.isNotEmpty ? items[i].suppName : '-',
+            items[i].suppMobile,
+            ExcelExportHelper.formatAmount(items[i].subTotal),
+            ExcelExportHelper.formatAmount(items[i].discountAmount),
+            ExcelExportHelper.formatAmount(items[i].gstAmount),
+            ExcelExportHelper.formatAmount(items[i].netAmount),
+            ExcelExportHelper.formatAmount(items[i].paidAmount),
+            ExcelExportHelper.formatAmount(items[i].balanceAmount),
+            items[i].status.isNotEmpty ? items[i].status : '-',
+          ],
+      ],
+    );
+  }
+
+  static Future<ExcelExportResult> exportPurchaseDetailReport({
+    required PurchaseMasterViewItem master,
+    required List<PurchaseDetailViewItem> items,
+  }) {
+    return ExcelExportHelper.exportSheet(
+      filePrefix:
+          'Purchase_Invoice_Detail_${master.invoiceNo.replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '_')}',
+      sheetName: 'Invoice Details',
+      emptyMessage: 'No purchase item details available to export.',
+      columns: const [
+        ExcelColumn(
+          'Sr. No.',
+          align: ExcelCellAlign.center,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn('Product Name'),
+        ExcelColumn('Barcode', align: ExcelCellAlign.center),
+        ExcelColumn('Batch No.', align: ExcelCellAlign.center),
+        ExcelColumn(
+          'Quantity',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Purchase Price',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Landing Price',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'MRP',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Selling Price',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Discount %',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Discount Amt',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'GST %',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'GST Amt',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Total Amount',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+      ],
+      rows: [
+        for (int i = 0; i < items.length; i++)
+          [
+            '${i + 1}',
+            items[i].prodName.isNotEmpty
+                ? items[i].prodName
+                : 'Product #${items[i].productId}',
+            items[i].barcode,
+            items[i].batchNo,
+            ExcelExportHelper.formatAmount(items[i].qty),
+            ExcelExportHelper.formatAmount(items[i].purchasePrice),
+            ExcelExportHelper.formatAmount(items[i].landingPrice),
+            ExcelExportHelper.formatAmount(items[i].mrp),
+            ExcelExportHelper.formatAmount(items[i].sellingPrice),
+            ExcelExportHelper.formatAmount(items[i].discountPercent),
+            ExcelExportHelper.formatAmount(items[i].discountAmount),
+            ExcelExportHelper.formatAmount(items[i].gstPercent),
+            ExcelExportHelper.formatAmount(items[i].gstAmount),
+            ExcelExportHelper.formatAmount(items[i].totalAmount),
+          ],
+      ],
+    );
+  }
+
+  static Future<ExcelExportResult> exportPurchaseReturnDetailReport({
+    required PurchaseReturnMasterViewItem master,
+    required List<PurchaseReturnDetailViewItem> items,
+  }) {
+    return ExcelExportHelper.exportSheet(
+      filePrefix:
+          'Purchase_Return_Detail_${master.returnNo.replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '_')}',
+      sheetName: 'Return Details',
+      emptyMessage: 'No return line items available to export.',
+      columns: const [
+        ExcelColumn(
+          'Sr. No.',
+          align: ExcelCellAlign.center,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn('Product Name'),
+        ExcelColumn('Product Code', align: ExcelCellAlign.center),
+        ExcelColumn('Batch No.', align: ExcelCellAlign.center),
+        ExcelColumn(
+          'Quantity',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Purchase Price',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'MRP',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Discount %',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Discount Amt',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'GST %',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'GST Amt',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+        ExcelColumn(
+          'Total Amount',
+          align: ExcelCellAlign.right,
+          type: ExcelCellType.number,
+        ),
+      ],
+      rows: [
+        for (int i = 0; i < items.length; i++)
+          [
+            '${i + 1}',
+            items[i].productName.isNotEmpty
+                ? items[i].productName
+                : 'Product #${items[i].productId}',
+            items[i].productCode,
+            items[i].batchNumber,
+            ExcelExportHelper.formatAmount(items[i].qty),
+            ExcelExportHelper.formatAmount(items[i].purchasePrice),
+            ExcelExportHelper.formatAmount(items[i].mrp),
+            ExcelExportHelper.formatAmount(items[i].discountPercent),
+            ExcelExportHelper.formatAmount(items[i].discountAmount),
+            ExcelExportHelper.formatAmount(items[i].gstPercent),
+            ExcelExportHelper.formatAmount(items[i].gstAmount),
+            ExcelExportHelper.formatAmount(items[i].totalAmount),
           ],
       ],
     );

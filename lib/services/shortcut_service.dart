@@ -38,6 +38,8 @@ class AppRoutes {
       '/reports/product-wise-purchase';
   static const String stockLedgerReport = '/reports/stock-ledger';
   static const String lowStockReport = '/reports/low-stock';
+  static const String purchaseReturnReport = '/reports/purchase-return';
+  static const String purchaseEntryReport = '/reports/purchase-entry';
   static const String customerWiseSalesReport = '/reports/customer-wise-sales';
   static const String collectionReport = '/reports/collection';
   static const String outstandingReceivableReport =
@@ -192,7 +194,10 @@ class ShortcutService {
     AppRoutes.lowStockReport,
     '/reports/low-stock',
     'reports/low-stock',
+    AppRoutes.purchaseReturnReport,
     AppRoutes.customerWiseSalesReport,
+    '/reports/purchase-return',
+    'reports/purchase-return',
     '/reports/customer-wise-sales',
     'reports/customer-wise-sales',
     AppRoutes.collectionReport,

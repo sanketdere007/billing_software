@@ -4,6 +4,8 @@ import '../../widgets/app_drawer.dart';
 import '../../widgets/direct_back_scope.dart';
 import 'supplier_outstanding_report_screen.dart';
 import 'product_wise_purchase_report_screen.dart';
+import 'purchase_return_report_screen.dart';
+import 'purchase_entry_report_screen.dart';
 import 'customer_wise_sales_report_screen.dart';
 import 'outstanding_receivable_report_screen.dart';
 import 'collection_report_screen.dart';
@@ -129,6 +131,24 @@ class _ReportsScreenState extends State<ReportsScreen> {
               color: Colors.indigo,
               routeName: AppRoutes.productWisePurchaseReport,
               screenBuilder: () => const ProductWisePurchaseReportScreen(),
+            ),
+            ReportItem(
+              title: 'Purchase Return Report',
+              description:
+                  'Purchase return master records, return dates, suppliers, refund totals, and line item details.',
+              icon: Icons.assignment_return_rounded,
+              color: Colors.indigo,
+              routeName: AppRoutes.purchaseReturnReport,
+              screenBuilder: () => const PurchaseReturnReportScreen(),
+            ),
+            ReportItem(
+              title: 'Purchase Entry Report',
+              description:
+                  'Purchase invoice records, bill dates, suppliers, GST, net amounts, and line item details.',
+              icon: Icons.receipt_long_rounded,
+              color: Colors.indigo,
+              routeName: AppRoutes.purchaseEntryReport,
+              screenBuilder: () => const PurchaseEntryReportScreen(),
             ),
           ],
         ),

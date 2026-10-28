@@ -23,8 +23,6 @@ class PaymentMasterScreen extends StatefulWidget {
 }
 
 class _PaymentMasterScreenState extends State<PaymentMasterScreen> {
-
-
   final _formKey = GlobalKey<FormState>();
   final DateFormat _dateFormat = DateFormat('dd/MM/yyyy');
 
@@ -93,8 +91,16 @@ class _PaymentMasterScreenState extends State<PaymentMasterScreen> {
   final FocusNode _otherRemarkNode = FocusNode();
   final FocusNode _remarksNode = FocusNode();
 
-  DateTime _paymentDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
-  DateTime _invoiceDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+  DateTime _paymentDate = DateTime(
+    DateTime.now().year,
+    DateTime.now().month,
+    DateTime.now().day,
+  );
+  DateTime _invoiceDate = DateTime(
+    DateTime.now().year,
+    DateTime.now().month,
+    DateTime.now().day,
+  );
   DateTime? _chequeDate;
   DateTime? _bankDate;
   DateTime? _otherDate;
@@ -328,8 +334,16 @@ class _PaymentMasterScreenState extends State<PaymentMasterScreen> {
     _otherReferenceController.clear();
     _otherRemarksController.clear();
     setState(() {
-      _paymentDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
-      _invoiceDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+      _paymentDate = DateTime(
+        DateTime.now().year,
+        DateTime.now().month,
+        DateTime.now().day,
+      );
+      _invoiceDate = DateTime(
+        DateTime.now().year,
+        DateTime.now().month,
+        DateTime.now().day,
+      );
       _chequeDate = null;
       _bankDate = null;
       _otherDate = null;
@@ -351,10 +365,14 @@ class _PaymentMasterScreenState extends State<PaymentMasterScreen> {
       );
       if (mounted) {
         setState(() {
-          _pendingInvoices = invoices.where((inv) => inv.balanceAmount > 0).toList();
+          _pendingInvoices = invoices
+              .where((inv) => inv.balanceAmount > 0)
+              .toList();
           if (_pendingInvoices.isEmpty) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('No pending invoices found for this supplier')),
+              const SnackBar(
+                content: Text('No pending invoices found for this supplier'),
+              ),
             );
           }
         });
@@ -405,9 +423,14 @@ class _PaymentMasterScreenState extends State<PaymentMasterScreen> {
       return;
     }
 
-    if (_selectedInvoice != null && _totalAmount > _selectedInvoice!.balanceAmount) {
+    if (_selectedInvoice != null &&
+        _totalAmount > _selectedInvoice!.balanceAmount) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Payment amount cannot exceed pending amount (₹${_selectedInvoice!.balanceAmount.toStringAsFixed(2)})')),
+        SnackBar(
+          content: Text(
+            'Payment amount cannot exceed pending amount (₹${_selectedInvoice!.balanceAmount.toStringAsFixed(2)})',
+          ),
+        ),
       );
       return;
     }
@@ -545,62 +568,65 @@ class _PaymentMasterScreenState extends State<PaymentMasterScreen> {
       child: DirectBackScope(
         child: LayoutBuilder(
           builder: (context, constraints) {
-          final isDesktop = constraints.maxWidth >= 800;
-          final formCard = _buildFormCard(context, isDesktop);
+            final isDesktop = constraints.maxWidth >= 800;
+            final formCard = _buildFormCard(context, isDesktop);
 
-          if (isDesktop) {
-            return Scaffold(
-              body: Row(
-                children: [
-                  const SizedBox(
-                    width: 250,
-                    child: AppDrawer(isPermanent: true),
-                  ),
-                  const VerticalDivider(width: 1, thickness: 1),
-                  Expanded(
-                    child: Scaffold(
-                      appBar: AppBar(
-                        title: const Text('Payment Entry'),
-                        leading: IconButton(
-                          icon: const Icon(Icons.arrow_back),
-                          tooltip: 'Back',
-                          onPressed: () => Navigator.of(context).pop(),
+            if (isDesktop) {
+              return Scaffold(
+                body: Row(
+                  children: [
+                    const SizedBox(
+                      width: 250,
+                      child: AppDrawer(isPermanent: true),
+                    ),
+                    const VerticalDivider(width: 1, thickness: 1),
+                    Expanded(
+                      child: Scaffold(
+                        appBar: AppBar(
+                          title: const Text('Payment Entry'),
+                          leading: IconButton(
+                            icon: const Icon(Icons.arrow_back),
+                            tooltip: 'Back',
+                            onPressed: () => Navigator.of(context).pop(),
+                          ),
                         ),
-                      ),
-                      body: Container(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.surfaceVariant.withOpacity(0.15),
-                        child: Center(
-                          child: SingleChildScrollView(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 12,
-                            ),
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 920),
-                              child: formCard,
+                        body: Container(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surfaceVariant.withOpacity(0.15),
+                          child: Center(
+                            child: SingleChildScrollView(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 12,
+                              ),
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 920,
+                                ),
+                                child: formCard,
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+              );
+            }
+
+            return Scaffold(
+              appBar: AppBar(title: const Text('Payment Entry')),
+              body: SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: formCard,
               ),
             );
-          }
-
-          return Scaffold(
-            appBar: AppBar(title: const Text('Payment Entry')),
-            body: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: formCard,
-            ),
-          );
-        },
+          },
+        ),
       ),
-    ));
+    );
   }
 
   Widget _buildFormCard(BuildContext context, bool isDesktop) {
@@ -676,7 +702,7 @@ class _PaymentMasterScreenState extends State<PaymentMasterScreen> {
               const SizedBox(height: 16),
               _buildDateField(
                 theme: theme,
-                label: 'Invoice Date',
+                label: 'Payment Date\nyyyy/MM/dd',
                 date: _invoiceDate,
                 node: _invoiceDateNode,
                 onPicked: (date) => setState(() => _invoiceDate = date),
@@ -1255,7 +1281,8 @@ class _PaymentMasterScreenState extends State<PaymentMasterScreen> {
                 if (invoice.purchaseMasterInvoiceDate != null) {
                   _invoiceDate = invoice.purchaseMasterInvoiceDate!;
                 }
-                _cashAmountController.text = invoice.balanceAmount.toStringAsFixed(2);
+                _cashAmountController.text = invoice.balanceAmount
+                    .toStringAsFixed(2);
                 _upiAmountController.clear();
                 _chequeAmountController.clear();
                 _bankAmountController.clear();
@@ -1291,21 +1318,38 @@ class _PaymentMasterScreenState extends State<PaymentMasterScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Invoice Details', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+          Text(
+            'Invoice Details',
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Invoice Date: ${_selectedInvoice!.purchaseMasterInvoiceDate != null ? _dateFormat.format(_selectedInvoice!.purchaseMasterInvoiceDate!) : 'N/A'}'),
-              Text('Total Amount: ₹${_selectedInvoice!.netAmount.toStringAsFixed(2)}'),
+              Text(
+                'Invoice Date: ${_selectedInvoice!.purchaseMasterInvoiceDate != null ? _dateFormat.format(_selectedInvoice!.purchaseMasterInvoiceDate!) : 'N/A'}',
+              ),
+              Text(
+                'Total Amount: ₹${_selectedInvoice!.netAmount.toStringAsFixed(2)}',
+              ),
             ],
           ),
           const SizedBox(height: 4),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Paid Amount: ₹${_selectedInvoice!.paidAmount.toStringAsFixed(2)}'),
-              Text('Pending Amount: ₹${_selectedInvoice!.balanceAmount.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red)),
+              Text(
+                'Paid Amount: ₹${_selectedInvoice!.paidAmount.toStringAsFixed(2)}',
+              ),
+              Text(
+                'Pending Amount: ₹${_selectedInvoice!.balanceAmount.toStringAsFixed(2)}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red,
+                ),
+              ),
             ],
           ),
         ],

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../models/purchase_return.dart';
 import '../utils/api_constants.dart';
 import 'api_service.dart';
+import 'session_service.dart';
 
 class PurchaseReturnService extends ChangeNotifier {
   static final PurchaseReturnService _instance = PurchaseReturnService._internal();
@@ -92,45 +93,82 @@ class PurchaseReturnService extends ChangeNotifier {
   }
 
   Future<PurchaseReturnMasterViewResponse> getPurchaseReturnMasterViewList({
-    required int compId,
-    required int branchId,
+    int? compId,
+    int? branchId,
     int purchaseReturnMasterId = 0,
     int supplierId = 0,
     String search = "",
     required String fromDate,
     required String toDate,
     int page = 1,
-    int pageSize = 10,
+    int pageSize = 20,
   }) async {
     try {
+      final effectiveCompId = compId ?? sessionService.selectedCompId ?? 1;
+      final effectiveBranchId = branchId ?? sessionService.selectedBranchId ?? 1;
+
       final requestBody = {
-        "compId": compId,
-        "branchId": branchId,
+        "compId": effectiveCompId,
+        "branchId": effectiveBranchId,
         "purchaseReturnMaster_Id": purchaseReturnMasterId,
         "supplierId": supplierId,
         "search": search,
+        "searchText": search,
         "fromDate": fromDate,
         "toDate": toDate,
         "page": page,
-        "pageSize": pageSize
+        "pageNumber": page,
+        "pageSize": pageSize,
       };
 
-      final dynamic response = await apiService.post(
-        ApiConstants.getPurchaseReturnMasterViewListEndpoint,
-        body: requestBody,
-        requiresAuth: true,
-      );
+      dynamic response;
+      try {
+        response = await apiService.post(
+          ApiConstants.getPurchaseReturnMasterViewListEndpoint,
+          body: requestBody,
+          requiresAuth: true,
+        );
+      } on ApiException catch (apiErr) {
+        if (apiErr.statusCode == 404 || apiErr.statusCode == 405) {
+          response = await apiService.get(
+            ApiConstants.getPurchaseReturnMasterViewListEndpoint,
+            queryParameters: {
+              "compId": effectiveCompId.toString(),
+              "branchId": effectiveBranchId.toString(),
+              "purchaseReturnMaster_Id": purchaseReturnMasterId.toString(),
+              "supplierId": supplierId.toString(),
+              "search": search,
+              "fromDate": fromDate,
+              "toDate": toDate,
+              "page": page.toString(),
+              "pageSize": pageSize.toString(),
+            },
+            requiresAuth: true,
+          );
+        } else {
+          rethrow;
+        }
+      }
 
-      if (response is! Map<String, dynamic>) {
+      final Map<String, dynamic> jsonMap;
+      if (response is Map<String, dynamic>) {
+        jsonMap = response;
+      } else if (response is List) {
+        jsonMap = <String, dynamic>{'status': true, 'data': response};
+      } else {
         throw ApiException('Invalid response format from server.');
       }
 
-      final masterResponse = PurchaseReturnMasterViewResponse.fromJson(response);
+      final masterResponse = PurchaseReturnMasterViewResponse.fromJson(jsonMap);
 
       if (masterResponse.status) {
         return masterResponse;
       } else {
-        throw ApiException(masterResponse.message.isNotEmpty ? masterResponse.message : 'Failed to fetch purchase return master list.');
+        throw ApiException(
+          masterResponse.message.isNotEmpty
+              ? masterResponse.message
+              : 'Failed to fetch purchase return master list.',
+        );
       }
     } on ApiException {
       rethrow;
@@ -139,30 +177,72 @@ class PurchaseReturnService extends ChangeNotifier {
     }
   }
 
-  Future<List<PurchaseReturnDetailViewItem>> getPurchaseReturnDetailViewList(int masterId, {int compId = 1, int branchId = 1}) async {
+  Future<List<PurchaseReturnDetailViewItem>> getPurchaseReturnDetailViewList(
+    int masterId, {
+    int? compId,
+    int? branchId,
+  }) async {
     try {
+      final effectiveCompId = compId ?? sessionService.selectedCompId ?? 1;
+      final effectiveBranchId = branchId ?? sessionService.selectedBranchId ?? 1;
+
       final requestBody = {
         "purchaseReturnMaster_Id": masterId,
-        "compId": compId,
-        "branchId": branchId,
+        "purchaseReturnMasterId": masterId,
+        "masterId": masterId,
+        "compId": effectiveCompId,
+        "branchId": effectiveBranchId,
       };
 
-      final dynamic response = await apiService.post(
-        ApiConstants.getPurchaseReturnDetailViewListEndpoint,
-        body: requestBody,
-        requiresAuth: true,
-      );
+      dynamic response;
+      try {
+        response = await apiService.post(
+          ApiConstants.getPurchaseReturnDetailViewListEndpoint,
+          body: requestBody,
+          requiresAuth: true,
+        );
+      } on ApiException catch (apiErr) {
+        if (apiErr.statusCode == 404 || apiErr.statusCode == 405) {
+          try {
+            response = await apiService.get(
+              '${ApiConstants.getPurchaseReturnDetailViewListEndpoint}/$masterId',
+              requiresAuth: true,
+            );
+          } catch (_) {
+            response = await apiService.get(
+              ApiConstants.getPurchaseReturnDetailViewListEndpoint,
+              queryParameters: {
+                "purchaseReturnMaster_Id": masterId.toString(),
+                "compId": effectiveCompId.toString(),
+                "branchId": effectiveBranchId.toString(),
+              },
+              requiresAuth: true,
+            );
+          }
+        } else {
+          rethrow;
+        }
+      }
 
-      if (response is! Map<String, dynamic>) {
+      final Map<String, dynamic> jsonMap;
+      if (response is Map<String, dynamic>) {
+        jsonMap = response;
+      } else if (response is List) {
+        jsonMap = <String, dynamic>{'status': true, 'data': response};
+      } else {
         throw ApiException('Invalid response format from server.');
       }
 
-      final detailResponse = PurchaseReturnDetailViewResponse.fromJson(response);
+      final detailResponse = PurchaseReturnDetailViewResponse.fromJson(jsonMap);
 
       if (detailResponse.status) {
         return detailResponse.data;
       } else {
-        throw ApiException(detailResponse.message.isNotEmpty ? detailResponse.message : 'Failed to fetch purchase return details.');
+        throw ApiException(
+          detailResponse.message.isNotEmpty
+              ? detailResponse.message
+              : 'Failed to fetch purchase return details.',
+        );
       }
     } on ApiException {
       rethrow;
@@ -171,3 +251,5 @@ class PurchaseReturnService extends ChangeNotifier {
     }
   }
 }
+
+final purchaseReturnService = PurchaseReturnService();

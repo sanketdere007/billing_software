@@ -54,6 +54,8 @@ import '../screens/help_support_screen.dart';
 import '../widgets/support_info_footer.dart';
 import '../screens/reports/supplier_outstanding_report_screen.dart';
 import '../screens/reports/product_wise_purchase_report_screen.dart';
+import '../screens/reports/purchase_return_report_screen.dart';
+import '../screens/reports/purchase_entry_report_screen.dart';
 import '../screens/reports/customer_outstanding_report_screen.dart';
 import '../screens/reports/collection_report_screen.dart';
 import '../screens/reports/payment_entry_report_screen.dart';
@@ -74,6 +76,12 @@ class AppDrawer extends StatefulWidget {
   final bool isPermanent;
 
   const AppDrawer({super.key, this.isPermanent = false});
+
+  /// Expands Reports and Purchase Reports in the drawer
+  static void openPurchaseReports() {
+    _AppDrawerState._isReportsMenuExpanded = true;
+    _AppDrawerState._isPurchaseReportsExpanded = true;
+  }
 
   /// Expands Reports and Sales Reports in the drawer
   static void openSalesReports() {
@@ -1439,6 +1447,41 @@ class _AppDrawerState extends State<AppDrawer> {
                               );
                             },
                           ),
+                          _buildDrawerItem(
+                            context: context,
+                            icon: Icons.receipt_long_rounded,
+                            iconColor: _getIconColor(context, Colors.indigo),
+                            title: 'Purchase Entry Report',
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  settings: const RouteSettings(
+                                    name: AppRoutes.purchaseEntryReport,
+                                  ),
+                                  builder: (context) =>
+                                  const PurchaseEntryReportScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                          _buildDrawerItem(
+                            context: context,
+                            icon: Icons.assignment_return_rounded,
+                            iconColor: _getIconColor(context, Colors.indigo),
+                            title: 'Purchase Return Report',
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  settings: const RouteSettings(
+                                    name: AppRoutes.purchaseReturnReport,
+                                  ),
+                                  builder: (context) =>
+                                      const PurchaseReturnReportScreen(),
+                                ),
+                              );
+                            },
+                          ),
+
                         ],
                       ),
                     ),

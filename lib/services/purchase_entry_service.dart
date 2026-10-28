@@ -93,60 +93,160 @@ class PurchaseEntryService extends ChangeNotifier {
   }
 
   Future<PurchaseMasterViewResponseData> getPurchaseMasterViewList({
-    required int pageNumber,
-    required int pageSize,
+    int? compId,
+    int? branchId,
+    int? supplierId,
+    int pageNumber = 1,
+    int pageSize = 20,
     String searchText = '',
     required DateTime fromDate,
     required DateTime toDate,
   }) async {
     try {
-      final compId = sessionService.selectedCompId ?? 1;
-      final branchId = sessionService.selectedBranchId ?? 1;
+      final effectiveCompId = compId ?? sessionService.selectedCompId ?? 1;
+      final effectiveBranchId = branchId ?? sessionService.selectedBranchId ?? 1;
 
       final body = {
-        "compId": compId,
-        "branchId": branchId,
+        "compId": effectiveCompId,
+        "branchId": effectiveBranchId,
+        if (supplierId != null && supplierId > 0) "supplierId": supplierId,
+        "search": searchText,
         "searchText": searchText,
         "fromDate": fromDate.toIso8601String(),
         "toDate": toDate.toIso8601String(),
+        "page": pageNumber,
         "pageNumber": pageNumber,
         "pageSize": pageSize,
       };
 
-      final response = await apiService.post(
-        ApiConstants.getPurchaseMasterViewListEndpoint,
-        body: body,
-        requiresAuth: true,
-      );
+      dynamic response;
+      try {
+        response = await apiService.post(
+          ApiConstants.getPurchaseMasterViewListEndpoint,
+          body: body,
+          requiresAuth: true,
+        );
+      } on ApiException catch (apiErr) {
+        if (apiErr.statusCode == 404 || apiErr.statusCode == 405) {
+          final queryParams = {
+            "compId": effectiveCompId.toString(),
+            "branchId": effectiveBranchId.toString(),
+            if (supplierId != null && supplierId > 0) "supplierId": supplierId.toString(),
+            "search": searchText,
+            "searchText": searchText,
+            "fromDate": fromDate.toIso8601String(),
+            "toDate": toDate.toIso8601String(),
+            "page": pageNumber.toString(),
+            "pageNumber": pageNumber.toString(),
+            "pageSize": pageSize.toString(),
+          };
+          response = await apiService.get(
+            ApiConstants.getPurchaseMasterViewListEndpoint,
+            queryParameters: queryParams,
+            requiresAuth: true,
+          );
+        } else {
+          rethrow;
+        }
+      }
 
-      final viewResponse = PurchaseMasterViewResponse.fromJson(response);
+      final Map<String, dynamic> jsonMap;
+      if (response is Map<String, dynamic>) {
+        jsonMap = response;
+      } else if (response is List) {
+        jsonMap = <String, dynamic>{'status': true, 'data': response};
+      } else {
+        throw ApiException('Invalid response format from server.');
+      }
+
+      final viewResponse = PurchaseMasterViewResponse.fromJson(jsonMap);
       if (viewResponse.status && viewResponse.data != null) {
         return viewResponse.data!;
       } else {
-        throw ApiException(viewResponse.message.isNotEmpty ? viewResponse.message : 'Failed to fetch purchase entries');
+        throw ApiException(
+          viewResponse.message.isNotEmpty
+              ? viewResponse.message
+              : 'Failed to fetch purchase entries',
+        );
       }
+    } on ApiException {
+      rethrow;
     } catch (e) {
       throw ApiException('Error fetching purchase entries: $e');
     }
   }
 
-  Future<List<PurchaseDetailViewItem>> getPurchaseDetailViewList(int purchaseMasterId) async {
+  Future<List<PurchaseDetailViewItem>> getPurchaseDetailViewList(
+    int purchaseMasterId, {
+    int? compId,
+    int? branchId,
+  }) async {
     try {
-      final response = await apiService.get(
-        '${ApiConstants.getPurchaseDetailViewListEndpoint}/$purchaseMasterId',
-        requiresAuth: true,
-      );
+      final effectiveCompId = compId ?? sessionService.selectedCompId ?? 1;
+      final effectiveBranchId = branchId ?? sessionService.selectedBranchId ?? 1;
 
-      final detailResponse = PurchaseDetailViewResponse.fromJson(response);
+      dynamic response;
+      try {
+        response = await apiService.post(
+          ApiConstants.getPurchaseDetailViewListEndpoint,
+          body: {
+            "purchaseMaster_Id": purchaseMasterId,
+            "purchaseMasterId": purchaseMasterId,
+            "masterId": purchaseMasterId,
+            "compId": effectiveCompId,
+            "branchId": effectiveBranchId,
+          },
+          requiresAuth: true,
+        );
+      } on ApiException catch (apiErr) {
+        if (apiErr.statusCode == 404 || apiErr.statusCode == 405) {
+          try {
+            response = await apiService.get(
+              '${ApiConstants.getPurchaseDetailViewListEndpoint}/$purchaseMasterId',
+              requiresAuth: true,
+            );
+          } catch (_) {
+            response = await apiService.get(
+              ApiConstants.getPurchaseDetailViewListEndpoint,
+              queryParameters: {
+                "purchaseMaster_Id": purchaseMasterId.toString(),
+                "purchaseMasterId": purchaseMasterId.toString(),
+                "compId": effectiveCompId.toString(),
+                "branchId": effectiveBranchId.toString(),
+              },
+              requiresAuth: true,
+            );
+          }
+        } else {
+          rethrow;
+        }
+      }
+
+      final Map<String, dynamic> jsonMap;
+      if (response is Map<String, dynamic>) {
+        jsonMap = response;
+      } else if (response is List) {
+        jsonMap = <String, dynamic>{'status': true, 'data': response};
+      } else {
+        throw ApiException('Invalid response format from server.');
+      }
+
+      final detailResponse = PurchaseDetailViewResponse.fromJson(jsonMap);
       if (detailResponse.status) {
         return detailResponse.data;
       } else {
-        throw ApiException(detailResponse.message.isNotEmpty ? detailResponse.message : 'Failed to fetch purchase details');
+        throw ApiException(
+          detailResponse.message.isNotEmpty
+              ? detailResponse.message
+              : 'Failed to fetch purchase details',
+        );
       }
+    } on ApiException {
+      rethrow;
     } catch (e) {
       throw ApiException('Error fetching purchase details: $e');
     }
   }
 }
 
-
+final purchaseEntryService = PurchaseEntryService();
