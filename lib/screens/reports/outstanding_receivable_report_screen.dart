@@ -13,7 +13,14 @@ import '../../widgets/direct_back_scope.dart';
 import 'sales_bill_detail_screen.dart';
 
 class OutstandingReceivableReportScreen extends StatefulWidget {
-  const OutstandingReceivableReportScreen({super.key});
+  final DateTime? initialFromDate;
+  final DateTime? initialToDate;
+
+  const OutstandingReceivableReportScreen({
+    super.key,
+    this.initialFromDate,
+    this.initialToDate,
+  });
 
   @override
   State<OutstandingReceivableReportScreen> createState() =>
@@ -30,8 +37,8 @@ class _OutstandingReceivableReportScreenState
   bool _isExporting = false;
   int _selectedIndex = -1;
 
-  DateTime _fromDate = DateTime(DateTime.now().year, DateTime.now().month, 1);
-  DateTime _toDate = DateTime.now();
+  late DateTime _fromDate;
+  late DateTime _toDate;
   bool _onlyOutstanding = false;
 
   OutstandingReceivableReportData? _reportData;
@@ -41,6 +48,13 @@ class _OutstandingReceivableReportScreenState
   void initState() {
     super.initState();
     _focusNode.requestFocus();
+    final now = DateTime.now();
+    _toDate = widget.initialToDate != null
+        ? DateTime(widget.initialToDate!.year, widget.initialToDate!.month, widget.initialToDate!.day)
+        : DateTime(now.year, now.month, now.day);
+    _fromDate = widget.initialFromDate != null
+        ? DateTime(widget.initialFromDate!.year, widget.initialFromDate!.month, widget.initialFromDate!.day)
+        : DateTime(_toDate.year, _toDate.month, _toDate.day - 7);
     _fetchReport();
   }
 

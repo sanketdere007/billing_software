@@ -16,7 +16,14 @@ import '../../controllers/receipt_pdf_controller.dart';
 import '../../models/invoice_pdf_data.dart' show IndianCurrencyWords;
 
 class CollectionReportScreen extends StatefulWidget {
-  const CollectionReportScreen({super.key});
+  final DateTime? initialFromDate;
+  final DateTime? initialToDate;
+
+  const CollectionReportScreen({
+    super.key,
+    this.initialFromDate,
+    this.initialToDate,
+  });
 
   @override
   State<CollectionReportScreen> createState() => _CollectionReportScreenState();
@@ -54,10 +61,14 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
     _screenFocusNode.onKeyEvent = _handleKeyEvent;
     _scrollController.addListener(_onScroll);
 
-    // Set default dates to current month
+    // Set default dates to current date and 7 days prior
     final now = DateTime.now();
-    _fromDate = DateTime(now.year, now.month, 1);
-    _toDate = now;
+    _toDate = widget.initialToDate != null
+        ? DateTime(widget.initialToDate!.year, widget.initialToDate!.month, widget.initialToDate!.day)
+        : DateTime(now.year, now.month, now.day);
+    _fromDate = widget.initialFromDate != null
+        ? DateTime(widget.initialFromDate!.year, widget.initialFromDate!.month, widget.initialFromDate!.day)
+        : DateTime(_toDate!.year, _toDate!.month, _toDate!.day - 7);
 
     _fetchReport(refresh: true);
 

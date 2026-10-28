@@ -1459,7 +1459,7 @@ class _AppDrawerState extends State<AppDrawer> {
                                     name: AppRoutes.purchaseEntryReport,
                                   ),
                                   builder: (context) =>
-                                  const PurchaseEntryReportScreen(),
+                                      const PurchaseEntryReportScreen(),
                                 ),
                               );
                             },
@@ -1481,7 +1481,6 @@ class _AppDrawerState extends State<AppDrawer> {
                               );
                             },
                           ),
-
                         ],
                       ),
                     ),

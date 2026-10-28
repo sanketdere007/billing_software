@@ -40,13 +40,21 @@ class DashboardService extends ChangeNotifier {
       final effectiveBranchId = branchId ?? sessionService.selectedBranchId ?? 0;
 
       final now = DateTime.now();
-      final effectiveFromDate = fromDate != null
-          ? DateTime(fromDate.year, fromDate.month, fromDate.day, 0, 0, 0, 0)
-          : DateTime(now.year, now.month, 1, 0, 0, 0, 0);
-
       final effectiveToDate = toDate != null
           ? DateTime(toDate.year, toDate.month, toDate.day, 23, 59, 59, 999)
           : DateTime(now.year, now.month, now.day, 23, 59, 59, 999);
+
+      final effectiveFromDate = fromDate != null
+          ? DateTime(fromDate.year, fromDate.month, fromDate.day, 0, 0, 0, 0)
+          : DateTime(
+              effectiveToDate.year,
+              effectiveToDate.month,
+              effectiveToDate.day - 7,
+              0,
+              0,
+              0,
+              0,
+            );
 
       final Map<String, String> queryParameters = {
         'CompId': effectiveCompId.toString(),

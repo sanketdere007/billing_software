@@ -22,16 +22,47 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Map<String, dynamic>? _summaryData;
   bool _isLoading = true;
   String? _summaryError;
-  DateTime _fromDate = DateTime(
-    DateTime.now().year,
-    DateTime.now().month,
-    DateTime.now().day,
-  ).subtract(Duration(days: DateTime.now().weekday - 1));
-  DateTime _toDate = DateTime.now();
+  late DateTime _toDate;
+  late DateTime _fromDate;
 
   @override
   void initState() {
     super.initState();
+    final now = DateTime.now();
+    _toDate = DateTime(now.year, now.month, now.day);
+    _fromDate = DateTime(_toDate.year, _toDate.month, _toDate.day - 7);
+    _fetchDashboardSummary();
+  }
+
+  void _onFromDateSelected(DateTime date) {
+    final newFromDate = DateTime(date.year, date.month, date.day);
+    if (newFromDate.isAfter(_toDate)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'From Date cannot be greater than To Date.',
+          ),
+        ),
+      );
+      return;
+    }
+    setState(() {
+      _fromDate = newFromDate;
+    });
+    _fetchDashboardSummary();
+  }
+
+  void _onToDateSelected(DateTime date) {
+    final newToDate = DateTime(date.year, date.month, date.day);
+    final newFromDate = DateTime(
+      newToDate.year,
+      newToDate.month,
+      newToDate.day - 7,
+    );
+    setState(() {
+      _toDate = newToDate;
+      _fromDate = newFromDate;
+    });
     _fetchDashboardSummary();
   }
 
@@ -143,25 +174,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 vertical: 8.0,
                               ),
                               child: CustomDatePickerField(
+                                key: ValueKey('desktop_from_${_fromDate.millisecondsSinceEpoch}'),
                                 initialDate: _fromDate,
                                 lastDate: DateTime.now(),
                                 labelText: 'From Date',
-                                onDateSelected: (date) {
-                                  if (date.isAfter(_toDate)) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'From Date cannot be greater than To Date.',
-                                        ),
-                                      ),
-                                    );
-                                    return;
-                                  }
-                                  setState(() {
-                                    _fromDate = date;
-                                  });
-                                  _fetchDashboardSummary();
-                                },
+                                onDateSelected: _onFromDateSelected,
                               ),
                             ),
                           ),
@@ -175,25 +192,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 vertical: 8.0,
                               ),
                               child: CustomDatePickerField(
+                                key: ValueKey('desktop_to_${_toDate.millisecondsSinceEpoch}'),
                                 initialDate: _toDate,
                                 lastDate: DateTime.now(),
                                 labelText: 'To Date',
-                                onDateSelected: (date) {
-                                  if (date.isBefore(_fromDate)) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'To Date cannot be smaller than From Date.',
-                                        ),
-                                      ),
-                                    );
-                                    return;
-                                  }
-                                  setState(() {
-                                    _toDate = date;
-                                  });
-                                  _fetchDashboardSummary();
-                                },
+                                onDateSelected: _onToDateSelected,
                               ),
                             ),
                           ),
@@ -227,25 +230,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8.0),
                       child: CustomDatePickerField(
+                        key: ValueKey('mobile_from_${_fromDate.millisecondsSinceEpoch}'),
                         initialDate: _fromDate,
                         lastDate: DateTime.now(),
                         labelText: 'From',
-                        onDateSelected: (date) {
-                          if (date.isAfter(_toDate)) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'From Date cannot be greater than To Date.',
-                                ),
-                              ),
-                            );
-                            return;
-                          }
-                          setState(() {
-                            _fromDate = date;
-                          });
-                          _fetchDashboardSummary();
-                        },
+                        onDateSelected: _onFromDateSelected,
                       ),
                     ),
                   ),
@@ -257,25 +246,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8.0),
                       child: CustomDatePickerField(
+                        key: ValueKey('mobile_to_${_toDate.millisecondsSinceEpoch}'),
                         initialDate: _toDate,
                         lastDate: DateTime.now(),
                         labelText: 'To',
-                        onDateSelected: (date) {
-                          if (date.isBefore(_fromDate)) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'To Date cannot be smaller than From Date.',
-                                ),
-                              ),
-                            );
-                            return;
-                          }
-                          setState(() {
-                            _toDate = date;
-                          });
-                          _fetchDashboardSummary();
-                        },
+                        onDateSelected: _onToDateSelected,
                       ),
                     ),
                   ),
@@ -322,6 +297,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       isLoading: _isLoading,
                       errorMessage: _summaryError,
                       onRetry: _fetchDashboardSummary,
+                      fromDate: _fromDate,
+                      toDate: _toDate,
                     ),
                     const SizedBox(height: 32),
 

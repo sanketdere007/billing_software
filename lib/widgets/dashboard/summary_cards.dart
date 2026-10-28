@@ -17,6 +17,8 @@ class SummaryCards extends StatelessWidget {
   final VoidCallback? onSalesTap;
   final VoidCallback? onCollectionTap;
   final VoidCallback? onPendingAmountTap;
+  final DateTime? fromDate;
+  final DateTime? toDate;
 
   const SummaryCards({
     super.key,
@@ -28,6 +30,8 @@ class SummaryCards extends StatelessWidget {
     this.onSalesTap,
     this.onCollectionTap,
     this.onPendingAmountTap,
+    this.fromDate,
+    this.toDate,
   });
 
   @override
@@ -98,8 +102,10 @@ class SummaryCards extends StatelessWidget {
                         settings: const RouteSettings(
                           name: AppRoutes.customerWiseSalesReport,
                         ),
-                        builder: (context) =>
-                            const CustomerWiseSalesReportScreen(),
+                        builder: (context) => CustomerWiseSalesReportScreen(
+                          initialFromDate: fromDate,
+                          initialToDate: toDate,
+                        ),
                       ),
                     );
                   },
@@ -127,7 +133,10 @@ class SummaryCards extends StatelessWidget {
                         settings: const RouteSettings(
                           name: AppRoutes.collectionReport,
                         ),
-                        builder: (context) => const CollectionReportScreen(),
+                        builder: (context) => CollectionReportScreen(
+                          initialFromDate: fromDate,
+                          initialToDate: toDate,
+                        ),
                       ),
                     );
                   },
@@ -147,8 +156,10 @@ class SummaryCards extends StatelessWidget {
                         settings: const RouteSettings(
                           name: AppRoutes.outstandingReceivableReport,
                         ),
-                        builder: (context) =>
-                            const OutstandingReceivableReportScreen(),
+                        builder: (context) => OutstandingReceivableReportScreen(
+                          initialFromDate: fromDate,
+                          initialToDate: toDate,
+                        ),
                       ),
                     );
                   },

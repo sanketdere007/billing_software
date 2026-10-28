@@ -12,7 +12,14 @@ import '../../widgets/direct_back_scope.dart';
 import '../../widgets/custom_date_picker_field.dart';
 
 class CustomerWiseSalesReportScreen extends StatefulWidget {
-  const CustomerWiseSalesReportScreen({super.key});
+  final DateTime? initialFromDate;
+  final DateTime? initialToDate;
+
+  const CustomerWiseSalesReportScreen({
+    super.key,
+    this.initialFromDate,
+    this.initialToDate,
+  });
 
   @override
   State<CustomerWiseSalesReportScreen> createState() =>
@@ -57,8 +64,12 @@ class _CustomerWiseSalesReportScreenState
     _scrollController.addListener(_onScroll);
 
     final now = DateTime.now();
-    _fromDate = DateTime(now.year, now.month, 1);
-    _toDate = now;
+    _toDate = widget.initialToDate != null
+        ? DateTime(widget.initialToDate!.year, widget.initialToDate!.month, widget.initialToDate!.day)
+        : DateTime(now.year, now.month, now.day);
+    _fromDate = widget.initialFromDate != null
+        ? DateTime(widget.initialFromDate!.year, widget.initialFromDate!.month, widget.initialFromDate!.day)
+        : DateTime(_toDate!.year, _toDate!.month, _toDate!.day - 7);
 
     _fetchReport(refresh: true);
 
