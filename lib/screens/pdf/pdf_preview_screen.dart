@@ -66,11 +66,23 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
   }
 
   Future<void> _share() async {
+    final data = widget.invoiceData;
+    if (data == null) {
+      await showWarningDialog(context, 'No invoice data available to share.');
+      return;
+    }
+
+    setState(() => _isBusy = true);
     try {
-      await _controller.sharePdf();
+      await _controller.shareViaWhatsApp(
+        invoiceData: data,
+        context: context,
+      );
     } catch (e) {
       if (!mounted) return;
       await showErrorDialog(context, 'Unable to share: $e');
+    } finally {
+      if (mounted) setState(() => _isBusy = false);
     }
   }
 
@@ -191,26 +203,7 @@ class _ActionBar extends StatelessWidget {
         child: Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: [
-            // _ActionButton(
-            //   enabled: enabled,
-            //   icon: Icons.print_outlined,
-            //   label: 'Print',
-            //   onPressed: onPrint,
-            // ),
-            // _ActionButton(
-            //   enabled: enabled,
-            //   icon: Icons.download_outlined,
-            //   label: 'Download',
-            //   onPressed: onDownload,
-            // ),
-            // _ActionButton(
-            //   enabled: enabled,
-            //   icon: Icons.share_outlined,
-            //   label: 'Share',
-            //   onPressed: onShare,
-            // ),
-          ],
+          children: const [],
         ),
       ),
     );

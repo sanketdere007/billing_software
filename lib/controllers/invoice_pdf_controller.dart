@@ -1,10 +1,12 @@
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:printing/printing.dart';
 
 import '../models/invoice_pdf_data.dart';
 import '../services/invoice_pdf_generator.dart';
+import '../services/whatsapp_share_service.dart';
 
 /// Coordinates invoice PDF generation and platform actions.
 /// Not tied to a UI framework (GetX is not used in this project).
@@ -15,6 +17,7 @@ class InvoicePdfController {
 
   final InvoicePdfGenerator _generator;
 
+  InvoicePdfData? currentData;
   Uint8List? pdfBytes;
   String fileName = 'tax-invoice.pdf';
   bool isLoading = false;
@@ -28,6 +31,7 @@ class InvoicePdfController {
   }) async {
     isLoading = true;
     errorMessage = null;
+    currentData = data;
     try {
       final rawNo = data.invoice.invoiceNo.trim().isNotEmpty
           ? data.invoice.invoiceNo.trim()
@@ -58,7 +62,31 @@ class InvoicePdfController {
     );
   }
 
-  Future<void> sharePdf() async {
+  Future<void> shareViaWhatsApp({
+    required InvoicePdfData invoiceData,
+    required BuildContext context,
+  }) async {
+    final bytes = pdfBytes ?? await generateFromData(invoiceData);
+    await whatsAppShareService.shareInvoicePdfViaWhatsApp(
+      context: context,
+      invoiceData: invoiceData,
+      pdfBytes: bytes,
+      fileName: fileName,
+    );
+  }
+
+  Future<void> sharePdf({
+    InvoicePdfData? invoiceData,
+    BuildContext? context,
+  }) async {
+    final effectiveData = invoiceData ?? currentData;
+    if (context != null && effectiveData != null) {
+      await shareViaWhatsApp(
+        invoiceData: effectiveData,
+        context: context,
+      );
+      return;
+    }
     final bytes = _requireBytes();
     await Printing.sharePdf(bytes: bytes, filename: fileName);
   }

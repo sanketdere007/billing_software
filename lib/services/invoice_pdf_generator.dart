@@ -5,6 +5,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import '../models/invoice_pdf_data.dart';
+import 'invoice_pdf_font_loader.dart';
 
 /// Builds a Care-Software-style GST tax invoice PDF from [InvoicePdfData].
 /// Layout is independent of how the data is obtained (hardcoded JSON or API).
@@ -31,7 +32,9 @@ class InvoicePdfGenerator {
   ];
 
   Future<Uint8List> generate(InvoicePdfData data) async {
+    final theme = await InvoicePdfFontLoader.getTheme();
     final doc = pw.Document(
+      theme: theme,
       title: '${data.invoice.title} ${data.invoice.invoiceNo}',
       author: data.company.name,
     );
@@ -452,16 +455,16 @@ class InvoicePdfGenerator {
     final formattedNumber = _formatCurrency(balance);
     return _totalRow(
       'Balance Due',
-      'Rs. $formattedNumber',
+      '₹ $formattedNumber',
       bold: true,
       customValueWidget: pw.Row(
         mainAxisSize: pw.MainAxisSize.min,
         mainAxisAlignment: pw.MainAxisAlignment.end,
         crossAxisAlignment: pw.CrossAxisAlignment.center,
         children: [
-          _rupeeIcon(),
+          
           pw.Text(
-            formattedNumber,
+            '₹ $formattedNumber',
             style: pw.TextStyle(
               fontSize: _bodySize,
               fontWeight: pw.FontWeight.bold,

@@ -74,6 +74,22 @@ flutter:
   assets:
     - assets/images/logo_full.png
     - assets/images/logo_icon.png
+    - assets/fonts/
+
+  # Unicode fonts for offline bundling (optional).
+  # Run `dart run tool/setup_fonts.dart` to download font files into assets/fonts/,
+  # then uncomment the section below:
+  # fonts:
+  #   - family: NotoSans
+  #     fonts:
+  #       - asset: assets/fonts/NotoSans-Regular.ttf
+  #       - asset: assets/fonts/NotoSans-Bold.ttf
+  #         weight: 700
+  #   - family: NotoSansDevanagari
+  #     fonts:
+  #       - asset: assets/fonts/NotoSansDevanagari-Regular.ttf
+  #       - asset: assets/fonts/NotoSansDevanagari-Bold.ttf
+  #         weight: 700
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
