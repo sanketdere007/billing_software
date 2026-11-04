@@ -286,7 +286,7 @@ class _SupplierPendingInvoiceReportScreenState extends State<SupplierPendingInvo
                             const SizedBox(width: 16),
                           ],
                         ),
-                        body: _buildBodyContent(),
+                        body: _buildBodyContent(isDesktop: true),
                       ),
                     ),
                   ],
@@ -299,20 +299,6 @@ class _SupplierPendingInvoiceReportScreenState extends State<SupplierPendingInvo
                 title: Text('Pending Invoices: ${widget.supplierName}'),
                 actions: [
                   IconButton(
-                    icon: const Icon(Icons.search),
-                    onPressed: () {
-                      showSearch(
-                        context: context,
-                        delegate: _InvoiceSearchDelegate(
-                          onSearch: (query) {
-                            _searchController.text = query;
-                            _onSearchChanged(query);
-                          },
-                        ),
-                      );
-                    },
-                  ),
-                  IconButton(
                     icon: const Icon(Icons.refresh_rounded),
                     tooltip: 'Refresh',
                     onPressed: _isLoading ? null : () => _fetchInvoices(refresh: true),
@@ -320,7 +306,7 @@ class _SupplierPendingInvoiceReportScreenState extends State<SupplierPendingInvo
                 ],
               ),
               drawer: const AppDrawer(isPermanent: false),
-              body: _buildBodyContent(),
+              body: _buildBodyContent(isDesktop: false),
             );
           },
         ),
@@ -328,7 +314,7 @@ class _SupplierPendingInvoiceReportScreenState extends State<SupplierPendingInvo
     );
   }
 
-  Widget _buildBodyContent() {
+  Widget _buildBodyContent({required bool isDesktop}) {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -347,6 +333,48 @@ class _SupplierPendingInvoiceReportScreenState extends State<SupplierPendingInvo
             FilledButton(onPressed: () => _fetchInvoices(refresh: true), child: const Text('Retry')),
           ],
         ),
+      );
+    }
+
+    if (!isDesktop) {
+      return Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Search invoice...',
+                prefixIcon: const Icon(Icons.search, size: 20),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear, size: 18),
+                        onPressed: () {
+                          _searchController.clear();
+                          _onSearchChanged('');
+                        },
+                      )
+                    : null,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+              ),
+              onChanged: _onSearchChanged,
+            ),
+          ),
+          if (_invoiceData.isEmpty)
+            const Expanded(
+              child: Center(
+                child: Text('No pending invoices found for this supplier.'),
+              ),
+            )
+          else
+            Expanded(child: _buildMobileList()),
+        ],
       );
     }
 
@@ -377,16 +405,7 @@ class _SupplierPendingInvoiceReportScreenState extends State<SupplierPendingInvo
           ),
         ),
         Expanded(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final isDesktop = constraints.maxWidth >= 800;
-              if (isDesktop) {
-                return _buildDesktopDataTable();
-              } else {
-                return _buildMobileList();
-              }
-            },
-          ),
+          child: _buildDesktopDataTable(),
         ),
       ],
     );
@@ -486,52 +505,265 @@ class _SupplierPendingInvoiceReportScreenState extends State<SupplierPendingInvo
   }
 
   Widget _buildMobileList() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final dateFormat = DateFormat('dd-MM-yyyy');
 
-    return ListView.builder(
-      controller: _scrollController,
-      padding: const EdgeInsets.all(8),
-      itemCount: _invoiceData.length + (_isFetchingMore ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (index == _invoiceData.length) {
-          return const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Center(child: CircularProgressIndicator()),
-          );
-        }
+    double totalNet = 0;
+    double totalPaid = 0;
+    double totalBalance = 0;
+    for (var item in _invoiceData) {
+      totalNet += item.netAmount;
+      totalPaid += item.paidAmount;
+      totalBalance += item.balanceAmount;
+    }
 
-        final item = _invoiceData[index];
-        final isSelected = index == _highlightedIndex;
-        final dateStr = item.purchaseMasterInvoiceDate != null 
-            ? dateFormat.format(item.purchaseMasterInvoiceDate!) 
-            : '-';
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            itemCount: _invoiceData.length + (_isFetchingMore ? 1 : 0),
+            itemBuilder: (context, index) {
+              if (index == _invoiceData.length) {
+                return const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
 
-        return Card(
-          elevation: isSelected ? 4 : 1,
-          color: isSelected ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3) : null,
-          child: ListTile(
-            title: Text('Invoice: ${item.purchaseMasterInvoiceNo}', style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Date: $dateStr | Ledger: ${item.accLedgerName}'),
-                Text(
-                  'Balance: ${item.balanceAmount.toStringAsFixed(2)}',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: item.balanceAmount > 0 ? Colors.red.shade700 : Colors.green.shade700,
+              final item = _invoiceData[index];
+              final isSelected = index == _highlightedIndex;
+              final dateStr = item.purchaseMasterInvoiceDate != null
+                  ? dateFormat.format(item.purchaseMasterInvoiceDate!)
+                  : '-';
+
+              return Card(
+                elevation: 1,
+                margin: const EdgeInsets.symmetric(vertical: 4),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  side: BorderSide(
+                    color: isSelected
+                        ? colorScheme.primary
+                        : colorScheme.outlineVariant.withOpacity(0.6),
                   ),
+                ),
+                color: isSelected
+                    ? colorScheme.primaryContainer.withOpacity(0.3)
+                    : null,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(10),
+                  onTap: () {
+                    setState(() {
+                      _highlightedIndex = index;
+                    });
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 28,
+                              height: 28,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: colorScheme.primaryContainer,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                '#${index + 1}',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: colorScheme.onPrimaryContainer,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item.purchaseMasterInvoiceNo.isNotEmpty
+                                        ? item.purchaseMasterInvoiceNo
+                                        : 'Invoice #${index + 1}',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  if (item.accLedgerName.isNotEmpty) ...[
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      item.accLedgerName,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                            Text(
+                              dateStr,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        const Divider(height: 1),
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Net Amt',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '₹${item.netAmount.toStringAsFixed(2)}',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Paid Amt',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '₹${item.paidAmount.toStringAsFixed(2)}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.green.shade700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  'Balance Due',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '₹${item.balanceAmount.toStringAsFixed(2)}',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: item.balanceAmount > 0
+                                        ? Colors.red.shade700
+                                        : Colors.green.shade700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: colorScheme.primaryContainer.withOpacity(0.35),
+            border: Border(
+              top: BorderSide(
+                color: colorScheme.outlineVariant,
+              ),
+            ),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Invoices: ${_invoiceData.length}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      'Net: ₹${totalNet.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Total Balance Due',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    Text(
+                      '₹${totalBalance.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: totalBalance > 0
+                            ? Colors.red.shade700
+                            : colorScheme.primary,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-            onTap: () {
-              setState(() {
-                _highlightedIndex = index;
-              });
-            },
           ),
-        );
-      },
+        ),
+      ],
     );
   }
 }

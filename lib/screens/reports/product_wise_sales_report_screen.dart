@@ -418,16 +418,29 @@ class _ProductWiseSalesReportScreenState
 
   Widget _buildFilterRowMobile() {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(12.0),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           TextField(
             controller: _searchController,
-            decoration: const InputDecoration(
-              labelText: 'Search',
-              border: OutlineInputBorder(),
-              contentPadding: EdgeInsets.symmetric(
+            decoration: InputDecoration(
+              labelText: 'Search Product',
+              hintText: 'Type product name...',
+              prefixIcon: const Icon(Icons.search_rounded, size: 20),
+              suffixIcon: _searchController.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear, size: 18),
+                      onPressed: () {
+                        _searchController.clear();
+                        if (_debounce?.isActive ?? false) _debounce!.cancel();
+                        _fetchReport(refresh: true);
+                      },
+                    )
+                  : null,
+              border: const OutlineInputBorder(),
+              contentPadding: const EdgeInsets.symmetric(
                 horizontal: 12,
                 vertical: 8,
               ),
@@ -436,18 +449,15 @@ class _ProductWiseSalesReportScreenState
               if (_debounce?.isActive ?? false) {
                 _debounce!.cancel();
               }
-
               _debounce = Timer(
                 const Duration(milliseconds: 500),
-                    () {
+                () {
                   _fetchReport(refresh: true);
                 },
               );
             },
           ),
-
           const SizedBox(height: 12),
-
           Row(
             children: [
               Expanded(
@@ -473,9 +483,7 @@ class _ProductWiseSalesReportScreenState
                   },
                 ),
               ),
-
               const SizedBox(width: 12),
-
               Expanded(
                 child: CustomDatePickerField(
                   labelText: 'To Date',
@@ -544,20 +552,20 @@ class _ProductWiseSalesReportScreenState
 
     return Column(
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.15),
-          child: Row(
-            children: [
-              Text(
-                'Showing ${_reportData.length} records',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+        if (isDesktop)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.15),
+            child: Row(
+              children: [
+                Text(
+                  'Showing ${_reportData.length} records',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
-              ),
-              const Spacer(),
-              if (isDesktop)
+                const Spacer(),
                 Text(
                   'Use ↑ / ↓ arrows to navigate, Enter to view details',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -565,9 +573,9 @@ class _ProductWiseSalesReportScreenState
                     fontSize: 11,
                   ),
                 ),
-            ],
+              ],
+            ),
           ),
-        ),
         Expanded(
           child: isDesktop ? _buildDesktopDataTable() : _buildMobileList(),
         ),
@@ -725,59 +733,205 @@ class _ProductWiseSalesReportScreenState
   }
 
   Widget _buildMobileList() {
-    return ListView.builder(
-      controller: _scrollController,
-      padding: const EdgeInsets.all(8),
-      itemCount: _reportData.length + (_isFetchingMore ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (index == _reportData.length) {
-          return const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Center(child: CircularProgressIndicator()),
-          );
-        }
+    final theme = Theme.of(context);
+    final totalQtySum = _reportData.fold<double>(0.0, (sum, i) => sum + i.totalQty);
+    final totalAmountSum = _reportData.fold<double>(0.0, (sum, i) => sum + i.totalAmount);
 
-        final item = _reportData[index];
-        final isSelected = index == _highlightedIndex;
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.all(8),
+            itemCount: _reportData.length + (_isFetchingMore ? 1 : 0),
+            itemBuilder: (context, index) {
+              if (index == _reportData.length) {
+                return const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
 
-        return Card(
-          elevation: isSelected ? 4 : 1,
-          color: isSelected
-              ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3)
-              : null,
-          child: ListTile(
-            title: Text(
-              item.productName.isNotEmpty
-                  ? item.productName
-                  : 'Unknown Product',
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              final item = _reportData[index];
+              final isSelected = index == _highlightedIndex;
+
+              return Card(
+                elevation: isSelected ? 4 : 1,
+                color: isSelected
+                    ? theme.colorScheme.primaryContainer.withOpacity(0.3)
+                    : null,
+                margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                child: InkWell(
+                  onTap: () {
+                    setState(() {
+                      _highlightedIndex = index;
+                    });
+                    _navigateToDetails(item);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            SizedBox(
+                              width: 32,
+                              child: Text(
+                                '#${index + 1}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Text(
+                                item.productName.isNotEmpty
+                                    ? item.productName
+                                    : 'Unknown Product',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ),
+                            Icon(
+                              Icons.chevron_right,
+                              size: 20,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ],
+                        ),
+                        if (item.hsnCode.isNotEmpty || item.totalInvoices > 0) ...[
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              if (item.hsnCode.isNotEmpty)
+                                Text(
+                                  'HSN: ${item.hsnCode}',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              if (item.hsnCode.isNotEmpty && item.totalInvoices > 0)
+                                const Text(' • '),
+                              if (item.totalInvoices > 0)
+                                Text(
+                                  'Invoices: ${item.totalInvoices}',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
+                        const Divider(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Qty',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                Text(
+                                  item.totalQty.toStringAsFixed(2),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (item.totalFreeQty > 0)
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'Free Qty',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                  Text(
+                                    item.totalFreeQty.toStringAsFixed(2),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.green.shade700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  'Total Amount',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                Text(
+                                  '₹ ${item.totalAmount.toStringAsFixed(2)}',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primaryContainer.withOpacity(0.35),
+            border: Border(
+              top: BorderSide(color: theme.colorScheme.outlineVariant),
             ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          ),
+          child: SafeArea(
+            top: false,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'HSN: ${item.hsnCode.isNotEmpty ? item.hsnCode : '-'} • Invoices: ${item.totalInvoices}',
-                ),
-                Text(
-                  'Qty: ${item.totalQty.toStringAsFixed(2)} • Free: ${item.totalFreeQty.toStringAsFixed(2)}',
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Amount: ₹ ${item.totalAmount.toStringAsFixed(2)}',
+                  'Records: ${_reportData.length}',
                   style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  'Qty: ${totalQtySum.toStringAsFixed(2)}',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  'Total: ₹ ${totalAmountSum.toStringAsFixed(2)}',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
+                  ),
                 ),
               ],
             ),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              setState(() {
-                _highlightedIndex = index;
-              });
-              _navigateToDetails(item);
-            },
           ),
-        );
-      },
+        ),
+      ],
     );
   }
 }

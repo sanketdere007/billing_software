@@ -369,20 +369,20 @@ class _CustomerOutstandingDetailReportScreenState
 
     return Column(
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.15),
-          child: Row(
-            children: [
-              const Spacer(),
-              if (isDesktop)
+        if (isDesktop)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.15),
+            child: Row(
+              children: [
+                const Spacer(),
                 Text(
                   'Use ↑ / ↓ to navigate • Esc to go back',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
-            ],
+              ],
+            ),
           ),
-        ),
         Expanded(
           child: isDesktop ? _buildDesktopDataTable() : _buildMobileList(),
         ),
@@ -434,7 +434,6 @@ class _CustomerOutstandingDetailReportScreenState
                       ),
                     ),
                   ),
-
                   Expanded(
                     flex: 2,
                     child: Align(
@@ -644,93 +643,295 @@ class _CustomerOutstandingDetailReportScreenState
   }
 
   Widget _buildMobileList() {
-    return ListView.builder(
-      controller: _scrollController,
-      padding: const EdgeInsets.all(8),
-      itemCount: _reportData.length + (_isFetchingMore ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (index == _reportData.length) {
-          return const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Center(child: CircularProgressIndicator()),
-          );
-        }
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final dateFormat = DateFormat('dd/MM/yyyy');
 
-        final item = _reportData[index];
-        final isSelected = index == _highlightedIndex;
+    double totalAmtSum = 0;
+    double paidAmtSum = 0;
+    double pendingAmtSum = 0;
+    for (var item in _reportData) {
+      totalAmtSum += _getDouble(item, [
+        'netAmount',
+        'grandTotal',
+        'totalAmount',
+        'salesMaster_GrandTotal',
+      ]);
+      paidAmtSum += _getDouble(item, [
+        'paidAmount',
+        'salesMaster_PaidAmount',
+        'receivedAmount',
+      ]);
+      pendingAmtSum += _getDouble(item, [
+        'balanceAmount',
+        'pendingAmount',
+        'salesMaster_BalanceAmount',
+      ]);
+    }
 
-        final invoiceNo = _getString(item, [
-          'invoiceNo',
-          'salesMaster_InvoiceNo',
-          'SalesMaster_InvoiceNo',
-        ], 'N/A');
-        final dateStr = _getString(item, [
-          'invoiceDate',
-          'salesMaster_InvoiceDate',
-          'date',
-          'Date',
-        ]);
-        final totalAmt = _getDouble(item, [
-          'netAmount',
-          'grandTotal',
-          'totalAmount',
-          'salesMaster_GrandTotal',
-        ]);
-        final paidAmt = _getDouble(item, [
-          'paidAmount',
-          'salesMaster_PaidAmount',
-          'receivedAmount',
-        ]);
-        final pendingAmt = _getDouble(item, [
-          'balanceAmount',
-          'pendingAmount',
-          'salesMaster_BalanceAmount',
-        ]);
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            itemCount: _reportData.length + (_isFetchingMore ? 1 : 0),
+            itemBuilder: (context, index) {
+              if (index == _reportData.length) {
+                return const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
 
-        final dateFormat = DateFormat('dd/MM/yyyy');
-        DateTime parsedDate;
-        try {
-          parsedDate = DateTime.parse(dateStr);
-        } catch (_) {
-          parsedDate = DateTime.now();
-        }
+              final item = _reportData[index];
+              final isSelected = index == _highlightedIndex;
 
-        return Card(
-          elevation: isSelected ? 4 : 1,
-          color: isSelected
-              ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3)
-              : null,
-          child: ListTile(
-            title: Text(
-              'Invoice: $invoiceNo',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Date: ${dateStr.isNotEmpty ? dateFormat.format(parsedDate) : ''}',
-                ),
-                Text(
-                  'Total: ${totalAmt.toStringAsFixed(2)} | Paid: ${paidAmt.toStringAsFixed(2)}',
-                ),
-                Text(
-                  'Pending: ${pendingAmt.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.red,
+              final invoiceNo = _getString(item, [
+                'invoiceNo',
+                'salesMaster_InvoiceNo',
+                'SalesMaster_InvoiceNo',
+              ], 'N/A');
+              final dateStr = _getString(item, [
+                'invoiceDate',
+                'salesMaster_InvoiceDate',
+                'date',
+                'Date',
+              ]);
+              final totalAmt = _getDouble(item, [
+                'netAmount',
+                'grandTotal',
+                'totalAmount',
+                'salesMaster_GrandTotal',
+              ]);
+              final paidAmt = _getDouble(item, [
+                'paidAmount',
+                'salesMaster_PaidAmount',
+                'receivedAmount',
+              ]);
+              final pendingAmt = _getDouble(item, [
+                'balanceAmount',
+                'pendingAmount',
+                'salesMaster_BalanceAmount',
+              ]);
+
+              DateTime parsedDate;
+              try {
+                parsedDate = DateTime.parse(dateStr);
+              } catch (_) {
+                parsedDate = DateTime.now();
+              }
+
+              return Card(
+                elevation: 1,
+                margin: const EdgeInsets.symmetric(vertical: 4),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  side: BorderSide(
+                    color: isSelected
+                        ? colorScheme.primary
+                        : colorScheme.outlineVariant.withOpacity(0.6),
                   ),
+                ),
+                color: isSelected
+                    ? colorScheme.primaryContainer.withOpacity(0.3)
+                    : null,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(10),
+                  onTap: () {
+                    setState(() {
+                      _highlightedIndex = index;
+                    });
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 28,
+                              height: 28,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: colorScheme.primaryContainer,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                '#${index + 1}',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: colorScheme.onPrimaryContainer,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'Invoice: $invoiceNo',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              dateStr.isNotEmpty
+                                  ? dateFormat.format(parsedDate)
+                                  : '',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        const Divider(height: 1),
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Total Amt',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '₹${totalAmt.toStringAsFixed(2)}',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Paid Amt',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '₹${paidAmt.toStringAsFixed(2)}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.green.shade700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  'Pending Amt',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '₹${pendingAmt.toStringAsFixed(2)}',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: pendingAmt > 0
+                                        ? Colors.red.shade700
+                                        : Colors.green.shade700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: colorScheme.primaryContainer.withOpacity(0.35),
+            border: Border(
+              top: BorderSide(
+                color: colorScheme.outlineVariant,
+              ),
+            ),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Invoices: ${_reportData.length}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      'Paid: ₹${paidAmtSum.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Total Pending',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    Text(
+                      '₹${pendingAmtSum.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: pendingAmtSum > 0
+                            ? Colors.red.shade700
+                            : colorScheme.primary,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-            onTap: () {
-              setState(() {
-                _highlightedIndex = index;
-              });
-            },
           ),
-        );
-      },
+        ),
+      ],
     );
   }
 }

@@ -343,7 +343,68 @@ class _CustomerListReportScreenState extends State<CustomerListReportScreen> {
     );
   }
 
-  Widget _buildFilters() {
+  Widget _buildFilters({required bool isDesktop}) {
+    if (!isDesktop) {
+      return Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          children: [
+            TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Search customer name or mobile...',
+                prefixIcon: const Icon(Icons.search, size: 20),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear, size: 20),
+                        onPressed: () {
+                          _searchController.clear();
+                          _onSearchChanged('');
+                        },
+                      )
+                    : null,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                isDense: true,
+              ),
+              onChanged: _onSearchChanged,
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: CityDropdown(
+                    selectedCityId: _selectedCityId,
+                    onChanged: _onCityChanged,
+                    isFilter: true,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: AreaDropdown(
+                    selectedAreaId: _selectedAreaId,
+                    cityId: _selectedCityId,
+                    onChanged: _onAreaChanged,
+                    isFilter: true,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            RouteDropdown(
+              selectedRouteId: _selectedRouteId,
+              onChanged: _onRouteChanged,
+            ),
+          ],
+        ),
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -387,7 +448,7 @@ class _CustomerListReportScreenState extends State<CustomerListReportScreen> {
   Widget _buildBodyContent({required bool isDesktop}) {
     return Column(
       children: [
-        _buildFilters(),
+        _buildFilters(isDesktop: isDesktop),
         if (_isLoading && _reportData.isEmpty)
           const Expanded(child: Center(child: CircularProgressIndicator()))
         else if (_errorMessage != null && _reportData.isEmpty)
@@ -413,26 +474,27 @@ class _CustomerListReportScreenState extends State<CustomerListReportScreen> {
           Expanded(
             child: Column(
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.15),
-                  child: Row(
-                    children: [
-                      Text(
-                        'Showing ${_reportData.length} records',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                if (isDesktop)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.15),
+                    child: Row(
+                      children: [
+                        Text(
+                          'Showing ${_reportData.length} records',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
                         ),
-                      ),
-                      const Spacer(),
-                      Text(
-                        'Use ↑ / ↓ to navigate',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
+                        const Spacer(),
+                        Text(
+                          'Use ↑ / ↓ to navigate',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
                 Expanded(
                   child: isDesktop ? _buildDesktopDataTable() : _buildMobileList(),
                 ),
@@ -530,42 +592,211 @@ class _CustomerListReportScreenState extends State<CustomerListReportScreen> {
     );
   }
 
-  Widget _buildMobileList() {
-    return ListView.builder(
-      controller: _scrollController,
-      padding: const EdgeInsets.all(8),
-      itemCount: _reportData.length + (_isFetchingMore ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (index == _reportData.length) {
-          return const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Center(child: CircularProgressIndicator()),
-          );
-        }
+  Widget _buildCattleChip(String label, int count) {
+    if (count <= 0) return const SizedBox.shrink();
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        '$label: $count',
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).colorScheme.onPrimaryContainer,
+        ),
+      ),
+    );
+  }
 
-        final item = _reportData[index];
-        final isSelected = index == _highlightedIndex;
-        return Card(
-          elevation: isSelected ? 4 : 1,
-          color: isSelected ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3) : null,
-          child: ListTile(
-            title: Text(item.custName, style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Mobile: ${item.custMobileNo}'),
-                Text('City: ${item.custCityName} | Area: ${item.custAreaName}'),
-                Text('Cow: ${item.custCowCount} | Buffalo: ${item.custBuffaloCount} | Bull: ${item.custBullCount} | Goat: ${item.custGoatCount}', style: const TextStyle(fontSize: 12)),
-              ],
-            ),
-            onTap: () {
-              setState(() {
-                _highlightedIndex = index;
-              });
+  Widget _buildMobileList() {
+    final theme = Theme.of(context);
+    final totalCattle = _reportData.fold<int>(
+      0,
+      (sum, item) =>
+          sum +
+          item.custCowCount +
+          item.custBuffaloCount +
+          item.custBullCount +
+          item.custGoatCount,
+    );
+
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            itemCount: _reportData.length + (_isFetchingMore ? 1 : 0),
+            itemBuilder: (context, index) {
+              if (index == _reportData.length) {
+                return const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+
+              final item = _reportData[index];
+
+              return Card(
+                margin: const EdgeInsets.only(bottom: 8),
+                elevation: 1,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  side: BorderSide(
+                    color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 28,
+                            height: 28,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primaryContainer,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              '#${index + 1}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.onPrimaryContainer,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item.custName,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                if (item.custMobileNo.isNotEmpty) ...[
+                                  const SizedBox(height: 2),
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.phone_outlined,
+                                        size: 13,
+                                        color: theme.colorScheme.onSurfaceVariant,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        item.custMobileNo,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: theme.colorScheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                          if (item.routeName.isNotEmpty)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.surfaceVariant
+                                    .withOpacity(0.5),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                item.routeName,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const Divider(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              '${item.custCityName.isNotEmpty ? item.custCityName : '-'}${item.custAreaName.isNotEmpty ? " • ${item.custAreaName}" : ""}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Wrap(
+                            spacing: 4,
+                            children: [
+                              _buildCattleChip('Cow', item.custCowCount),
+                              _buildCattleChip('Buf', item.custBuffaloCount),
+                              _buildCattleChip('Bull', item.custBullCount),
+                              _buildCattleChip('Goat', item.custGoatCount),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              );
             },
           ),
-        );
-      },
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primaryContainer.withOpacity(0.35),
+            border: Border(
+              top: BorderSide(color: theme.colorScheme.outlineVariant),
+            ),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Customers: ${_reportData.length}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                ),
+                Text(
+                  'Total Animals: $totalCattle',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

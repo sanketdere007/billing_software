@@ -254,7 +254,7 @@ class _SalesReturnBillDetailScreenState
                           ),
                         ],
                       ),
-                      body: _buildBody(),
+                      body: _buildBody(isDesktop: true),
                     ),
                   ),
                 ],
@@ -274,14 +274,14 @@ class _SalesReturnBillDetailScreenState
               ],
             ),
             drawer: const AppDrawer(isPermanent: false),
-            body: _buildBody(),
+            body: _buildBody(isDesktop: false),
           );
         },
       ),
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody({required bool isDesktop}) {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -359,6 +359,16 @@ class _SalesReturnBillDetailScreenState
     }
 
     final double effectivePayable = widget.billAmount ?? payableAmount;
+
+    if (!isDesktop) {
+      return _buildMobileContent(
+        totalQty,
+        totalGross,
+        prodDis,
+        totalGst,
+        effectivePayable,
+      );
+    }
 
     return Column(
       children: [
@@ -588,6 +598,340 @@ class _SalesReturnBillDetailScreenState
             fontSize: 14,
             fontWeight: FontWeight.bold,
             color: color,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileContent(
+    double totalQty,
+    double totalGross,
+    double prodDis,
+    double totalGst,
+    double effectivePayable,
+  ) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Column(
+      children: [
+        // Compact Bill Info Card on Mobile
+        Card(
+          margin: const EdgeInsets.fromLTRB(12, 12, 12, 6),
+          elevation: 0,
+          color: colorScheme.surfaceVariant.withOpacity(0.35),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: colorScheme.outlineVariant),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        widget.customerName,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: colorScheme.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        '#${widget.billNo}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                if (widget.billAmount != null ||
+                    widget.paidAmount != null ||
+                    widget.balanceAmount != null) ...[
+                  const SizedBox(height: 10),
+                  const Divider(height: 1),
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      if (widget.billAmount != null)
+                        _buildMobileSummaryItem(
+                          'Bill Amt',
+                          '₹${widget.billAmount!.toStringAsFixed(2)}',
+                          Colors.blue,
+                        ),
+                      if (widget.paidAmount != null)
+                        _buildMobileSummaryItem(
+                          'Paid Amt',
+                          '₹${widget.paidAmount!.toStringAsFixed(2)}',
+                          Colors.green,
+                        ),
+                      if (widget.balanceAmount != null)
+                        _buildMobileSummaryItem(
+                          'Bal Due',
+                          '₹${widget.balanceAmount!.toStringAsFixed(2)}',
+                          Colors.red,
+                        ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+
+        // Items List
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            itemCount: _details.length,
+            itemBuilder: (context, index) {
+              final rawItem = _details[index];
+              final Map map = rawItem is Map
+                  ? rawItem
+                  : (rawItem is Map<String, dynamic> ? rawItem : {});
+
+              final prodName = _getString(
+                map,
+                columns[0]['keys'] as List<String>,
+              );
+              final qty = _getDouble(map, columns[1]['keys'] as List<String>);
+              final rate = _getDouble(map, columns[2]['keys'] as List<String>);
+              final gross = _getDouble(map, columns[3]['keys'] as List<String>);
+              final disPerc = _getDouble(
+                map,
+                columns[4]['keys'] as List<String>,
+              );
+              final disAmt = _getDouble(
+                map,
+                columns[5]['keys'] as List<String>,
+              );
+              final gstAmt = _getDouble(
+                map,
+                columns[7]['keys'] as List<String>,
+              );
+              final payable = _getDouble(
+                map,
+                columns[8]['keys'] as List<String>,
+              );
+
+              return Card(
+                elevation: 1,
+                margin: const EdgeInsets.symmetric(vertical: 4),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  side: BorderSide(
+                    color: colorScheme.outlineVariant.withOpacity(0.6),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 28,
+                            height: 28,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: colorScheme.primaryContainer,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              '#${index + 1}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.onPrimaryContainer,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              prodName,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            '₹${payable.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      const Divider(height: 1),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _buildMobileMetricCol(
+                            'Return Qty',
+                            qty.toStringAsFixed(2),
+                          ),
+                          _buildMobileMetricCol(
+                            'Rate',
+                            '₹${rate.toStringAsFixed(2)}',
+                          ),
+                          _buildMobileMetricCol(
+                            'Gross',
+                            '₹${gross.toStringAsFixed(2)}',
+                          ),
+                          if (disAmt > 0)
+                            _buildMobileMetricCol(
+                              'Dis (${disPerc.toStringAsFixed(0)}%)',
+                              '₹${disAmt.toStringAsFixed(2)}',
+                            )
+                          else if (gstAmt > 0)
+                            _buildMobileMetricCol(
+                              'GST',
+                              '₹${gstAmt.toStringAsFixed(2)}',
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+
+        // Sticky Bottom Summary Bar
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: colorScheme.primaryContainer.withOpacity(0.35),
+            border: Border(
+              top: BorderSide(
+                color: colorScheme.outlineVariant,
+              ),
+            ),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Items: ${_details.length} | Qty: ${totalQty.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    if (totalGst > 0)
+                      Text(
+                        'GST: ₹${totalGst.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Total Return',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    Text(
+                      '₹${effectivePayable.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileSummaryItem(String label, String value, Color color) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileMetricCol(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ],

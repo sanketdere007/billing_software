@@ -470,7 +470,7 @@ class _LowStockReportScreenState extends State<LowStockReportScreen> {
     return Column(
       children: [
         _buildFilters(isDesktop: isDesktop),
-        _buildSummaryCards(isDesktop: isDesktop),
+        if (isDesktop) _buildSummaryCards(isDesktop: isDesktop),
         Expanded(
           child: _isLoading && _reportData.isEmpty
               ? const Center(child: CircularProgressIndicator())
@@ -536,7 +536,7 @@ class _LowStockReportScreenState extends State<LowStockReportScreen> {
                         )
                       : Column(
                           children: [
-                            _buildRecordsHeader(isDesktop: isDesktop),
+                            if (isDesktop) _buildRecordsHeader(isDesktop: isDesktop),
                             Expanded(
                               child: isDesktop
                                   ? _buildDesktopDataTable()
@@ -1023,106 +1023,193 @@ class _LowStockReportScreenState extends State<LowStockReportScreen> {
   Widget _buildMobileList() {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final totalAvailable = _reportData.fold<double>(
+      0.0,
+      (sum, item) => sum + item.availableStock,
+    );
 
-    return ListView.builder(
-      controller: _scrollController,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      itemCount: _reportData.length,
-      itemBuilder: (context, index) {
-        final item = _reportData[index];
-        final isOutOfStock = item.availableStock <= 0;
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            itemCount: _reportData.length + (_isFetchingMore ? 1 : 0),
+            itemBuilder: (context, index) {
+              if (index == _reportData.length) {
+                return const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Center(
+                    child: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+                );
+              }
 
-        return Card(
-          margin: const EdgeInsets.only(bottom: 10),
-          elevation: 1,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-            side: BorderSide(
-              color: isDark ? Colors.white10 : Colors.grey.shade200,
+              final item = _reportData[index];
+              final isOutOfStock = item.availableStock <= 0;
+
+              return Card(
+                margin: const EdgeInsets.only(bottom: 8),
+                elevation: 1,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  side: BorderSide(
+                    color: isDark ? Colors.white10 : Colors.grey.shade200,
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 28,
+                            height: 28,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primaryContainer,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              '#${index + 1}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.onPrimaryContainer,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item.productName.isNotEmpty
+                                      ? item.productName
+                                      : 'Product #${item.batchProductId}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  'Unit: ${item.unitShortName} ${item.unitValue > 0 ? '(Val: ${item.unitValue})' : ''}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isOutOfStock
+                                  ? Colors.red.withOpacity(0.18)
+                                  : Colors.amber.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              isOutOfStock ? 'OUT OF STOCK' : 'LOW STOCK',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: isOutOfStock
+                                    ? Colors.red.shade700
+                                    : Colors.orange.shade900,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Divider(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Threshold: $_lowStockQty',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          Row(
+                            children: [
+                              Text(
+                                'Available: ',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                              Text(
+                                item.availableStock.toStringAsFixed(2),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: isOutOfStock
+                                      ? Colors.red.shade700
+                                      : Colors.orange.shade800,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primaryContainer.withOpacity(0.35),
+            border: Border(
+              top: BorderSide(color: theme.colorScheme.outlineVariant),
             ),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          child: SafeArea(
+            top: false,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        item.productName.isNotEmpty
-                            ? item.productName
-                            : 'Product #${item.batchProductId}',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isOutOfStock
-                            ? Colors.red.withOpacity(0.18)
-                            : Colors.amber.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        isOutOfStock ? 'OUT OF STOCK' : 'LOW STOCK',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: isOutOfStock
-                              ? Colors.red.shade700
-                              : Colors.orange.shade900,
-                        ),
-                      ),
-                    ),
-                  ],
+                Text(
+                  'Items: $_totalRecords',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
                 ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Unit: ${item.unitShortName} ${item.unitValue > 0 ? '(Val: ${item.unitValue})' : ''}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        Text(
-                          'Available: ',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                        Text(
-                          item.availableStock.toStringAsFixed(2),
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: isOutOfStock
-                                ? Colors.red.shade700
-                                : Colors.orange.shade800,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                Text(
+                  'Total Avail: ${totalAvailable.toStringAsFixed(2)}',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: theme.colorScheme.primary,
+                  ),
                 ),
               ],
             ),
           ),
-        );
-      },
+        ),
+      ],
     );
   }
 }

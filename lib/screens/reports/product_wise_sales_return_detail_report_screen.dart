@@ -495,42 +495,42 @@ class _ProductWiseSalesReturnDetailReportScreenState
 
     return Column(
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.15),
-          child: Row(
-            children: [
-              Text(
-                'Showing ${_reportData.length} records',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-              ),
-              if (_totalReturnQty > 0 || _totalReturnAmount > 0) ...[
-                const SizedBox(width: 16),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    'Total Qty: ${_totalReturnQty.toStringAsFixed(2)} | Total Amt: ₹ ${_totalReturnAmount.toStringAsFixed(2)}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
+        if (isDesktop)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.15),
+            child: Row(
+              children: [
+                Text(
+                  'Showing ${_reportData.length} records',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                 ),
-              ],
-              const Spacer(),
-              if (isDesktop)
+                if (_totalReturnQty > 0 || _totalReturnAmount > 0) ...[
+                  const SizedBox(width: 16),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      'Total Qty: ${_totalReturnQty.toStringAsFixed(2)} | Total Amt: ₹ ${_totalReturnAmount.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                ],
+                const Spacer(),
                 Text(
                   'Use ↑ / ↓ arrows to navigate',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -538,9 +538,9 @@ class _ProductWiseSalesReturnDetailReportScreenState
                         fontSize: 11,
                       ),
                 ),
-            ],
+              ],
+            ),
           ),
-        ),
         Expanded(
           child: isDesktop ? _buildDesktopDataTable() : _buildMobileList(),
         ),
@@ -752,70 +752,272 @@ class _ProductWiseSalesReturnDetailReportScreenState
   }
 
   Widget _buildMobileList() {
-    return ListView.builder(
-      controller: _scrollController,
-      padding: const EdgeInsets.all(8),
-      itemCount: _reportData.length + (_isFetchingMore ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (index == _reportData.length) {
-          return const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Center(child: CircularProgressIndicator()),
-          );
-        }
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
-        final item = _reportData[index];
-        final isSelected = index == _highlightedIndex;
+    double runningQty = 0;
+    double runningAmount = 0;
+    for (var item in _reportData) {
+      runningQty += item.salesReturnDetailQty;
+      runningAmount += item.salesReturnDetailTotalAmount;
+    }
+    final displayQty = _totalReturnQty > 0 ? _totalReturnQty : runningQty;
+    final displayAmount = _totalReturnAmount > 0 ? _totalReturnAmount : runningAmount;
 
-        return Card(
-          elevation: isSelected ? 4 : 1,
-          color: isSelected
-              ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3)
-              : null,
-          child: ListTile(
-            title: Text(
-              item.salesReturnMasterInvoiceNo.isNotEmpty
-                  ? item.salesReturnMasterInvoiceNo
-                  : 'Return #${item.salesReturnMasterId}',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (item.customerName.isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    'Customer: ${item.customerName}',
-                    style: const TextStyle(fontWeight: FontWeight.w500),
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            itemCount: _reportData.length + (_isFetchingMore ? 1 : 0),
+            itemBuilder: (context, index) {
+              if (index == _reportData.length) {
+                return const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+
+              final item = _reportData[index];
+              final isSelected = index == _highlightedIndex;
+
+              return Card(
+                elevation: 1,
+                margin: const EdgeInsets.symmetric(vertical: 4),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  side: BorderSide(
+                    color: isSelected
+                        ? colorScheme.primary
+                        : colorScheme.outlineVariant.withOpacity(0.6),
                   ),
-                ],
-                if (item.salesReturnMasterDate != null)
-                  Text(
-                    'Date: ${DateFormat('dd MMM yyyy').format(item.salesReturnMasterDate!)}',
-                  ),
-                Text(
-                  'Rate: ₹ ${item.salesReturnDetailSellingPrice.toStringAsFixed(2)} • Qty: ${item.salesReturnDetailQty.toStringAsFixed(2)}',
                 ),
-                if (item.salesReturnMasterRemark.isNotEmpty)
-                  Text(
-                    'Remark: ${item.salesReturnMasterRemark}',
-                    style: const TextStyle(fontStyle: FontStyle.italic),
+                color: isSelected
+                    ? colorScheme.primaryContainer.withOpacity(0.3)
+                    : null,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(10),
+                  onTap: () {
+                    setState(() {
+                      _highlightedIndex = index;
+                    });
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 28,
+                              height: 28,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: colorScheme.primaryContainer,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                '#${index + 1}',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: colorScheme.onPrimaryContainer,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item.salesReturnMasterInvoiceNo.isNotEmpty
+                                        ? item.salesReturnMasterInvoiceNo
+                                        : 'Return #${item.salesReturnMasterId}',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  if (item.customerName.isNotEmpty) ...[
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      item.customerName,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                            if (item.salesReturnMasterDate != null)
+                              Text(
+                                DateFormat('dd MMM yyyy').format(
+                                  item.salesReturnMasterDate!,
+                                ),
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                          ],
+                        ),
+                        if (item.salesReturnMasterRemark.isNotEmpty) ...[
+                          const SizedBox(height: 6),
+                          Text(
+                            item.salesReturnMasterRemark,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontStyle: FontStyle.italic,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 8),
+                        const Divider(height: 1),
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Quantity',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  item.salesReturnDetailQty.toStringAsFixed(2),
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Rate',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '₹ ${item.salesReturnDetailSellingPrice.toStringAsFixed(2)}',
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  'Total Amount',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '₹ ${item.salesReturnDetailTotalAmount.toStringAsFixed(2)}',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: colorScheme.primary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                const SizedBox(height: 4),
-                Text(
-                  'Amount: ₹ ${item.salesReturnDetailTotalAmount.toStringAsFixed(2)}',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              );
+            },
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: colorScheme.primaryContainer.withOpacity(0.35),
+            border: Border(
+              top: BorderSide(
+                color: colorScheme.outlineVariant,
+              ),
+            ),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Records: ${_totalRecords > 0 ? _totalRecords : _reportData.length}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      'Total Qty: ${displayQty.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Total Amount',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    Text(
+                      '₹ ${displayAmount.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-            onTap: () {
-              setState(() {
-                _highlightedIndex = index;
-              });
-            },
           ),
-        );
-      },
+        ),
+      ],
     );
   }
 }

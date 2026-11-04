@@ -507,6 +507,58 @@ class _BatchWiseStockReportScreenState
   }
 
   Widget _buildFilters({required bool isDesktop}) {
+    if (!isDesktop) {
+      return Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Search product...',
+                prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear, size: 18),
+                        onPressed: () {
+                          _searchController.clear();
+                          _onSearchChanged('');
+                        },
+                      )
+                    : null,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                isDense: true,
+              ),
+              onChanged: _onSearchChanged,
+            ),
+            const SizedBox(height: 8),
+            FilterChip(
+              label: const Text('Only In Stock'),
+              selected: _onlyInStock,
+              avatar: Icon(
+                _onlyInStock
+                    ? Icons.check_circle_rounded
+                    : Icons.inventory_2_outlined,
+                size: 18,
+              ),
+              onSelected: (selected) {
+                setState(() {
+                  _onlyInStock = selected;
+                });
+                _fetchReport(refresh: true);
+              },
+            ),
+          ],
+        ),
+      );
+    }
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Row(
@@ -792,9 +844,12 @@ class _BatchWiseStockReportScreenState
 
   Widget _buildMobileList() {
     final theme = Theme.of(context);
-    return ListView.builder(
-      controller: _scrollController,
-      padding: const EdgeInsets.all(8),
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             itemCount: _reportData.length + (_isFetchingMore ? 1 : 0),
             itemBuilder: (context, index) {
               if (index == _reportData.length) {
@@ -805,194 +860,246 @@ class _BatchWiseStockReportScreenState
               }
 
               final item = _reportData[index];
-              final isSelected = index == _highlightedIndex;
 
               return Card(
-                elevation: isSelected ? 4 : 1,
-                color: isSelected
-                    ? theme.colorScheme.primaryContainer.withOpacity(0.3)
-                    : null,
-                margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                child: InkWell(
-                  onTap: () {
-                    setState(() {
-                      _highlightedIndex = index;
-                    });
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(
-                              width: 32,
-                              child: Text(
-                                '#${index + 1}',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: theme.colorScheme.primary,
-                                ),
-                              ),
+                elevation: 1,
+                margin: const EdgeInsets.only(bottom: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  side: BorderSide(
+                    color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 28,
+                            height: 28,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primaryContainer,
+                              borderRadius: BorderRadius.circular(6),
                             ),
-                            Expanded(
-                              child: Text(
-                                item.prodName,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15,
-                                ),
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: item.batchAvailableStock > 0
-                                    ? Colors.green.shade50
-                                    : Colors.red.shade50,
-                                borderRadius: BorderRadius.circular(4),
-                                border: Border.all(
-                                  color: item.batchAvailableStock > 0
-                                      ? Colors.green.shade300
-                                      : Colors.red.shade300,
-                                ),
-                              ),
-                              child: Text(
-                                'Avail: ${item.batchAvailableStock.toStringAsFixed(2)}',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: item.batchAvailableStock > 0
-                                      ? Colors.green.shade800
-                                      : Colors.red.shade800,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Row(
-                          children: [
-                            Text(
-                              'Batch: ${item.batchNumber.isNotEmpty ? item.batchNumber : "N/A"}',
+                            child: Text(
+                              '#${index + 1}',
                               style: TextStyle(
-                                fontSize: 13,
-                                color: theme.colorScheme.onSurfaceVariant,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.onPrimaryContainer,
                               ),
                             ),
-                            if (item.unitShortName.isNotEmpty) ...[
-                              const Text(' • '),
-                              Text(
-                                'Unit: ${item.prodUnitValue > 0 ? "${item.prodUnitValue} " : ""}${item.unitShortName}',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item.prodName,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
                                 ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  'Batch: ${item.batchNumber.isNotEmpty ? item.batchNumber : "N/A"}${item.unitShortName.isNotEmpty ? " • Unit: ${item.prodUnitValue > 0 ? "${item.prodUnitValue} " : ""}${item.unitShortName}" : ""}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                if (item.batchBarcode.isNotEmpty ||
+                                    item.batchEanCode.isNotEmpty) ...[
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Barcode: ${item.batchBarcode.isNotEmpty ? item.batchBarcode : item.batchEanCode}',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: item.batchAvailableStock > 0
+                                  ? Colors.green.withOpacity(0.12)
+                                  : Colors.red.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              'Avail: ${item.batchAvailableStock.toStringAsFixed(2)}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: item.batchAvailableStock > 0
+                                    ? Colors.green.shade800
+                                    : Colors.red.shade800,
                               ),
-                            ],
-                          ],
-                        ),
-                        if (item.batchBarcode.isNotEmpty ||
-                            item.batchEanCode.isNotEmpty) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            'Barcode: ${item.batchBarcode.isNotEmpty ? item.batchBarcode : item.batchEanCode}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ],
-                        const Divider(height: 16),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
+                      ),
+                      const Divider(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   'Total Stock',
                                   style: TextStyle(
-                                    fontSize: 11,
+                                    fontSize: 10,
                                     color: theme.colorScheme.onSurfaceVariant,
                                   ),
                                 ),
+                                const SizedBox(height: 2),
                                 Text(
                                   item.batchStock.toStringAsFixed(2),
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
+                                    fontSize: 12,
                                   ),
                                 ),
                               ],
                             ),
-                            Column(
+                          ),
+                          Expanded(
+                            child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Purchase Price',
+                                  'Purchase',
                                   style: TextStyle(
-                                    fontSize: 11,
+                                    fontSize: 10,
                                     color: theme.colorScheme.onSurfaceVariant,
                                   ),
                                 ),
+                                const SizedBox(height: 2),
                                 Text(
-                                  '₹ ${item.batchPurchasePrice.toStringAsFixed(2)}',
+                                  '₹${item.batchPurchasePrice.toStringAsFixed(2)}',
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w600,
+                                    fontSize: 12,
                                   ),
                                 ),
                               ],
                             ),
-                            Column(
+                          ),
+                          Expanded(
+                            child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   'MRP',
                                   style: TextStyle(
-                                    fontSize: 11,
+                                    fontSize: 10,
                                     color: theme.colorScheme.onSurfaceVariant,
                                   ),
                                 ),
+                                const SizedBox(height: 2),
                                 Text(
-                                  '₹ ${item.batchMrp.toStringAsFixed(2)}',
+                                  '₹${item.batchMrp.toStringAsFixed(2)}',
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w600,
+                                    fontSize: 12,
                                   ),
                                 ),
                               ],
                             ),
-                            Column(
+                          ),
+                          Expanded(
+                            child: Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 Text(
-                                  'Selling Price',
+                                  'Selling',
                                   style: TextStyle(
-                                    fontSize: 11,
+                                    fontSize: 10,
                                     color: theme.colorScheme.onSurfaceVariant,
                                   ),
                                 ),
+                                const SizedBox(height: 2),
                                 Text(
-                                  '₹ ${item.batchSellingPrice.toStringAsFixed(2)}',
+                                  '₹${item.batchSellingPrice.toStringAsFixed(2)}',
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
+                                    fontSize: 12,
                                     color: theme.colorScheme.primary,
                                   ),
                                 ),
                               ],
                             ),
-                          ],
-                        ),
-                      ],
-                    ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
-          );
-        },
-      );
+              );
+            },
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primaryContainer.withOpacity(0.35),
+            border: Border(
+              top: BorderSide(color: theme.colorScheme.outlineVariant),
+            ),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Records: $_totalRecords',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                ),
+                Row(
+                  children: [
+                    Text(
+                      'Stock: ${_totalStock.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Avail: ${_totalAvailableStock.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }

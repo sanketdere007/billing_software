@@ -547,7 +547,7 @@ class _StockLedgerReportScreenState extends State<StockLedgerReportScreen> {
     return Column(
       children: [
         _buildFilters(isDesktop: isDesktop),
-        _buildSummaryCards(isDesktop: isDesktop),
+        if (isDesktop) _buildSummaryCards(isDesktop: isDesktop),
         Expanded(
           child: _isLoading && _reportData.isEmpty
               ? const Center(child: CircularProgressIndicator())
@@ -611,7 +611,7 @@ class _StockLedgerReportScreenState extends State<StockLedgerReportScreen> {
                         )
                       : Column(
                           children: [
-                            _buildRecordsHeader(isDesktop: isDesktop),
+                            if (isDesktop) _buildRecordsHeader(isDesktop: isDesktop),
                             Expanded(
                               child: isDesktop
                                   ? _buildDesktopDataTable()
@@ -1382,191 +1382,281 @@ class _StockLedgerReportScreenState extends State<StockLedgerReportScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return ListView.builder(
-      controller: _scrollController,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      itemCount: _reportData.length,
-      itemBuilder: (context, index) {
-        final item = _reportData[index];
-        final isTypeIn = item.stockLedgerType.trim().toUpperCase() == 'IN';
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            itemCount: _reportData.length + (_isFetchingMore ? 1 : 0),
+            itemBuilder: (context, index) {
+              if (index == _reportData.length) {
+                return const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Center(
+                    child: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+                );
+              }
 
-        return Card(
-          margin: const EdgeInsets.only(bottom: 10),
-          elevation: 1,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-            side: BorderSide(
-              color: isDark ? Colors.white10 : Colors.grey.shade200,
+              final item = _reportData[index];
+              final isTypeIn = item.stockLedgerType.trim().toUpperCase() == 'IN';
+
+              return Card(
+                margin: const EdgeInsets.only(bottom: 8),
+                elevation: 1,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  side: BorderSide(
+                    color: isDark ? Colors.white10 : Colors.grey.shade200,
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 28,
+                            height: 28,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primaryContainer,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              '#${index + 1}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.onPrimaryContainer,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item.prodName.isNotEmpty
+                                      ? item.prodName
+                                      : 'Product #${item.stockLedgerProductId}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const SizedBox(height: 3),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.calendar_today_rounded,
+                                      size: 12,
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      item.stockLedgerDate != null
+                                          ? _dateFormat.format(item.stockLedgerDate!)
+                                          : '-',
+                                      style: TextStyle(
+                                        fontSize: 11.5,
+                                        color: theme.colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                    if (item.batchNumber.isNotEmpty) ...[
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        '• Batch: ${item.batchNumber}',
+                                        style: TextStyle(
+                                          fontSize: 11.5,
+                                          color: theme.colorScheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isTypeIn
+                                  ? Colors.green.withOpacity(0.18)
+                                  : Colors.red.withOpacity(0.18),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              item.stockLedgerType.toUpperCase(),
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: isTypeIn
+                                    ? Colors.green.shade700
+                                    : Colors.red.shade700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Divider(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Transaction / Ref',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '${item.stockLedgerTransactionType} ${item.stockLedgerReferenceNo.isNotEmpty ? '(${item.stockLedgerReferenceNo})' : ''}',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                'Quantity',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                item.quantity.toStringAsFixed(2),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: isTypeIn
+                                      ? Colors.green.shade700
+                                      : Colors.red.shade700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? Colors.white.withOpacity(0.04)
+                              : Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Before: ${item.beforeStock.toStringAsFixed(2)}',
+                              style: const TextStyle(fontSize: 11.5),
+                            ),
+                            const Icon(Icons.arrow_forward_rounded, size: 14),
+                            Text(
+                              'After: ${item.afterStock.toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (item.stockLedgerRemark.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          'Remark: ${item.stockLedgerRemark}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontStyle: FontStyle.italic,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primaryContainer.withOpacity(0.35),
+            border: Border(
+              top: BorderSide(color: theme.colorScheme.outlineVariant),
             ),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          child: SafeArea(
+            top: false,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        item.prodName.isNotEmpty
-                            ? item.prodName
-                            : 'Product #${item.stockLedgerProductId}',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isTypeIn
-                            ? Colors.green.withOpacity(0.18)
-                            : Colors.red.withOpacity(0.18),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        item.stockLedgerType.toUpperCase(),
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: isTypeIn
-                              ? Colors.green.shade700
-                              : Colors.red.shade700,
-                        ),
-                      ),
-                    ),
-                  ],
+                Text(
+                  'Records: $_totalRecords',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
                 ),
-                const SizedBox(height: 6),
                 Row(
                   children: [
-                    Icon(Icons.calendar_today_rounded,
-                        size: 13, color: Colors.grey.shade500),
-                    const SizedBox(width: 4),
                     Text(
-                      item.stockLedgerDate != null
-                          ? _dateFormat.format(item.stockLedgerDate!)
-                          : '-',
+                      'IN: ${_totalInQty.toStringAsFixed(2)}',
                       style: TextStyle(
-                        fontSize: 11.5,
-                        color: Colors.grey.shade600,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                        color: Colors.green.shade700,
                       ),
                     ),
-                    if (item.batchNumber.isNotEmpty) ...[
-                      const SizedBox(width: 12),
-                      Icon(Icons.layers_rounded,
-                          size: 13, color: Colors.grey.shade500),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Batch: ${item.batchNumber}',
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          color: Colors.grey.shade600,
-                        ),
+                    const SizedBox(width: 10),
+                    Text(
+                      'OUT: ${_totalOutQty.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                        color: Colors.red.shade700,
                       ),
-                    ],
-                  ],
-                ),
-                const Divider(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Transaction / Ref',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey.shade500,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '${item.stockLedgerTransactionType} ${item.stockLedgerReferenceNo.isNotEmpty ? '(${item.stockLedgerReferenceNo})' : ''}',
-                          style: const TextStyle(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          'Quantity',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey.shade500,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          item.quantity.toStringAsFixed(2),
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: isTypeIn
-                                ? Colors.green.shade700
-                                : Colors.red.shade700,
-                          ),
-                        ),
-                      ],
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.white.withOpacity(0.04)
-                        : Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Before: ${item.beforeStock.toStringAsFixed(2)}',
-                        style: const TextStyle(fontSize: 11.5),
-                      ),
-                      const Icon(Icons.arrow_forward_rounded, size: 14),
-                      Text(
-                        'After: ${item.afterStock.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (item.stockLedgerRemark.isNotEmpty) ...[
-                  const SizedBox(height: 6),
-                  Text(
-                    'Remark: ${item.stockLedgerRemark}',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontStyle: FontStyle.italic,
-                      color: Colors.grey.shade500,
-                    ),
-                  ),
-                ],
               ],
             ),
           ),
-        );
-      },
+        ),
+      ],
     );
   }
 }

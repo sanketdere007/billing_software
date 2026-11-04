@@ -411,7 +411,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
         // Top filter header
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+          padding: isDesktop
+              ? const EdgeInsets.fromLTRB(20, 16, 20, 12)
+              : const EdgeInsets.fromLTRB(12, 12, 12, 10),
           decoration: BoxDecoration(
             color: isDark
                 ? Theme.of(context).cardColor
@@ -493,7 +495,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
           child: filteredCategories.isEmpty
               ? _buildEmptyState()
               : ListView.builder(
-                  padding: const EdgeInsets.all(20),
+                  padding: isDesktop
+                      ? const EdgeInsets.all(20)
+                      : const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                   itemCount: filteredCategories.length,
                   itemBuilder: (context, index) {
                     final category = filteredCategories[index];
@@ -592,7 +596,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 28),
+      margin: EdgeInsets.only(bottom: isDesktop ? 28 : 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -665,13 +669,18 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 itemCount: category.reports.length,
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: crossAxisCount,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  mainAxisExtent: 110,
+                  crossAxisSpacing: isDesktop ? 16 : 10,
+                  mainAxisSpacing: isDesktop ? 16 : 10,
+                  mainAxisExtent: isDesktop ? 110 : 96,
                 ),
                 itemBuilder: (context, index) {
                   final report = category.reports[index];
-                  return _buildReportCard(context, report, category);
+                  return _buildReportCard(
+                    context,
+                    report,
+                    category,
+                    isDesktop: isDesktop,
+                  );
                 },
               );
             },
@@ -684,8 +693,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
   Widget _buildReportCard(
     BuildContext context,
     ReportItem report,
-    ReportCategory category,
-  ) {
+    ReportCategory category, {
+    required bool isDesktop,
+  }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Material(
@@ -694,7 +704,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
         onTap: () => _openReport(report),
         borderRadius: BorderRadius.circular(14),
         child: Container(
-          padding: const EdgeInsets.all(14),
+          padding: EdgeInsets.all(isDesktop ? 14 : 10),
           decoration: BoxDecoration(
             color: isDark ? Theme.of(context).cardColor : Colors.white,
             borderRadius: BorderRadius.circular(14),
@@ -716,7 +726,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             children: [
               // Icon container
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: EdgeInsets.all(isDesktop ? 10 : 8),
                 decoration: BoxDecoration(
                   color: isDark
                       ? report.color.shade900.withOpacity(0.35)
@@ -730,13 +740,13 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 ),
                 child: Icon(
                   report.icon,
-                  size: 24,
+                  size: isDesktop ? 24 : 20,
                   color: isDark
                       ? report.color.shade300
                       : report.color.shade700,
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: isDesktop ? 12 : 10),
 
               // Title and Description
               Expanded(
@@ -747,7 +757,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     Text(
                       report.title,
                       style: TextStyle(
-                        fontSize: 14.5,
+                        fontSize: isDesktop ? 14.5 : 13.5,
                         fontWeight: FontWeight.bold,
                         color: Theme.of(context).colorScheme.onSurface,
                       ),
@@ -758,7 +768,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     Text(
                       report.description,
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: isDesktop ? 12 : 11,
                         color: isDark
                             ? Colors.grey.shade400
                             : Colors.grey.shade600,
@@ -776,7 +786,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 padding: const EdgeInsets.only(top: 8.0, left: 4.0),
                 child: Icon(
                   Icons.arrow_forward_ios_rounded,
-                  size: 14,
+                  size: isDesktop ? 14 : 12,
                   color: isDark ? Colors.grey.shade600 : Colors.grey.shade400,
                 ),
               ),

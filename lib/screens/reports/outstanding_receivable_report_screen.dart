@@ -265,7 +265,7 @@ class _OutstandingReceivableReportScreenState
                         body: Column(
                           children: [
                             _buildFilters(isDesktop: true),
-                            Expanded(child: _buildBodyContent()),
+                            Expanded(child: _buildBodyContent(isDesktop: true)),
                           ],
                         ),
                       ),
@@ -291,7 +291,7 @@ class _OutstandingReceivableReportScreenState
               body: Column(
                 children: [
                   _buildFilters(isDesktop: false),
-                  Expanded(child: _buildBodyContent()),
+                  Expanded(child: _buildBodyContent(isDesktop: false)),
                 ],
               ),
             );
@@ -397,12 +397,24 @@ class _OutstandingReceivableReportScreenState
         children: [
           TextField(
             controller: _searchController,
-            decoration: const InputDecoration(
-              labelText: 'Search',
-              border: OutlineInputBorder(),
-              contentPadding: EdgeInsets.symmetric(
+            decoration: InputDecoration(
+              hintText: 'Search by Customer, Bill No...',
+              prefixIcon: const Icon(Icons.search, size: 20),
+              suffixIcon: _searchController.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear, size: 18),
+                      onPressed: () {
+                        _searchController.clear();
+                        _fetchReport();
+                      },
+                    )
+                  : null,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              contentPadding: const EdgeInsets.symmetric(
                 horizontal: 12,
-                vertical: 8,
+                vertical: 10,
               ),
             ),
             onChanged: _onSearchChanged,
@@ -479,7 +491,7 @@ class _OutstandingReceivableReportScreenState
     );
   }
 
-  Widget _buildBodyContent() {
+  Widget _buildBodyContent({required bool isDesktop}) {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -516,6 +528,10 @@ class _OutstandingReceivableReportScreenState
               : 'No records found.',
         ),
       );
+    }
+
+    if (!isDesktop) {
+      return _buildMobileList();
     }
 
     return Padding(
@@ -785,6 +801,318 @@ class _OutstandingReceivableReportScreenState
           const Expanded(flex: 1, child: SizedBox()),
         ],
       ),
+    );
+  }
+
+  Widget _buildMobileList() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final dateFormat = DateFormat('dd/MM/yyyy');
+
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            itemCount: _reportData!.partyTotals.length,
+            itemBuilder: (context, index) {
+              final partyTotal = _reportData!.partyTotals[index];
+              final invoices = _reportData!.invoiceDetails
+                  .where((inv) => inv.custId == partyTotal.custId)
+                  .toList();
+
+              return Card(
+                elevation: 1,
+                margin: const EdgeInsets.symmetric(vertical: 6),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(
+                    color: colorScheme.outlineVariant.withOpacity(0.6),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Party Header
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              partyTotal.custName.isNotEmpty
+                                  ? partyTotal.custName
+                                  : 'Unknown Customer',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: colorScheme.primaryContainer,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              '${invoices.length} ${invoices.length == 1 ? 'Bill' : 'Bills'}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.onPrimaryContainer,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      const Divider(height: 1),
+                      const SizedBox(height: 8),
+
+                      // Invoices
+                      ...invoices.asMap().entries.map((entry) {
+                        final invIdx = entry.key;
+                        final inv = entry.value;
+                        final flatIdx = _reportData!.invoiceDetails.indexOf(inv);
+                        final isSelected = _selectedIndex == flatIdx;
+
+                        return Container(
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? colorScheme.primaryContainer.withOpacity(0.3)
+                                : colorScheme.surfaceVariant.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: isSelected
+                                  ? colorScheme.primary
+                                  : colorScheme.outlineVariant.withOpacity(0.4),
+                            ),
+                          ),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(8),
+                            onTap: () {
+                              setState(() {
+                                _selectedIndex = flatIdx;
+                              });
+                              _navigateToDetailScreen(inv);
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(10),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        width: 24,
+                                        height: 24,
+                                        alignment: Alignment.center,
+                                        decoration: BoxDecoration(
+                                          color: colorScheme.primary.withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        child: Text(
+                                          '#${invIdx + 1}',
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: colorScheme.primary,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          inv.salesMasterInvoiceNo,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      ),
+                                      if (inv.daysOutstanding > 0)
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 6,
+                                            vertical: 2,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.red.withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                          child: Text(
+                                            '${inv.daysOutstanding}d',
+                                            style: const TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.red,
+                                            ),
+                                          ),
+                                        ),
+                                      const SizedBox(width: 4),
+                                      const Icon(Icons.chevron_right, size: 18),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        inv.salesMasterInvoiceDate != null
+                                            ? dateFormat.format(inv.salesMasterInvoiceDate!)
+                                            : '-',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: colorScheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Bill: ₹${inv.billAmount.toStringAsFixed(2)}',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: colorScheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Due: ₹${inv.balanceAmount.toStringAsFixed(2)}',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                          color: inv.balanceAmount > 0
+                                              ? Colors.red.shade700
+                                              : Colors.green.shade700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
+
+                      const SizedBox(height: 6),
+                      // Party Totals
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceVariant.withOpacity(0.35),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Party Totals',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              'Bill: ₹${partyTotal.totalBillAmount.toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              'Due: ₹${partyTotal.totalBalanceAmount.toStringAsFixed(2)}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: partyTotal.totalBalanceAmount > 0
+                                    ? Colors.red.shade700
+                                    : Colors.green.shade700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+
+        // Sticky Bottom Grand Total Bar
+        if (_reportData!.grandTotal != null)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: colorScheme.primaryContainer.withOpacity(0.35),
+              border: Border(
+                top: BorderSide(
+                  color: colorScheme.outlineVariant,
+                ),
+              ),
+            ),
+            child: SafeArea(
+              top: false,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Parties: ${_reportData!.partyTotals.length}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        'Bill: ₹${_reportData!.grandTotal!.grandTotalBillAmount.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Total Outstanding',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      Text(
+                        '₹${_reportData!.grandTotal!.grandTotalBalanceAmount.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: _reportData!.grandTotal!.grandTotalBalanceAmount > 0
+                              ? Colors.red.shade700
+                              : colorScheme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

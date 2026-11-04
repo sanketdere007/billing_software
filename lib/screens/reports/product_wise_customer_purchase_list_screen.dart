@@ -484,21 +484,24 @@ class _ProductWiseCustomerPurchaseListScreenState
 
     return Column(
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.15),
-          child: Row(
-            children: [
-              Text(
-                'Showing ${_reportData.length} records',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+        if (isDesktop)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            color: Theme.of(
+              context,
+            ).colorScheme.surfaceVariant.withOpacity(0.15),
+            child: Row(
+              children: [
+                Text(
+                  'Showing ${_reportData.length} records',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
         Expanded(
           child: isDesktop ? _buildDesktopDataTable() : _buildMobileList(),
         ),
@@ -677,60 +680,215 @@ class _ProductWiseCustomerPurchaseListScreenState
   }
 
   Widget _buildMobileList() {
-    return ListView.builder(
-      controller: _scrollController,
-      padding: const EdgeInsets.all(8),
-      itemCount: _reportData.length + (_isFetchingMore ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (index == _reportData.length) {
-          return const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Center(child: CircularProgressIndicator()),
-          );
-        }
+    final theme = Theme.of(context);
+    final totalQtySum = _reportData.fold<double>(0.0, (sum, i) => sum + i.qty);
+    final totalAmountSum = _reportData.fold<double>(
+      0.0,
+      (sum, i) => sum + i.amount,
+    );
 
-        final item = _reportData[index];
-        final isSelected = index == _highlightedIndex;
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.all(8),
+            itemCount: _reportData.length + (_isFetchingMore ? 1 : 0),
+            itemBuilder: (context, index) {
+              if (index == _reportData.length) {
+                return const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
 
-        return Card(
-          elevation: isSelected ? 4 : 1,
-          color: isSelected
-              ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3)
-              : null,
-          child: ListTile(
-            title: Text(
-              item.customerName.isNotEmpty
-                  ? item.customerName
-                  : 'Unknown Customer',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (item.customerMobile.isNotEmpty)
-                  Text('Mobile: ${item.customerMobile}'),
-                if (item.purchaseDate != null)
-                  Text(
-                    'Date: ${DateFormat('dd MMM yyyy, hh:mm a').format(item.purchaseDate!)}',
+              final item = _reportData[index];
+              final isSelected = index == _highlightedIndex;
+
+              return Card(
+                elevation: isSelected ? 4 : 1,
+                color: isSelected
+                    ? theme.colorScheme.primaryContainer.withOpacity(0.3)
+                    : null,
+                margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                child: InkWell(
+                  onTap: () {
+                    setState(() {
+                      _highlightedIndex = index;
+                    });
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            SizedBox(
+                              width: 32,
+                              child: Text(
+                                '#${index + 1}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Text(
+                                item.customerName.isNotEmpty
+                                    ? item.customerName
+                                    : 'Unknown Customer',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (item.customerMobile.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            'Mobile: ${item.customerMobile}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                        if (item.purchaseDate != null) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            'Date: ${DateFormat('dd MMM yyyy, hh:mm a').format(item.purchaseDate!)}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                        const Divider(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Rate',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                Text(
+                                  '₹ ${item.rate.toStringAsFixed(2)}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'Qty',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                Text(
+                                  item.qty.toStringAsFixed(2),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (item.freeQty > 0)
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'Free Qty',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                  Text(
+                                    item.freeQty.toStringAsFixed(2),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.green.shade700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  'Amount',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                Text(
+                                  '₹ ${item.amount.toStringAsFixed(2)}',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                Text(
-                  'Rate: ₹ ${item.rate.toStringAsFixed(2)} • Qty: ${item.qty.toStringAsFixed(2)} • Free: ${item.freeQty.toStringAsFixed(2)}',
                 ),
-                const SizedBox(height: 4),
+              );
+            },
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primaryContainer.withOpacity(0.35),
+            border: Border(
+              top: BorderSide(color: theme.colorScheme.outlineVariant),
+            ),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
                 Text(
-                  'Amount: ₹ ${item.amount.toStringAsFixed(2)}',
+                  'Records: ${_reportData.length}',
                   style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  'Qty: ${totalQtySum.toStringAsFixed(2)}',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  'Total: ₹ ${totalAmountSum.toStringAsFixed(2)}',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
+                  ),
                 ),
               ],
             ),
-            onTap: () {
-              setState(() {
-                _highlightedIndex = index;
-              });
-            },
           ),
-        );
-      },
+        ),
+      ],
     );
   }
 }

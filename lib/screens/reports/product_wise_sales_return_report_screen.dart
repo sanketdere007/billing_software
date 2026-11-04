@@ -297,7 +297,7 @@ class _ProductWiseSalesReturnReportScreenState
                         ),
                         body: Column(
                           children: [
-                            _buildFilterRow(),
+                            _buildFilterRow(isDesktop: true),
                             Expanded(child: _buildBodyContent(isDesktop: true)),
                           ],
                         ),
@@ -324,7 +324,7 @@ class _ProductWiseSalesReturnReportScreenState
               drawer: const AppDrawer(isPermanent: false),
               body: Column(
                 children: [
-                  _buildFilterRow(),
+                  _buildFilterRow(isDesktop: false),
                   Expanded(child: _buildBodyContent(isDesktop: false)),
                 ],
               ),
@@ -335,7 +335,96 @@ class _ProductWiseSalesReturnReportScreenState
     );
   }
 
-  Widget _buildFilterRow() {
+  Widget _buildFilterRow({required bool isDesktop}) {
+    if (!isDesktop) {
+      return Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Search by product name...',
+                prefixIcon: const Icon(Icons.search, size: 20),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear, size: 18),
+                        onPressed: () {
+                          _searchController.clear();
+                          _fetchReport(refresh: true);
+                        },
+                      )
+                    : null,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+              ),
+              onChanged: (value) {
+                if (_debounce?.isActive ?? false) _debounce!.cancel();
+                _debounce = Timer(const Duration(milliseconds: 500), () {
+                  _fetchReport(refresh: true);
+                });
+              },
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: CustomDatePickerField(
+                    labelText: 'From Date',
+                    initialDate: _fromDate,
+                    lastDate: DateTime.now(),
+                    onDateSelected: (date) {
+                      if (_toDate != null && date.isAfter(_toDate!)) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content:
+                                Text('From Date cannot be later than To Date.'),
+                          ),
+                        );
+                      } else {
+                        setState(() {
+                          _fromDate = date;
+                        });
+                        _fetchReport(refresh: true);
+                      }
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: CustomDatePickerField(
+                    labelText: 'To Date',
+                    initialDate: _toDate,
+                    lastDate: DateTime.now(),
+                    onDateSelected: (date) {
+                      if (_fromDate != null && date.isBefore(_fromDate!)) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                                'To Date cannot be earlier than From Date.'),
+                          ),
+                        );
+                      } else {
+                        setState(() {
+                          _toDate = date;
+                        });
+                        _fetchReport(refresh: true);
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Row(
@@ -448,20 +537,20 @@ class _ProductWiseSalesReturnReportScreenState
 
     return Column(
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.15),
-          child: Row(
-            children: [
-              Text(
-                'Showing ${_reportData.length} records',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-              ),
-              const Spacer(),
-              if (isDesktop)
+        if (isDesktop)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.15),
+            child: Row(
+              children: [
+                Text(
+                  'Showing ${_reportData.length} records',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                ),
+                const Spacer(),
                 Text(
                   'Use ↑ / ↓ arrows to navigate, Enter to view details',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -469,9 +558,9 @@ class _ProductWiseSalesReturnReportScreenState
                         fontSize: 11,
                       ),
                 ),
-            ],
+              ],
+            ),
           ),
-        ),
         Expanded(
           child: isDesktop ? _buildDesktopDataTable() : _buildMobileList(),
         ),
@@ -631,59 +720,227 @@ class _ProductWiseSalesReturnReportScreenState
   }
 
   Widget _buildMobileList() {
-    return ListView.builder(
-      controller: _scrollController,
-      padding: const EdgeInsets.all(8),
-      itemCount: _reportData.length + (_isFetchingMore ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (index == _reportData.length) {
-          return const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Center(child: CircularProgressIndicator()),
-          );
-        }
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
-        final item = _reportData[index];
-        final isSelected = index == _highlightedIndex;
+    double totalQty = 0;
+    double totalAmount = 0;
+    for (var item in _reportData) {
+      totalQty += item.totalReturnQty;
+      totalAmount += item.totalReturnAmount;
+    }
 
-        return Card(
-          elevation: isSelected ? 4 : 1,
-          color: isSelected
-              ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3)
-              : null,
-          child: ListTile(
-            title: Text(
-              item.productName.isNotEmpty
-                  ? item.productName
-                  : 'Unknown Product',
-              style: const TextStyle(fontWeight: FontWeight.bold),
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            itemCount: _reportData.length + (_isFetchingMore ? 1 : 0),
+            itemBuilder: (context, index) {
+              if (index == _reportData.length) {
+                return const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+
+              final item = _reportData[index];
+              final isSelected = index == _highlightedIndex;
+
+              return Card(
+                elevation: 1,
+                margin: const EdgeInsets.symmetric(vertical: 4),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  side: BorderSide(
+                    color: isSelected
+                        ? colorScheme.primary
+                        : colorScheme.outlineVariant.withOpacity(0.6),
+                  ),
+                ),
+                color: isSelected
+                    ? colorScheme.primaryContainer.withOpacity(0.3)
+                    : null,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(10),
+                  onTap: () {
+                    setState(() {
+                      _highlightedIndex = index;
+                    });
+                    _navigateToDetails(item);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 28,
+                              height: 28,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: colorScheme.primaryContainer,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                '#${index + 1}',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: colorScheme.onPrimaryContainer,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item.productName.isNotEmpty
+                                        ? item.productName
+                                        : 'Unknown Product',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Entries: ${item.totalReturnEntries} • Batches: ${item.totalBatches}',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Icon(Icons.chevron_right, size: 20),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        const Divider(height: 1),
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Return Qty',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  item.totalReturnQty.toStringAsFixed(2),
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  'Return Amount',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '₹ ${item.totalReturnAmount.toStringAsFixed(2)}',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: colorScheme.primary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: colorScheme.primaryContainer.withOpacity(0.35),
+            border: Border(
+              top: BorderSide(
+                color: colorScheme.outlineVariant,
+              ),
             ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          ),
+          child: SafeArea(
+            top: false,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Return Entries: ${item.totalReturnEntries} • Batches: ${item.totalBatches}',
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Records: ${_reportData.length}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      'Total Qty: ${totalQty.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
-                Text(
-                  'Return Qty: ${item.totalReturnQty.toStringAsFixed(2)}',
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Return Amount: ₹ ${item.totalReturnAmount.toStringAsFixed(2)}',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Total Return',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    Text(
+                      '₹ ${totalAmount.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              setState(() {
-                _highlightedIndex = index;
-              });
-              _navigateToDetails(item);
-            },
           ),
-        );
-      },
+        ),
+      ],
     );
   }
 }

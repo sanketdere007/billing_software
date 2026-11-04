@@ -1000,185 +1000,263 @@ class _PurchaseEntryDetailReportScreenState
 
   Widget _buildMobileList() {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(12),
-      itemCount: _details.length + 1,
-      itemBuilder: (context, index) {
-        if (index == _details.length) {
-          // Summary Footer Card
-          return Card(
-            margin: const EdgeInsets.only(top: 8, bottom: 20),
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-              side: BorderSide(
-                color: theme.colorScheme.primary.withOpacity(0.3),
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.summarize_outlined,
-                        size: 20,
-                        color: theme.colorScheme.primary,
-                      ),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'Invoice Summary',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            itemCount: _details.length + 1,
+            itemBuilder: (context, index) {
+              if (index == _details.length) {
+                // Summary Footer Card
+                return Card(
+                  margin: const EdgeInsets.only(top: 8, bottom: 20),
+                  elevation: 1,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    side: BorderSide(
+                      color: colorScheme.primary.withOpacity(0.3),
+                    ),
                   ),
-                  const Divider(height: 20),
-                  _buildMobileSummaryRow('Total Items', '${_details.length}'),
-                  _buildMobileSummaryRow(
-                    'Total Quantity',
-                    _totalQty.toStringAsFixed(1),
-                  ),
-                  _buildMobileSummaryRow(
-                    'Sub Total',
-                    '₹ ${_totalGross.toStringAsFixed(2)}',
-                  ),
-                  const Divider(height: 16),
-                  _buildMobileSummaryRow(
-                    'Product-wise Discount',
-                    '₹ ${_totalProductDiscount.toStringAsFixed(2)}',
-                    color: Colors.amber.shade900,
-                  ),
-                  _buildMobileSummaryRow(
-                    _billWiseDiscountPercent > 0
-                        ? 'Bill-wise Discount (${_billWiseDiscountPercent.toStringAsFixed(1)}%)'
-                        : 'Bill-wise Discount',
-                    '₹ ${_billWiseDiscount.toStringAsFixed(2)}',
-                    color: Colors.deepOrange.shade800,
-                  ),
-                  _buildMobileSummaryRow(
-                    'Total Discount',
-                    '₹ ${_totalDiscount.toStringAsFixed(2)}',
-                    color: Colors.orange.shade900,
-                    isBold: true,
-                  ),
-                  const Divider(height: 16),
-                  _buildMobileSummaryRow(
-                    'GST Amount',
-                    '₹ ${_totalGST.toStringAsFixed(2)}',
-                  ),
-                  _buildMobileSummaryRow(
-                    'Net Amount',
-                    '₹ ${_totalAmount.toStringAsFixed(2)}',
-                    color: theme.colorScheme.primary,
-                    isBold: true,
-                    fontSize: 15,
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
-
-        final item = _details[index];
-
-        return Card(
-          margin: const EdgeInsets.symmetric(vertical: 6),
-          elevation: 1.5,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-            side: BorderSide(
-              color: Theme.of(context).dividerColor.withOpacity(0.4),
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            item.prodName.isNotEmpty
-                                ? item.prodName
-                                : 'Product #${item.productId}',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14.5,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.summarize_outlined,
+                              size: 20,
+                              color: colorScheme.primary,
                             ),
-                          ),
-                          if (item.barcode.isNotEmpty ||
-                              item.batchNo.isNotEmpty) ...[
-                            const SizedBox(height: 3),
-                            Text(
-                              [
-                                if (item.barcode.isNotEmpty)
-                                  'Barcode: ${item.barcode}',
-                                if (item.batchNo.isNotEmpty)
-                                  'Batch: ${item.batchNo}',
-                              ].join(' • '),
+                            const SizedBox(width: 8),
+                            const Text(
+                              'Invoice Breakdown',
                               style: TextStyle(
-                                fontSize: 11.5,
-                                color: Theme.of(context).hintColor,
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ],
+                        ),
+                        const Divider(height: 20),
+                        _buildMobileSummaryRow('Total Items', '${_details.length}'),
+                        _buildMobileSummaryRow(
+                          'Total Quantity',
+                          _totalQty.toStringAsFixed(1),
+                        ),
+                        _buildMobileSummaryRow(
+                          'Sub Total',
+                          '₹ ${_totalGross.toStringAsFixed(2)}',
+                        ),
+                        const Divider(height: 16),
+                        _buildMobileSummaryRow(
+                          'Product-wise Discount',
+                          '₹ ${_totalProductDiscount.toStringAsFixed(2)}',
+                          color: Colors.amber.shade900,
+                        ),
+                        _buildMobileSummaryRow(
+                          _billWiseDiscountPercent > 0
+                              ? 'Bill-wise Discount (${_billWiseDiscountPercent.toStringAsFixed(1)}%)'
+                              : 'Bill-wise Discount',
+                          '₹ ${_billWiseDiscount.toStringAsFixed(2)}',
+                          color: Colors.deepOrange.shade800,
+                        ),
+                        _buildMobileSummaryRow(
+                          'Total Discount',
+                          '₹ ${_totalDiscount.toStringAsFixed(2)}',
+                          color: Colors.orange.shade900,
+                          isBold: true,
+                        ),
+                        const Divider(height: 16),
+                        _buildMobileSummaryRow(
+                          'GST Amount',
+                          '₹ ${_totalGST.toStringAsFixed(2)}',
+                        ),
+                        _buildMobileSummaryRow(
+                          'Net Amount',
+                          '₹ ${_totalAmount.toStringAsFixed(2)}',
+                          color: colorScheme.primary,
+                          isBold: true,
+                          fontSize: 15,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              final item = _details[index];
+
+              return Card(
+                margin: const EdgeInsets.symmetric(vertical: 4),
+                elevation: 1,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  side: BorderSide(
+                    color: colorScheme.outlineVariant.withOpacity(0.6),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 28,
+                            height: 28,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: colorScheme.primaryContainer,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              '#${index + 1}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.onPrimaryContainer,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item.prodName.isNotEmpty
+                                      ? item.prodName
+                                      : 'Product #${item.productId}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                if (item.barcode.isNotEmpty ||
+                                    item.batchNo.isNotEmpty) ...[
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    [
+                                      if (item.barcode.isNotEmpty)
+                                        'Barcode: ${item.barcode}',
+                                      if (item.batchNo.isNotEmpty)
+                                        'Batch: ${item.batchNo}',
+                                    ].join(' • '),
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                          Text(
+                            '₹ ${item.totalAmount.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: colorScheme.primary,
+                            ),
+                          ),
                         ],
                       ),
-                    ),
-                    Text(
-                      '₹ ${item.totalAmount.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                        color: Colors.indigo,
+                      const SizedBox(height: 8),
+                      const Divider(height: 1),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _buildMobileMetricCol(
+                            'Qty',
+                            item.qty.toStringAsFixed(1),
+                          ),
+                          _buildMobileMetricCol(
+                            'Rate',
+                            '₹${item.purchasePrice.toStringAsFixed(2)}',
+                          ),
+                          _buildMobileMetricCol(
+                            item.discountPercent > 0
+                                ? 'Disc (${item.discountPercent.toStringAsFixed(0)}%)'
+                                : 'Disc',
+                            '₹${item.discountAmount.toStringAsFixed(2)}',
+                            color: Colors.orange.shade700,
+                          ),
+                          _buildMobileMetricCol(
+                            'GST',
+                            '₹${item.gstAmount.toStringAsFixed(2)}',
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-                const Divider(height: 18),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              );
+            },
+          ),
+        ),
+
+        // Sticky Bottom Summary Bar
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: colorScheme.primaryContainer.withOpacity(0.35),
+            border: Border(
+              top: BorderSide(
+                color: colorScheme.outlineVariant,
+              ),
+            ),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Qty: ${item.qty.toStringAsFixed(1)}',
+                      'Items: ${_details.length} | Qty: ${_totalQty.toStringAsFixed(1)}',
                       style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12.5,
-                      ),
-                    ),
-                    Text(
-                      'Rate: ₹${item.purchasePrice.toStringAsFixed(2)}',
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    Text(
-                      item.discountPercent > 0
-                          ? 'Disc: ₹${item.discountAmount.toStringAsFixed(2)} (${item.discountPercent.toStringAsFixed(0)}%)'
-                          : 'Disc: ₹${item.discountAmount.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        color: Colors.orange,
+                        fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
+                    if (_totalGST > 0)
+                      Text(
+                        'GST: ₹${_totalGST.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
                     Text(
-                      'GST: ₹${item.gstAmount.toStringAsFixed(2)}',
+                      'Net Amount',
                       style: TextStyle(
-                        fontSize: 12.5,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 11,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    Text(
+                      '₹${_totalAmount.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: colorScheme.primary,
                       ),
                     ),
                   ],
@@ -1186,8 +1264,32 @@ class _PurchaseEntryDetailReportScreenState
               ],
             ),
           ),
-        );
-      },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileMetricCol(String label, String value, {Color? color}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: color,
+          ),
+        ),
+      ],
     );
   }
 

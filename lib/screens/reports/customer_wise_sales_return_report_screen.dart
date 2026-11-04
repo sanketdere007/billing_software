@@ -303,7 +303,7 @@ class _CustomerWiseSalesReturnReportScreenState
               body: Column(
                 children: [
                   _buildFilters(isDesktop: false),
-                  Expanded(child: _buildBodyContent()),
+                  Expanded(child: _buildMobileList()),
                 ],
               ),
             );
@@ -1019,6 +1019,347 @@ class _CustomerWiseSalesReturnReportScreenState
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildMobileList() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_errorMessage != null && _reportData == null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.error_outline_rounded,
+              size: 48,
+              color: Colors.red,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Failed to load report',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(_errorMessage!),
+            const SizedBox(height: 16),
+            FilledButton(onPressed: _fetchReport, child: const Text('Retry')),
+          ],
+        ),
+      );
+    }
+
+    final hasPartyTotals =
+        _reportData != null && _reportData!.partyTotals.isNotEmpty;
+    final hasStatement =
+        _reportData != null && _reportData!.statement.isNotEmpty;
+
+    if (!hasPartyTotals && !hasStatement) {
+      return Center(
+        child: Text(
+          _onlyOutstanding
+              ? 'No outstanding sales return records found.'
+              : 'No records found.',
+          style: Theme.of(context).textTheme.bodyLarge,
+        ),
+      );
+    }
+
+    List<CustomerWiseSalesReturnPartyTotal> parties =
+        _reportData!.partyTotals;
+    if (parties.isEmpty && hasStatement) {
+      final Map<int, List<CustomerWiseSalesReturnStatement>> grouped = {};
+      for (var s in _reportData!.statement) {
+        grouped.putIfAbsent(s.customerId, () => []).add(s);
+      }
+      parties = grouped.entries.map((entry) {
+        final first = entry.value.first;
+        final totalBill = entry.value.fold<double>(
+          0.0,
+          (sum, e) => sum + e.billAmount,
+        );
+        final totalPaid = entry.value.fold<double>(
+          0.0,
+          (sum, e) => sum + e.paidAmount,
+        );
+        final totalBal = entry.value.fold<double>(
+          0.0,
+          (sum, e) => sum + e.balanceAmount,
+        );
+        return CustomerWiseSalesReturnPartyTotal(
+          customerId: entry.key,
+          customerCode: first.customerCode,
+          customerName: first.customerName,
+          totalReturns: entry.value.length,
+          totalBillAmount: totalBill,
+          totalPaidAmount: totalPaid,
+          totalBalanceAmount: totalBal,
+          rowType: first.rowType,
+        );
+      }).toList();
+    }
+
+    final theme = Theme.of(context);
+    final grandTotal = _reportData?.grandTotal;
+
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.all(8),
+            itemCount: parties.length,
+            itemBuilder: (context, index) {
+              final partyTotal = parties[index];
+              final returns = _reportData!.statement
+                  .where((inv) => inv.customerId == partyTotal.customerId)
+                  .toList();
+              final isSelected = index == _selectedIndex;
+
+              return Card(
+                elevation: isSelected ? 4 : 1,
+                color: isSelected
+                    ? theme.colorScheme.primaryContainer.withOpacity(0.3)
+                    : null,
+                margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          SizedBox(
+                            width: 32,
+                            child: Text(
+                              '#${index + 1}',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.primary,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              partyTotal.customerCode.isNotEmpty
+                                  ? '${partyTotal.customerName} (${partyTotal.customerCode})'
+                                  : partyTotal.customerName,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                              ),
+                            ),
+                          ),
+                          if (partyTotal.totalReturns > 0)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.primary.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                '${partyTotal.totalReturns} ${partyTotal.totalReturns == 1 ? 'Return' : 'Returns'}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      if (returns.isNotEmpty) ...[
+                        const Divider(height: 16),
+                        ...returns.map((inv) {
+                          return InkWell(
+                            onTap: () => _navigateToDetailScreen(inv),
+                            child: Container(
+                              margin: const EdgeInsets.symmetric(vertical: 4),
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.surfaceVariant.withOpacity(0.25),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'Bill No: ${inv.billNo}',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                      if (inv.returnDate != null)
+                                        Text(
+                                          DateFormat('dd/MM/yyyy').format(inv.returnDate!),
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: theme.colorScheme.onSurfaceVariant,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Bill Amt',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: theme.colorScheme.onSurfaceVariant,
+                                            ),
+                                          ),
+                                          Text(
+                                            '₹ ${inv.billAmount.toStringAsFixed(2)}',
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 12.5,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            'Paid Amt',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: theme.colorScheme.onSurfaceVariant,
+                                            ),
+                                          ),
+                                          Text(
+                                            '₹ ${inv.paidAmount.toStringAsFixed(2)}',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 12.5,
+                                              color: Colors.green.shade700,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                        children: [
+                                          Text(
+                                            'Balance',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: theme.colorScheme.onSurfaceVariant,
+                                            ),
+                                          ),
+                                          Text(
+                                            '₹ ${inv.balanceAmount.toStringAsFixed(2)}',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 12.5,
+                                              color: inv.balanceAmount > 0
+                                                  ? Colors.red.shade700
+                                                  : Colors.green.shade700,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      if (inv.days > 0)
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: Colors.orange.withOpacity(0.15),
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                          child: Text(
+                                            '${inv.days}d',
+                                            style: const TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.deepOrange,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }),
+                      ],
+                      const Divider(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Total Bill: ₹ ${partyTotal.totalBillAmount.toStringAsFixed(2)}',
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            'Total Bal: ₹ ${partyTotal.totalBalanceAmount.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: partyTotal.totalBalanceAmount > 0
+                                  ? Colors.red.shade700
+                                  : Colors.green.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        if (grandTotal != null && grandTotal.totalPages > 1)
+          _buildPaginationBar(grandTotal),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primaryContainer.withOpacity(0.35),
+            border: Border(
+              top: BorderSide(color: theme.colorScheme.outlineVariant),
+            ),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Parties: ${parties.length}',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  'Bill: ₹ ${(grandTotal?.grandTotalBillAmount ?? 0.0).toStringAsFixed(2)}',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  'Due: ₹ ${(grandTotal?.grandTotalBalanceAmount ?? 0.0).toStringAsFixed(2)}',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: (grandTotal?.grandTotalBalanceAmount ?? 0.0) > 0
+                        ? Colors.red.shade700
+                        : null,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

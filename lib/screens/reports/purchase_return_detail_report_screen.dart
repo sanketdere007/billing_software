@@ -860,103 +860,186 @@ class _PurchaseReturnDetailReportScreenState
   }
 
   Widget _buildMobileList() {
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      itemCount: _details.length,
-      itemBuilder: (context, index) {
-        final item = _details[index];
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
-        return Card(
-          elevation: 1,
-          margin: const EdgeInsets.symmetric(vertical: 5),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-            side: BorderSide(
-              color: Theme.of(context).dividerColor.withOpacity(0.4),
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    CircleAvatar(
-                      radius: 14,
-                      backgroundColor: Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withOpacity(0.12),
-                      child: Text(
-                        '${index + 1}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            itemCount: _details.length,
+            itemBuilder: (context, index) {
+              final item = _details[index];
+
+              return Card(
+                elevation: 1,
+                margin: const EdgeInsets.symmetric(vertical: 4),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  side: BorderSide(
+                    color: colorScheme.outlineVariant.withOpacity(0.6),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            item.productName.isNotEmpty
-                                ? item.productName
-                                : 'Product #${item.productId}',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                          Container(
+                            width: 28,
+                            height: 28,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: colorScheme.primaryContainer,
+                              borderRadius: BorderRadius.circular(6),
                             ),
-                          ),
-                          if (item.productCode.isNotEmpty)
-                            Text(
-                              'Code: ${item.productCode}',
+                            child: Text(
+                              '#${index + 1}',
                               style: TextStyle(
-                                fontSize: 12,
-                                color: Theme.of(context).hintColor,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.onPrimaryContainer,
                               ),
                             ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item.productName.isNotEmpty
+                                      ? item.productName
+                                      : 'Product #${item.productId}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                if (item.productCode.isNotEmpty) ...[
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Code: ${item.productCode}',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                          Text(
+                            '₹ ${item.totalAmount.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: colorScheme.primary,
+                            ),
+                          ),
                         ],
+                      ),
+                      const SizedBox(height: 8),
+                      const Divider(height: 1),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _buildMobileLabelValue(
+                            'Qty',
+                            item.qty.toStringAsFixed(2),
+                          ),
+                          _buildMobileLabelValue(
+                            'Price',
+                            '₹${item.purchasePrice.toStringAsFixed(2)}',
+                          ),
+                          _buildMobileLabelValue(
+                            'Batch',
+                            item.batchNumber.isNotEmpty ? item.batchNumber : '-',
+                          ),
+                          _buildMobileLabelValue(
+                            'GST',
+                            item.gstAmount > 0
+                                ? '₹${item.gstAmount.toStringAsFixed(2)}'
+                                : '-',
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+
+        // Sticky Bottom Summary Bar
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: colorScheme.primaryContainer.withOpacity(0.35),
+            border: Border(
+              top: BorderSide(
+                color: colorScheme.outlineVariant,
+              ),
+            ),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Items: ${_details.length} | Qty: ${_totalQty.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    if (_totalGST > 0)
+                      Text(
+                        'GST: ₹${_totalGST.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Total Return',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ),
                     Text(
-                      '₹ ${item.totalAmount.toStringAsFixed(2)}',
-                      style: const TextStyle(
+                      '₹${_totalAmount.toStringAsFixed(2)}',
+                      style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                        color: Colors.indigo,
+                        fontSize: 16,
+                        color: colorScheme.primary,
                       ),
-                    ),
-                  ],
-                ),
-                const Divider(height: 18),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildMobileLabelValue('Qty', item.qty.toStringAsFixed(2)),
-                    _buildMobileLabelValue(
-                        'Price', '₹ ${item.purchasePrice.toStringAsFixed(2)}'),
-                    _buildMobileLabelValue(
-                      'Batch',
-                      item.batchNumber.isNotEmpty ? item.batchNumber : '-',
-                    ),
-                    _buildMobileLabelValue(
-                      'GST',
-                      item.gstAmount > 0
-                          ? '₹ ${item.gstAmount.toStringAsFixed(2)}'
-                          : '-',
                     ),
                   ],
                 ),
               ],
             ),
           ),
-        );
-      },
+        ),
+      ],
     );
   }
 
