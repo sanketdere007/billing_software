@@ -39,9 +39,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (newFromDate.isAfter(_toDate)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-            'From Date cannot be greater than To Date.',
-          ),
+          content: Text('From Date cannot be greater than To Date.'),
         ),
       );
       return;
@@ -174,7 +172,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 vertical: 8.0,
                               ),
                               child: CustomDatePickerField(
-                                key: ValueKey('desktop_from_${_fromDate.millisecondsSinceEpoch}'),
+                                key: ValueKey(
+                                  'desktop_from_${_fromDate.millisecondsSinceEpoch}',
+                                ),
                                 initialDate: _fromDate,
                                 lastDate: DateTime.now(),
                                 labelText: 'From Date',
@@ -192,7 +192,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 vertical: 8.0,
                               ),
                               child: CustomDatePickerField(
-                                key: ValueKey('desktop_to_${_toDate.millisecondsSinceEpoch}'),
+                                key: ValueKey(
+                                  'desktop_to_${_toDate.millisecondsSinceEpoch}',
+                                ),
                                 initialDate: _toDate,
                                 lastDate: DateTime.now(),
                                 labelText: 'To Date',
@@ -216,51 +218,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           );
         } else {
-          // Mobile Layout (Collapsible Drawer)
+          // Mobile / Tablet Layout (Collapsible Drawer)
           return Scaffold(
             appBar: AppBar(
               title: const Text('Dashboard'),
               backgroundColor: isDark ? Colors.grey[900] : Colors.blue.shade700,
               foregroundColor: Colors.white,
               elevation: 0,
-              actions: [
-                Center(
-                  child: SizedBox(
-                    width: 110,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: CustomDatePickerField(
-                        key: ValueKey('mobile_from_${_fromDate.millisecondsSinceEpoch}'),
-                        initialDate: _fromDate,
-                        lastDate: DateTime.now(),
-                        labelText: 'From',
-                        onDateSelected: _onFromDateSelected,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Center(
-                  child: SizedBox(
-                    width: 110,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: CustomDatePickerField(
-                        key: ValueKey('mobile_to_${_toDate.millisecondsSinceEpoch}'),
-                        initialDate: _toDate,
-                        lastDate: DateTime.now(),
-                        labelText: 'To',
-                        onDateSelected: _onToDateSelected,
-                      ),
-                    ),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.refresh),
-                  onPressed: _handleRefresh,
-                  tooltip: 'Refresh Dashboard',
-                ),
-              ],
+              // No date-picker actions in mobile AppBar – they live in the
+              // sticky date-filter bar directly below.
             ),
             drawer: const AppDrawer(isPermanent: false),
             body: _buildDashboardContent(context, isDesktop, isDark),
@@ -280,6 +246,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ── Sticky Date-Filter Bar (Mobile / Tablet only) ──────────────────
+          if (!isDesktop)
+            Container(
+              color: isDark ? Colors.grey[900] : Colors.blue.shade700,
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: CustomDatePickerField(
+                      key: ValueKey(
+                        'mobile_from_${_fromDate.millisecondsSinceEpoch}',
+                      ),
+                      initialDate: _fromDate,
+                      lastDate: DateTime.now(),
+                      labelText: 'From Date',
+                      onDateSelected: _onFromDateSelected,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: CustomDatePickerField(
+                      key: ValueKey(
+                        'mobile_to_${_toDate.millisecondsSinceEpoch}',
+                      ),
+                      initialDate: _toDate,
+                      lastDate: DateTime.now(),
+                      labelText: 'To Date',
+                      onDateSelected: _onToDateSelected,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          // ── Scrollable Dashboard Content ───────────────────────────────────
           Expanded(
             child: RefreshIndicator(
               onRefresh: _handleRefresh,
@@ -289,9 +289,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Hiding quick action section as requested
-                    // const QuickActions(),
-                    // const SizedBox(height: 32),
                     SummaryCards(
                       summaryData: _summaryData,
                       isLoading: _isLoading,
@@ -301,16 +298,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       toDate: _toDate,
                     ),
                     const SizedBox(height: 32),
-
                     DashboardCharts(
                       key: _dashboardChartsKey,
                       fromDate: _fromDate,
                       toDate: _toDate,
                     ),
-                    // const SizedBox(height: 32),
-
-                    // const DashboardSections(),
-                    // const SizedBox(height: 32),
                   ],
                 ),
               ),

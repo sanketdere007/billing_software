@@ -131,7 +131,7 @@ class DashboardChartsState extends State<DashboardCharts> {
             else ...[
               _buildSalesTrendChart(context),
               const SizedBox(height: 24),
-             // _buildCollectionDonutChart(context),
+              // _buildCollectionDonutChart(context),
             ],
             const SizedBox(height: 24),
             if (isDesktop)
@@ -294,7 +294,7 @@ class DashboardChartsState extends State<DashboardCharts> {
 
     return Container(
       height: height,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),

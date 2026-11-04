@@ -337,7 +337,7 @@ class _ProductWiseCustomerPurchaseListScreenState
                   ),
                 ],
               ),
-              drawer: const AppDrawer(isPermanent: false),
+              //   drawer: const AppDrawer(isPermanent: false),
               body: Column(
                 children: [
                   _buildMobileFilterBar(),

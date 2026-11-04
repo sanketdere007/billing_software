@@ -15,10 +15,12 @@ class ProductWiseSalesReportScreen extends StatefulWidget {
   const ProductWiseSalesReportScreen({super.key});
 
   @override
-  State<ProductWiseSalesReportScreen> createState() => _ProductWiseSalesReportScreenState();
+  State<ProductWiseSalesReportScreen> createState() =>
+      _ProductWiseSalesReportScreenState();
 }
 
-class _ProductWiseSalesReportScreenState extends State<ProductWiseSalesReportScreen> {
+class _ProductWiseSalesReportScreenState
+    extends State<ProductWiseSalesReportScreen> {
   final FocusNode _screenFocusNode = FocusNode();
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
@@ -29,7 +31,7 @@ class _ProductWiseSalesReportScreenState extends State<ProductWiseSalesReportScr
   bool _hasMoreData = true;
   int _pageNumber = 1;
   static const int _pageSize = 15;
-  
+
   String? _errorMessage;
   List<ProductWiseSalesItem> _reportData = [];
   int _highlightedIndex = 0;
@@ -63,14 +65,15 @@ class _ProductWiseSalesReportScreenState extends State<ProductWiseSalesReportScr
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
       _fetchMoreData();
     }
   }
 
   Future<void> _fetchMoreData() async {
     if (_isLoading || _isFetchingMore || !_hasMoreData) return;
-    
+
     setState(() {
       _isFetchingMore = true;
     });
@@ -79,16 +82,17 @@ class _ProductWiseSalesReportScreenState extends State<ProductWiseSalesReportScr
       final nextPage = _pageNumber + 1;
       final compId = sessionService.selectedCompId ?? 0;
       final branchId = sessionService.selectedBranchId ?? 0;
-      
-      final response = await productWiseSalesReportService.getProductWiseSalesReport(
-        compId: compId,
-        branchId: branchId,
-        fromDate: _fromDate ?? DateTime.now(),
-        toDate: _toDate ?? DateTime.now(),
-        searchText: _searchController.text.trim(),
-        pageNumber: nextPage,
-        pageSize: _pageSize,
-      );
+
+      final response = await productWiseSalesReportService
+          .getProductWiseSalesReport(
+            compId: compId,
+            branchId: branchId,
+            fromDate: _fromDate ?? DateTime.now(),
+            toDate: _toDate ?? DateTime.now(),
+            searchText: _searchController.text.trim(),
+            pageNumber: nextPage,
+            pageSize: _pageSize,
+          );
 
       if (mounted) {
         setState(() {
@@ -129,7 +133,7 @@ class _ProductWiseSalesReportScreenState extends State<ProductWiseSalesReportScr
         }
       });
       _scrollToIndex(_highlightedIndex);
-      
+
       if (_highlightedIndex >= _reportData.length - 5) {
         _fetchMoreData();
       }
@@ -148,7 +152,8 @@ class _ProductWiseSalesReportScreenState extends State<ProductWiseSalesReportScr
       return KeyEventResult.handled;
     }
 
-    if (key == LogicalKeyboardKey.enter || key == LogicalKeyboardKey.numpadEnter) {
+    if (key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.numpadEnter) {
       if (_highlightedIndex >= 0 && _highlightedIndex < _reportData.length) {
         _navigateToDetails(_reportData[_highlightedIndex]);
         return KeyEventResult.handled;
@@ -161,7 +166,7 @@ class _ProductWiseSalesReportScreenState extends State<ProductWiseSalesReportScr
   void _scrollToIndex(int index) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_scrollController.hasClients) return;
-      const double rowHeight = 58.0; 
+      const double rowHeight = 58.0;
       final targetOffset = index * rowHeight;
       final currentOffset = _scrollController.offset;
       final viewportHeight = _scrollController.position.viewportDimension;
@@ -200,28 +205,34 @@ class _ProductWiseSalesReportScreenState extends State<ProductWiseSalesReportScr
       final compId = sessionService.selectedCompId ?? 0;
       final branchId = sessionService.selectedBranchId ?? 0;
 
-      final response = await productWiseSalesReportService.getProductWiseSalesReport(
-        compId: compId,
-        branchId: branchId,
-        fromDate: _fromDate ?? DateTime.now(),
-        toDate: _toDate ?? DateTime.now(),
-        searchText: _searchController.text.trim(),
-        pageNumber: 1,
-        pageSize: _pageSize,
-      );
-      
+      final response = await productWiseSalesReportService
+          .getProductWiseSalesReport(
+            compId: compId,
+            branchId: branchId,
+            fromDate: _fromDate ?? DateTime.now(),
+            toDate: _toDate ?? DateTime.now(),
+            searchText: _searchController.text.trim(),
+            pageNumber: 1,
+            pageSize: _pageSize,
+          );
+
       if (mounted) {
         setState(() {
           if (response.status) {
             _reportData = response.items;
             _hasMoreData = response.items.length == _pageSize;
           } else {
-            _errorMessage = response.message.isNotEmpty ? response.message : 'Unknown error';
+            _errorMessage = response.message.isNotEmpty
+                ? response.message
+                : 'Unknown error';
           }
           _isLoading = false;
-          
+
           if (_reportData.isNotEmpty) {
-            _highlightedIndex = _highlightedIndex.clamp(0, _reportData.length - 1);
+            _highlightedIndex = _highlightedIndex.clamp(
+              0,
+              _reportData.length - 1,
+            );
           } else {
             _highlightedIndex = 0;
           }
@@ -281,14 +292,16 @@ class _ProductWiseSalesReportScreenState extends State<ProductWiseSalesReportScr
                             IconButton(
                               icon: const Icon(Icons.refresh_rounded),
                               tooltip: 'Refresh',
-                              onPressed: _isLoading ? null : () => _fetchReport(refresh: true),
+                              onPressed: _isLoading
+                                  ? null
+                                  : () => _fetchReport(refresh: true),
                             ),
                             const SizedBox(width: 16),
                           ],
                         ),
                         body: Column(
                           children: [
-                            _buildFilterRow(),
+                            _buildFilterRowDesktop(),
                             Expanded(child: _buildBodyContent(isDesktop: true)),
                           ],
                         ),
@@ -306,14 +319,17 @@ class _ProductWiseSalesReportScreenState extends State<ProductWiseSalesReportScr
                   IconButton(
                     icon: const Icon(Icons.refresh_rounded),
                     tooltip: 'Refresh',
-                    onPressed: _isLoading ? null : () => _fetchReport(refresh: true),
+                    onPressed: _isLoading
+                        ? null
+                        : () => _fetchReport(refresh: true),
                   ),
                 ],
               ),
               drawer: const AppDrawer(isPermanent: false),
               body: Column(
                 children: [
-                  _buildFilterRow(),
+                  if (isDesktop) _buildFilterRowDesktop(),
+                  if (!isDesktop) _buildFilterRowMobile(),
                   Expanded(child: _buildBodyContent(isDesktop: false)),
                 ],
               ),
@@ -324,7 +340,7 @@ class _ProductWiseSalesReportScreenState extends State<ProductWiseSalesReportScr
     );
   }
 
-  Widget _buildFilterRow() {
+  Widget _buildFilterRowDesktop() {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Row(
@@ -381,7 +397,9 @@ class _ProductWiseSalesReportScreenState extends State<ProductWiseSalesReportScr
                 if (_fromDate != null && date.isBefore(_fromDate!)) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('To Date cannot be earlier than From Date.'),
+                      content: Text(
+                        'To Date cannot be earlier than From Date.',
+                      ),
                     ),
                   );
                 } else {
@@ -398,6 +416,96 @@ class _ProductWiseSalesReportScreenState extends State<ProductWiseSalesReportScr
     );
   }
 
+  Widget _buildFilterRowMobile() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _searchController,
+            decoration: const InputDecoration(
+              labelText: 'Search',
+              border: OutlineInputBorder(),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 8,
+              ),
+            ),
+            onChanged: (value) {
+              if (_debounce?.isActive ?? false) {
+                _debounce!.cancel();
+              }
+
+              _debounce = Timer(
+                const Duration(milliseconds: 500),
+                    () {
+                  _fetchReport(refresh: true);
+                },
+              );
+            },
+          ),
+
+          const SizedBox(height: 12),
+
+          Row(
+            children: [
+              Expanded(
+                child: CustomDatePickerField(
+                  labelText: 'From Date',
+                  initialDate: _fromDate,
+                  lastDate: DateTime.now(),
+                  onDateSelected: (date) {
+                    if (_toDate != null && date.isAfter(_toDate!)) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'From Date cannot be later than To Date.',
+                          ),
+                        ),
+                      );
+                    } else {
+                      setState(() {
+                        _fromDate = date;
+                      });
+                      _fetchReport(refresh: true);
+                    }
+                  },
+                ),
+              ),
+
+              const SizedBox(width: 12),
+
+              Expanded(
+                child: CustomDatePickerField(
+                  labelText: 'To Date',
+                  initialDate: _toDate,
+                  lastDate: DateTime.now(),
+                  onDateSelected: (date) {
+                    if (_fromDate != null && date.isBefore(_fromDate!)) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'To Date cannot be earlier than From Date.',
+                          ),
+                        ),
+                      );
+                    } else {
+                      setState(() {
+                        _toDate = date;
+                      });
+                      _fetchReport(refresh: true);
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildBodyContent({required bool isDesktop}) {
     if (_isLoading && _reportData.isEmpty) {
       return const Center(child: CircularProgressIndicator());
@@ -408,13 +516,23 @@ class _ProductWiseSalesReportScreenState extends State<ProductWiseSalesReportScr
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline_rounded, size: 48, color: Colors.red),
+            const Icon(
+              Icons.error_outline_rounded,
+              size: 48,
+              color: Colors.red,
+            ),
             const SizedBox(height: 16),
-            Text('Failed to load report', style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              'Failed to load report',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 8),
             Text(_errorMessage!),
             const SizedBox(height: 16),
-            FilledButton(onPressed: () => _fetchReport(refresh: true), child: const Text('Retry')),
+            FilledButton(
+              onPressed: () => _fetchReport(refresh: true),
+              child: const Text('Retry'),
+            ),
           ],
         ),
       );
@@ -471,16 +589,50 @@ class _ProductWiseSalesReportScreenState extends State<ProductWiseSalesReportScr
               padding: const EdgeInsets.symmetric(horizontal: 20),
               decoration: BoxDecoration(
                 color: theme.colorScheme.primaryContainer.withOpacity(0.35),
-                border: Border(bottom: BorderSide(color: theme.colorScheme.outlineVariant)),
+                border: Border(
+                  bottom: BorderSide(color: theme.colorScheme.outlineVariant),
+                ),
               ),
               child: const Row(
                 children: [
-                  SizedBox(width: 50, child: Text('#', style: TextStyle(fontWeight: FontWeight.bold))),
-                  Expanded(flex: 3, child: Text('Product Name', style: TextStyle(fontWeight: FontWeight.bold))),
-                  Expanded(flex: 1, child: Text('HSN Code', style: TextStyle(fontWeight: FontWeight.bold))),
-                  Expanded(flex: 1, child: Text('Quantity', textAlign: TextAlign.right, style: TextStyle(fontWeight: FontWeight.bold))),
-             //     Expanded(flex: 1, child: Text('Free Qty', textAlign: TextAlign.right, style: TextStyle(fontWeight: FontWeight.bold))),
-                  Expanded(flex: 2, child: Text('Total Amount', textAlign: TextAlign.right, style: TextStyle(fontWeight: FontWeight.bold))),
+                  SizedBox(
+                    width: 50,
+                    child: Text(
+                      '#',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 3,
+                    child: Text(
+                      'Product Name',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 1,
+                    child: Text(
+                      'HSN Code',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 1,
+                    child: Text(
+                      'Quantity',
+                      textAlign: TextAlign.right,
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  //     Expanded(flex: 1, child: Text('Free Qty', textAlign: TextAlign.right, style: TextStyle(fontWeight: FontWeight.bold))),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      'Total Amount',
+                      textAlign: TextAlign.right,
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -499,7 +651,7 @@ class _ProductWiseSalesReportScreenState extends State<ProductWiseSalesReportScr
 
                   final item = _reportData[index];
                   final isSelected = index == _highlightedIndex;
-                  
+
                   return InkWell(
                     onTap: () {
                       setState(() {
@@ -511,23 +663,53 @@ class _ProductWiseSalesReportScreenState extends State<ProductWiseSalesReportScr
                       height: 58,
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       decoration: BoxDecoration(
-                        color: isSelected ? theme.colorScheme.primaryContainer.withOpacity(0.3) : null,
-                        border: Border(bottom: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.3))),
+                        color: isSelected
+                            ? theme.colorScheme.primaryContainer.withOpacity(
+                                0.3,
+                              )
+                            : null,
+                        border: Border(
+                          bottom: BorderSide(
+                            color: theme.colorScheme.outlineVariant.withOpacity(
+                              0.3,
+                            ),
+                          ),
+                        ),
                       ),
                       child: Row(
                         children: [
                           SizedBox(width: 50, child: Text('${index + 1}')),
-                          Expanded(flex: 3, child: Text(item.productName.isNotEmpty ? item.productName : 'N/A')),
-                          Expanded(flex: 1, child: Text(item.hsnCode.isNotEmpty ? item.hsnCode : '-')),
-                          Expanded(flex: 1, child: Text(item.totalQty.toStringAsFixed(2), textAlign: TextAlign.right)),
-                        //  Expanded(flex: 1, child: Text(item.totalFreeQty.toStringAsFixed(2), textAlign: TextAlign.right)),
                           Expanded(
-                            flex: 2, 
+                            flex: 3,
                             child: Text(
-                              '₹ ${item.totalAmount.toStringAsFixed(2)}', 
+                              item.productName.isNotEmpty
+                                  ? item.productName
+                                  : 'N/A',
+                            ),
+                          ),
+                          Expanded(
+                            flex: 1,
+                            child: Text(
+                              item.hsnCode.isNotEmpty ? item.hsnCode : '-',
+                            ),
+                          ),
+                          Expanded(
+                            flex: 1,
+                            child: Text(
+                              item.totalQty.toStringAsFixed(2),
                               textAlign: TextAlign.right,
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            )
+                            ),
+                          ),
+                          //  Expanded(flex: 1, child: Text(item.totalFreeQty.toStringAsFixed(2), textAlign: TextAlign.right)),
+                          Expanded(
+                            flex: 2,
+                            child: Text(
+                              '₹ ${item.totalAmount.toStringAsFixed(2)}',
+                              textAlign: TextAlign.right,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -557,17 +739,28 @@ class _ProductWiseSalesReportScreenState extends State<ProductWiseSalesReportScr
 
         final item = _reportData[index];
         final isSelected = index == _highlightedIndex;
-        
+
         return Card(
           elevation: isSelected ? 4 : 1,
-          color: isSelected ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3) : null,
+          color: isSelected
+              ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3)
+              : null,
           child: ListTile(
-            title: Text(item.productName.isNotEmpty ? item.productName : 'Unknown Product', style: const TextStyle(fontWeight: FontWeight.bold)),
+            title: Text(
+              item.productName.isNotEmpty
+                  ? item.productName
+                  : 'Unknown Product',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('HSN: ${item.hsnCode.isNotEmpty ? item.hsnCode : '-'} • Invoices: ${item.totalInvoices}'),
-                Text('Qty: ${item.totalQty.toStringAsFixed(2)} • Free: ${item.totalFreeQty.toStringAsFixed(2)}'),
+                Text(
+                  'HSN: ${item.hsnCode.isNotEmpty ? item.hsnCode : '-'} • Invoices: ${item.totalInvoices}',
+                ),
+                Text(
+                  'Qty: ${item.totalQty.toStringAsFixed(2)} • Free: ${item.totalFreeQty.toStringAsFixed(2)}',
+                ),
                 const SizedBox(height: 4),
                 Text(
                   'Amount: ₹ ${item.totalAmount.toStringAsFixed(2)}',

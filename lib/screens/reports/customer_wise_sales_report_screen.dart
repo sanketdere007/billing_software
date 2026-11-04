@@ -65,10 +65,18 @@ class _CustomerWiseSalesReportScreenState
 
     final now = DateTime.now();
     _toDate = widget.initialToDate != null
-        ? DateTime(widget.initialToDate!.year, widget.initialToDate!.month, widget.initialToDate!.day)
+        ? DateTime(
+            widget.initialToDate!.year,
+            widget.initialToDate!.month,
+            widget.initialToDate!.day,
+          )
         : DateTime(now.year, now.month, now.day);
     _fromDate = widget.initialFromDate != null
-        ? DateTime(widget.initialFromDate!.year, widget.initialFromDate!.month, widget.initialFromDate!.day)
+        ? DateTime(
+            widget.initialFromDate!.year,
+            widget.initialFromDate!.month,
+            widget.initialFromDate!.day,
+          )
         : DateTime(_toDate!.year, _toDate!.month, _toDate!.day - 7);
 
     _fetchReport(refresh: true);
@@ -108,7 +116,10 @@ class _CustomerWiseSalesReportScreenState
     });
   }
 
-  CustomerWiseSalesReportRequest _buildRequest({required int page, int pageSize = _pageSize}) {
+  CustomerWiseSalesReportRequest _buildRequest({
+    required int page,
+    int pageSize = _pageSize,
+  }) {
     final compId = sessionService.selectedCompId ?? 0;
     final branchId = sessionService.selectedBranchId ?? 0;
 
@@ -134,8 +145,8 @@ class _CustomerWiseSalesReportScreenState
     try {
       final nextPage = _pageNumber + 1;
       final request = _buildRequest(page: nextPage);
-      final response =
-          await customerWiseSalesReportService.getCustomerWiseSalesReport(request);
+      final response = await customerWiseSalesReportService
+          .getCustomerWiseSalesReport(request);
 
       if (mounted) {
         setState(() {
@@ -182,8 +193,8 @@ class _CustomerWiseSalesReportScreenState
 
     try {
       final request = _buildRequest(page: 1);
-      final response =
-          await customerWiseSalesReportService.getCustomerWiseSalesReport(request);
+      final response = await customerWiseSalesReportService
+          .getCustomerWiseSalesReport(request);
 
       if (mounted) {
         setState(() {
@@ -318,8 +329,8 @@ class _CustomerWiseSalesReportScreenState
     const exportPageSize = 200;
     for (var safety = 0; safety < 200; safety++) {
       final request = _buildRequest(page: page, pageSize: exportPageSize);
-      final response =
-          await customerWiseSalesReportService.getCustomerWiseSalesReport(request);
+      final response = await customerWiseSalesReportService
+          .getCustomerWiseSalesReport(request);
       final newItems = response.data?.items ?? [];
       if (newItems.isEmpty) break;
       allRecords.addAll(newItems);
@@ -360,7 +371,9 @@ class _CustomerWiseSalesReportScreenState
     } catch (e) {
       if (!mounted) return;
       await showErrorDialog(
-          context, 'Failed to export customer sales report: $e');
+        context,
+        'Failed to export customer sales report: $e',
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -373,7 +386,12 @@ class _CustomerWiseSalesReportScreenState
   void _showCustomerDetailsDialog(CustomerWiseSalesReportItem item) {
     final theme = Theme.of(context);
 
-    Widget buildRow(String label, String value, {bool isBold = false, Color? valueColor}) {
+    Widget buildRow(
+      String label,
+      String value, {
+      bool isBold = false,
+      Color? valueColor,
+    }) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Row(
@@ -458,16 +476,24 @@ class _CustomerWiseSalesReportScreenState
                 children: [
                   if (item.billingAddress.isNotEmpty)
                     buildRow('Billing Address', item.billingAddress),
-                  if (item.gstNo.isNotEmpty)
-                    buildRow('GST No', item.gstNo),
+                  if (item.gstNo.isNotEmpty) buildRow('GST No', item.gstNo),
                   const Divider(height: 16),
                   buildRow('Total Invoices', '${item.totalInvoices}'),
                   buildRow('Total Quantity', item.totalQty.toStringAsFixed(2)),
-                  buildRow('Sub Total', '₹ ${item.subTotal.toStringAsFixed(2)}'),
+                  buildRow(
+                    'Sub Total',
+                    '₹ ${item.subTotal.toStringAsFixed(2)}',
+                  ),
                   if (item.itemDiscount > 0)
-                    buildRow('Item Discount', '₹ ${item.itemDiscount.toStringAsFixed(2)}'),
+                    buildRow(
+                      'Item Discount',
+                      '₹ ${item.itemDiscount.toStringAsFixed(2)}',
+                    ),
                   if (item.billWiseDiscount > 0)
-                    buildRow('Bill Discount', '₹ ${item.billWiseDiscount.toStringAsFixed(2)}'),
+                    buildRow(
+                      'Bill Discount',
+                      '₹ ${item.billWiseDiscount.toStringAsFixed(2)}',
+                    ),
                   if (item.totalCGST > 0)
                     buildRow('CGST', '₹ ${item.totalCGST.toStringAsFixed(2)}'),
                   if (item.totalSGST > 0)
@@ -477,7 +503,10 @@ class _CustomerWiseSalesReportScreenState
                   if (item.totalCESS > 0)
                     buildRow('CESS', '₹ ${item.totalCESS.toStringAsFixed(2)}'),
                   if (item.totalRoundOff != 0)
-                    buildRow('Round Off', '₹ ${item.totalRoundOff.toStringAsFixed(2)}'),
+                    buildRow(
+                      'Round Off',
+                      '₹ ${item.totalRoundOff.toStringAsFixed(2)}',
+                    ),
                   const Divider(height: 16),
                   buildRow(
                     'Total Sales',
@@ -495,15 +524,26 @@ class _CustomerWiseSalesReportScreenState
                     'Total Outstanding',
                     '₹ ${item.totalOutstanding.toStringAsFixed(2)}',
                     isBold: true,
-                    valueColor: item.totalOutstanding > 0 ? Colors.red.shade700 : Colors.green.shade700,
+                    valueColor: item.totalOutstanding > 0
+                        ? Colors.red.shade700
+                        : Colors.green.shade700,
                   ),
                   const Divider(height: 16),
                   if (item.firstSaleDate != null)
-                    buildRow('First Sale Date', _displayFormat.format(item.firstSaleDate!)),
+                    buildRow(
+                      'First Sale Date',
+                      _displayFormat.format(item.firstSaleDate!),
+                    ),
                   if (item.lastSaleDate != null)
-                    buildRow('Last Sale Date', _displayFormat.format(item.lastSaleDate!)),
+                    buildRow(
+                      'Last Sale Date',
+                      _displayFormat.format(item.lastSaleDate!),
+                    ),
                   if (item.salesMasterInvoiceDate != null)
-                    buildRow('Last Invoice Date', _displayFormat.format(item.salesMasterInvoiceDate!)),
+                    buildRow(
+                      'Last Invoice Date',
+                      _displayFormat.format(item.salesMasterInvoiceDate!),
+                    ),
                 ],
               ),
             ),
@@ -634,50 +674,47 @@ class _CustomerWiseSalesReportScreenState
           child: _isLoading && _reportData.isEmpty
               ? const Center(child: CircularProgressIndicator())
               : _errorMessage != null && _reportData.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.error_outline_rounded,
-                            size: 48,
-                            color: Colors.red,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Failed to load report',
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          const SizedBox(height: 8),
-                          Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 24),
-                            child: Text(
-                              _errorMessage!,
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          FilledButton(
-                            onPressed: () => _fetchReport(refresh: true),
-                            child: const Text('Retry'),
-                          ),
-                        ],
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.error_outline_rounded,
+                        size: 48,
+                        color: Colors.red,
                       ),
-                    )
-                  : _reportData.isEmpty
-                      ? const Center(
-                          child: Text('No customer sales records found.'),
-                        )
-                      : Column(
-                          children: [
-                            Expanded(
-                              child: isDesktop
-                                  ? _buildDesktopDataTable()
-                                  : _buildMobileList(),
-                            ),
-                          ],
+                      const SizedBox(height: 16),
+                      Text(
+                        'Failed to load report',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 8),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Text(
+                          _errorMessage!,
+                          textAlign: TextAlign.center,
                         ),
+                      ),
+                      const SizedBox(height: 16),
+                      FilledButton(
+                        onPressed: () => _fetchReport(refresh: true),
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                )
+              : _reportData.isEmpty
+              ? const Center(child: Text('No customer sales records found.'))
+              : Column(
+                  children: [
+                    Expanded(
+                      child: isDesktop
+                          ? _buildDesktopDataTable()
+                          : _buildMobileList(),
+                    ),
+                  ],
+                ),
         ),
       ],
     );
@@ -726,7 +763,9 @@ class _CustomerWiseSalesReportScreenState
                   if (_toDate != null && date.isAfter(_toDate!)) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('From Date cannot be later than To Date.'),
+                        content: Text(
+                          'From Date cannot be later than To Date.',
+                        ),
                       ),
                     );
                   } else {
@@ -749,8 +788,9 @@ class _CustomerWiseSalesReportScreenState
                   if (_fromDate != null && date.isBefore(_fromDate!)) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content:
-                            Text('To Date cannot be earlier than From Date.'),
+                        content: Text(
+                          'To Date cannot be earlier than From Date.',
+                        ),
                       ),
                     );
                   } else {
@@ -824,8 +864,9 @@ class _CustomerWiseSalesReportScreenState
                     if (_toDate != null && date.isAfter(_toDate!)) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content:
-                              Text('From Date cannot be later than To Date.'),
+                          content: Text(
+                            'From Date cannot be later than To Date.',
+                          ),
                         ),
                       );
                     } else {
@@ -847,8 +888,9 @@ class _CustomerWiseSalesReportScreenState
                     if (_fromDate != null && date.isBefore(_fromDate!)) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content:
-                              Text('To Date cannot be earlier than From Date.'),
+                          content: Text(
+                            'To Date cannot be earlier than From Date.',
+                          ),
                         ),
                       );
                     } else {
@@ -995,7 +1037,9 @@ class _CustomerWiseSalesReportScreenState
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? theme.colorScheme.primaryContainer.withOpacity(0.3)
+                            ? theme.colorScheme.primaryContainer.withOpacity(
+                                0.3,
+                              )
                             : null,
                         border: Border(
                           bottom: BorderSide(
@@ -1020,10 +1064,14 @@ class _CustomerWiseSalesReportScreenState
                             flex: 2,
                             child: Text(
                               item.salesMasterInvoiceDate != null
-                                  ? _displayFormat.format(item.salesMasterInvoiceDate!)
+                                  ? _displayFormat.format(
+                                      item.salesMasterInvoiceDate!,
+                                    )
                                   : (item.lastSaleDate != null
-                                      ? _displayFormat.format(item.lastSaleDate!)
-                                      : '-'),
+                                        ? _displayFormat.format(
+                                            item.lastSaleDate!,
+                                          )
+                                        : '-'),
                               style: TextStyle(
                                 color: theme.colorScheme.onSurfaceVariant,
                               ),
@@ -1212,7 +1260,7 @@ class _CustomerWiseSalesReportScreenState
                     setState(() {
                       _highlightedIndex = index;
                     });
-                    _showCustomerDetailsDialog(item);
+                    // _showCustomerDetailsDialog(item);
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(12),

@@ -14,6 +14,7 @@ class CompanyListScreen extends StatefulWidget {
   State<CompanyListScreen> createState() => _CompanyListScreenState();
 }
 
+
 class _CompanyListScreenState extends State<CompanyListScreen> {
   final CompanyService _companyService = companyService;
 
@@ -274,11 +275,11 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                 ],
               ),
               drawer: const AppDrawer(isPermanent: false),
-              floatingActionButton: FloatingActionButton.extended(
-                onPressed: () => _navigateToAddCompany(),
-                icon: const Icon(Icons.add_rounded),
-                label: const Text('Add Company'),
-              ),
+              // floatingActionButton: FloatingActionButton.extended(
+              //   onPressed: () => _navigateToAddCompany(),
+              //   icon: const Icon(Icons.add_rounded),
+              //   label: const Text('Add Company'),
+              // ),
               body: Column(
                 children: [
                   _buildMobileFilterBar(),

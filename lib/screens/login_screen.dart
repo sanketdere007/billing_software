@@ -90,7 +90,9 @@ class _LoginScreenState extends State<LoginScreen> {
         // Check if there is only 1 Company and 1 Branch available
         bool autoSelected = false;
         try {
-          final companies = await companyService.getAllCompanies(isActive: true);
+          final companies = await companyService.getAllCompanies(
+            isActive: true,
+          );
           if (companies.length == 1) {
             final singleCompany = companies.first;
             final branches = await branchService.getAllBranches(
@@ -200,13 +202,18 @@ class _LoginScreenState extends State<LoginScreen> {
                     Center(
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 24.0,
+                          horizontal: 8.0,
                           vertical: 40.0,
                         ),
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 450),
                           child: Container(
-                            padding: const EdgeInsets.all(32.0),
+                            padding: const EdgeInsets.only(
+                              top: 32.0,
+                              bottom: 32,
+                              left: 16,
+                              right: 16,
+                            ),
                             decoration: BoxDecoration(
                               color: Theme.of(context).cardColor,
                               borderRadius: BorderRadius.circular(24.0),
@@ -299,11 +306,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                           ? Colors.grey.shade800
                                           : Colors.grey.shade50,
                                       border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(16),
+                                        borderRadius: BorderRadius.circular(8),
                                         borderSide: BorderSide.none,
                                       ),
                                       enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(16),
+                                        borderRadius: BorderRadius.circular(8),
                                         borderSide: BorderSide(
                                           color: isDark
                                               ? Colors.grey.shade700
@@ -311,7 +318,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         ),
                                       ),
                                       focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(16),
+                                        borderRadius: BorderRadius.circular(8),
                                         borderSide: BorderSide(
                                           color: Colors.blue.shade400,
                                           width: 2,
@@ -366,11 +373,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                           ? Colors.grey.shade800
                                           : Colors.grey.shade50,
                                       border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(16),
+                                        borderRadius: BorderRadius.circular(8),
                                         borderSide: BorderSide.none,
                                       ),
                                       enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(16),
+                                        borderRadius: BorderRadius.circular(8),
                                         borderSide: BorderSide(
                                           color: isDark
                                               ? Colors.grey.shade700
@@ -378,7 +385,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         ),
                                       ),
                                       focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(16),
+                                        borderRadius: BorderRadius.circular(8),
                                         borderSide: BorderSide(
                                           color: Colors.blue.shade400,
                                           width: 2,
