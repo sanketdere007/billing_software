@@ -1,11 +1,15 @@
 import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
+import 'package:flutter/foundation.dart'
+    show kIsWeb, defaultTargetPlatform, TargetPlatform;
 
 /// Helper utility for detecting platform capabilities with safe fallbacks.
 class PlatformHelper {
   /// Returns `true` only when the app is running as a desktop app on Windows.
   /// Strictly returns `false` on Web (Chrome/Firefox/Edge on web), Android, iOS, macOS, and Linux.
   static bool get isWindowsDesktop {
+    if (_overrideIsWindowsDesktop != null) {
+      return _overrideIsWindowsDesktop!;
+    }
     if (kIsWeb) return false;
     try {
       return Platform.isWindows;
@@ -15,9 +19,25 @@ class PlatformHelper {
     }
   }
 
+  /// Returns `true` only on mobile platforms (Android or iOS).
+  /// Strictly returns `false` on Web, Windows, macOS, and Linux.
+  static bool get isMobile {
+    if (_overrideIsMobile != null) {
+      return _overrideIsMobile!;
+    }
+    if (kIsWeb) return false;
+    try {
+      return Platform.isAndroid || Platform.isIOS;
+    } catch (_) {
+      return defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS;
+    }
+  }
+
   /// For testing purposes or manual overrides if needed.
   static bool? _overrideIsWindowsDesktop;
-  
+  static bool? _overrideIsMobile;
+
   static bool get isWindowsDesktopEffective {
     if (_overrideIsWindowsDesktop != null) {
       return _overrideIsWindowsDesktop!;
@@ -27,5 +47,9 @@ class PlatformHelper {
 
   static void setOverrideForTesting(bool? value) {
     _overrideIsWindowsDesktop = value;
+  }
+
+  static void setOverrideIsMobileForTesting(bool? value) {
+    _overrideIsMobile = value;
   }
 }

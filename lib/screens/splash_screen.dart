@@ -7,6 +7,9 @@ import 'package:billing_software/services/auth_service.dart';
 import 'package:billing_software/services/session_service.dart';
 import 'package:billing_software/services/company_service.dart';
 import 'package:billing_software/services/branch_service.dart';
+import 'package:billing_software/services/server_config_service.dart';
+import 'package:billing_software/screens/server_config_screen.dart';
+import 'package:billing_software/utils/platform_helper.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -82,6 +85,33 @@ class _SplashScreenState extends State<SplashScreen>
   _navigateToNextScreen() async {
     // Wait for the animation to finish + a little extra time
     await Future.delayed(const Duration(milliseconds: 3200));
+
+    // For Mobile platform: verify if Server IP is configured
+    if (PlatformHelper.isMobile) {
+      await serverConfigService.init();
+      if (!serverConfigService.hasConfiguredIp) {
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          PageRouteBuilder(
+            settings: const RouteSettings(name: AppRoutes.serverConfig),
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                const ServerConfigScreen(isInitialSetup: true),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(
+                opacity: CurvedAnimation(
+                  parent: animation,
+                  curve: Curves.easeInOut,
+                ),
+                child: child,
+              );
+            },
+            transitionDuration: const Duration(milliseconds: 600),
+          ),
+        );
+        return;
+      }
+    }
 
     final isLoggedIn = await authService.isAuthenticated();
     if (isLoggedIn) {

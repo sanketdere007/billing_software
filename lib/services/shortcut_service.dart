@@ -18,6 +18,7 @@ import '../screens/customers/add_customer_screen.dart';
 
 /// Route name constants for ERP screens managed by shortcuts.
 class AppRoutes {
+  static const String serverConfig = '/server-config';
   static const String login = '/login';
   static const String dashboard = '/dashboard';
   static const String customerAdd = '/customers/add';

@@ -3,10 +3,12 @@ import 'package:billing_software/constants/app_constants.dart';
 import 'package:billing_software/screens/splash_screen.dart';
 import 'package:billing_software/services/theme_provider.dart';
 import 'package:billing_software/services/shortcut_service.dart';
+import 'package:billing_software/services/server_config_service.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   shortcutService.init();
+  await serverConfigService.init();
   runApp(const MyApp());
 }
 

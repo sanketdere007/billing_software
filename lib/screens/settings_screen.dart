@@ -12,6 +12,8 @@ import '../widgets/company_dropdown.dart';
 import '../widgets/branch_dropdown.dart';
 import '../widgets/direct_back_scope.dart';
 import 'company_branch_selection_screen.dart';
+import '../services/server_config_service.dart';
+import 'server_config_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -91,6 +93,59 @@ class SettingsScreen extends StatelessWidget {
 
               // Database Backup Section
               const _DatabaseBackupSection(),
+
+              if (PlatformHelper.isMobile) ...[
+                const SizedBox(height: 24),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8.0),
+                  child: Text(
+                    'Server Configuration',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                ListenableBuilder(
+                  listenable: serverConfigService,
+                  builder: (context, _) {
+                    return Card(
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: ListTile(
+                        leading: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.dns_rounded,
+                            color: Colors.blue,
+                          ),
+                        ),
+                        title: const Text('Server IP Address'),
+                        subtitle: Text(
+                          'Base URL: ${serverConfigService.currentBaseUrl}',
+                        ),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              settings: const RouteSettings(
+                                name: AppRoutes.serverConfig,
+                              ),
+                              builder: (context) => const ServerConfigScreen(
+                                isInitialSetup: false,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ],
             ],
           );
 

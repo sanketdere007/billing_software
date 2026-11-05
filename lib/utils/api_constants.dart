@@ -1,13 +1,19 @@
 import 'platform_helper.dart';
+import '../services/server_config_service.dart';
 
 class ApiConstants {
   // Base API URL
-  // Returns the Windows hostname URL on Windows Desktop,
-  // and the IP-based URL on Android / iOS / tablet.
-  static String get baseUrl =>
-      PlatformHelper.isWindowsDesktop
-          ? 'http://billingapi.local:3032'
-          : 'http://192.168.1.10:3032';
+  // Mobile (Android/iOS): Uses locally saved dynamic IP-based URL.
+  // Windows/Desktop: Keeps existing URL exactly as it is (http://billingapi.local:3032).
+  // Web: Keeps existing URL exactly as it is (http://192.168.1.10:3032).
+  static String get baseUrl {
+    if (PlatformHelper.isMobile) {
+      return serverConfigService.currentBaseUrl;
+    }
+    return PlatformHelper.isWindowsDesktop
+        ? 'http://billingapi.local:3032'
+        : 'http://192.168.1.10:3032';
+  }
 
   // Auth Endpoints
   static const String loginEndpoint = '/api/Auth/Login';

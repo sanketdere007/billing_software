@@ -9,6 +9,9 @@ import 'package:billing_software/services/branch_service.dart';
 import 'package:billing_software/services/api_service.dart';
 import 'package:billing_software/services/theme_provider.dart';
 import 'package:billing_software/widgets/support_info_footer.dart';
+import 'package:billing_software/utils/platform_helper.dart';
+import 'package:billing_software/services/server_config_service.dart';
+import 'package:billing_software/screens/server_config_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -43,6 +46,19 @@ class _LoginScreenState extends State<LoginScreen> {
     _emailFocusNode.dispose();
     _passwordFocusNode.dispose();
     super.dispose();
+  }
+
+  Future<void> _openServerConfig() async {
+    final updated = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        settings: const RouteSettings(name: AppRoutes.serverConfig),
+        builder: (context) => const ServerConfigScreen(isInitialSetup: false),
+      ),
+    );
+    if (updated == true && mounted) {
+      setState(() {});
+    }
   }
 
   Future<void> _login() async {
@@ -404,32 +420,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                   const SizedBox(height: 12),
 
-                                  // Forgot Password
-                                  // Align(
-                                  //   alignment: Alignment.centerRight,
-                                  //   child: TextButton(
-                                  //     onPressed: () {
-                                  //       // Handle forgot password
-                                  //     },
-                                  //     style: TextButton.styleFrom(
-                                  //       foregroundColor: isDark
-                                  //           ? Colors.blue.shade300
-                                  //           : Colors.blue.shade700,
-                                  //       padding: const EdgeInsets.symmetric(
-                                  //         horizontal: 8,
-                                  //         vertical: 4,
-                                  //       ),
-                                  //     ),
-                                  //     child: const Text(
-                                  //       'Forgot Password?',
-                                  //       style: TextStyle(
-                                  //         fontWeight: FontWeight.w600,
-                                  //       ),
-                                  //     ),
-                                  //   ),
-                                  // ),
-                                  const SizedBox(height: 12),
-
                                   // Login Button
                                   Container(
                                     decoration: BoxDecoration(
@@ -493,6 +483,30 @@ class _LoginScreenState extends State<LoginScreen> {
                                     ),
                                   ),
                                   const SizedBox(height: 12),
+                                  if (PlatformHelper.isMobile) ...[
+                                    Center(
+                                      child: TextButton.icon(
+                                        onPressed: _openServerConfig,
+                                        icon: Icon(
+                                          Icons.settings_ethernet_rounded,
+                                          size: 16,
+                                          color: isDark
+                                              ? Colors.blue.shade300
+                                              : Colors.blue.shade700,
+                                        ),
+                                        label: Text(
+                                          'Server IP: ${serverConfigService.currentIp ?? "Not Set"} (Change)',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                            color: isDark
+                                                ? Colors.blue.shade300
+                                                : Colors.blue.shade700,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ],
                               ),
                             ),
@@ -500,6 +514,73 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ),
+                    if (PlatformHelper.isMobile)
+                      Positioned(
+                        top: 16,
+                        left: 16,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: _openServerConfig,
+                            borderRadius: BorderRadius.circular(20),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? Colors.grey.shade800.withOpacity(0.9)
+                                    : Colors.white.withOpacity(0.9),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: isDark
+                                      ? Colors.grey.shade700
+                                      : Colors.blue.shade200,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.06),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.dns_rounded,
+                                    size: 15,
+                                    color: isDark
+                                        ? Colors.blue.shade300
+                                        : Colors.blue.shade700,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    serverConfigService.currentIp ?? 'Configure IP',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: isDark
+                                          ? Colors.blue.shade200
+                                          : Colors.blue.shade900,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Icon(
+                                    Icons.edit,
+                                    size: 12,
+                                    color: isDark
+                                        ? Colors.grey.shade400
+                                        : Colors.grey.shade600,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     Positioned(
                       top: 16,
                       right: 16,

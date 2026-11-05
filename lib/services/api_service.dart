@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../utils/api_constants.dart';
+import '../utils/platform_helper.dart';
 import 'session_service.dart';
 
 class ApiException implements Exception {
@@ -67,29 +68,8 @@ class ApiService {
       debugPrint('└────────────────────────────────────────────────────────');
 
       return _processResponse(response);
-    } on SocketException catch (e) {
-      if (e.osError != null && e.osError!.errorCode == 101) {
-        throw ApiException('No Internet Connection');
-      }
-      throw ApiException(
-        'Unable to connect to server.\nPlease try again later.',
-      );
-    } on TimeoutException {
-      throw ApiException('Connection timed out. Please try again.');
-    } on FormatException {
-      throw ApiException('Invalid response format from server.');
-    } on HttpException {
-      throw ApiException(
-        'Unable to connect to server.\nPlease try again later.',
-      );
-    } on ApiException {
-      rethrow;
     } catch (e) {
-      throw ApiException(
-        e.toString().contains('Failed host lookup')
-            ? 'No Internet Connection'
-            : 'Unable to connect to server.\nPlease try again later.',
-      );
+      throw _handleNetworkException(e);
     }
   }
 
@@ -126,29 +106,8 @@ class ApiService {
       debugPrint('└────────────────────────────────────────────────────────');
 
       return _processResponse(response);
-    } on SocketException catch (e) {
-      if (e.osError != null && e.osError!.errorCode == 101) {
-        throw ApiException('No Internet Connection');
-      }
-      throw ApiException(
-        'Unable to connect to server.\nPlease try again later.',
-      );
-    } on TimeoutException {
-      throw ApiException('Connection timed out. Please try again.');
-    } on FormatException {
-      throw ApiException('Invalid response format from server.');
-    } on HttpException {
-      throw ApiException(
-        'Unable to connect to server.\nPlease try again later.',
-      );
-    } on ApiException {
-      rethrow;
     } catch (e) {
-      throw ApiException(
-        e.toString().contains('Failed host lookup')
-            ? 'No Internet Connection'
-            : 'Unable to connect to server.\nPlease try again later.',
-      );
+      throw _handleNetworkException(e);
     }
   }
 
@@ -185,27 +144,45 @@ class ApiService {
       debugPrint('└────────────────────────────────────────────────────────');
 
       return _processResponse(response);
-    } on SocketException catch (e) {
-      if (e.osError != null && e.osError!.errorCode == 101) {
-        throw ApiException('No Internet Connection');
-      }
-      throw ApiException(
-        'Unable to connect to server.\nPlease try again later.',
-      );
-    } on TimeoutException {
-      throw ApiException('Connection timed out. Please try again.');
-    } on FormatException {
-      throw ApiException('Invalid response format from server.');
-    } on HttpException {
-      throw ApiException(
-        'Unable to connect to server.\nPlease try again later.',
-      );
-    } on ApiException {
-      rethrow;
     } catch (e) {
-      throw ApiException(
-        e.toString().contains('Failed host lookup')
-            ? 'No Internet Connection'
+      throw _handleNetworkException(e);
+    }
+  }
+
+  ApiException _handleNetworkException(Object e) {
+    if (e is ApiException) {
+      return e;
+    } else if (e is SocketException) {
+      if (e.osError != null && e.osError!.errorCode == 101) {
+        return ApiException('No Internet Connection');
+      }
+      return ApiException(
+        PlatformHelper.isMobile
+            ? 'Unable to connect to server at ${ApiConstants.baseUrl}.\nPlease ensure the server is running and both devices are on the same Wi-Fi network.'
+            : 'Unable to connect to server.\nPlease try again later.',
+      );
+    } else if (e is TimeoutException) {
+      return ApiException(
+        PlatformHelper.isMobile
+            ? 'Connection to server at ${ApiConstants.baseUrl} timed out. Please check your network connection.'
+            : 'Connection timed out. Please try again.',
+      );
+    } else if (e is FormatException) {
+      return ApiException('Invalid response format from server.');
+    } else if (e is HttpException) {
+      return ApiException(
+        PlatformHelper.isMobile
+            ? 'Unable to connect to server at ${ApiConstants.baseUrl}.\nPlease try again later.'
+            : 'Unable to connect to server.\nPlease try again later.',
+      );
+    } else {
+      final str = e.toString();
+      if (str.contains('Failed host lookup')) {
+        return ApiException('No Internet Connection');
+      }
+      return ApiException(
+        PlatformHelper.isMobile
+            ? 'Unable to connect to server at ${ApiConstants.baseUrl}.\nPlease verify the configured IP address.'
             : 'Unable to connect to server.\nPlease try again later.',
       );
     }
