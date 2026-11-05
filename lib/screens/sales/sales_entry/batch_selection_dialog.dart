@@ -148,9 +148,11 @@ class _BatchSelectionDialogState extends State<BatchSelectionDialog> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-
+    final screenWidth = MediaQuery.of(context).size.width;
+    final bool isDesktop = screenWidth >= 1000;
+    final bool isMobile = screenWidth < 600;
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       elevation: 8,
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 600, maxHeight: 600),
@@ -160,7 +162,7 @@ class _BatchSelectionDialogState extends State<BatchSelectionDialog> {
           children: [
             // Header
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 18, 16, 12),
+              padding: const EdgeInsets.fromLTRB(12, 18, 12, 12),
               child: Row(
                 children: [
                   Container(
@@ -196,7 +198,7 @@ class _BatchSelectionDialogState extends State<BatchSelectionDialog> {
 
             // Search Bar
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
               child: TextField(
                 controller: _searchController,
                 focusNode: _searchFocusNode,
@@ -225,7 +227,7 @@ class _BatchSelectionDialogState extends State<BatchSelectionDialog> {
 
             // Keyboard hints badge
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
               child: Row(
                 children: [
                   // Text(
@@ -242,13 +244,14 @@ class _BatchSelectionDialogState extends State<BatchSelectionDialog> {
                     color: theme.hintColor,
                   ),
                   const SizedBox(width: 4),
-                  Text(
-                    '↑/↓ navigate • Enter to select • Esc to close',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.hintColor,
-                      fontSize: 10,
+                  if (isDesktop)
+                    Text(
+                      '↑/↓ navigate • Enter to select • Esc to close',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.hintColor,
+                        fontSize: 10,
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -302,7 +305,7 @@ class _BatchSelectionDialogState extends State<BatchSelectionDialog> {
                   return ListView.builder(
                     controller: _scrollController,
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
+                      horizontal: 4,
                       vertical: 4,
                     ),
                     itemCount: _filteredBatches.length,
@@ -333,13 +336,13 @@ class _BatchSelectionDialogState extends State<BatchSelectionDialog> {
                                     : Colors.transparent,
                               ),
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
+                                horizontal: 8,
                                 vertical: 8,
                               ),
                               child: Row(
                                 children: [
                                   CircleAvatar(
-                                    radius: 16,
+                                    radius: 12,
                                     backgroundColor: isSelected
                                         ? theme.colorScheme.primary
                                         : theme.colorScheme.surfaceVariant,
@@ -351,7 +354,7 @@ class _BatchSelectionDialogState extends State<BatchSelectionDialog> {
                                           : theme.colorScheme.onSurfaceVariant,
                                     ),
                                   ),
-                                  const SizedBox(width: 12),
+                                  const SizedBox(width: 8),
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment:

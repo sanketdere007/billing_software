@@ -222,8 +222,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           return Scaffold(
             appBar: AppBar(
               title: const Text('Dashboard'),
-              backgroundColor: isDark ? Colors.grey[900] : Colors.blue.shade700,
-              foregroundColor: Colors.white,
+
               elevation: 0,
               // No date-picker actions in mobile AppBar – they live in the
               // sticky date-filter bar directly below.
@@ -249,7 +248,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           // ── Sticky Date-Filter Bar (Mobile / Tablet only) ──────────────────
           if (!isDesktop)
             Container(
-              color: isDark ? Colors.grey[900] : Colors.blue.shade700,
+              //      color: isDark ? Colors.grey[900] : Colors.blue.shade700,
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
               child: Row(
                 children: [

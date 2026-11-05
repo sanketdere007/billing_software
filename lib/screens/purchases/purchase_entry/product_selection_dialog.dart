@@ -147,7 +147,9 @@ class _ProductSelectionDialogState extends State<ProductSelectionDialog> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-
+    final screenWidth = MediaQuery.of(context).size.width;
+    final bool isDesktop = screenWidth >= 1000;
+    final bool isMobile = screenWidth < 600;
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 8,
@@ -241,13 +243,14 @@ class _ProductSelectionDialogState extends State<ProductSelectionDialog> {
                     color: theme.hintColor,
                   ),
                   const SizedBox(width: 4),
-                  Text(
-                    '↑/↓ navigate • Enter to select • Esc to close',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.hintColor,
-                      fontSize: 10,
+                  if (isDesktop)
+                    Text(
+                      '↑/↓ navigate • Enter to select • Esc to close',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.hintColor,
+                        fontSize: 10,
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),

@@ -25,6 +25,7 @@ import '../../../services/shortcut_service.dart';
 import '../../pdf/pdf_preview_screen.dart';
 import '../sales_entry/payment_mode_dialog.dart';
 import '../../../widgets/transaction_date_picker_field.dart';
+import '../../../utils/platform_helper.dart';
 
 class SalePersistResult {
   final SalesReturnUpsertResponse salesResponse;
@@ -91,6 +92,13 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
 
   final CustomerService _customerService = CustomerService();
   final BatchService _batchService = batchService;
+
+  String _formatQty(double value) {
+    if (value.truncateToDouble() == value) {
+      return value.toInt().toString();
+    }
+    return value.toString();
+  }
 
   @override
   void initState() {
@@ -1466,6 +1474,13 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (PlatformHelper.isWindowsDesktop) {
+      return _buildWindowsDesktopUI(context);
+    }
+    return _buildMobileUI(context);
+  }
+
+  Widget _buildWindowsDesktopUI(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final bool isDesktop = screenWidth >= 1000;
     final bool isMobile = screenWidth < 600;
@@ -1779,6 +1794,1041 @@ class _AddSalesReturnScreenState extends State<AddSalesReturnScreen> {
             drawer: const AppDrawer(),
             body: content,
           );
+  }
+
+  Widget _buildMobileUI(BuildContext context) {
+    final theme = Theme.of(context);
+    final validProducts =
+        _products.where((p) => p['product'] != null).toList();
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(_isViewMode ? 'View Sales Return' : 'Add Sales Return'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.list_alt_rounded),
+            tooltip: 'View Sales Returns',
+            onPressed: _openSalesReturnView,
+          ),
+          IconButton(
+            icon: const Icon(Icons.restart_alt_rounded),
+            tooltip: 'Clear Form',
+            onPressed: _resetForm,
+          ),
+          const SizedBox(width: 4),
+        ],
+      ),
+      drawer: const AppDrawer(),
+      body: _buildMobileStickyLayout(theme, validProducts),
+    );
+  }
+
+  Widget _buildMobileStickyLayout(
+    ThemeData theme,
+    List<Map<String, dynamic>> validProducts,
+  ) {
+    return SaveClearShortcuts(
+      onSave: () {
+        if (!_isLoading) _saveEntry();
+      },
+      onClear: _resetForm,
+      child: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            if (_isViewMode)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+                child: _buildMobileViewModeBanner(theme),
+              ),
+            Container(
+              color: theme.scaffoldBackgroundColor,
+              padding: const EdgeInsets.fromLTRB(6, 6, 6, 2),
+              child: _buildMobileCustomerAndDateCard(theme),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(6, 4, 4, 6),
+                children: [
+                  if (validProducts.isEmpty)
+                    _buildMobileEmptyProductsCard(theme)
+                  else
+                    ...validProducts.asMap().entries.map((entry) {
+                      final itemIndex = entry.key;
+                      final p = entry.value;
+                      final originalIndex = _products.indexOf(p);
+                      return _buildMobileProductCard(
+                        theme,
+                        p,
+                        itemIndex,
+                        originalIndex,
+                      );
+                    }),
+                  const SizedBox(height: 2),
+                  _buildMobileBillDiscountCard(theme),
+                  const SizedBox(height: 2),
+                  _buildMobileSummaryCard(theme),
+                ],
+              ),
+            ),
+            _buildMobileBottomBar(theme, validProducts.length),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /*
+        onSave: () {
+          if (!_isLoading) _saveEntry();
+        },
+        onClear: _resetForm,
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
+                  children: [
+                    if (_isViewMode) _buildMobileViewModeBanner(theme),
+                    _buildMobileCustomerAndDateCard(theme),
+                    const SizedBox(height: 12),
+                    _buildMobileProductsHeader(theme, validProducts.length),
+                    const SizedBox(height: 8),
+                    if (validProducts.isEmpty)
+                      _buildMobileEmptyProductsCard(theme)
+                    else
+                      ...validProducts.asMap().entries.map((entry) {
+                        final itemIndex = entry.key;
+                        final p = entry.value;
+                        final originalIndex = _products.indexOf(p);
+                        return _buildMobileProductCard(
+                          theme,
+                          p,
+                          itemIndex,
+                          originalIndex,
+                        );
+                      }),
+                    const SizedBox(height: 12),
+                    _buildMobileBillDiscountCard(theme),
+                    const SizedBox(height: 12),
+                    _buildMobileSummaryCard(theme),
+                  ],
+                ),
+              ),
+              _buildMobileBottomBar(theme, validProducts.length),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  */
+
+  Widget _buildMobileViewModeBanner(ThemeData theme) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.amber.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.amber.shade700),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.visibility_rounded, color: Colors.amber.shade900, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'View Mode (Read Only). Tap New Return to start a new return.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: Colors.amber.shade900,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: _resetForm,
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              visualDensity: VisualDensity.compact,
+            ),
+            child: const Text('New Return'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileCustomerAndDateCard(ThemeData theme) {
+    return Card(
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(6),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CustomerDropdown(
+              focusNode: _customerNode,
+              nextFocusNode: _invoiceDateNode,
+              selectedCustomerId: _selectedCustomer,
+              selectedCustomer: _selectedCustomerItem,
+              isRequired: true,
+              onChanged: (val) {
+                setState(() {
+                  _selectedCustomer = val?.custId;
+                  _selectedCustomerItem = val;
+                });
+              },
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: TransactionDatePickerField(
+                    selectedDate: _selectedDate,
+                    focusNode: _invoiceDateNode,
+                    labelText: 'Return Date (yyyy/MM/dd)',
+                    restrictFutureDates: true,
+                    onDateSelected: (newDate) {
+                      setState(() {
+                        _selectedDate = newDate;
+                      });
+                    },
+                    onNextFocus: () {
+                      if (mounted && _products.isNotEmpty) {
+                        (_products.first['productNode'] as FocusNode).requestFocus();
+                      }
+                    },
+                  ),
+                ),
+                const SizedBox(width: 6),
+                FilledButton.icon(
+                  onPressed: _isViewMode ? null : _addProductFromButton,
+                  icon: const Icon(Icons.add_shopping_cart, size: 14),
+                  label: const Text('Add Product'),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /*
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.person_outline_rounded,
+                  size: 20,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Customer & Return Date',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            CustomerDropdown(
+              focusNode: _customerNode,
+              nextFocusNode: _invoiceDateNode,
+              selectedCustomerId: _selectedCustomer,
+              selectedCustomer: _selectedCustomerItem,
+              isRequired: true,
+              onChanged: (val) {
+                setState(() {
+                  _selectedCustomer = val?.custId;
+                  _selectedCustomerItem = val;
+                });
+              },
+            ),
+            const SizedBox(height: 12),
+            TransactionDatePickerField(
+              selectedDate: _selectedDate,
+              focusNode: _invoiceDateNode,
+              labelText: 'Return Date (yyyy/MM/dd)',
+              restrictFutureDates: true,
+              onDateSelected: (newDate) {
+                setState(() {
+                  _selectedDate = newDate;
+                });
+              },
+              onNextFocus: () {
+                if (mounted && _products.isNotEmpty) {
+                  (_products.first['productNode'] as FocusNode).requestFocus();
+                }
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  */
+
+  Widget _buildMobileProductsHeader(ThemeData theme, int count) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            Text(
+              'Items ($count)',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        FilledButton.icon(
+          onPressed: _isViewMode ? null : _addProductFromButton,
+          icon: const Icon(Icons.add_shopping_cart, size: 18),
+          label: const Text('Add Product'),
+          style: FilledButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileEmptyProductsCard(ThemeData theme) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+        ),
+      ),
+      color: theme.colorScheme.surfaceVariant.withOpacity(0.15),
+      child: InkWell(
+        onTap: _isViewMode ? null : _addProductFromButton,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.assignment_return_outlined,
+                  size: 40,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'No items in this return',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Tap here or "+ Add Product" to add items',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileProductCard(
+    ThemeData theme,
+    Map<String, dynamic> p,
+    int displayIndex,
+    int originalIndex,
+  ) {
+    final BatchListItem prod = p['product'];
+    final double rate = (p['rate'] as num?)?.toDouble() ?? 0.0;
+    final double gross = (p['gross'] as num?)?.toDouble() ?? 0.0;
+    final double net = (p['net'] as num?)?.toDouble() ?? gross;
+    final double gstAmt = (p['gstAmt'] as num?)?.toDouble() ?? 0.0;
+    final double gstPct = (p['gstPct'] as num?)?.toDouble() ?? 0.0;
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Top Row: Item Index Badge, Product Name, and Delete Button
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 26,
+                  height: 26,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primaryContainer,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    '${displayIndex + 1}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                      color: theme.colorScheme.onPrimaryContainer,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        prod.prodName,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: [
+                          Text(
+                            'Unit: ${_unitValueFor(prod)} ${prod.unitName}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          if (prod.batchSellingPrice > 0)
+                            Text(
+                              'Price: ₹${prod.batchSellingPrice.toStringAsFixed(2)}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                if (!_isViewMode)
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline_rounded, color: Colors.red),
+                    iconSize: 22,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    splashRadius: 20,
+                    tooltip: 'Remove Item',
+                    onPressed: () => _removeProduct(originalIndex),
+                  ),
+              ],
+            ),
+            const Divider(height: 16),
+
+            // Quantity and Rate Controls Row
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Quantity controls with +/- increment buttons
+                Expanded(
+                  flex: 5,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Qty (${prod.unitName})',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: theme.colorScheme.outlineVariant.withOpacity(0.7),
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            InkWell(
+                              onTap: _isViewMode
+                                  ? null
+                                  : () {
+                                      double cur = (p['qty'] as num?)?.toDouble() ?? 1.0;
+                                      if (cur > 1) {
+                                        double next = cur - 1;
+                                        (p['qtyController'] as TextEditingController).text =
+                                            _formatQty(next);
+                                        p['qty'] = next;
+                                        _calculateTotals();
+                                      }
+                                    },
+                              borderRadius: const BorderRadius.horizontal(left: Radius.circular(7)),
+                              child: const Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                child: Icon(Icons.remove, size: 16),
+                              ),
+                            ),
+                            Expanded(
+                              child: TextFormField(
+                                controller: p['qtyController'],
+                                focusNode: p['qtyNode'],
+                                enabled: !_isViewMode,
+                                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                textAlign: TextAlign.center,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d*')),
+                                ],
+                                decoration: const InputDecoration(
+                                  isDense: true,
+                                  border: InputBorder.none,
+                                  contentPadding: EdgeInsets.symmetric(vertical: 8),
+                                ),
+                                onChanged: (val) {
+                                  p['qty'] = double.tryParse(val) ?? 0.0;
+                                  _calculateTotals();
+                                },
+                              ),
+                            ),
+                            InkWell(
+                              onTap: _isViewMode
+                                  ? null
+                                  : () {
+                                      double cur = (p['qty'] as num?)?.toDouble() ?? 0.0;
+                                      double next = cur + 1;
+                                      (p['qtyController'] as TextEditingController).text =
+                                          _formatQty(next);
+                                      p['qty'] = next;
+                                      _calculateTotals();
+                                    },
+                              borderRadius: const BorderRadius.horizontal(right: Radius.circular(7)),
+                              child: const Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                child: Icon(Icons.add, size: 16),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Return Rate / Price
+                Expanded(
+                  flex: 4,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Rate',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      TextFormField(
+                        controller: p['rateController'],
+                        focusNode: p['rateNode'],
+                        enabled: !_isViewMode,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        textAlign: TextAlign.right,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d*')),
+                        ],
+                        decoration: InputDecoration(
+                          isDense: true,
+                          prefixText: '₹ ',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                        ),
+                        onChanged: (val) {
+                          final newRate = double.tryParse(val) ?? 0.0;
+                          p['rate'] = newRate;
+                          if (newRate <= 0.0) {
+                            p['discAmt'] = 0.0;
+                            (p['discAmtController'] as TextEditingController).text = '0.0';
+                          }
+                          _calculateTotals();
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+
+            // Discount and GST row
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Disc %',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      TextFormField(
+                        controller: p['discPctController'],
+                        focusNode: p['discPctNode'],
+                        enabled: !_isViewMode && (p['rate'] ?? 0.0) > 0.0,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        textAlign: TextAlign.right,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d*')),
+                        ],
+                        decoration: InputDecoration(
+                          isDense: true,
+                          suffixText: '%',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                        ),
+                        onChanged: (val) {
+                          p['discPct'] = double.tryParse(val) ?? 0.0;
+                          _calculateTotals();
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  flex: 4,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Discount (₹)',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      TextFormField(
+                        controller: p['discAmtController'],
+                        focusNode: p['discNode'],
+                        enabled: !_isViewMode && (p['rate'] ?? 0.0) > 0.0,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        textAlign: TextAlign.right,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d*')),
+                        ],
+                        decoration: InputDecoration(
+                          isDense: true,
+                          prefixText: '₹ ',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                        ),
+                        onChanged: (val) {
+                          p['discAmt'] = double.tryParse(val) ?? 0.0;
+                          _calculateTotals();
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  flex: 3,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        'GST (${gstPct.toStringAsFixed(0)}%)',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        '₹${gstAmt.toStringAsFixed(2)}',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+
+            // Net Total bar for this item
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceVariant.withOpacity(0.35),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Gross: ₹${gross.toStringAsFixed(2)}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      Text(
+                        'Item Net: ',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        '₹${net.toStringAsFixed(2)}',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileBillDiscountCard(ThemeData theme) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.discount_outlined,
+                  size: 20,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Bill Discount',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _billDiscountPctController,
+                    focusNode: _billDiscountPctNode,
+                    enabled: !_isViewMode,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    textAlign: TextAlign.right,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d*')),
+                    ],
+                    decoration: InputDecoration(
+                      labelText: 'Bill Dis %',
+                      suffixText: '%',
+                      isDense: true,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextFormField(
+                    controller: _billDiscountController,
+                    focusNode: _billDiscountAmtNode,
+                    enabled: !_isViewMode,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    textAlign: TextAlign.right,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d*')),
+                    ],
+                    decoration: InputDecoration(
+                      labelText: 'Bill Discount',
+                      prefixText: '₹ ',
+                      isDense: true,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileSummaryCard(ThemeData theme) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Return Breakdown',
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 10),
+            _buildSummaryRow('Total Quantity', _totalQuantity.toStringAsFixed(2), theme),
+            const SizedBox(height: 6),
+            _buildSummaryRow('Gross Total', '₹${_grossTotal.toStringAsFixed(2)}', theme),
+            const SizedBox(height: 6),
+            _buildSummaryRow(
+              'Product Discount',
+              '- ₹${_totalProductDiscount.toStringAsFixed(2)}',
+              theme,
+              isNegative: true,
+            ),
+            const SizedBox(height: 6),
+            _buildSummaryRow('Total GST', '+ ₹${_totalGST.toStringAsFixed(2)}', theme),
+            if (_billDiscount > 0) ...[
+              const SizedBox(height: 6),
+              _buildSummaryRow(
+                'Bill Discount',
+                '- ₹${_billDiscount.toStringAsFixed(2)}',
+                theme,
+                isNegative: true,
+              ),
+            ],
+            const Divider(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Final Payable',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  '₹${_finalPayable.toStringAsFixed(2)}',
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryRow(
+    String label,
+    String value,
+    ThemeData theme, {
+    bool isNegative = false,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        Text(
+          value,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: isNegative ? Colors.green.shade700 : null,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileBottomBar(ThemeData theme, int itemCount) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 10,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Total Return ($itemCount items)',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  Text(
+                    '₹${_finalPayable.toStringAsFixed(2)}',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.primary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            OutlinedButton(
+              onPressed: _resetForm,
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(_isViewMode ? 'New' : 'Clear'),
+            ),
+            const SizedBox(width: 8),
+            FilledButton.icon(
+              onPressed: _isLoading
+                  ? null
+                  : () {
+                      if (_isViewMode) {
+                        _resetForm();
+                      } else {
+                        _saveEntry();
+                      }
+                    },
+              icon: _isLoading
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Icon(_isViewMode ? Icons.add_rounded : Icons.check_circle_outline, size: 18),
+              label: Text(
+                _isLoading
+                    ? 'Saving...'
+                    : _isViewMode
+                        ? 'New Return'
+                        : 'Save',
+              ),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _openSalesReturnView() async {
