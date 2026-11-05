@@ -456,7 +456,7 @@ class _SalesEntryViewListState extends State<SalesEntryViewList> {
                             ),
                           ],
                         ),
-                        body: _buildBody(),
+                        body: _buildDesktopBody(),
                       ),
                     ),
                   ],
@@ -481,7 +481,7 @@ class _SalesEntryViewListState extends State<SalesEntryViewList> {
                 ],
               ),
               drawer: const AppDrawer(isPermanent: false),
-              body: _buildBody(),
+              body: _buildMobileBody(),
             );
           },
         ),
@@ -563,7 +563,7 @@ class _SalesEntryViewListState extends State<SalesEntryViewList> {
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildDesktopBody() {
     return Column(
       children: [
         _buildFilterRow(),
@@ -879,6 +879,564 @@ class _SalesEntryViewListState extends State<SalesEntryViewList> {
               ],
             ),
           ),
+      ],
+    );
+  }
+
+  Widget _buildMobileFilters() {
+    return Padding(
+      padding: const EdgeInsets.all(12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              labelText: 'Search Invoice / Customer',
+              hintText: 'Type invoice number or customer...',
+              prefixIcon: const Icon(Icons.search_rounded, size: 20),
+              suffixIcon: _searchController.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear, size: 18),
+                      onPressed: () {
+                        _searchController.clear();
+                        _fetchEntries(refresh: true);
+                      },
+                    )
+                  : null,
+              border: const OutlineInputBorder(),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 8,
+              ),
+            ),
+            onChanged: (value) {
+              if (_debounce?.isActive ?? false) _debounce!.cancel();
+              _debounce = Timer(const Duration(milliseconds: 500), () {
+                _fetchEntries(refresh: true);
+              });
+            },
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: CustomDatePickerField(
+                  labelText: 'From Date',
+                  initialDate: _fromDate,
+                  lastDate: DateTime.now(),
+                  onDateSelected: (date) {
+                    if (_toDate != null && date.isAfter(_toDate!)) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('From Date cannot be later than To Date.'),
+                        ),
+                      );
+                    } else {
+                      setState(() {
+                        _fromDate = date;
+                      });
+                      _fetchEntries(refresh: true);
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: CustomDatePickerField(
+                  labelText: 'To Date',
+                  initialDate: _toDate,
+                  lastDate: DateTime.now(),
+                  onDateSelected: (date) {
+                    if (_fromDate != null && date.isBefore(_fromDate!)) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('To Date cannot be earlier than From Date.'),
+                        ),
+                      );
+                    } else {
+                      setState(() {
+                        _toDate = date;
+                      });
+                      _fetchEntries(refresh: true);
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileCard(SalesMasterData entry, int index) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isSelected = index == _highlightedIndex;
+    final raw = entry.raw;
+    final id = _getSalesMasterId(entry);
+    final isCurrentRowLoading = _loadingSalesMasterId == id;
+
+    final invoiceNo = raw['salesMaster_InvoiceNo']?.toString() ?? 'INV-$id';
+    final custName = raw['cust_Name']?.toString() ?? 'Customer';
+    final custMobile = raw['cust_MobileNo']?.toString() ?? '';
+    final invoiceDate = raw['salesMaster_InvoiceDate']?.toString().split('T').first ?? '';
+    final totalQty = raw['salesMaster_TotalQty'] ?? 0;
+    final discount = (raw['salesMaster_TotalDiscount'] as num?)?.toDouble() ?? 0.0;
+    final paidAmount = (raw['salesMaster_PaidAmount'] as num?)?.toDouble() ?? 0.0;
+    final balanceAmount = (raw['salesMaster_BalanceAmount'] as num?)?.toDouble() ?? 0.0;
+    final grandTotal = (raw['salesMaster_GrandTotal'] as num?)?.toDouble() ?? 0.0;
+
+    return Card(
+      elevation: 1,
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+        side: BorderSide(
+          color: isSelected
+              ? colorScheme.primary
+              : colorScheme.outlineVariant.withOpacity(0.6),
+          width: isSelected ? 1.5 : 1.0,
+        ),
+      ),
+      color: isSelected ? colorScheme.primaryContainer.withOpacity(0.25) : null,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: () => _selectEntry(entry),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header Row: Index Badge, Invoice No & Customer Name, and Grand Total + Date
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 28,
+                    height: 28,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      '#${index + 1}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onPrimaryContainer,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          invoiceNo,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            color: colorScheme.primary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          custName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (custMobile.isNotEmpty) ...[
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.phone_rounded,
+                                size: 12,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                custMobile,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        '₹ ${grandTotal.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          color: colorScheme.primary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        invoiceDate,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 8),
+              const Divider(height: 1),
+              const SizedBox(height: 8),
+
+              // Metrics Row: Qty, Discount, Paid Amt, Balance Due
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Qty',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '$totalQty',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Discount',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '₹ ${discount.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.orange,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Paid Amt',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '₹ ${paidAmount.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.green.shade700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Balance Due',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '₹ ${balanceAmount.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: balanceAmount > 0
+                              ? Colors.red.shade700
+                              : Colors.green.shade700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 8),
+              const Divider(height: 1),
+              const SizedBox(height: 4),
+
+              // Actions Row: Tap to load prompt on left, PDF Preview, PDF Download, Delete on right
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  InkWell(
+                    onTap: () => _selectEntry(entry),
+                    borderRadius: BorderRadius.circular(4),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.touch_app_outlined,
+                            size: 15,
+                            color: colorScheme.primary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Tap to Select',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: colorScheme.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: isCurrentRowLoading && _loadingAction == 'preview'
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.visibility_outlined, size: 20),
+                        tooltip: 'Preview PDF',
+                        visualDensity: VisualDensity.compact,
+                        onPressed: _loadingSalesMasterId != null
+                            ? null
+                            : () => _handlePdfPreview(entry),
+                      ),
+                      IconButton(
+                        icon: isCurrentRowLoading && _loadingAction == 'download'
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.download_outlined, size: 20),
+                        tooltip: 'Download PDF',
+                        visualDensity: VisualDensity.compact,
+                        onPressed: _loadingSalesMasterId != null
+                            ? null
+                            : () => _handlePdfDownload(entry),
+                      ),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          color: Colors.red,
+                          size: 20,
+                        ),
+                        tooltip: 'Delete',
+                        visualDensity: VisualDensity.compact,
+                        onPressed: _loadingSalesMasterId != null
+                            ? null
+                            : () {
+                                if (id > 0) {
+                                  _deleteEntry(id);
+                                }
+                              },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileBottomBar() {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    double totalGrandTotal = 0;
+    double totalPaid = 0;
+    double totalBalance = 0;
+
+    for (final e in _entries) {
+      final g = (e.raw['salesMaster_GrandTotal'] as num?)?.toDouble() ?? 0.0;
+      final p = (e.raw['salesMaster_PaidAmount'] as num?)?.toDouble() ?? 0.0;
+      final b = (e.raw['salesMaster_BalanceAmount'] as num?)?.toDouble() ?? 0.0;
+      totalGrandTotal += g;
+      totalPaid += p;
+      totalBalance += b;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: colorScheme.primaryContainer.withOpacity(0.35),
+        border: Border(
+          top: BorderSide(
+            color: colorScheme.outlineVariant,
+          ),
+        ),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Invoices: ${_entries.length}',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  'Paid: ₹${totalPaid.toStringAsFixed(2)}',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Total: ₹${totalGrandTotal.toStringAsFixed(2)}',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                Text(
+                  'Due: ₹${totalBalance.toStringAsFixed(2)}',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                    color: totalBalance > 0
+                        ? Colors.red.shade700
+                        : colorScheme.primary,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileBody() {
+    return Column(
+      children: [
+        _buildMobileFilters(),
+        Expanded(
+          child: _isLoading && _entries.isEmpty
+              ? const Center(child: CircularProgressIndicator())
+              : _errorMessage != null && _entries.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                          const SizedBox(height: 16),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 24),
+                            child: Text(
+                              _errorMessage!,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: Colors.red),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            onPressed: () => _fetchEntries(refresh: true),
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    )
+                  : _entries.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.receipt_long_outlined,
+                                size: 54,
+                                color: Theme.of(context).colorScheme.outline,
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'No sales entries found.',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : ListView.builder(
+                          controller: _scrollController,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          itemCount: _entries.length + (_isFetchingMore ? 1 : 0),
+                          itemBuilder: (context, index) {
+                            if (index == _entries.length) {
+                              return const Padding(
+                                padding: EdgeInsets.all(16.0),
+                                child: Center(child: CircularProgressIndicator()),
+                              );
+                            }
+                            return _buildMobileCard(_entries[index], index);
+                          },
+                        ),
+        ),
+        if (_entries.isNotEmpty) _buildMobileBottomBar(),
       ],
     );
   }
