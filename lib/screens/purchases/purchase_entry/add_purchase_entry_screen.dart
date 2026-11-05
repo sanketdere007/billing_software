@@ -17,6 +17,7 @@ import '../../../widgets/save_clear_shortcuts.dart';
 import '../../../services/shortcut_service.dart';
 import '../../sales/sales_entry/payment_mode_dialog.dart';
 import '../../../widgets/transaction_date_picker_field.dart';
+import '../../../utils/platform_helper.dart';
 
 class AddPurchaseEntryScreen extends StatefulWidget {
   final PurchaseEntry? existingEntry;
@@ -60,6 +61,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
   double _finalPayable = 0.0;
 
   bool _isLoading = false;
+  bool _isViewMode = false;
 
   final SupplierService _supplierService = supplierService;
   final ProductService _productService = productService;
@@ -96,7 +98,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
     if (route == null) return;
 
     final hasProducts = _products.any((p) => p['product'] != null);
-    if (!hasProducts) {
+    if (_isViewMode || !hasProducts) {
       shortcutService.registerDirectBackRoute(route);
     } else {
       shortcutService.unregisterDirectBackRoute(route);
@@ -104,6 +106,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
   }
 
   void _loadExistingEntry(PurchaseEntry entry) {
+    _isViewMode = true;
     _invoiceNoController.text = entry.invoiceNo;
     _selectedDate = entry.invoiceDate;
     _selectedSupplier = int.tryParse(entry.supplierId) ?? 0;
@@ -190,6 +193,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
       );
 
       _resetForm(); // clear first
+      _isViewMode = true;
       _products.clear(); // remove the empty row added by resetForm
 
       _invoiceNoController.text = master.invoiceNo;
@@ -549,6 +553,13 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
   }
 
   Future<void> _saveEntry() async {
+    if (_isViewMode) {
+      await showWarningDialog(
+        context,
+        'Cannot save in view mode. Please click Clear to start a new entry.',
+      );
+      return;
+    }
     if (!_formKey.currentState!.validate()) return;
     if (_selectedSupplier == null) {
       await showWarningDialog(context, 'Please select a supplier');
@@ -749,6 +760,7 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
 
   void _resetForm() {
     setState(() {
+      _isViewMode = false;
       _invoiceNoController.clear();
       _invoiceAmountController.clear();
       _billDiscountController.text = '0';
@@ -1011,6 +1023,40 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
     }
 
     return KeyEventResult.ignored;
+  }
+
+  void _addProductFromButton() {
+    if (_products.isNotEmpty && _products.last['product'] != null) {
+      setState(() {
+        _addNewEmptyRow();
+      });
+      _scrollToBottom();
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        (_products.last['productNode'] as FocusNode).requestFocus();
+        _selectProductForEmptyRow(_products.length - 1);
+      }
+    });
+  }
+
+  Future<void> _openPurchaseEntryView() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const PurchaseEntryViewListScreen(),
+      ),
+    );
+    if (result != null && result is PurchaseMasterViewItem) {
+      _loadMasterAndDetails(result);
+    }
+  }
+
+  String _formatQty(double qty) {
+    if (qty == qty.roundToDouble()) {
+      return qty.toInt().toString();
+    }
+    return qty.toString();
   }
 
   Widget _buildProductTable() {
@@ -1862,6 +1908,13 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (PlatformHelper.isWindowsDesktop) {
+      return _buildWindowsDesktopUI(context);
+    }
+    return _buildMobileUI(context);
+  }
+
+  Widget _buildWindowsDesktopUI(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final bool isDesktop = screenWidth >= 1000;
     final bool isMobile = screenWidth < 600;
@@ -2277,6 +2330,1195 @@ class _AddPurchaseEntryScreenState extends State<AddPurchaseEntryScreen> {
             drawer: const AppDrawer(),
             body: content,
           );
+  }
+
+  Widget _buildMobileUI(BuildContext context) {
+    final theme = Theme.of(context);
+    final validProducts =
+        _products.where((p) => p['product'] != null).toList();
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(_isViewMode ? 'View Purchase Entry' : 'Add Purchase Entry'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.list_alt_rounded),
+            tooltip: 'View Purchase Entries',
+            onPressed: _openPurchaseEntryView,
+          ),
+          IconButton(
+            icon: const Icon(Icons.restart_alt_rounded),
+            tooltip: 'Clear Form',
+            onPressed: _resetForm,
+          ),
+          const SizedBox(width: 4),
+        ],
+      ),
+      drawer: const AppDrawer(),
+      body: _buildMobileStickyLayout(theme, validProducts),
+    );
+  }
+
+  Widget _buildMobileStickyLayout(
+    ThemeData theme,
+    List<Map<String, dynamic>> validProducts,
+  ) {
+    return SaveClearShortcuts(
+      onSave: () {
+        if (!_isLoading) _saveEntry();
+      },
+      onClear: _resetForm,
+      child: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            if (_isViewMode)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+                child: _buildMobileViewModeBanner(theme),
+              ),
+            Container(
+              color: theme.scaffoldBackgroundColor,
+              padding: const EdgeInsets.fromLTRB(6, 6, 6, 2),
+              child: _buildMobileHeaderCard(theme),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(6, 4, 4, 6),
+                children: [
+                  if (validProducts.isEmpty)
+                    _buildMobileEmptyProductsCard(theme)
+                  else
+                    ...validProducts.asMap().entries.map((entry) {
+                      final itemIndex = entry.key;
+                      final p = entry.value;
+                      final originalIndex = _products.indexOf(p);
+                      return _buildMobileProductCard(
+                        theme,
+                        p,
+                        itemIndex,
+                        originalIndex,
+                      );
+                    }),
+                  const SizedBox(height: 2),
+                  _buildMobileBillDiscountCard(theme),
+                  const SizedBox(height: 2),
+                  _buildMobileSummaryCard(theme),
+                ],
+              ),
+            ),
+            _buildMobileBottomBar(theme, validProducts.length),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileViewModeBanner(ThemeData theme) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.amber.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.amber.shade700),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.visibility_rounded,
+            color: Colors.amber.shade900,
+            size: 20,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'View Mode (Read Only). Tap New Entry to start a new purchase.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: Colors.amber.shade900,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: _resetForm,
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              visualDensity: VisualDensity.compact,
+            ),
+            child: const Text('New Entry'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileHeaderCard(ThemeData theme) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(6),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SupplierDropdown(
+              focusNode: _supplierNode,
+              nextFocusNode: _invoiceNoNode,
+              selectedSupplierId: _selectedSupplier,
+              isRequired: true,
+              onChanged: (val) {
+                setState(() {
+                  _selectedSupplier = val?.suppId;
+                });
+              },
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _invoiceNoController,
+                    focusNode: _invoiceNoNode,
+                    enabled: !_isViewMode,
+                    textInputAction: TextInputAction.next,
+                    decoration: InputDecoration(
+                      labelText: 'Invoice / Bill No',
+                      isDense: true,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 10,
+                      ),
+                    ),
+                    validator: (val) =>
+                        val == null || val.isEmpty ? 'Required' : null,
+                    onFieldSubmitted: (_) => _invoiceAmountNode.requestFocus(),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextFormField(
+                    controller: _invoiceAmountController,
+                    focusNode: _invoiceAmountNode,
+                    enabled: !_isViewMode,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    textInputAction: TextInputAction.next,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'^\d+\.?\d*'),
+                      ),
+                    ],
+                    decoration: InputDecoration(
+                      labelText: 'Invoice Amount',
+                      prefixText: '₹ ',
+                      isDense: true,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 10,
+                      ),
+                      suffixIcon: _isViewMode
+                          ? null
+                          : IconButton(
+                              icon: const Icon(Icons.sync_rounded, size: 18),
+                              tooltip: 'Match Final Payable',
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              onPressed: () {
+                                setState(() {
+                                  _invoiceAmountController.text =
+                                      _finalPayable.toStringAsFixed(2);
+                                });
+                              },
+                            ),
+                    ),
+                    validator: (val) =>
+                        val == null || val.isEmpty ? 'Required' : null,
+                    onFieldSubmitted: (_) => _invoiceDateNode.requestFocus(),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: TransactionDatePickerField(
+                    selectedDate: _selectedDate,
+                    focusNode: _invoiceDateNode,
+                    labelText: 'Invoice Date (yyyy/MM/dd)',
+                    restrictFutureDates: true,
+                    onDateSelected: (newDate) {
+                      setState(() {
+                        _selectedDate = newDate;
+                      });
+                    },
+                    onNextFocus: () {
+                      if (mounted && _products.isNotEmpty) {
+                        (_products.first['productNode'] as FocusNode)
+                            .requestFocus();
+                      }
+                    },
+                  ),
+                ),
+                const SizedBox(width: 6),
+                FilledButton.icon(
+                  onPressed: _isViewMode ? null : _addProductFromButton,
+                  icon: const Icon(Icons.add_shopping_cart, size: 14),
+                  label: const Text('Add Product'),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileEmptyProductsCard(ThemeData theme) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+        ),
+      ),
+      color: theme.colorScheme.surfaceVariant.withOpacity(0.15),
+      child: InkWell(
+        onTap: _isViewMode ? null : _addProductFromButton,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.add_shopping_cart_rounded,
+                  size: 40,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'No items in this purchase',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Tap here or "+ Add Product" to add items',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileProductCard(
+    ThemeData theme,
+    Map<String, dynamic> p,
+    int displayIndex,
+    int originalIndex,
+  ) {
+    final ProductListItem prod = p['product'];
+    final double gross = (p['gross'] as num?)?.toDouble() ?? 0.0;
+    final double net = (p['net'] as num?)?.toDouble() ?? gross;
+    final double gstAmt = (p['gstAmt'] as num?)?.toDouble() ?? 0.0;
+    final double gstPct = (p['gstPct'] as num?)?.toDouble() ?? 0.0;
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 6),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Top Row: Item Index Badge, Product Name, and Delete Button
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 26,
+                  height: 26,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primaryContainer,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    '${displayIndex + 1}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                      color: theme.colorScheme.onPrimaryContainer,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        prod.prodName,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: [
+                          if (prod.prodUnitValue > 0 ||
+                              prod.prodUnitShortName.isNotEmpty)
+                            Text(
+                              'Unit: ${prod.prodUnitValue} ${prod.prodUnitShortName}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          Text(
+                            'GST: ${prod.prodGSTPercent.toStringAsFixed(0)}%',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                if (!_isViewMode)
+                  IconButton(
+                    icon: const Icon(
+                      Icons.delete_outline_rounded,
+                      color: Colors.red,
+                    ),
+                    iconSize: 22,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    splashRadius: 20,
+                    tooltip: 'Remove Item',
+                    onPressed: () => _removeProduct(originalIndex),
+                  ),
+              ],
+            ),
+            const Divider(height: 8),
+
+            // Batch No and Quantity Row
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Batch No
+                Expanded(
+                  flex: 5,
+                  child: TextFormField(
+                    controller: p['batchNoController'],
+                    focusNode: p['batchNoNode'],
+                    enabled: !_isViewMode,
+                    decoration: InputDecoration(
+                      labelText: 'Batch No',
+                      isDense: true,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 10,
+                      ),
+                    ),
+                    onChanged: (val) {
+                      p['batchNo'] = val;
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Quantity controls with +/- increment buttons
+                Expanded(
+                  flex: 6,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: theme.colorScheme.outlineVariant.withOpacity(0.7),
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        InkWell(
+                          onTap: _isViewMode
+                              ? null
+                              : () {
+                                  double cur =
+                                      (p['qty'] as num?)?.toDouble() ?? 1.0;
+                                  if (cur > 1.0) {
+                                    double next = cur - 1.0;
+                                    (p['qtyController']
+                                            as TextEditingController)
+                                        .text = _formatQty(next);
+                                    p['qty'] = next;
+                                    double gross = next * (p['pc'] ?? 0.0);
+                                    p['discAmt'] =
+                                        gross * (p['discPct'] ?? 0.0) / 100;
+                                    (p['discAmtController']
+                                            as TextEditingController)
+                                        .text = p['discAmt'].toStringAsFixed(2);
+                                    _calculateTotals();
+                                  }
+                                },
+                          borderRadius: const BorderRadius.horizontal(
+                            left: Radius.circular(7),
+                          ),
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 8,
+                            ),
+                            child: Icon(Icons.remove, size: 16),
+                          ),
+                        ),
+                        Expanded(
+                          child: TextFormField(
+                            controller: p['qtyController'],
+                            focusNode: p['qtyNode'],
+                            enabled: !_isViewMode,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            textAlign: TextAlign.center,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                RegExp(r'^\d+\.?\d*'),
+                              ),
+                            ],
+                            decoration: const InputDecoration(
+                              isDense: true,
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.symmetric(
+                                vertical: 8,
+                              ),
+                            ),
+                            onChanged: (val) {
+                              double newQty = double.tryParse(val) ?? 0.0;
+                              p['qty'] = newQty;
+                              double gross = newQty * (p['pc'] ?? 0.0);
+                              p['discAmt'] =
+                                  gross * (p['discPct'] ?? 0.0) / 100;
+                              (p['discAmtController']
+                                      as TextEditingController)
+                                  .text = p['discAmt'].toStringAsFixed(2);
+                              _calculateTotals();
+                            },
+                          ),
+                        ),
+                        InkWell(
+                          onTap: _isViewMode
+                              ? null
+                              : () {
+                                  double cur =
+                                      (p['qty'] as num?)?.toDouble() ?? 0.0;
+                                  double next = cur + 1.0;
+                                  (p['qtyController']
+                                          as TextEditingController)
+                                      .text = _formatQty(next);
+                                  p['qty'] = next;
+                                  double gross = next * (p['pc'] ?? 0.0);
+                                  p['discAmt'] =
+                                      gross * (p['discPct'] ?? 0.0) / 100;
+                                  (p['discAmtController']
+                                          as TextEditingController)
+                                      .text = p['discAmt'].toStringAsFixed(2);
+                                  _calculateTotals();
+                                },
+                          borderRadius: const BorderRadius.horizontal(
+                            right: Radius.circular(7),
+                          ),
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 8,
+                            ),
+                            child: Icon(Icons.add, size: 16),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+
+            // Purchase Cost (PC) and Landing Cost (LC) Row
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: p['pcController'],
+                    focusNode: p['pcNode'],
+                    enabled: !_isViewMode,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    textAlign: TextAlign.right,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'^\d+\.?\d*'),
+                      ),
+                    ],
+                    decoration: InputDecoration(
+                      isDense: true,
+                      prefixText: '₹ ',
+                      labelText: 'Purchase Cost',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 10,
+                      ),
+                    ),
+                    onChanged: (val) {
+                      final newPc = double.tryParse(val) ?? 0.0;
+                      p['pc'] = newPc;
+                      if (newPc <= 0.0) {
+                        p['discPct'] = 0.0;
+                        (p['discPctController'] as TextEditingController).text =
+                            '0.0';
+                        p['discAmt'] = 0.0;
+                        (p['discAmtController'] as TextEditingController).text =
+                            '0.0';
+                      } else {
+                        double gross = (p['qty'] ?? 0.0) * newPc;
+                        p['discAmt'] =
+                            gross * (p['discPct'] ?? 0.0) / 100;
+                        (p['discAmtController'] as TextEditingController).text =
+                            p['discAmt'].toStringAsFixed(2);
+                      }
+                      _calculateTotals();
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextFormField(
+                    controller: p['lcController'],
+                    focusNode: p['lcNode'],
+                    enabled: !_isViewMode,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    textAlign: TextAlign.right,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'^\d+\.?\d*'),
+                      ),
+                    ],
+                    decoration: InputDecoration(
+                      isDense: true,
+                      prefixText: '₹ ',
+                      labelText: 'Landing Cost',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 10,
+                      ),
+                    ),
+                    onChanged: (val) {
+                      p['lc'] = double.tryParse(val) ?? 0.0;
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+
+            // MRP and Selling Price Row
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: p['mrpController'],
+                    focusNode: p['mrpNode'],
+                    enabled: !_isViewMode,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    textAlign: TextAlign.right,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'^\d+\.?\d*'),
+                      ),
+                    ],
+                    decoration: InputDecoration(
+                      isDense: true,
+                      prefixText: '₹ ',
+                      labelText: 'MRP',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 10,
+                      ),
+                    ),
+                    onChanged: (val) {
+                      p['mrp'] = double.tryParse(val) ?? 0.0;
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextFormField(
+                    controller: p['spController'],
+                    focusNode: p['spNode'],
+                    enabled: !_isViewMode,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    textAlign: TextAlign.right,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'^\d+\.?\d*'),
+                      ),
+                    ],
+                    decoration: InputDecoration(
+                      isDense: true,
+                      prefixText: '₹ ',
+                      labelText: 'Selling Price',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 10,
+                      ),
+                    ),
+                    onChanged: (val) {
+                      p['sp'] = double.tryParse(val) ?? 0.0;
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+
+            // Discount and GST row
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: TextFormField(
+                    controller: p['discPctController'],
+                    focusNode: p['discPctNode'],
+                    enabled: !_isViewMode && (p['pc'] ?? 0.0) > 0.0,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    textAlign: TextAlign.right,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'^\d+\.?\d*'),
+                      ),
+                    ],
+                    decoration: InputDecoration(
+                      isDense: true,
+                      suffixText: '%',
+                      labelText: 'Disc %',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 10,
+                      ),
+                    ),
+                    onChanged: (val) {
+                      double dPct = double.tryParse(val) ?? 0.0;
+                      p['discPct'] = dPct;
+                      double gross =
+                          (p['qty'] ?? 0.0) * (p['pc'] ?? 0.0);
+                      p['discAmt'] = (gross * dPct) / 100;
+                      (p['discAmtController'] as TextEditingController)
+                              .text =
+                          p['discAmt'].toStringAsFixed(2);
+                      _calculateTotals();
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  flex: 4,
+                  child: TextFormField(
+                    controller: p['discAmtController'],
+                    focusNode: p['discNode'],
+                    enabled: !_isViewMode && (p['pc'] ?? 0.0) > 0.0,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    textAlign: TextAlign.right,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'^\d+\.?\d*'),
+                      ),
+                    ],
+                    decoration: InputDecoration(
+                      isDense: true,
+                      prefixText: '₹ ',
+                      labelText: 'Discount (₹)',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 10,
+                      ),
+                    ),
+                    onChanged: (val) {
+                      double dAmt = double.tryParse(val) ?? 0.0;
+                      p['discAmt'] = dAmt;
+                      double gross =
+                          (p['qty'] ?? 0.0) * (p['pc'] ?? 0.0);
+                      if (gross > 0) {
+                        p['discPct'] = (dAmt / gross) * 100;
+                        (p['discPctController'] as TextEditingController)
+                                .text =
+                            p['discPct'].toStringAsFixed(2);
+                      } else {
+                        p['discPct'] = 0.0;
+                        (p['discPctController'] as TextEditingController)
+                                .text =
+                            '0.0';
+                      }
+                      _calculateTotals();
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  flex: 3,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        'GST (${gstPct.toStringAsFixed(0)}%)',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '₹${gstAmt.toStringAsFixed(2)}',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+
+            // Net Total bar for this item
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceVariant.withOpacity(0.35),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Gross: ₹${gross.toStringAsFixed(2)}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      Text(
+                        'Item Net: ',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        '₹${net.toStringAsFixed(2)}',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileBillDiscountCard(ThemeData theme) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.discount_outlined,
+                  size: 20,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Bill Discount',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _billDiscountPercentController,
+                    enabled: !_isViewMode,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    textAlign: TextAlign.right,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d*')),
+                    ],
+                    decoration: InputDecoration(
+                      labelText: 'Bill Dis %',
+                      suffixText: '%',
+                      isDense: true,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 10,
+                      ),
+                    ),
+                    onChanged: (val) {
+                      double pct = double.tryParse(val) ?? 0.0;
+                      double subTotal =
+                          _grossTotal - _totalProductDiscount + _totalGST;
+                      double amt = (subTotal * pct) / 100;
+                      _billDiscountController.text = amt.toStringAsFixed(2);
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextFormField(
+                    controller: _billDiscountController,
+                    enabled: !_isViewMode,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    textAlign: TextAlign.right,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d*')),
+                    ],
+                    decoration: InputDecoration(
+                      labelText: 'Bill Discount',
+                      prefixText: '₹ ',
+                      isDense: true,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 10,
+                      ),
+                    ),
+                    onChanged: (val) {
+                      double amt = double.tryParse(val) ?? 0.0;
+                      double subTotal =
+                          _grossTotal - _totalProductDiscount + _totalGST;
+                      if (subTotal > 0) {
+                        double pct = (amt / subTotal) * 100;
+                        _billDiscountPercentController.text =
+                            pct.toStringAsFixed(2);
+                      } else {
+                        _billDiscountPercentController.text = '0.0';
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileSummaryCard(ThemeData theme) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Bill Breakdown',
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 10),
+            _buildSummaryRow(
+              'Total Quantity',
+              _totalQuantity.toStringAsFixed(2),
+              theme,
+            ),
+            const SizedBox(height: 6),
+            _buildSummaryRow(
+              'Gross Total',
+              '₹${_grossTotal.toStringAsFixed(2)}',
+              theme,
+            ),
+            const SizedBox(height: 6),
+            _buildSummaryRow(
+              'Product Discount',
+              '- ₹${_totalProductDiscount.toStringAsFixed(2)}',
+              theme,
+              isNegative: true,
+            ),
+            const SizedBox(height: 6),
+            _buildSummaryRow(
+              'Total GST',
+              '+ ₹${_totalGST.toStringAsFixed(2)}',
+              theme,
+            ),
+            if (_billDiscount > 0) ...[
+              const SizedBox(height: 6),
+              _buildSummaryRow(
+                'Bill Discount',
+                '- ₹${_billDiscount.toStringAsFixed(2)}',
+                theme,
+                isNegative: true,
+              ),
+            ],
+            const Divider(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Final Payable',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  '₹${_finalPayable.toStringAsFixed(2)}',
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryRow(
+    String label,
+    String value,
+    ThemeData theme, {
+    bool isNegative = false,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        Text(
+          value,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: isNegative ? Colors.green.shade700 : null,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileBottomBar(ThemeData theme, int itemCount) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 10,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Total Payable ($itemCount items)',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  Text(
+                    '₹${_finalPayable.toStringAsFixed(2)}',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.primary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            OutlinedButton(
+              onPressed: _resetForm,
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(_isViewMode ? 'New' : 'Clear'),
+            ),
+            const SizedBox(width: 8),
+            FilledButton.icon(
+              onPressed: _isLoading
+                  ? null
+                  : () {
+                      if (_isViewMode) {
+                        _resetForm();
+                      } else {
+                        _saveEntry();
+                      }
+                    },
+              icon: _isLoading
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Icon(
+                      _isViewMode
+                          ? Icons.add_rounded
+                          : Icons.check_circle_outline,
+                      size: 18,
+                    ),
+              label: Text(
+                _isLoading
+                    ? 'Saving...'
+                    : _isViewMode
+                        ? 'New Entry'
+                        : 'Save',
+              ),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildSummaryItem(String label, String value) {
