@@ -14,6 +14,7 @@ import '../../services/customer_service.dart';
 import '../../models/customer.dart';
 import '../../models/receipt_pdf_data.dart';
 import '../../models/invoice_pdf_data.dart' show IndianCurrencyWords;
+import '../../services/shortcut_service.dart';
 import '../pdf/receipt_pdf_preview_screen.dart';
 class ReceiptMasterScreen extends StatefulWidget {
   const ReceiptMasterScreen({super.key});
@@ -624,8 +625,10 @@ class _ReceiptMasterScreenState extends State<ReceiptMasterScreen> {
           amountInWords: IndianCurrencyWords.convert(_totalAmount),
         );
 
-        Navigator.of(context).pushReplacement(
+        _clearForm();
+        Navigator.of(context).push(
           MaterialPageRoute(
+            settings: const RouteSettings(name: AppRoutes.pdfPreview),
             builder: (_) => ReceiptPdfPreviewScreen(receiptData: pdfData),
           ),
         );

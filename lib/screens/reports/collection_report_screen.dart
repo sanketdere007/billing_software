@@ -14,6 +14,8 @@ import '../../widgets/custom_date_picker_field.dart';
 import '../../models/receipt_pdf_data.dart';
 import '../../controllers/receipt_pdf_controller.dart';
 import '../../models/invoice_pdf_data.dart' show IndianCurrencyWords;
+import '../pdf/receipt_pdf_preview_screen.dart';
+import '../../services/shortcut_service.dart';
 
 class CollectionReportScreen extends StatefulWidget {
   final DateTime? initialFromDate;
@@ -64,10 +66,18 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
     // Set default dates to current date and 7 days prior
     final now = DateTime.now();
     _toDate = widget.initialToDate != null
-        ? DateTime(widget.initialToDate!.year, widget.initialToDate!.month, widget.initialToDate!.day)
+        ? DateTime(
+            widget.initialToDate!.year,
+            widget.initialToDate!.month,
+            widget.initialToDate!.day,
+          )
         : DateTime(now.year, now.month, now.day);
     _fromDate = widget.initialFromDate != null
-        ? DateTime(widget.initialFromDate!.year, widget.initialFromDate!.month, widget.initialFromDate!.day)
+        ? DateTime(
+            widget.initialFromDate!.year,
+            widget.initialFromDate!.month,
+            widget.initialFromDate!.day,
+          )
         : DateTime(_toDate!.year, _toDate!.month, _toDate!.day - 7);
 
     _fetchReport(refresh: true);
@@ -177,7 +187,7 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
       return KeyEventResult.handled;
     }
 
-    // Arrow-key navigation only works when report data is loaded.
+    // Arrow-key and Enter navigation only work when report data is loaded.
     if (_reportData.isEmpty) {
       return KeyEventResult.ignored;
     }
@@ -208,6 +218,14 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
       });
       _scrollToIndex(_highlightedIndex);
       return KeyEventResult.handled;
+    }
+
+    if (key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.numpadEnter) {
+      if (_highlightedIndex >= 0 && _highlightedIndex < _reportData.length) {
+        _viewReceiptPdf(_reportData[_highlightedIndex]);
+        return KeyEventResult.handled;
+      }
     }
 
     return KeyEventResult.ignored;
@@ -443,7 +461,7 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
           ? item.branchName
           : (sessionService.selectedBranchName ?? ''),
       receiptDate: item.receiptMasterReceiptDate != null
-          ? _displayFormat.format(item.receiptMasterReceiptDate!)
+          ? _dateFormat.format(item.receiptMasterReceiptDate!)
           : '',
       receiptNo: item.receiptMasterReceiptNo,
       invoiceNo: '',
@@ -463,7 +481,7 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
       bankAmount: item.bankAmount,
       bankName: item.receiptMasterBankName,
       bankAccountNo: '',
-      bankTransactionNo: '',
+      bankTransactionNo: item.receiptMasterNEFTReferenceNo,
       bankReferenceNo: item.receiptMasterBankReferenceNo,
       bankTransferType: item.receiptMasterNEFTType,
 
@@ -479,6 +497,16 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
       totalAmount: item.totalAmount,
       remarks: item.receiptMasterRemark,
       amountInWords: IndianCurrencyWords.convert(item.totalAmount),
+    );
+  }
+
+  void _viewReceiptPdf(CollectionReportData item) {
+    final data = _getReceiptPdfData(item);
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        settings: const RouteSettings(name: AppRoutes.pdfPreview),
+        builder: (_) => ReceiptPdfPreviewScreen(receiptData: data),
+      ),
     );
   }
 
@@ -520,19 +548,6 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
     } catch (e) {
       if (mounted) {
         showErrorDialog(context, 'Failed to share receipt PDF: $e');
-      }
-    }
-  }
-
-  Future<void> _shareReceiptImage(CollectionReportData item) async {
-    try {
-      final controller = ReceiptPdfController();
-      final data = _getReceiptPdfData(item);
-      await controller.generateFromData(data);
-      await controller.shareAsImage();
-    } catch (e) {
-      if (mounted) {
-        showErrorDialog(context, 'Failed to share receipt Image: $e');
       }
     }
   }
@@ -748,8 +763,9 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
                       if (_toDate != null && date.isAfter(_toDate!)) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content:
-                                Text('From Date cannot be later than To Date.'),
+                            content: Text(
+                              'From Date cannot be later than To Date.',
+                            ),
                           ),
                         );
                       } else {
@@ -917,8 +933,8 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
-                  Expanded(
-                    flex: 2,
+                  SizedBox(
+                    width: 175,
                     child: Text(
                       'Action',
                       style: TextStyle(fontWeight: FontWeight.bold),
@@ -949,6 +965,7 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
                         _highlightedIndex = index;
                       });
                     },
+                    onDoubleTap: () => _viewReceiptPdf(item),
                     child: Container(
                       height: 53,
                       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -993,37 +1010,59 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
                               ),
                             ),
                           ),
-                          Expanded(
-                            flex: 2,
+                          SizedBox(
+                            width: 175,
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                // IconButton(
-                                //   icon: const Icon(
-                                //     Icons.print_outlined,
-                                //     size: 20,
-                                //   ),
-                                //   tooltip: 'Print',
-                                //   padding: const EdgeInsets.all(4),
-                                //   constraints: const BoxConstraints(),
-                                //   onPressed: () => _printReceipt(item),
-                                // ),
-                                const SizedBox(width: 8),
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.visibility_outlined,
+                                    size: 18,
+                                  ),
+                                  tooltip: 'View PDF',
+                                  padding: const EdgeInsets.all(4),
+                                  constraints: const BoxConstraints(),
+                                  onPressed: () => _viewReceiptPdf(item),
+                                ),
+                                const SizedBox(width: 4),
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.print_outlined,
+                                    size: 18,
+                                  ),
+                                  tooltip: 'Print',
+                                  padding: const EdgeInsets.all(4),
+                                  constraints: const BoxConstraints(),
+                                  onPressed: () => _printReceipt(item),
+                                ),
+                                const SizedBox(width: 4),
                                 IconButton(
                                   icon: const Icon(
                                     Icons.download_outlined,
-                                    size: 20,
+                                    size: 18,
                                   ),
                                   tooltip: 'Download',
                                   padding: const EdgeInsets.all(4),
                                   constraints: const BoxConstraints(),
                                   onPressed: () => _downloadReceipt(item),
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: 4),
+                                // IconButton(
+                                //   icon: const Icon(
+                                //     Icons.share_outlined,
+                                //     size: 18,
+                                //   ),
+                                //   tooltip: 'Share',
+                                //   padding: const EdgeInsets.all(4),
+                                //   constraints: const BoxConstraints(),
+                                //   onPressed: () => _shareReceiptPdf(item),
+                                // ),
+                                const SizedBox(width: 4),
                                 IconButton(
                                   icon: const Icon(
                                     Icons.delete_outline,
-                                    size: 20,
+                                    size: 18,
                                     color: Colors.red,
                                   ),
                                   tooltip: 'Delete',
@@ -1031,32 +1070,6 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
                                   constraints: const BoxConstraints(),
                                   onPressed: () => _deleteReceipt(item),
                                 ),
-                                const SizedBox(width: 8),
-                                // PopupMenuButton<String>(
-                                //   icon: const Icon(
-                                //     Icons.share_outlined,
-                                //     size: 20,
-                                //   ),
-                                //   tooltip: 'Share',
-                                //   padding: const EdgeInsets.all(4),
-                                //   onSelected: (value) {
-                                //     if (value == 'pdf') {
-                                //       _shareReceiptPdf(item);
-                                //     } else if (value == 'image') {
-                                //       _shareReceiptImage(item);
-                                //     }
-                                //   },
-                                //   itemBuilder: (context) => [
-                                //     const PopupMenuItem(
-                                //       value: 'pdf',
-                                //       child: Text('Share as PDF'),
-                                //     ),
-                                //     const PopupMenuItem(
-                                //       value: 'image',
-                                //       child: Text('Share as Image'),
-                                //     ),
-                                //   ],
-                                // ),
                               ],
                             ),
                           ),
@@ -1106,7 +1119,7 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
-                  const Expanded(flex: 2, child: SizedBox()),
+                  const SizedBox(width: 175),
                 ],
               ),
             ),
@@ -1242,48 +1255,80 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              IconButton(
-                                icon: const Icon(Icons.download_outlined, size: 20),
-                                tooltip: 'Download',
-                                padding: const EdgeInsets.all(4),
-                                constraints: const BoxConstraints(),
-                                onPressed: () => _downloadReceipt(item),
-                              ),
-                              const SizedBox(width: 8),
-                              PopupMenuButton<String>(
-                                icon: const Icon(Icons.share_outlined, size: 20),
-                                tooltip: 'Share',
-                                padding: const EdgeInsets.all(4),
-                                constraints: const BoxConstraints(),
-                                onSelected: (value) {
-                                  if (value == 'pdf') {
-                                    _shareReceiptPdf(item);
-                                  } else if (value == 'image') {
-                                    _shareReceiptImage(item);
-                                  }
-                                },
-                                itemBuilder: (context) => const [
-                                  PopupMenuItem(
-                                    value: 'pdf',
-                                    child: Text('Share as PDF'),
+                              Container(
+                                height: 20,
+                                width: 35,
+                                child: IconButton(
+                                  icon: const Icon(
+                                    Icons.visibility_outlined,
+                                    size: 20,
                                   ),
-                                  PopupMenuItem(
-                                    value: 'image',
-                                    child: Text('Share as Image'),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(width: 8),
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.delete_outline,
-                                  size: 20,
-                                  color: Colors.red,
+                                  tooltip: 'View PDF',
+                                  padding: const EdgeInsets.all(4),
+                                  constraints: const BoxConstraints(),
+                                  onPressed: () => _viewReceiptPdf(item),
                                 ),
-                                tooltip: 'Delete',
-                                padding: const EdgeInsets.all(4),
-                                constraints: const BoxConstraints(),
-                                onPressed: () => _deleteReceipt(item),
+                              ),
+                              const SizedBox(width: 0),
+                              Container(
+                                height: 20,
+                                width: 35,
+                                child: IconButton(
+                                  icon: const Icon(
+                                    Icons.print_outlined,
+                                    size: 20,
+                                  ),
+                                  tooltip: 'Print',
+                                  padding: const EdgeInsets.all(4),
+                                  constraints: const BoxConstraints(),
+                                  onPressed: () => _printReceipt(item),
+                                ),
+                              ),
+                              const SizedBox(width: 0),
+                              Container(
+                                height: 20,
+                                width: 35,
+                                child: IconButton(
+                                  icon: const Icon(
+                                    Icons.download_outlined,
+                                    size: 20,
+                                  ),
+                                  tooltip: 'Download',
+                                  padding: const EdgeInsets.all(4),
+                                  constraints: const BoxConstraints(),
+                                  onPressed: () => _downloadReceipt(item),
+                                ),
+                              ),
+                              const SizedBox(width: 0),
+                              Container(
+                                height: 20,
+                                width: 35,
+                                child: IconButton(
+                                  icon: const Icon(
+                                    Icons.share_outlined,
+                                    size: 20,
+                                  ),
+                                  tooltip: 'Share',
+                                  padding: const EdgeInsets.all(4),
+                                  constraints: const BoxConstraints(),
+                                  onPressed: () => _shareReceiptPdf(item),
+                                ),
+                              ),
+                              const SizedBox(width: 0),
+                              Container(
+                                height: 20,
+                                width: 35,
+                                child: IconButton(
+                                  icon: const Icon(
+                                    Icons.delete_outline,
+                                    size: 20,
+                                    color: Colors.red,
+                                  ),
+                                  tooltip: 'Delete',
+                                  padding: const EdgeInsets.all(4),
+                                  constraints: const BoxConstraints(),
+                                  onPressed: () => _deleteReceipt(item),
+                                ),
                               ),
                             ],
                           ),
@@ -1300,11 +1345,7 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
             color: colorScheme.primaryContainer.withOpacity(0.35),
-            border: Border(
-              top: BorderSide(
-                color: colorScheme.outlineVariant,
-              ),
-            ),
+            border: Border(top: BorderSide(color: colorScheme.outlineVariant)),
           ),
           child: SafeArea(
             top: false,
@@ -1313,7 +1354,10 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
               children: [
                 Text(
                   'Total Records: $_totalRecords',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
                 ),
                 Text(
                   'Total: ₹ ${_totalCollection.toStringAsFixed(2)}',
@@ -1377,13 +1421,21 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // IconButton(
-                      //   icon: const Icon(Icons.print_outlined, size: 20),
-                      //   tooltip: 'Print',
-                      //   padding: const EdgeInsets.all(4),
-                      //   constraints: const BoxConstraints(),
-                      //   onPressed: () => _printReceipt(item),
-                      // ),
+                      IconButton(
+                        icon: const Icon(Icons.visibility_outlined, size: 20),
+                        tooltip: 'View PDF',
+                        padding: const EdgeInsets.all(4),
+                        constraints: const BoxConstraints(),
+                        onPressed: () => _viewReceiptPdf(item),
+                      ),
+                      const SizedBox(width: 4),
+                      IconButton(
+                        icon: const Icon(Icons.print_outlined, size: 20),
+                        tooltip: 'Print',
+                        padding: const EdgeInsets.all(4),
+                        constraints: const BoxConstraints(),
+                        onPressed: () => _printReceipt(item),
+                      ),
                       const SizedBox(width: 4),
                       IconButton(
                         icon: const Icon(Icons.download_outlined, size: 20),
@@ -1391,6 +1443,14 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
                         padding: const EdgeInsets.all(4),
                         constraints: const BoxConstraints(),
                         onPressed: () => _downloadReceipt(item),
+                      ),
+                      const SizedBox(width: 4),
+                      IconButton(
+                        icon: const Icon(Icons.share_outlined, size: 20),
+                        tooltip: 'Share',
+                        padding: const EdgeInsets.all(4),
+                        constraints: const BoxConstraints(),
+                        onPressed: () => _shareReceiptPdf(item),
                       ),
                       const SizedBox(width: 4),
                       IconButton(
@@ -1403,29 +1463,6 @@ class _CollectionReportScreenState extends State<CollectionReportScreen> {
                         padding: const EdgeInsets.all(4),
                         constraints: const BoxConstraints(),
                         onPressed: () => _deleteReceipt(item),
-                      ),
-                      const SizedBox(width: 4),
-                      PopupMenuButton<String>(
-                        icon: const Icon(Icons.share_outlined, size: 20),
-                        tooltip: 'Share',
-                        padding: const EdgeInsets.all(4),
-                        onSelected: (value) {
-                          if (value == 'pdf') {
-                            _shareReceiptPdf(item);
-                          } else if (value == 'image') {
-                            _shareReceiptImage(item);
-                          }
-                        },
-                        itemBuilder: (context) => [
-                          const PopupMenuItem(
-                            value: 'pdf',
-                            child: Text('Share as PDF'),
-                          ),
-                          const PopupMenuItem(
-                            value: 'image',
-                            child: Text('Share as Image'),
-                          ),
-                        ],
                       ),
                     ],
                   ),

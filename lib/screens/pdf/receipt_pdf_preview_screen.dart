@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../controllers/receipt_pdf_controller.dart';
 import '../../models/receipt_pdf_data.dart';
+import '../../utils/platform_helper.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/app_message_dialog.dart';
 import '../../widgets/direct_back_scope.dart';
@@ -47,6 +47,9 @@ class _ReceiptPdfPreviewScreenState extends State<ReceiptPdfPreviewScreen> {
 
   Future<void> _print() async {
     try {
+      if (_controller.pdfBytes == null && widget.receiptData != null) {
+        await _generate();
+      }
       await _controller.printPdf();
     } catch (e) {
       if (!mounted) return;
@@ -56,11 +59,28 @@ class _ReceiptPdfPreviewScreenState extends State<ReceiptPdfPreviewScreen> {
 
   Future<void> _download() async {
     try {
+      if (_controller.pdfBytes == null && widget.receiptData != null) {
+        await _generate();
+      }
       final path = await _controller.downloadPdf();
       if (!mounted || path == null) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('PDF saved: $path')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(
+                Icons.check_circle_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
+              const SizedBox(width: 10),
+              Expanded(child: Text('Receipt downloaded successfully to $path')),
+            ],
+          ),
+          backgroundColor: Colors.green.shade700,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       await showErrorDialog(context, 'Unable to download: $e');
@@ -68,111 +88,14 @@ class _ReceiptPdfPreviewScreenState extends State<ReceiptPdfPreviewScreen> {
   }
 
   Future<void> _share() async {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Text(
-                  'Share Receipt',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ),
-              ListTile(
-                leading: const Icon(Icons.image),
-                title: const Text('Share as Image'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _shareAsImage();
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.picture_as_pdf),
-                title: const Text('Share as PDF'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _shareAsPdf();
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.open_in_browser),
-                title: const Text('Open in WhatsApp Web'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _shareViaWhatsAppWeb();
-                },
-              ),
-              const Divider(),
-              ListTile(
-                leading: const Icon(Icons.cancel),
-                title: const Text('Cancel'),
-                onTap: () => Navigator.pop(context),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _shareAsImage() async {
     try {
-      await _controller.shareAsImage();
-    } catch (e) {
-      if (!mounted) return;
-      await showErrorDialog(context, 'Unable to share as image: $e');
-    }
-  }
-
-  Future<void> _shareAsPdf() async {
-    try {
+      if (_controller.pdfBytes == null && widget.receiptData != null) {
+        await _generate();
+      }
       await _controller.shareAsPdf();
     } catch (e) {
       if (!mounted) return;
       await showErrorDialog(context, 'Unable to share as PDF: $e');
-    }
-  }
-
-  Future<void> _shareViaWhatsAppWeb() async {
-    try {
-      final phone = widget.receiptData?.customerMobile ?? '';
-      final parsedPhone = phone.replaceAll(RegExp(r'[^0-9]'), '');
-
-      // Save PDF to downloads so user can attach it easily
-      final path = await _controller.downloadPdf();
-      if (mounted && path != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Saved to $path. Please attach this file in WhatsApp!',
-            ),
-            duration: const Duration(seconds: 4),
-          ),
-        );
-      }
-
-      final url = Uri.parse(
-        'https://web.whatsapp.com/send?phone=$parsedPhone&text=Hello, please find your receipt attached.',
-      );
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url, mode: LaunchMode.externalApplication);
-      } else {
-        if (!mounted) return;
-        await showErrorDialog(
-          context,
-          'Could not open WhatsApp Web. Please check your browser.',
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      await showErrorDialog(context, 'Unable to open WhatsApp Web: $e');
     }
   }
 
@@ -194,11 +117,12 @@ class _ReceiptPdfPreviewScreenState extends State<ReceiptPdfPreviewScreen> {
           onPressed: canAct ? _download : null,
           icon: const Icon(Icons.download_outlined),
         ),
-        IconButton(
-          tooltip: 'Share',
-          onPressed: canAct ? _share : null,
-          icon: const Icon(Icons.share_outlined),
-        ),
+        if (PlatformHelper.isMobile)
+          IconButton(
+            tooltip: 'Share',
+            onPressed: canAct ? _share : null,
+            icon: const Icon(Icons.share_outlined),
+          ),
         const SizedBox(width: 8),
       ],
     );

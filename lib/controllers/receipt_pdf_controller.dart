@@ -1,11 +1,9 @@
-import 'package:file_selector/file_selector.dart';
 import 'package:flutter/foundation.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:printing/printing.dart';
 
 import '../models/receipt_pdf_data.dart';
 import '../services/receipt_pdf_generator.dart';
-import 'dart:io';
+import '../services/pdf_download_service.dart';
 
 class ReceiptPdfController {
   ReceiptPdfController({ReceiptPdfGenerator? generator})
@@ -66,49 +64,7 @@ class ReceiptPdfController {
 
   Future<String?> downloadPdf() async {
     final bytes = _requireBytes();
-
-    if (kIsWeb) {
-      await Printing.sharePdf(bytes: bytes, filename: fileName);
-      return fileName;
-    }
-
-    if (_isDesktop) {
-      final location = await getSaveLocation(
-        suggestedName: fileName,
-        acceptedTypeGroups: const [
-          XTypeGroup(label: 'PDF', extensions: ['pdf']),
-        ],
-      );
-      if (location == null) return null;
-      final file = XFile.fromData(
-        bytes,
-        mimeType: 'application/pdf',
-        name: fileName,
-      );
-      await file.saveTo(location.path);
-      return location.path;
-    }
-
-    final dir = await getApplicationDocumentsDirectory();
-    final path = '${dir.path}/$fileName';
-    final file = XFile.fromData(
-      bytes,
-      mimeType: 'application/pdf',
-      name: fileName,
-    );
-    await file.saveTo(path);
-    return path;
-  }
-
-  bool get _isDesktop {
-    switch (defaultTargetPlatform) {
-      case TargetPlatform.windows:
-      case TargetPlatform.linux:
-      case TargetPlatform.macOS:
-        return true;
-      default:
-        return false;
-    }
+    return PdfDownloadService.downloadPdf(bytes: bytes, fileName: fileName);
   }
 
   Uint8List _requireBytes() {
